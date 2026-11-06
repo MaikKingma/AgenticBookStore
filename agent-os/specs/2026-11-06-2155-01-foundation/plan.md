@@ -31,7 +31,7 @@ Create the Maven multi-module build (Java 25, Spring Boot 4.1.2, Spring AI BOM 2
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Build skeleton: both modules generated from start.spring.io with curl, root POM, single wrapper, .gitattributes, .gitignore, .editorconfig | root | [] | 1 | critical | opus | pending | | | 0 | | |
+| T1 | Build skeleton: both modules generated from start.spring.io with curl, root POM, single wrapper, .gitattributes, .gitignore, .editorconfig | root | [] | 1 | critical | opus | merged | PASS | ENDORSE | 1 | #2 (sdd/01-foundation/T1) | squash via PR #2 |
 | T2 | CI workflow: `verify` on ubuntu-latest, `windows-build` on windows-latest, on every push and every pull request | root | [T1] | 2 | elevated | sonnet | pending | | | 0 | | |
 | T3 | Bookstore runtime and database configuration plus test infrastructure | bookstore | [T1] | 2 | critical | opus | pending | | | 0 | | |
 | T6 | Distributor configuration (127.0.0.1, port 8090, actuator health and info) with context and health tests | distributor | [T1] | 2 | standard | sonnet | pending | | | 0 | | |
