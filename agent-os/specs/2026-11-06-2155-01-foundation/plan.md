@@ -293,6 +293,10 @@ T5-5 `find bookstore/src/test/java/nl/openvalue/archfixtures bookstore/src/test/
 - W1 (from T1 meta-review; applies to T2, T3, T6, T4, T5): grep every warning line of the referee log (`grep -n -i -E "warn|deprecat"`, JVM warning lines included), quote each one and classify it as fixable in this task (FAIL), owned by another task's named criterion, or unowned (flag it to the orchestrator); never call one "environmental" without showing a machine-local source. Unowned and accepted by orchestrator decision Q-T1-W (never a FAIL): the Mockito/Byte Buddy dynamic-agent JVM warning, the JDK CDS warning, and the flyway-parent `prefixes.txt` 401 resolver warnings.
 - W1-T3 (T3 only): if `spring.jpa.open-in-view is enabled by default` or Flyway `No migrations found` is still in the referee log, the verdict is FAIL.
 
+- W2 (from T2 meta-review; T3, T6, T4, T5): use `grep -n -i -E "warn|deprecat|self-attach"` for the W1 warning inventory, and give the referee log as an absolute path.
+- W3 (T3, T6, T4, T5): run every C0-5 global grep literally and quote its output, even when the task diff does not touch those paths. A scope argument supplements the grep, never replaces it.
+- W4 (T3, T6, T4, T5): prove that the referee ran after the impl finished and after the last probe restore with `stat` mtimes (impl artifact, last changed product file, Surefire XML), never with frontmatter timestamps.
+
 ## Amendments
 
 - 2026-11-06T22:22Z, orchestrator (after T1 meta-review): the expected tuple in QA directive T1-7 was wrong; `git check-attr eol -- mvnw mvnw.cmd x.sh .githooks/pre-commit x.ps1 x.cmd` must give (lf, crlf, lf, lf, crlf, crlf) in argument order. Corrected in place. No consequence for T1 (the verifier checked argument by argument).
