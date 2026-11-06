@@ -1,14 +1,14 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over four labs.
-Current phase: 3, step 0 (precondition check)
-Current spec: none (bootstrap)
+Current phase: 3, spec 01 step 2 (run the cycle)
+Current spec: 01 (in progress). Goal: a fast, identical build on every laptop plus an ArchUnit referee that fails loudly when code lands in the wrong layer, before any business code exists.
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
 Clean `./mvnw clean verify` time: n/a, no code yet (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
-| 01 | todo | | | |
+| 01 | in progress | | | orchestrator agent run started 2026-11-06 |
 | 02 | todo | | | |
 | 03 | todo | | | |
 | 04 | todo | | | |
