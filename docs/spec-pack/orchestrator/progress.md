@@ -1,9 +1,9 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over four labs.
-Current phase: 1, step 8
+Current phase: 2, step 1
 Current spec: none (bootstrap)
-Factory skills installed and invocable: pending (gate at Phase 1, step 9)
+Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
 Clean `./mvnw clean verify` time: n/a, no code yet (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
@@ -38,3 +38,4 @@ Clean `./mvnw clean verify` time: n/a, no code yet (budget 60)
 - 2026-11-06 Phase 0, Maik: `agent-os/product` is a symlink to `../docs/spec-pack/product`; a pointer standard `agent-os/standards/architecture.md` is indexed.
 - 2026-11-06 Phase 0, Maik: keep the existing clone, branch `factory` from `main` (7c45791), commit the untracked agent-os commands and standards index in the bootstrap.
 - 2026-11-06 Phase 1: D1 to D5 are listed in `decisions.md`; they are applied in Phase 2.
+- 2026-11-06 Phase 1: bootstrap committed as 1cd9170 and pushed to origin/factory. GitHub default branch stays main. Skills gate passed: hexagonal-slice, clean-hexagonal-onion, ddd-building-blocks and layer-testing all appear in the session and load.
