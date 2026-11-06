@@ -1,0 +1,5 @@
+# Agent OS Standards Index
+
+root:
+  architecture:
+    description: Pointer to the Clean Hexagonal Onion architecture standard and the factory skills that apply it
