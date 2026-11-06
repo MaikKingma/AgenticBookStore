@@ -1,2 +1,3 @@
 - [Scaffold verification techniques](scaffold-verification-techniques.md) — regeneration diff with -w, wrapper sha, grep controls, BOM tally, snapshot script and cmp for probes, valid ArchUnit spike
 - [Shell traps](shell-traps.md) — zsh glob/find-paren failures that look like empty results, quoted paths with spaces, -l referee log, missing new mailbox
+- [Spring runtime probes](spring-runtime-probes.md) — always `clean test` for probes (stale target/), Docker-down recipe, entity probe rmdir, cleaner mutations, live spring-boot:run handling
