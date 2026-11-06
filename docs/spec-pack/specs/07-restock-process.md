@@ -26,7 +26,8 @@ distributor for more. It shows why events are published after commit and why the
 ## Out of scope
 - Asynchronous execution (`@Async`), retries with backoff, outbox pattern. The listener runs synchronously after
   commit, so the HTTP response that triggered the event waits for the restock call. This is a conscious trade-off
-  for simplicity and testability; document it in `docs/architecture.md`.
+  for simplicity and testability; document it in the Javadoc of `RequestRestockDelegate` and in the PR description,
+and carry it into `docs/architecture.md` when spec 09 creates that file.
 
 ## Behaviour
 - No restock is requested while one is pending (`requestRestock` returns without calling the distributor).
@@ -103,7 +104,7 @@ Receiving stock SHALL clear a pending restock.
 2. Flow methods `handleStockRunningLow`, `requestRestock`; default mocked port in `IntegrationTestBase`; migration `V4`.
 3. `EventProcessor`, `RequestRestockDelegate` (with `REQUIRES_NEW`).
 4. Manual retry endpoint, `PendingRestockView`, `StockView` extension.
-5. Integration test, ArchUnit exception and fixture, `docs/architecture.md` trade-off note, `http/inventory.http` update.
+5. Integration test, ArchUnit exception and fixture, the trade-off note (Javadoc and PR description; spec 09 moves it into `docs/architecture.md`), `http/inventory.http` update.
 
 ## Definition of done
 - Scenarios covered; `./mvnw verify` green; ArchUnit green with exactly one documented exception.

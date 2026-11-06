@@ -60,7 +60,8 @@ spec and the architecture standard contradict each other, stop and ask.
 
 - `<System>AppServiceImpl` with Spring `RestClient`; external payloads as private nested records; base URL from
   configuration (`distributor.base-url`).
-- Every failure (connection, timeout, 4xx, 5xx, unexpected body) becomes a port exception.
+- Every failure (connection, timeout, 4xx, 5xx, unexpected body) becomes a port exception, except where the spec
+  maps a status to a value (spec 06: a 404 from `findTitle` is `Optional.empty()`).
 - Test: contract test with `MockRestServiceServer`. Never call the real distributor from a test.
 
 ## Step 6: inbound adapter
@@ -69,7 +70,8 @@ spec and the architecture standard contradict each other, stop and ask.
 
 - `POST /{resource}/commands/{action}` for collection-level commands, `POST /{resource}/{id}/commands/{action}`
   for instance commands.
-- Body is a `<Action>Payload` record with Jakarta Validation annotations.
+- Body is a `*Payload` record named after the action as the spec names it (`AddBookPayload`, `PlaceOrderPayload`,
+  `ImportBookPayload`), with Jakarta Validation annotations.
 - Success is `202 Accepted`; creating an aggregate returns `CommandResult(id)`.
 
 **`query`**:
@@ -83,6 +85,13 @@ spec and the architecture standard contradict each other, stop and ask.
   `<Action>Delegate`.
 - The delegate runs `@Transactional(propagation = REQUIRES_NEW)` and calls exactly one flow method.
 
+**`assistant`** (spec 08 only):
+
+- `AssistantCommands` (`POST /assistant/chat`, 200 with `AssistantReplyView`), `ChatPayload`, the `*View` records,
+  `BookstoreTools` (`@Tool` methods that call flows only), `AssistantConfig`, `AssistantProperties`,
+  `AssistantRateLimiter`, `AssistantExceptionHandler`. Spring AI types appear nowhere else.
+- Test: `@WebMvcTest` for the endpoint, mocked flows for the tools, `ScriptedChatModel` end to end.
+
 **All of them**:
 
 - The package's `*ExceptionHandler` maps the four use-case exceptions to RFC 9457 `ProblemDetail`.
@@ -93,8 +102,9 @@ spec and the architecture standard contradict each other, stop and ask.
 
 ## Step 7: end to end
 
-- One `*IntegrationTest` per acceptance scenario that crosses layers: full context, PostgreSQL, real HTTP through
-  MockMvc or `RestTestClient`.
+- One `*IntegrationTest` class per capability (`CatalogueIntegrationTest`, `OrderIntegrationTest`), extending
+  `IntegrationTestBase`, with one test method per acceptance scenario that crosses layers: full context,
+  PostgreSQL, real HTTP through MockMvc or `RestTestClient`.
 - For event-driven scenarios, assert the effect of the `process` listener after the commit.
 
 ## Step 8: verify and hand back

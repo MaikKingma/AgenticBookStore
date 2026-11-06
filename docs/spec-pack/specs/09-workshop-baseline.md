@@ -1,6 +1,6 @@
 # Spec 09: Workshop baseline (seed data, human docs, sanitised main, lab-1 tag)
 
-> Modules: both · Depends on: 01 to 08 · Capability: `workshop-baseline`
+> Modules: all · Depends on: 01 to 08 and 12 · Capability: `workshop-baseline`
 
 ## Why
 This spec turns a finished app into a workshop starting point: realistic demo data, the documentation a real
@@ -21,8 +21,9 @@ that Lab 1 actually produces the failure modes the keynote promises.
 - Flyway locations: the main `application.yml` (default profile) sets `classpath:db/migration,classpath:db/seed`;
   `application-test.yml` sets `classpath:db/migration` only.
 - The seed is a repeatable migration `db/seed/R__seed_demo_data.sql` (no version number, so it never interferes
-  with the numbering of new migrations in `db/migration`). Every statement is idempotent and portable between H2 and
-  PostgreSQL (`INSERT INTO ... SELECT ... WHERE NOT EXISTS (...)`).
+  with the numbering of new migrations in `db/migration`). Every statement is idempotent PostgreSQL SQL
+  (`INSERT INTO ... ON CONFLICT DO NOTHING` or `INSERT INTO ... SELECT ... WHERE NOT EXISTS (...)`). There is no
+  other database to stay portable with.
 - 40 books. 20 of them are exactly the ISBNs in `distributor/src/main/resources/catalog/bookstore-shared-isbns.txt`
   (spec 05), with the same titles and authors. The other 20 are bookstore-only. Mix genres; a few discontinued
   (bookstore-only ones).
@@ -33,11 +34,16 @@ that Lab 1 actually produces the failure modes the keynote promises.
 - ISBNs must pass the checksum; data is fictional demo data (state this in the README).
 
 ## Human documentation
-- `README.md` (at most 120 lines): what the app is, prerequisites (Java 25 only), run commands for both modules,
-  the module map, a short architecture paragraph with the onion diagram and a link to `docs/architecture.md`,
-  endpoint overview, "Assistant" section (`BOOKSTORE_AI_API_KEY`, offline mode, and the warning not to use
-  `ANTHROPIC_API_KEY`), test commands. It reads like a normal team README. It contains no instructions addressed to
-  AI agents.
+- `README.md` (at most 120 lines): what the app is, prerequisites (Java 25 and Docker; no Node.js, the build installs
+  its own), run commands: `./mvnw verify` once, then `./mvnw -pl bookstore spring-boot:run` (starts PostgreSQL through Docker
+  Compose, serves the storefront built by the full build at http://localhost:8080/shop/) and `./mvnw -pl distributor spring-boot:run`, plus how to run the jar
+  against an existing PostgreSQL (`SPRING_DATASOURCE_URL`, user and password `bookstore`) and how to reset the
+  database (`docker compose -f bookstore/compose.yaml down`); the module map including `frontend/` and `guide/`;
+  a short architecture paragraph with the onion diagram and a link to `docs/architecture.md`; endpoint overview;
+  a "Storefront" section (`/shop/`, Vite dev server for UI work with the Maven-installed npm: `frontend/node/npm run dev` in `frontend/`, proxy to 8080);
+  "Assistant" section (`BOOKSTORE_AI_API_KEY`, offline mode, and the warning not to use `ANTHROPIC_API_KEY`);
+  test commands (`./mvnw verify` needs Docker running). It reads like a normal team README. It contains no
+  instructions addressed to AI agents.
 - `docs/architecture.md`: the architecture standard of this pack, rewritten for the team (layers, rules, naming,
   testing, the documented process exception, the synchronous restock trade-off). Lab 2 imports it from `CLAUDE.md`.
 - `http/*.http`: `catalogue.http`, `inventory.http`, `orders.http`, `assistant.http`, `distributor.http`,
@@ -47,13 +53,19 @@ that Lab 1 actually produces the failure modes the keynote promises.
 `scripts/publish-workshop-main.sh` (bash, idempotent):
 1. Requires a clean working tree on `factory`.
 2. Creates a temporary worktree of `factory`, removes these paths if present: `CLAUDE.md`, `CLAUDE.local.md`,
-   `AGENTS.md`, `.claude/`, `.mcp.json`, `openspec/`, `.specify/`, `specs/`, `agent-os/`, `.githooks/`,
-   `docs/spec-pack/` (this pack contains the lab solutions and facilitator notes, so it must never reach `main`).
+   `AGENTS.md`, `.claude/` (this includes the SDD tooling's `.claude/agent-memory/`, `.claude/comms/`,
+   `.claude/worktrees/`, `.claude/commands/`, `.claude/skills/` and `.claude/settings.json`), `.mcp.json`,
+   `openspec/`, `.specify/`, `specs/`, `agent-os/` (including the `agent-os/product` symlink and
+   `agent-os/specs/`, where the SDD cycle writes its plan artefacts), `.githooks/`,
+   `docs/spec-pack/` (this pack contains the lab solutions, the orchestrator progress file and facilitator notes,
+   so it must never reach `main`). The list lives once, in the script, and the CI guard below reads the same list.
 3. Commits the result as a single commit "Agentic Bookstore: workshop baseline" on an orphan-based `main`
    (history starts fresh, so participants do not see agent-generated history), force-updates `main`, and moves tag
    `lab-1-start` to it. Prints what it removed.
 
-CI job `no-agent-config` (runs only on `main` and on tag `lab-1-start`): fails if any of the paths above exist.
+CI job `no-agent-config` (runs only on `main` and on tag `lab-1-start`): fails if any of the paths above exist,
+including `.claude/agent-memory`, `.claude/comms`, `.claude/worktrees`, `agent-os/specs` and `docs/spec-pack`,
+and names the offending path.
 
 ## Lab 1 traps (verify they are present, do not add hints)
 - No discount, percentage or promotion concept anywhere.
@@ -67,8 +79,8 @@ CI job `no-agent-config` (runs only on `main` and on tag `lab-1-start`): fails i
 The application SHALL load the demo data when run locally and SHALL never load it in tests.
 
 #### Scenario: Local run
-- **WHEN** the bookstore starts with the default profile and `GET /books` is called
-- **THEN** 40 books are returned
+- **WHEN** the bookstore starts with the default profile (PostgreSQL through Docker Compose support) and `GET /books` is called
+- **THEN** 40 books are returned, and the storefront at `/shop/` lists them
 
 #### Scenario: Tests are unaffected
 - **WHEN** the test suite runs
@@ -83,9 +95,9 @@ The `main` branch SHALL contain no agent or SDD configuration, enforced by CI.
 - **THEN** the `no-agent-config` job fails and names the path
 
 #### Scenario: Publishing
-- **GIVEN** `factory` contains `CLAUDE.md`, `.claude/`, `openspec/` and `docs/spec-pack/`
+- **GIVEN** `factory` contains `CLAUDE.md`, `.claude/` (with `agent-memory/` and `skills/`), `agent-os/` (with the `product` symlink and `specs/`) and `docs/spec-pack/`
 - **WHEN** `scripts/publish-workshop-main.sh` runs
-- **THEN** `main` has one commit, none of those paths, `./mvnw verify` is green on it, and tag `lab-1-start` points to it
+- **THEN** `main` has one commit, none of those paths, `./mvnw verify` is green on it (CI on `ubuntu-latest` with Docker), and tag `lab-1-start` points to it
 
 ### Requirement: Lab 1 produces observable failures
 The baseline SHALL make the Lab 1 task fail visibly for an unconfigured agent in most runs.
@@ -105,7 +117,7 @@ Fallback Lab 1 prompts (more ambiguous, same area):
 - A script test (bash, run in CI on Linux) for `publish-workshop-main.sh` against a temporary repository.
 
 ## Tasks
-1. Seed SQL, Flyway location config per profile.
+1. Seed SQL (PostgreSQL syntax), Flyway location config per profile.
 2. `docs/architecture.md`, `README.md`, `http/` collection.
 3. Publish script, its test, CI guard job.
 4. Run the script; verify `main`; create tag.

@@ -1,6 +1,6 @@
 # Spec 11: Workshop guide site (Docusaurus)
 
-> Repository: `agentic-harness-workshop` · Depends on: 10 (for branch names) · Capability: `workshop-guide`
+> Folder: `guide/` in `MaikKingma/AgenticBookStore` · Depends on: 10 (for branch names) · Capability: `workshop-guide`
 
 ## Why
 Participants work at different speeds. A self-paced guide lets fast people move on and slow people catch up, while
@@ -8,7 +8,9 @@ the facilitator's sync moments keep the room together. The guide must work on a 
 and stay online after the workshop as take-home material.
 
 ## What changes
-- A Docusaurus 3 site (classic preset, docs-only mode, no blog) deployed to GitHub Pages.
+- A Docusaurus 3 site in `guide/` (classic preset, docs-only mode, no blog) deployed to GitHub Pages of this
+  repository. The version is pinned in `product/tech-stack.md`. `guide/` is not a Maven module: it has its own
+  `package.json`, and CI installs the pinned Node.js with `actions/setup-node`. Participants never need Node.js.
 - Content generated from `workshop/workshop-plan.md`, `workshop/sdd-framework-guide.md` and
   `workshop/lab-4-feature-briefs.md` of this pack. Those files stay the source of truth; the site restructures them
   for participants and removes facilitator-only notes (expected findings, risk table, rehearsal notes).
@@ -19,7 +21,7 @@ and stay online after the workshop as take-home material.
 
 ## Information architecture
 ```
-docs/
+guide/docs/
   index.md                      # Welcome, agenda, what you will build, how to use this guide
   00-before-you-start.md        # Prerequisites (mirrors the participant email), Lab 0 setup check
   01-lab-break-the-agent.md
@@ -69,7 +71,7 @@ The guide SHALL be usable without network access.
 
 #### Scenario: Offline bundle
 - **GIVEN** the release zip extracted on a laptop without network
-- **WHEN** the participant opens it with `npx serve` or by opening `index.html` (configure the build for relative paths, *verify* which works with the chosen Docusaurus version)
+- **WHEN** the participant opens `index.html` from the extracted folder in a browser (configure the build for relative paths; *verify* with the pinned Docusaurus version; participants have no Node.js, so no `npx serve`)
 - **THEN** all pages, images and code blocks render
 
 ### Requirement: Readable next to a terminal
@@ -80,7 +82,7 @@ The guide SHALL be readable at half-screen width on a 13-inch laptop.
 - **THEN** there is no horizontal page scroll and code blocks scroll on their own
 
 ### Requirement: Deployed automatically
-Pushes to `main` SHALL build and deploy the site to GitHub Pages; pull requests SHALL build without deploying.
+Pushes to `factory` that touch `guide/**` SHALL build and deploy the site to GitHub Pages; pull requests that touch `guide/**` SHALL build without deploying. Nothing deploys from `main`: it is published by spec 09 before `guide/` exists, and a later republish would only carry `guide/` as a plain folder. Guide fixes never require a republish of `main` (decision of 2026-11-06).
 
 #### Scenario: Broken link
 - **GIVEN** a page links to a missing page
@@ -88,12 +90,14 @@ Pushes to `main` SHALL build and deploy the site to GitHub Pages; pull requests 
 - **THEN** the build fails (`onBrokenLinks: 'throw'`)
 
 ## Tasks
-1. Scaffold Docusaurus 3 (classic, TypeScript config), docs-only, OpenValue AI colours from the OpenValue design system.
+1. Scaffold Docusaurus (pinned version, classic, TypeScript config) in `guide/`, docs-only, OpenValue AI colours
+   from the OpenValue design system. Add `guide/.docusaurus/` and `guide/build/` to the root `.gitignore`.
 2. Write `index.md`, `00-before-you-start.md`, `reference/*`.
 3. Write Lab 1 to Lab 4 pages and the SDD tracks from the pack.
 4. Tabs for OS-specific commands, admonitions for sync moments and checkpoints.
-5. GitHub Actions: build on PR, deploy on main, attach zip to release `workshop-2026`.
-6. Review pass: run every command in the guide on a clean machine against the bookstore repository.
+5. GitHub Actions workflow `guide.yml` with `paths: [guide/**]`: build on PR, deploy on push to `factory`,
+   attach zip to release `workshop-2026`.
+6. Review pass: run every command in the guide on a clean machine against `main` of this repository.
 
 ## Definition of done
 - Site live, offline zip available, every command executed once on a clean machine, no broken links.

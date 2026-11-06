@@ -36,14 +36,17 @@ Lab 4 intact, because shipping a feature end-to-end is the payoff of the day.
 
 ## 3. Lab 0: Setup check (before and at the start)
 
-Participants should arrive with this done (see the participant email). On the day, in the first 10 minutes:
+Participants should arrive with this done (see the participant email): Claude Code, Temurin 25, git, and Docker
+Desktop (or another Docker engine) installed and running. Node.js is not needed: the build installs its own copy.
+On the day, in the first 10 minutes:
 
 ```bash
 claude --version            # Claude Code installed
 claude                      # then /status: logged in with a Pro/Max/Team/Enterprise account
 java -version               # 25
-git clone https://github.com/<org>/agentic-bookstore.git && cd agentic-bookstore
-./mvnw verify               # green, under a minute (dependencies were downloaded at home)
+docker info                 # Docker is running (tests and the local database need it)
+git clone https://github.com/MaikKingma/AgenticBookStore.git && cd AgenticBookStore
+./mvnw verify               # green, under a minute (dependencies and the PostgreSQL image were downloaded at home)
 ```
 
 Then set the workshop key (shown on the screen, never committed):
@@ -56,14 +59,16 @@ $env:BOOKSTORE_AI_API_KEY="<key on screen>"     # Windows PowerShell
 Also inside Claude Code: `/model sonnet`. Pro usage limits are shared over a 5-hour window and Opus (the default)
 drains them faster; Sonnet comfortably covers four hours of labs.
 
-Facilitator fallback kit: USB sticks with the repo, a pre-filled `~/.m2` archive, the Temurin 25 installers, and the
-distributor jar.
+Facilitator fallback kit: USB sticks with the repo, a pre-filled `~/.m2` archive, the Temurin 25 installers, the
+Docker Desktop installers, the PostgreSQL image (`docker save`), the frontend's `node/` and `node_modules/` folders,
+and the distributor jar.
 
 ## 4. Lab 1: Break the agent (25 min)
 
 **Goal:** experience the failure modes on a codebase where the agent knows nothing about our conventions.
 
-**Start:** `main` (tag `lab-1-start`). No `CLAUDE.md`, no `.claude/`, no MCP.
+**Start:** `main` (tag `lab-1-start`). No `CLAUDE.md`, no `.claude/`, no MCP. The app has a React storefront in
+`frontend/`; the task below is about the catalogue API, and the storefront is where participants see the result.
 
 **Sync moment (3 min):** Maik opens the repo, shows the onion diagram and the `ArchitectureTest`, then gives the
 task below to Claude Code live without any context. The room sees the first minute of what it does.
@@ -151,7 +156,7 @@ Create `.claude/settings.json` (shared, committed):
 {
   "permissions": {
     "allow": ["Bash(./mvnw *)", "Bash(git status *)", "Bash(git diff *)", "Bash(git add *)", "Bash(git commit *)"],
-    "deny":  ["Read(./.env)", "Read(./.env.*)", "Bash(git push *)", "Bash(* --no-verify*)", "Bash(git commit -n *)"]
+    "deny":  ["Read(./.env)", "Read(./.env.*)", "Bash(git push)", "Bash(git push *)", "Bash(* --no-verify*)", "Bash(git commit -n *)"]
   }
 }
 ```
@@ -225,7 +230,7 @@ harness you built.
 | B: Spec Kit | `start/lab-4-speckit` | Heavier, most guard rails | `/speckit-specify`, `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-implement`, `/speckit-converge` |
 | C: Agent OS | `start/lab-4-agentos` | Light, standards-centric | `/plan` then `/shape-spec`, `/inject-standards`, implement the plan |
 
-Detailed track instructions: `sdd-framework-guide.md`, section 3.
+Detailed track instructions: `sdd-framework-guide.md`, Part 2.
 
 **Pick a feature brief** (`lab-4-feature-briefs.md`): A) book reviews and ratings, B) wishlist with back-in-stock
 notification, C) the assistant recommends titles from the distributor.
@@ -253,7 +258,8 @@ spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes.
 
 | Risk | Mitigation |
 |---|---|
-| Conference wifi | Participants run `./mvnw verify` at home (dependencies cached). USB kit with `~/.m2` archive. Distributor runs locally. |
+| Conference wifi | Participants run `./mvnw verify` at home (Maven dependencies, the local Node.js, npm packages and the PostgreSQL image are then cached). USB kit with `~/.m2` archive, `docker save` of the image, and the frontend caches. Distributor runs locally. |
+| Docker missing or not running | Lab 0 checks `docker info`. Docker Desktop installers on the USB kit. Pairing as fallback. |
 | Pro usage limit reached | `/model sonnet` from Lab 0. `/usage` to check. Pair up if someone hits the limit. Facilitator has a spare Max account for demos. |
 | `ANTHROPIC_API_KEY` exported by a participant | Claude Code would switch to that key. We only ever use `BOOKSTORE_AI_API_KEY`. Lab 0 checks `/status` shows the subscription. |
 | Workshop key abuse | Console spend limit, key scoped to a workshop workspace, revoked after the session. |

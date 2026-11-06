@@ -1,6 +1,6 @@
 # J-Fall 2026 Workshop Pack: Crafting your Agentic Harness
 
-Everything needed to build and run the 4-hour pre-conference workshop: the specs to build the codebases with a
+Everything needed to build and run the 4-hour pre-conference workshop: the specs to build the codebase with a
 spec-driven development framework, the facilitator plan, the SDD track instructions, and the keynote outline.
 
 ## What is in here
@@ -11,23 +11,27 @@ spec-driven development framework, the facilitator plan, the SDD track instructi
 | `product/tech-stack.md` | Pinned versions and key properties (verified 2026-11-06) | SDD framework, builders |
 | `product/architecture-standard.md` | Clean Hexagonal Onion rules: layers, dependencies, naming, testing | SDD framework (constitution / standard / context) |
 | `product/roadmap.md` | Build order, repositories, factory branch, lab branches, build-week milestones | Maik |
-| `specs/01` to `specs/11` | One spec per increment, each with Why, scope, design notes, requirements with scenarios, tests, tasks, definition of done | SDD framework, one spec per cycle |
+| `specs/01` to `specs/12` | One spec per increment, each with Why, scope, design notes, requirements with scenarios, tests, tasks, definition of done | SDD framework, one spec per cycle |
 | `workshop/workshop-plan.md` | Agenda, Labs 0 to 4 step by step, sync moments, debriefs, risks | Maik; source for the guide site |
 | `workshop/sdd-framework-guide.md` | Using this pack with OpenSpec, Spec Kit or Agent OS, and the three Lab 4 tracks | Maik and participants |
 | `workshop/lab-4-feature-briefs.md` | Three deliberately vague feature requests for Lab 4 | Participants |
-| `keynote/keynote-outline.md` | Slide-by-slide text, speaker notes and image credits of the keynote deck | Maik |
-| `factory-harness/skills/` | Project-local Claude Code skills for the factory build: `clean-hexagonal-onion`, `ddd-building-blocks`, `hexagonal-slice`, `layer-testing`. Installed into `.claude/skills/` before the first spec | Orchestrator, factory branch only |
-| `orchestrator-prompt.md` | The paste-in prompt that bootstraps the mono repo and runs the SDD loop spec by spec | Maik |
+| `orchestrator/progress.md` | Factory progress: phase, spec status, verify times, open questions, manual checks, decision log | Orchestrator, Maik |
+| `orchestrator/sdd-mapping.md` | The SDD tooling mapped to the cycle stages, and the folders it writes to | Orchestrator |
+| `orchestrator/decisions.md` | Decisions D1 to D5 and the files they changed | Orchestrator, Maik |
+
+Not copied into this repository: the source pack also holds `keynote/keynote-outline.md`, `orchestrator-prompt.md` and
+`factory-harness/skills/`. The four factory skills (`clean-hexagonal-onion`, `ddd-building-blocks`, `hexagonal-slice`,
+`layer-testing`) are installed in `.claude/skills/` of this repository on `factory`.
 
 Keynote deck (OpenValue design system, 31 slides): https://claude.ai/artifact/LzTLM2vMwHniX1fsdWg7ed
 
 ## How to use the specs
-1. Create the `agentic-bookstore` repository with a `factory` branch and copy this pack to `docs/spec-pack/`.
+1. Create the `AgenticBookStore` mono repository with a `factory` branch and copy this pack to `docs/spec-pack/`.
 2. Pick your SDD framework and follow `workshop/sdd-framework-guide.md` Part 1.
-3. Run one spec per cycle, in order 01 to 10. Each spec is self-contained but assumes the previous ones are merged
-   with `./mvnw verify` green.
+3. Run one spec per cycle, in order 01, 02, 03, 04, 05, 06, 07, 08, 12, 09, 10, 11. Each spec is self-contained but
+   assumes the previous ones are merged with `./mvnw verify` green.
 4. Spec 09 publishes the participant `main` without any agent or SDD files. Spec 10 creates the lab branches.
-5. Spec 11 builds the Docusaurus guide in a second repository.
+5. Spec 11 builds the Docusaurus guide in `guide/` of the same repository.
 
 Spec format: every requirement uses `### Requirement:` with SHALL wording and `#### Scenario:` blocks with
 **GIVEN**/**WHEN**/**THEN** bullets. That is valid OpenSpec delta syntax and maps one-to-one to Spec Kit acceptance
@@ -36,14 +40,16 @@ scenarios and Agent OS shape documents.
 ## Decisions I made that you may want to change
 | Decision | Choice in this pack | Alternative |
 |---|---|---|
-| Build tool | Maven wrapper, multi-module | Gradle (start.spring.io default) |
-| Database | H2 in-memory for tests and local runs; optional PostgreSQL profile | Postgres + Testcontainers as default (adds Docker as a prerequisite) |
+| Build tool | Maven wrapper, multi-module; the React storefront is built by the same `./mvnw verify` through frontend-maven-plugin | Gradle (start.spring.io default) |
+| Database | PostgreSQL only: Docker Compose for local runs, Testcontainers for tests (Docker is a prerequisite) | H2 in-memory (zero install, but a database nobody runs in production) |
 | Migrations | Flyway (plain SQL) | Liquibase, as in your earlier workshop |
 | Lombok | Not used (records, Java 25) | Lombok as in the earlier workshop |
 | Root package | `nl.openvalue.bookstore`, `nl.openvalue.distributor` | Any other |
 | Domain | Original bookstore domain: catalogue, inventory, orders, restocking, assistant | Closer to the publishing domain of the earlier workshop |
 | Distributor | Separate module, deliberately foreign model, read-only MCP tools, runs locally | Centrally hosted instance |
 | Spec pack location | Copied to `docs/spec-pack/` on `factory` only; the publish script strips it from `main` (it contains the lab solutions) | Keep it in a separate private repository |
+| Repositories | One mono repository (`bookstore`, `distributor`, `frontend`, `guide`) | A separate guide repository |
+| Storefront | React + Vite in `frontend/`, served by the bookstore under `/shop/` (spec 12) | A static chat page only |
 | Lab exercises kept out of the baseline | Discounts (Lab 1/2), cancel order (Lab 3), multi-role contributor contract test and `list_new_releases` MCP tool (Lab 3) | Different exercises |
 | Agenda | Keynote 45 min, labs 25/35/50/45, break 15, wrap-up 15 | Longer keynote by shortening Lab 3 stretch goals |
 

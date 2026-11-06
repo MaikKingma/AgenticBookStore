@@ -24,10 +24,12 @@ Each branch adds files on top of the previous one. `./mvnw verify` stays green o
 ```markdown
 # Agentic Bookstore
 
-Spring Boot 4.1 / Java 25 online bookstore (module `bookstore`) and a fake book distributor (module `distributor`).
+Spring Boot 4.1 / Java 25 online bookstore (module `bookstore`, PostgreSQL in Docker), a fake book distributor
+(module `distributor`) and a React storefront (module `frontend`, built by Maven, served at `/shop/`).
 
 ## Commands
-- Build and test everything: `./mvnw verify` (Windows: `mvnw.cmd verify`). Always use the wrapper, never `mvn`.
+- Build and test everything: `./mvnw verify` (Windows: `mvnw.cmd verify`). Docker must be running (Testcontainers).
+  Always use the wrapper, never `mvn`.
 - One test class: `./mvnw -pl bookstore test -Dtest=BookTest`
 - Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8090)
 
@@ -90,7 +92,8 @@ paths:
 ---
 # Tests
 - One test class per production class, same package, suffix `Test`; end-to-end tests end with `IntegrationTest`.
-- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest`. ACL: `MockRestServiceServer`.
+- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testcontainers
+  PostgreSQL (`@Import(PostgresTestConfig.class)`, never an embedded database). ACL: `MockRestServiceServer`.
 - Never call the real distributor or a real LLM. The assistant uses `ScriptedChatModel`.
 - Name tests after behaviour: `rejectsOrderWhenStockIsInsufficient`.
 - Never weaken or delete an `ArchitectureTest` rule to make a build pass.
@@ -342,7 +345,7 @@ contradicts `CLAUDE.md`.
    version's `docs/customization.md`*):
    ```yaml
    context: |
-     Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: bookstore, distributor.
+     Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
      Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
      Definition of done: ./mvnw verify green, every scenario covered by a test.
    rules:

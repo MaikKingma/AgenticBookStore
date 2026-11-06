@@ -11,7 +11,10 @@ No code is reused from earlier workshop repositories: only the layering, naming 
 ## 1. The layers
 
 Root package: `nl.openvalue.bookstore` (bookstore module) and `nl.openvalue.distributor` (distributor module).
-The bookstore module has exactly these top-level packages under the root:
+The root package of the bookstore holds `BookstoreApplication` and only the cross-cutting configuration a spec
+explicitly puts there (spec 04: the `Clock` bean; spec 12: `StorefrontConfig`, which serves the storefront and
+touches no layer). Configuration of one adapter stays in that adapter. The bookstore module has exactly these
+top-level packages under the root:
 
 ```
                  +-----------------------------------------------------------+
@@ -148,13 +151,17 @@ packages such as `org.springframework.data.domain` never match.
 | `domain` | Pure unit tests, no Spring | JUnit, AssertJ | `BookTest` |
 | `domaininteraction` | Unit tests with mocked ports | JUnit, Mockito, AssertJ | `CatalogueFlowTest` |
 | `command`, `query`, `assistant` | Web slice tests with mocked flows | `@WebMvcTest`, `@MockitoBean`, MockMvc | `BookCommandsTest` |
-| `data` | JPA slice tests on H2 | `@DataJpaTest` | `BookDataServiceImplTest` |
+| `data` | JPA slice tests on PostgreSQL | `@DataJpaTest` + Testcontainers PostgreSQL (`@ServiceConnection`, one shared container, `@AutoConfigureTestDatabase(replace = NONE)`) | `BookDataServiceImplTest` |
 | `acl` | HTTP contract tests against a mocked server | `MockRestServiceServer` bound to `RestClient.Builder` | `DistributorAppServiceImplTest` |
 | `process` | Unit tests for delegate and processor | JUnit, Mockito | `EventProcessorTest` |
-| End to end | Full context, H2, real HTTP | `@SpringBootTest` + MockMvc or `RestTestClient` | `*IntegrationTest` |
+| End to end | Full context, PostgreSQL via Testcontainers, real HTTP | `@SpringBootTest` + MockMvc or `RestTestClient` | `*IntegrationTest` |
 | Architecture | Layer, dependency and naming rules | ArchUnit `@ArchTest` | `ArchitectureTest` |
 
-- `./mvnw verify` runs everything and must stay under 60 seconds on a 2024 laptop (hooks run it).
+- `./mvnw verify` runs everything (including the frontend tests and build, spec 12) and must stay under 60 seconds
+  on a 2024 laptop (hooks run it). Record the time after every spec; over budget is an open question, never a reason
+  to trim tests.
+- There is no in-memory database anywhere. Every test that needs a database runs on PostgreSQL in Docker through
+  Testcontainers. Docker must be running; a missing Docker daemon is an environment error, not a reason to skip.
 - Every requirement scenario in a spec maps to at least one test. Test method names describe behaviour
   (`rejectsOrderWhenStockIsInsufficient`).
 - No test may call the real distributor or a real LLM.

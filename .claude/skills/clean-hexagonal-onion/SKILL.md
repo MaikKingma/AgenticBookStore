@@ -37,17 +37,17 @@ Walk this list top to bottom and take the first match.
 |---|---|
 | holds a business rule, an invariant, a state change, a domain event or a domain exception | `domain` |
 | orchestrates a use case, is a port interface, a DTO, a DTO-to-domain mapper or a use-case exception | `domaininteraction` |
+| belongs to the assistant (spec 08): touches Spring AI, or is its endpoint, payload, view, tools, config, properties, rate limiter or exception handler | `assistant` |
 | is an HTTP endpoint that changes state, or its request body | `command` |
 | is an HTTP endpoint that reads, or its response shape | `query` |
 | reacts to a domain event after commit | `process` |
-| touches Spring AI in any way | `assistant` |
 | is a JPA entity, a Spring Data repository or implements a `*DataService` port | `data` |
 | calls an external system (the distributor REST API) and implements an `*AppService` port | `acl` |
 
 Nothing fits? Stop and ask. Do not create `util`, `common`, `shared`, `config`, `ports` or `adapters` packages.
 The root package itself only holds `BookstoreApplication` and the cross-cutting configuration a spec explicitly puts
-there (spec 04: the `Clock` bean). Configuration of one adapter stays in that adapter (`AssistantConfig` in
-`assistant`).
+there (spec 04: the `Clock` bean; spec 12: `StorefrontConfig`), as section 1 of the standard says. Configuration of
+one adapter stays in that adapter (`AssistantConfig` in `assistant`).
 
 ## Dependency rules
 
@@ -98,7 +98,10 @@ Nested JSON shapes are top-level records with a proper suffix (`OrderLinePayload
 
 ## When ArchitectureTest fails
 
-Fix the design, never the rule. Never edit `ArchitectureTest` and never add an `ignoreDependency`.
+Fix the design, never the rule. Never weaken or remove a rule in `ArchitectureTest`. Add a rule only when the spec
+you implement asks for it (spec 02: the money rule; spec 06: the acl rule), with its fixture in `ArchitectureSelfTest`.
+The only `ignoreDependency` is the named `process` to `..domain..*Event` exception of the standard (spec 07); never
+add another.
 
 | Symptom | Fix |
 |---|---|

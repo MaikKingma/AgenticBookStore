@@ -19,15 +19,17 @@ report the difference.
 | `data` | JPA slice tests on PostgreSQL | `@DataJpaTest` + Testcontainers PostgreSQL | `StockItemDataServiceImplTest` |
 | `acl` | HTTP contract tests against a mocked server | `MockRestServiceServer` bound to `RestClient.Builder` | `DistributorAppServiceImplTest` |
 | `process` | Unit tests for processor and delegate | JUnit, Mockito | `EventProcessorTest` |
-| End to end | Full context, PostgreSQL, real HTTP | `@SpringBootTest` + MockMvc or `RestTestClient` | `ReceiveStockIntegrationTest` |
+| End to end | Full context, PostgreSQL, real HTTP; one class per capability, one method per scenario | `@SpringBootTest` + MockMvc or `RestTestClient`, extends `IntegrationTestBase` | `InventoryIntegrationTest` |
 | Architecture | Layer, dependency and naming rules | ArchUnit `@ArchTest` | `ArchitectureTest` |
+| Root package config (spec 12) | Web slice or full context test of the configuration | `@WebMvcTest` importing the config, or `@SpringBootTest` + MockMvc | `StorefrontConfigTest` |
+| Frontend (spec 12) | Component and client tests, `fetch` mocked; run by Maven before the Vite build | Vitest, React Testing Library, jsdom | `CataloguePage.test.tsx` |
 
 ## Rules for every test
 
 - Every acceptance scenario of the spec maps to at least one test. Keep the map; it is evidence for the definition
   of done.
 - Method names describe behaviour: `rejectsReservationWhenStockIsInsufficient`, not `testReserve2`.
-- No test calls the real distributor or a real LLM. The assistant uses its offline chat model in tests (spec 08).
+- No test calls the real distributor or a real LLM. Assistant tests use the `ScriptedChatModel` test double (spec 08).
 - Time is controlled through `Clock` (a fixed clock in tests), never `Thread.sleep` or `Instant.now()` assertions.
 - Assert outcomes and messages that the spec defines (status, `code`, `details`), not incidental strings.
 - One reason to fail per test. Prefer several small tests over one long scenario.
@@ -50,7 +52,7 @@ report the difference.
 
 **Web slices**:
 
-- status codes: 202 for commands, 200 for queries, `CommandResult` on create
+- status codes: 202 for commands, 200 for queries and for the assistant chat (spec 08), `CommandResult` on create
 - the `*View` JSON shape
 - ProblemDetail `title`, `detail`, `code` and `details` for each use-case exception
 - 400 with `code = validation-failed` and `{field, message}` details for bad payloads
@@ -66,7 +68,8 @@ report the difference.
 
 - request path, method and body sent to the distributor
 - mapping of a good response
-- every failure becomes a port exception: connection refused, timeout, 4xx, 5xx, malformed body
+- every failure becomes a port exception: connection refused, timeout, 4xx, 5xx, malformed body; except where the
+  spec maps a status to a value (spec 06: a 404 from `findTitle` is `Optional.empty()`)
 
 **`process`**:
 
@@ -88,16 +91,18 @@ report the difference.
   
   Spring's test context cache then reuses one container across test classes. Do not start a container per test
   class.
-- If Spring tries to replace the datasource with an embedded one, add `@AutoConfigureTestDatabase(replace = NONE)`.
+- Every `@DataJpaTest` carries `@AutoConfigureTestDatabase(replace = NONE)` (spec 01), so Spring never swaps in an
+  embedded database.
 - Flyway runs every migration in tests, and `ddl-auto=validate` then catches drift between entities and migrations.
   A validate failure means fix the migration or the entity, never switch validation off.
-- Keep tests independent of each other's data. Each test creates what it needs with unique keys, or cleans up in
-  `@AfterEach`. Do not rely on test order.
+- Keep tests independent of each other's data. Every `*IntegrationTest` extends `IntegrationTestBase`, whose
+  `DatabaseCleaner` truncates every application table in `@BeforeEach` (spec 01). JPA slice tests create what they
+  need with unique keys. Do not rely on test order.
 
 ## Speed budget
 
-- The standard says `./mvnw clean verify` stays under 60 seconds, and the Lab 3 commit hook times out at 180
-  seconds.
+- The standard says `./mvnw verify` stays under 60 seconds (the orchestrator measures `./mvnw clean verify`), and
+  the Lab 3 commit hook times out at 180 seconds.
 - Measure the time after each spec and record it.
 - When it exceeds 60 seconds, report it as an open question instead of trimming tests.
 
@@ -106,6 +111,7 @@ report the difference.
 1. Read the first failure, not the last.
 2. A failing test is information. Fix the production code, unless the test contradicts the spec. Then stop and ask;
    do not change the test on your own.
-3. Never `@Disabled`, never delete a test, never weaken an assertion, never edit `ArchitectureTest`.
+3. Never `@Disabled`, never delete a test, never weaken an assertion, never weaken or remove an `ArchitectureTest`
+   rule (adding the rule a spec asks for is fine, see `clean-hexagonal-onion`).
 4. Docker not running is an environment problem: report it, do not work around it.
 5. Run `./mvnw clean verify` again from the repo root before you claim green, and keep the summary lines as evidence.

@@ -20,8 +20,12 @@ Where each block lives is in the `clean-hexagonal-onion` skill. This skill is ab
   `changePrice`, `discontinue`. No `setX`, no public mutable fields, getters only where a DTO or mapper needs them.
 - **Invariants inside.** Every rule from the spec's domain model table is checked inside the aggregate. A violation
   throws a domain exception named after the broken rule.
-- **Time comes in.** Behaviour that needs the current time takes a `java.time.Clock` parameter (`ship(Clock)`),
-  never `Instant.now()` directly.
+- **Time comes in.** Behaviour that needs the current time gets it from a `java.time.Clock`, never from
+  `Instant.now()` or `Year.now()` directly. The spec's signatures win: where the spec names a `Clock` parameter
+  (`ship(Clock)`, `Order.place(..., Clock)`), take it there; where the spec's signature has no `Clock` but the
+  behaviour needs the time (spec 03: `reserve` and `correct` stamp `occurredAt`; spec 02: the publication-year
+  upper bound), the aggregate receives the `Clock` through its factories (`openFor`, `addToCatalogue`, `restore`)
+  and the flow passes its injected `Clock`. Tests use a fixed clock either way.
 - **Events are registered, not published.** The aggregate adds events to an internal list.
   `pullDomainEvents()` returns them and clears the list.
 
@@ -80,8 +84,8 @@ Fields, defaults and exact rules always come from the spec. The code above shows
 
 ## Domain events (`domain`)
 
-- Records that implement the marker interface `DomainEvent`. Named in the past tense with the suffix `Event`
-  (`StockRunningLowEvent`, `OrderPlacedEvent`).
+- Records that implement the marker interface `DomainEvent`, named after what happened, with the suffix `Event`,
+  exactly as the spec names them (`StockRunningLowEvent`, `OrderPlacedEvent`).
 - Fields use JDK types only (`UUID`, `int`, `BigDecimal`, `String`, `Instant occurredAt`). The `process` layer may
   depend on the event class and on nothing else from `domain`.
 - Raised once per meaningful change, as the spec defines (for example "once per dip below the threshold").
@@ -116,6 +120,7 @@ public class InventoryFlow {
 
     // constructor injection: ports, mappers, ApplicationEventPublisher, Clock if needed
 
+    // illustrative only: spec 04 puts reservation in OrderFlow.placeOrder and collects all shortages first
     public void reserveStock(UUID bookId, int quantity) {          // JDK types in
         StockItem item = mapper.toDomain(stockItems.findByBookId(bookId)); // port throws its NotFound exception
         try {

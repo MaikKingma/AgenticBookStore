@@ -13,7 +13,8 @@ around a shared API key. The assistant is an **inbound adapter** in the onion: i
 - System prompt as a resource: `src/main/resources/prompts/assistant-system.st`.
 - Chat memory per conversation (`MessageWindowChatMemory`, 20 messages, in-memory repository).
 - Offline mode when no API key is configured, and a rate limit that protects the shared workshop key.
-- A one-page chat UI at `/` (static `index.html`, vanilla JS, no build step).
+- No UI in this spec. The chat page is part of the React storefront (spec 12), which calls `POST /assistant/chat`.
+  This spec delivers the endpoint only; `http/assistant.http` (spec 09) and curl are the manual clients until then.
 
 ## Out of scope
 - Placing orders or changing anything through the assistant (read-only tools only).
@@ -72,9 +73,9 @@ The assistant SHALL answer questions about the catalogue using the tools and SHA
 - **THEN** `CatalogueFlow.search` is called with "austen" and the reply contains "Pride and Prejudice"
 
 #### Scenario: Manual live check (facilitator, with the workshop key)
-- **GIVEN** the seeded catalogue and `BOOKSTORE_AI_API_KEY` set
-- **WHEN** the facilitator asks "Recommend two science fiction books under 15 euro" in the chat UI
-- **THEN** the answer names only seeded books with correct prices (record the transcript in the PR)
+- **GIVEN** a running bookstore with at least five science fiction books in the catalogue (the seed data arrives with spec 09; until then add them through `POST /books/commands/add`) and `BOOKSTORE_AI_API_KEY` set
+- **WHEN** the facilitator posts "Recommend two science fiction books under 15 euro" to `POST /assistant/chat` (curl or an `.http` file; the storefront chat page of spec 12 repeats this check later)
+- **THEN** the answer names only books from the catalogue with correct prices (record the transcript in the PR)
 
 ### Requirement: Conversation memory
 The assistant SHALL remember the last 20 messages per conversation id and SHALL keep conversations separate.
@@ -124,8 +125,8 @@ The assistant SHALL reject messages longer than 1000 characters and SHALL limit 
    `MessageChatMemoryAdvisor`; conversation id via `ChatMemory.CONVERSATION_ID` advisor param.
 4. `AssistantCommands`, `AssistantRateLimiter` (simple sliding window), `AssistantExceptionHandler`.
 5. `ScriptedChatModel`, integration tests.
-6. `static/index.html` chat page (conversation id in `sessionStorage`, plain fetch to `/assistant/chat`).
-7. Manual live check with the workshop key; README section "Assistant".
+6. Manual live check with the workshop key over HTTP; README section "Assistant". No static page: the storefront
+   (spec 12) is the UI, so nothing is served at `/` by this spec.
 
 ## Definition of done
 - `./mvnw verify` green without any key; manual live check transcript recorded.
