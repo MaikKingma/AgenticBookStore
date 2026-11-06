@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle - pre-gate "clean tree" semantics, the path-reference ban vs .gitignore, probes failing for the wrong reason, ArchUnit vacuity guards, framework-warning ownership, hand-written frontmatter timestamps, scope arguments replacing global greps
+description: Recurring traps when writing verifier directives in this repo's SDD cycle - pre-gate "clean tree" semantics, the path-reference ban vs .gitignore, probes failing for the wrong reason, ArchUnit vacuity guards, framework-warning ownership, hand-written frontmatter timestamps, scope arguments replacing global greps, probes without clean, unguarded shared test hooks
 metadata:
   type: feedback
 ---
@@ -27,5 +27,9 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    **Why:** the lens-2 ordering check and stale-agent detection both silently trust a value nobody took from the clock.
 
 7. **Scope argument instead of a directive item.** Verifiers skip global greps as "untouched by this diff". Accept that only with a quoted scope proof plus my own cheap confirmation, and direct them to execute every global item literally.
+
+8. **Probes that remove a file need `clean`.** `./mvnw test` without `clean` keeps a moved migration or a deleted probe class in `target/`, so the probe passes falsely or the next probe fails for the previous one's reason. Write `clean test -Dtest=...` into every probe item.
+
+9. **Shared test-infrastructure hooks need a guard test, not a code-review fallback.** A "report whether removing `@BeforeEach` fails a test, else inspection" item leaves the hook unguarded, and once accepted at strategy time I cannot REJECT on it later. Demand a guard at strategy time instead: a `@TestInstance(PER_CLASS)` subclass seeds a row in `@BeforeAll`, and its test asserts the row is gone. Check also what a fixture really exercises: FK-linked tables truncated in ONE statement do not need CASCADE, and CASCADE masks a partial table list. Require an unlinked table.
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.
