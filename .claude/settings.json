@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(date:*)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git grep:*)",
+      "Bash(git show:*)",
+      "Bash(./mvnw:*)",
+      "Bash(mvn:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(docker:*)",
+      "Bash(curl:*)",
+      "Bash(bash ~/.claude/scripts/*)",
+      "Bash(~/.claude/scripts/sdd-worktree.sh:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git commit --no-verify:*)",
+      "Bash(git push --no-verify:*)",
+      "Read(./.env*)"
+    ]
+  }
+}
