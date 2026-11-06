@@ -1,0 +1,2 @@
+# Test-only overrides of application.yml. Surefire activates the test profile for every test.
+# Never add an application.yml to the test resources: it would shadow the main one.
