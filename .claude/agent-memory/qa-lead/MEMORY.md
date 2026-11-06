@@ -1,1 +1,1 @@
-- [QA directive traps](qa-directive-traps.md) — pre-gate "clean tree" = snapshot-identical; path-ban vs .gitignore; probes must fail for the stated reason; ArchUnit vacuity guards
+- [QA directive traps](qa-directive-traps.md) — pre-gate "clean tree" = snapshot-identical; path-ban vs .gitignore; probes must fail for the stated reason; ArchUnit vacuity guards; framework-warning ownership
