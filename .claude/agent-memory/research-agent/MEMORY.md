@@ -1,0 +1,1 @@
+- [Boot 4 verification techniques](boot4-verification-techniques.md) — source jars, scratchpad probe project, Docker-down simulation, 4.1.2 traps
