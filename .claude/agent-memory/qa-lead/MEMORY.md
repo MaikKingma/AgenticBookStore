@@ -1,1 +1,1 @@
-- [QA directive traps](qa-directive-traps.md) — clean-tree snapshots, .gitignore vs path ban, probes fail for stated reason, ArchUnit vacuity, warning ownership, mtimes, global greps, clean probes, hook guards, shared-scratchpad evidence names
+- [QA directive traps](qa-directive-traps.md) — traps in QA directives: snapshot rule, greps, probes, warnings, evidence files; read before writing a directive
