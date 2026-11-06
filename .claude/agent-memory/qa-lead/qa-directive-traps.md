@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle - pre-gate "clean tree" semantics, the path-reference ban vs .gitignore, probes failing for the wrong reason, ArchUnit vacuity guards, framework-warning ownership, hand-written frontmatter timestamps, scope arguments replacing global greps, probes without clean, unguarded shared test hooks, generic scratch evidence names overwritten across tasks, one violator per package string, annotation greps matching Javadoc
+description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files); numbered list below
 metadata:
   type: feedback
 ---
