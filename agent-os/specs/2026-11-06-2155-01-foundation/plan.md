@@ -34,7 +34,7 @@ Create the Maven multi-module build (Java 25, Spring Boot 4.1.2, Spring AI BOM 2
 | T1 | Build skeleton: both modules generated from start.spring.io with curl, root POM, single wrapper, .gitattributes, .gitignore, .editorconfig | root | [] | 1 | critical | opus | merged | PASS | ENDORSE | 1 | #2 (sdd/01-foundation/T1) | squash via PR #2 |
 | T2 | CI workflow: `verify` on ubuntu-latest, `windows-build` on windows-latest, on every push and every pull request | root | [T1] | 2 | elevated | sonnet | pr | PASS | ENDORSE | 1 | #3 (sdd/01-foundation/T2) | |
 | T3 | Bookstore runtime and database configuration plus test infrastructure | bookstore | [T1] | 2 | critical | opus | pr | PASS | ENDORSE | 1 | #4 (sdd/01-foundation/T3) | |
-| T6 | Distributor configuration (127.0.0.1, port 8090, actuator health and info) with context and health tests | distributor | [T1] | 2 | standard | sonnet | pending | | | 0 | | |
+| T6 | Distributor configuration (127.0.0.1, port 8090, actuator health and info) with context and health tests | distributor | [T1] | 2 | standard | sonnet | pr | PASS | ENDORSE | 1 | (pending) | |
 | T4 | Eight layer packages with package-info.java and ArchitectureTest (20 named rules passing on the empty packages) | bookstore | [T1] | 3 | critical | opus | pending | | | 0 | | |
 | T5 | Fixtures in nl.openvalue.archfixtures and ArchitectureSelfTest proving every rule bites | bookstore | [T4] | 4 | critical | opus | pending | | | 0 | | |
 
@@ -300,6 +300,9 @@ T5-5 `find bookstore/src/test/java/nl/openvalue/archfixtures bookstore/src/test/
 - W5 (from T3 meta-review; T6, T4, T5): run every probe as `./mvnw -pl <module> clean test -Dtest=<class>`. Without `clean`, a removed probe class or resource stays in `target/` and leaks into the next probe. Quote the failing line that names the current probe's class or rule.
 - W6 (T6): a test that reads a property (`@Value`, `Environment.getProperty`) is characterisation only. The 127.0.0.1:8090 bind criterion is proven only by the live `lsof` line, which must be quoted.
 - Follow-ups from the T3 meta-review (outside T3's criteria; carried into the qa-final brief and the spec 02 QA strategy): F1 guard test for the cleaning hook; F2 an unlinked table in the cleaner test so CASCADE cannot hide a partial table list; F3 assert the effective `hibernate.hbm2ddl.auto` from the EntityManagerFactory properties; F4 prove the shared container survives a context close once slice contexts exist.
+
+- W7 (from T6 meta-review; T4, T5): name every scratch evidence file with the task prefix (`t4-referee.log`, `t4-snap-before.txt`, `t4-p1.log`; `t5-m1.log` to `t5-m10.log`, `t5-referee.log`, `t5-snap-*.txt`) and cite each by absolute path, with its time later than the restore of the probe it records. Generic names in the shared session scratchpad get overwritten by the next verifier.
+- Follow-ups from the T6 meta-review (for the qa-final brief): F5 no test checks `server.port: 8090` (live run only); F6 no test pins the `info` exposure or that nothing else is exposed (live curls only); F7 `bindsToTheLoopbackAddressOnly` in both health tests only compares the property to a string (rename or drop in both modules).
 
 ## Amendments
 
