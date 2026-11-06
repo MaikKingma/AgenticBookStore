@@ -1,0 +1,1 @@
+- [Maven build traps](maven-build-traps.md) — wrapper output truncation, zsh globbing in Bash, mvnw.cmd LF vs eol=crlf, ArchUnit junit6 engine works, which stack skills exist
