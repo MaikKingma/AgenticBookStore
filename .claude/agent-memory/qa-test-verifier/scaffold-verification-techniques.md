@@ -17,4 +17,6 @@ Rule: prove provenance of generated files by regenerating, not by reading the im
 - Probes: a snapshot script in `.claude/comms/tmp/` writes porcelain status, the sha256 of every task file (and probe paths, recorded as ABSENT) and a `find` of the src trees to scratch; `cmp` the before, after-restore and after-referee files.
 - An ArchUnit engine spike counts only as Failures 1 / Errors 0 with an AssertionError raised from `ArchUnitTestDescriptor`, never as 0 tests. Use different rules from the impl's spike.
 
+- Workflow YAML (no actionlint installed): write your own `ruby -ryaml` checker (Psych loads `on` as `true`; assert `on` values are `nil` for unfiltered triggers), then prove it can fail by running it on a scratchpad copy mutated with sed (add `branches:`, drop a flag). Check pinned action majors exist with `gh api repos/<owner>/<action>/releases/latest --jq .tag_name`.
+
 Related: [[shell-traps]]
