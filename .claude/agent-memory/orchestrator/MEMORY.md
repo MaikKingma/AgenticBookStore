@@ -1,1 +1,2 @@
 - [Repo conventions](repo-conventions.md) — factory base branch, merge-commit rule for spec PRs, module vocabulary, no allowlist, pack spec is the source of truth
+- [Cycle lessons](cycle-lessons.md) — gh workflow scope and SSH push, CI check names, moved-base handling, memory guard and scratchpad traps, model choices

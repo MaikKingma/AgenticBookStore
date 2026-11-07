@@ -56,7 +56,9 @@ AgenticBookStore/
   `spring.docker.compose.file=./compose.yaml` relative to the module, *verify at build time* that `spring-boot:run`
   from the repo root with `-pl bookstore` resolves it). Further: `spring.jpa.hibernate.ddl-auto=validate`,
   `spring.jpa.open-in-view=false`, Flyway on, `server.address=127.0.0.1`, `server.port=8080`,
-  `management.endpoints.web.exposure.include=health,info`. Running the jar without Docker Compose support
+  `management.endpoints.web.exposure.include=health,info`, `management.endpoint.health.show-components=always`
+  (so the health response lists `db`, as the Compose scenario below expects; details stay hidden). Running the jar
+  without Docker Compose support
   (for example `java -jar`) uses `SPRING_DATASOURCE_URL`, documented in the README (spec 09).
 - Tests use the main `application.yml` (do NOT add `src/test/resources/application.yml`: it would shadow the main
   file and silently drop `ddl-auto=validate`). Test-only overrides go in `src/test/resources/application-test.yml`

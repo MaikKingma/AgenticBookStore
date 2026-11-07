@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -64,6 +66,20 @@ class ArchitectureSelfTest {
             Map.entry("DATA_CLASS_NAMES", List.of(FIXTURES + "data.BookRestController")),
             Map.entry("ACL_CLASS_NAMES", List.of(FIXTURES + "acl.DistributorClient")),
             Map.entry("DOMAININTERACTION_CLASS_NAMES", List.of(FIXTURES + "domaininteraction.CatalogueService")));
+
+    /** Naming rule field of ArchitectureTest to the exact suffix set of the architecture standard. */
+    private static final Map<String, Set<String>> EXPECTED_SUFFIXES = Map.ofEntries(
+            Map.entry("COMMAND_CLASS_NAMES", Set.of("Commands", "Payload", "CommandResult", "ExceptionHandler")),
+            Map.entry("QUERY_CLASS_NAMES", Set.of("Queries", "View", "ExceptionHandler")),
+            Map.entry("PROCESS_CLASS_NAMES", Set.of("EventProcessor", "Delegate")),
+            Map.entry("ASSISTANT_CLASS_NAMES", Set.of("Commands", "Tools", "Config", "Properties", "Payload", "View",
+                    "ExceptionHandler", "RateLimiter", "ChatModel")),
+            Map.entry("DATA_CLASS_NAMES", Set.of("DataServiceImpl", "JPA", "JPAMapper", "Repository")),
+            Map.entry("ACL_CLASS_NAMES", Set.of("AppServiceImpl", "Properties")),
+            Map.entry("DOMAININTERACTION_CLASS_NAMES", Set.of("Flow", "DataService", "AppService", "DTO",
+                    "DomainMapper", "Exception")));
+
+    private static final Pattern SUFFIX_IN_DESCRIPTION = Pattern.compile("simple name ending with '([^']+)'");
 
     private static JavaClasses fixtures;
 
@@ -118,6 +134,18 @@ class ArchitectureSelfTest {
         assertThat(bookControllerDetails)
                 .contains(bookController)
                 .contains("'Commands'", "'Payload'", "'CommandResult'", "'ExceptionHandler'");
+    }
+
+    @Test
+    void namingRulesPinExactlyTheSuffixesOfTheStandard() {
+        assertThat(EXPECTED_SUFFIXES.keySet()).allSatisfy(ruleField -> {
+            Matcher matcher = SUFFIX_IN_DESCRIPTION.matcher(rule(ruleField).getDescription());
+            Set<String> suffixes = new TreeSet<>();
+            while (matcher.find()) {
+                suffixes.add(matcher.group(1));
+            }
+            assertThat(suffixes).as("%s suffixes", ruleField).isEqualTo(new TreeSet<>(EXPECTED_SUFFIXES.get(ruleField)));
+        });
     }
 
     @Test
@@ -270,7 +298,11 @@ class ArchitectureSelfTest {
         assertThat(result.hasViolation()).as("%s reports a violation", ruleField).isTrue();
         List<String> details = result.getFailureReport().getDetails();
         for (String violator : EXPECTED_VIOLATORS.get(ruleField)) {
-            assertThat(details).as("%s names %s", ruleField, violator).anyMatch(detail -> detail.contains(violator));
+            // The violator must be the origin of the violation, not merely the target of another class's dependency.
+            Pattern asOrigin = Pattern.compile(
+                    "^(Class|Field|Method|Constructor|Static Initializer) <" + Pattern.quote(violator) + "[.$>].*");
+            assertThat(details).as("%s names %s as origin", ruleField, violator)
+                    .anyMatch(detail -> asOrigin.matcher(detail).matches());
         }
     }
 
