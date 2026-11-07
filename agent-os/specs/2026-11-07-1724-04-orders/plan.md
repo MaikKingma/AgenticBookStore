@@ -61,7 +61,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 | T1 | Domain: `EmailAddress`, `OrderId`, `OrderStatus`, `OrderLineRequest`, `OrderLine`, `Order`, `OrderPlacedEvent`, five domain exceptions; `EmailAddressTest`, `OrderTest`, `StockItemTest` additions (F28) | bookstore | [] | 1 | critical | opus | done (branch `sdd/04-orders/T1`) | PASS (r2) | ENDORSE | 2 | #32 | 9bfe41b |
 | T2 | `OrderDTO`, `OrderLineDTO`, `PlaceOrderLineDTO`, `OrderDomainMapper`, `OrderDataService` with nested `OrderNotFoundException`, `BookNotOrderableException`; `OrderDomainMapperTest`, `UseCaseExceptionsTest` additions | bookstore | [T1] | 2 | elevated | sonnet | done (branch `sdd/04-orders/T2`) | PASS (r3) | ENDORSE (r1 REJECT) | 3 | #33 | 319bf05 |
 | T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical | opus | done (branch `sdd/04-orders/T3`) | PASS (r3) | ENDORSE | 3 | #34 | 32657ce |
-| T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical (proposal) | opus (proposal) | planned | | | | | |
+| T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | done (branch `sdd/04-orders/T4`) | PASS (r3) | ENDORSE (r2 REJECT) | 3 | #35 | d956f76 |
 | T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
 | T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
 | T7 | `OrderIntegrationTest`, `OrderEventRecorder`, `IntegrationTestBase` edit, `IntegrationTestBaseHooksTest` additions | bookstore | [T5, T6] | 7 | critical (proposal) | opus (proposal) | planned | | | | | |
@@ -517,6 +517,19 @@ From the QA lead's T3 review (ledger, Review log T3 r3):
 
 - FF-T3-1 (qa-final brief only, no task directive): (a) the `, o.id desc` tiebreak of the customer query is pinned by inspection plus substitution probes; its removal survives because the index `ix_customer_order_customer_email (customer_email, placed_at desc, id desc)` supplies the order, so qa-final checks the hash of `OrderRepository.java` at the spec tip and quotes its line 18. (b) The `timestamptz` probe kill depends on a non-UTC JVM zone; qa-final runs a catalogue query showing `timestamp with time zone` for `placed_at` and `shipped_at`, `character varying(254)`, `numeric(10,2)` and the constraint names including `pk_order_line` and `fk_order_line_customer_order`.
 
+From the QA lead's T4 reviews (ledger, Review log T4 r2 and T4 r3):
+
+- FF-T4-1 (T6 and T7 implDirective and qaDirective, test data): shared fixture constants used by more than one ordering test are checked once for every attribute: in the asserted order (id order, request order) no attribute of the constants may be monotone, because one monotone attribute makes every ordering test that uses the constants monotone in it at once. Applies to T6 view lines (isbn, title, quantity, unitPrice, lineTotal; G7b) and to T7 fixtures where a T7 test asserts an order over fixed books. Verifiers probe every attribute of the ordered element and of the entity it stands for that the code holds in scope at the sort site.
+- FF-T4-2 (T6 and T7 implDirective and qaDirective; amends FF-T4-1): tabulate shared constants in every order the tests assert over them, the stored or request order as well as the sorted order, and do it for any replacement literal before writing it. Exempt are loaded values that no sort site holds; a verifier who finds one runs the carry-sort probe and names the killing test instead of asking for literal changes.
+
 ## Amendments
 
-(none yet)
+### A1: T4 test data and QA reading (rework rounds 1 and 2)
+
+Recorded 2026-11-07 by the orchestrator (self-accepted, test data and QA reading only; text from the QA lead's T4 r3 review). Consequence: no production or scope change; later verifiers apply the C0-16 reading below.
+
+- The two-entry examples in the T4 card (shortage details, stock events) illustrate the rules "in request order" and "in book-id order"; they are not the required data. FF-T1-2 reads "at least two short books, three or more for the order claim".
+- Round 1 data: placeOrderCollectsEveryShortageIntoOne409 has three short books (3c x5 of 2, 1a x9 of 4, 2f x6 of 1) with the fitting book 2b between 3c and 1a; placeOrderPublishesTheOrderPlacedEventAndThePulledStockEvents has three stock events (requests 3c x3, 1a x3, 2b x1; total 75.47).
+- Round 2 data: the BOOK_2 line of STORED_LINES has isbn 9780141439501, chosen by the orchestrator over the QA lead's 9780141439631, which would have made the stored line order ascending in isbn; the event test stubs a local BOOK_2 BookDTO with isbn 9780141439631; the shortage test's 2f book has isbn 9780141439556, and its short stock items have reorder levels 5, 2, 4 and reorder quantities 8, 12, 6.
+- C0-16 reading for this spec: "sorted in no column" covers every attribute of the ordered element, and of the entity it stands for, that the code holds in scope at the sort site. A loaded value that no sort site holds (the reserved count before reservation, kept only in a loop-local DTO) is exempt.
+- An unknown stored order status stays an untranslated IllegalArgumentException (a 500) per B7; in FF-T2-2, "translated" reads "asserted as the exception at that layer".
