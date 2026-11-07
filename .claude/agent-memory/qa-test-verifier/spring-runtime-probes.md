@@ -25,5 +25,7 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - Live app vs MockMvc: a malformed JSON body gives Boot's `/error` JSON (`timestamp, status, error, path`, application/json) plus a `DefaultHandlerExceptionResolver` WARN in the app log; MockMvc shows an empty body. Classify that WARN as provoked by the malformed-body request, not as product code.
 - Smoke checks: cut request lines and bodies from the `.http` file with `sed -n`, send them with curl `-w '%{http_code} %{content_type}'`, and assert each response with a `python3 -I` checker that prints CHECK OK/FAIL lines. That gives one evidence file per run.
 - `./mvnw ... -l <log>` prints nothing to the Bash tool and exits 1 on test failure: read the log with grep afterwards.
+- Before trusting a spec claim about what a Jakarta constraint accepts, `javap -c` the validator class from the jar in `BOOT-INF/lib`. Hibernate Validator 9.x `NotBlankValidator` calls `String.isBlank()`, so any `Character.isWhitespace` character (U+2003, for example) is blank and gives 400. U+00A0 is not whitespace and passes. Send both as live controls; a "trims only up to U+0020" premise is false.
+- A curl `-i` response file read in Python text mode turns CRLF into LF, so `split("\r\n\r\n")` finds nothing and the parsed id is empty. Open the file with `newline=""`. Before a replay chains ids, check that the first parsed id is non-empty, because empty ids send later requests to `/books/` and still return plausible 404s.
 
 Related: [[scaffold-verification-techniques]], [[shell-traps]]

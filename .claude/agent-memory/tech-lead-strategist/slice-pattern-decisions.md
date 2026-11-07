@@ -1,12 +1,13 @@
 ---
 name: slice-pattern-decisions
-description: Rationale for the cross-slice design choices set at spec 02 (catalogue) that specs 03, 04, 06, 08 must mirror; use when shaping any later bookstore slice
+description: Rationale for the cross-slice design choices set at spec 02 (catalogue) and extended at spec 03 (inventory) that later bookstore slices mirror; use when shaping any bookstore slice
 metadata:
   type: project
 ---
 
-Status: proposed in the spec 02 strategy (2026-11-07). Verify what landed in the spec 02 plan under
-`agent-os/specs/` and in the code before advising; delete or fix any bullet the code contradicts.
+Status: the spec 02 bullets landed in code (checked 2026-11-07 against `CatalogueFlow`, `BookDataService`,
+`BookQueries`); the spec 03 bullets are proposals in the spec 03 strategy, so verify them in the spec 03 plan under
+`agent-os/specs/` and in the code before relying on them.
 
 - **Mappers are static final classes** (`BookDomainMapper.toDomain(dto, clock)`, `BookJPAMapper`). **Why:** the
   standard allows only `@Service`, `@Transactional`, `ApplicationEventPublisher` and the Logger in `domaininteraction`,
@@ -15,17 +16,31 @@ Status: proposed in the spec 02 strategy (2026-11-07). Verify what landed in the
 - **Price crosses the flow as `BigDecimal`; payload keeps `String price` with `@NotBlank` plus a decimal `@Pattern`,
   the command adapter converts.** **Why:** the standard's example and spec 06's `importFromDistributor(String,
   BigDecimal)` fix BigDecimal as the pattern; a `BigDecimal` payload component would give Boot's empty-body 400.
-- **400 is presence and wire format only; every business range is a domain rule and a 422 with its own code.**
-  **Why:** one source of truth for rules (the Lab 1 discount lands in the domain), no `@Size` duplicates of domain
-  ranges in payloads.
+- **400 is presence and wire format; a business range is a domain rule and a 422 with its own code.** Exception: when a
+  spec scenario names 400 for a range (spec 03 quantities), the payload repeats the range (`@NotNull Integer` plus
+  `@Min`/`@Max`) and the domain keeps the rule as an unreachable 422. **Why:** one source of truth where the spec allows
+  it; the standard itself does not forbid payload ranges. **Trap:** the domain rule must accept everything the payload
+  accepts, with no `strip()` and no blank check in the domain, so the payload stays stricter and the 422 stays
+  unreachable over HTTP (hibernate-validator 9.1.5 `NotBlankValidator` calls `String.isBlank()`, so any whitespace
+  such as U+2003 is already a 400; verified with `javap -c` in spec 03 qa-final).
 - **Port shape:** `findById` throws the nested NotFound, natural-key finders return `Optional`, `save(DTO)` upserts by
   id onto the managed entity with `saveAndFlush`, DTOs carry no version. **Why:** `@Version` is honoured inside the
   flow's transaction without leaking persistence state into the domain; flushing in the adapter lets it translate
-  unique and lock failures into port exceptions.
+  unique and lock failures into port exceptions, and makes failures surface before the flow publishes events.
 - **Four use-case exceptions, no common base; `details` always present.** **Why:** the standard names four; a base
   type would let a handler catch everything and hide a missing mapping. Handlers are duplicated per adapter by design
   (rule 3 forbids a shared helper package).
-- **No event machinery before a spec needs it** (spec 03 brings `DomainEvent`). **Why:** the slice skill forbids
-  speculative methods.
+- **Every domain exception a flow call can throw is translated, `restore` included** (spec 02 QA failed call sites
+  whose `toDomain` could leak). One private static translator per flow, parameterised by the field name when the same
+  value object feeds different payload fields.
+- **Events (spec 03):** the flow saves, then publishes `pullDomainEvents()` inside its transaction. A flow that only
+  opens an aggregate whose factory raises nothing takes no publisher; a domain test "factory registers no event" is the
+  guard that forces a revisit if that changes.
+- **Derived read values reach adapters as DTO accessor methods** (spec 03 `StockItemDTO.available()`, `lowStock()`),
+  pinned against the aggregate at the threshold. **Why:** adapters may not touch `domain`; otherwise every view copies
+  the rule. Presentation-only values (`inStock`) stay in the view.
+- **A request-parameter 400 in a query adapter** is a nested exception in the throwing controller plus one handler in
+  the bean-validation shape. **Why:** tech-stack limits Jakarta Validation to payloads, and `params = "x=y"` mappings
+  fail during handler lookup, where a package-scoped advice never runs.
 
 Related: [[strategy-constraints]], [[test-context-cost-model]].

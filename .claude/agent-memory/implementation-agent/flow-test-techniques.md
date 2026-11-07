@@ -1,6 +1,6 @@
 ---
 name: flow-test-techniques
-description: Mockito and AssertJ techniques for *FlowTest classes with mocked ports (strict stubs, precedence tests, exact translation checks, clock witnesses)
+description: Mockito and AssertJ techniques for *FlowTest classes with mocked ports (strict stubs, precedence tests, exact translation checks, clock witnesses, event capture, pass-through ordering)
 metadata:
   type: reference
 ---
@@ -18,5 +18,13 @@ metadata:
   (add, change price and discontinue each have one in `CatalogueFlowTest`).
 - Watch a behavioural red, not only a compile red: add a stub method that returns a neutral value first, run, then
   implement.
+- Published events: capture with `ArgumentCaptor<Object>`, so `verify(events).publishEvent(captor.capture())` binds
+  the `publishEvent(Object)` overload and a mutant that publishes the whole pulled list as one event fails on record
+  equality. Put the port and the publisher in one `inOrder(port, events)` to pin save before publish.
+- Not-found pass-through tests call the flow with input that would fail validation (`receive(id, -1)`), so a value
+  object built before the load turns the expected `isSameAs` 404 into a 422.
+- Order pass-through tests (`containsExactly` on a port list): make the stubbed order monotonic in NO column, asc or
+  desc (id, every int field, derived values like available, booleans), else a re-sorting mutant survives. Also add
+  the save-never/no-events check to read-side rejection tests (QA counts them as rejections).
 - A new `@Service` that needs a bean nobody provides yet breaks every full-context test; land the config class in the
   same task (spec 02 T3: `CatalogueFlow` needs the `Clock` bean from `ClockConfig`).

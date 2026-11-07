@@ -22,5 +22,16 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - Never guess heartbeat or message timestamps: take `date -u` each time. `stat` mtimes print local time (+0100 here), so convert them before comparing with UTC stamps in an order proof.
 
 - `grep` here is ugrep: a missing path (for example `http/` before T9) gives exit 2 with `ugrep: warning: ... No such file or directory`, and any matches in the other paths are still printed. Re-run on the existing paths alone so that "empty" means exit 1.
+- In the Bash tool, a `grep` or `rg` with no match shows "completed with no output", not "Exit code 1" (`git grep`, `lsof` and `cmp` do show their exit code). A negative control that cannot match looks the same. So every empty grep needs a positive control on a path that does match.
+
+- `rg` here is a zsh shell function, not a binary on PATH. Inside `bash script.sh` it gives "rg: command not found" (exit 127), which can pass for an empty result. Run every `rg` check directly in the Bash tool, never from a script. Keep greps that scripts run on ugrep `grep`.
+
+- `git show <rev>:<path> --output=<file>` and `git diff ... --output=<file>` in the Bash tool printed to stdout and left an empty file. Use a plain `> <file>` redirect, then check the size with `wc -c` (an empty file can look like an empty diff).
+
+- The Edit tool trims trailing whitespace in `old_string` and `new_string`. A probe that ends in `, ` (for example `super("code", `) restores without the space, and a restore using the same trimmed string then fails with "String to replace not found". Anchor probe edits on text that does not end in a space (include the next token), and after the last restore compare the file hashes with the before-snapshot.
+
+- The Write tool turns U+2003 into a plain space even between other characters (`a<U+2003>b` landed as `61 20 62`), and trims a file whose only content is a U+2003, so the non-ASCII positive control silently fails. Build it with `printf 'a\xe2\x80\x83b\n' > <scratch file>`, check with `od -An -tx1`, then `rg -c`. The em dash (U+2014) survives Write.
+
+- Probe runs go faster with two scripts in `.claude/comms/tmp/`: a probe runner (maven `-Dtest`, summary grep) and a restore script that `cp`s the FF7 `.orig` byte copy back and prints `shasum` beside the snap-before line. Edit mutates, the script restores and proves the hash in one call.
 
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

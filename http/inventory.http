@@ -1,0 +1,52 @@
+# JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+
+# Add Frankenstein and remember the new book id for the requests below.
+POST http://localhost:8080/books/commands/add
+Content-Type: application/json
+
+{
+  "isbn": "9780141439471",
+  "title": "Frankenstein",
+  "authors": ["Mary Shelley"],
+  "genre": "science-fiction",
+  "price": "8.99",
+  "publicationYear": 1818
+}
+
+> {% client.global.set("bookId", response.body.id); %}
+
+###
+
+# Show the stock of the new book. Every new book starts with no stock, at or below the reorder level.
+GET http://localhost:8080/inventory/{{bookId}}
+
+###
+
+# Receive a delivery of 5 copies.
+POST http://localhost:8080/inventory/{{bookId}}/commands/receive
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+###
+
+# Correct the stock on hand to 3 after counting the shelf.
+POST http://localhost:8080/inventory/{{bookId}}/commands/correct
+Content-Type: application/json
+
+{
+  "onHand": 3,
+  "reason": "Stocktake after counting the shelf"
+}
+
+###
+
+# List the books that are running low on stock.
+GET http://localhost:8080/inventory?lowStock=true
+
+###
+
+# Show the details of the book, which now includes its available stock.
+GET http://localhost:8080/books/{{bookId}}
