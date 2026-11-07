@@ -63,7 +63,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 | T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical | opus | done (branch `sdd/04-orders/T3`) | PASS (r3) | ENDORSE | 3 | #34 | 32657ce |
 | T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | done (branch `sdd/04-orders/T4`) | PASS (r3) | ENDORSE (r2 REJECT) | 3 | #35 | d956f76 |
 | T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | done (branch `sdd/04-orders/T5`) | PASS (r1) | ENDORSE | 1 | #36 | ba6dc03 |
-| T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
+| T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated | sonnet | done (branch `sdd/04-orders/T6`) | PASS (r1) | ENDORSE | 1 | #37 | aa03a82 |
 | T7 | `OrderIntegrationTest`, `OrderEventRecorder`, `IntegrationTestBase` edit, `IntegrationTestBaseHooksTest` additions | bookstore | [T5, T6] | 7 | critical (proposal) | opus (proposal) | planned | | | | | |
 | T8 | `http/orders.http` | root | [T5, T6] | 7 | standard (proposal) | sonnet (proposal) | planned | | | | | |
 
@@ -526,6 +526,10 @@ From the QA lead's T5 review (ledger, Review log T5 r1):
 
 - FF-T5-1 (qa-final brief only, no task directive): (a) qa-final item 5 adds a live place with a tab in the domain part of the e-mail (built from `chr(9)`, shown with `od -c`): 400 `validation-failed`, field `customerEmail`, nothing stored; (b) hash check of `PlaceOrderPayload.java` at the spec tip against the T5 QA baseline. Follow-up F31 carries the in-test per-position witnesses (tab in the domain and top-level parts, `!` accepted there) for `PlaceOrderPayload` and `EmailAddress`.
 
+From the QA lead's T6 review (ledger, Review log T6 r1):
+
+- FF-T6-1 (T7 qaDirective and qa-final brief): `OrderFlow.findById` and `findByCustomer` return the port result without a restore, so "the domain rejects it" or "it cannot be restored" is no equivalence argument for a survivor downstream of a read; judge it by whether a stored row without a check constraint can carry the value, then by rule 3. A3 applies to any order claim T7 makes over orders with lines. qa-final adds a hash check of `OrderView.java`, `OrderQueries.java` and `OrderSummaryView.java` at the spec tip against the T6 QA baseline. Follow-up F32 (a mixed-currency stub in `OrderQueriesTest`) is deferred.
+
 ## Amendments
 
 ### A1: T4 test data and QA reading (rework rounds 1 and 2)
@@ -546,3 +550,11 @@ Recorded 2026-11-07 by the orchestrator (self-accepted, endorsed by the QA lead 
 - Reason: with `@Valid` on the container, Hibernate Validator 9.1.5 logs `HV000271: Using @Valid on a container (java.util.List) is deprecated` (three lines per referee run), a fixable warning under C0-6(c).
 - Same validation and same field paths (`lines[i]`, `lines[i].bookId`, `lines[i].quantity`): the B8 text form passes all 43 OrderCommandsTest cases (verifier probe W7b, which logs HV000271 three times), and the delivered form logs none.
 - T5-1 reads `@Valid` in the type-argument position; probe W7 reads "`@Valid` removed from the list element type". No other constraint, test or scope change.
+
+### A3: C0-16 at a site whose elements hold a child list (T6 r1)
+
+Recorded 2026-11-07 by the orchestrator (self-accepted, QA reading only, text from the QA lead's T6 r1 review). Consequence: no production or scope change.
+
+- At a sort or pass-through site whose ordered element holds a child list (an OrderDTO with its lines), "sorted in no column" covers the element's own components and accessors (for OrderDTO: id, customerEmail, status, placedAt, shippedAt, total(), currency(), and values a view derives from it such as itemCount and the line count).
+- Attributes of a child element reached by a positional pick (the first line's book id) are outside, unless the sort statement already holds the child columns flat (a fetch-joined `order by`, as in T3).
+- A column that every app write path keeps constant (currency EUR) is exempt on a mocked pass-through that holds no comparator; the exemption ends when a spec widens Money (F30).
