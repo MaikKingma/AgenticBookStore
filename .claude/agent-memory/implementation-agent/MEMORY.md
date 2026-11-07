@@ -1,1 +1,1 @@
-- [Maven build traps](maven-build-traps.md) — wrapper output truncation, zsh globbing in Bash, mvnw.cmd LF vs eol=crlf, ArchUnit junit6 engine works, compiler plugin emits package-info.class, which stack skills exist
+- [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist

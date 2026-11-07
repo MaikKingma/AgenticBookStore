@@ -20,6 +20,8 @@ metadata:
 - maven-compiler-plugin 3.15.0 (Boot 4.1.2 managed) defaults `createMissingPackageInfoClass=true`: a Javadoc-only
   `package-info.java` still yields an empty `package-info.class` under target/classes. Only the property
   `maven.compiler.createMissingPackageInfoClass=false` stops it; javac's own behaviour is not the cause.
+- Mutation probes with Edit: a trailing space at the end of old/new string can be lost (a probe once left
+  `"...",importOptions`). Make probe edits whole-line, and prove every restore with `shasum -a 256` against a baseline.
 - `-q` with `-l <log>` leaves the log empty for `help:describe`; read the plugin descriptor instead with
   `unzip -p <plugin jar> META-INF/maven/plugin.xml` and grep it.
 
