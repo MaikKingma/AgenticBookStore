@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -15,11 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import nl.openvalue.bookstore.domaininteraction.BookDTO;
+import nl.openvalue.bookstore.domaininteraction.BookDataService;
 import nl.openvalue.bookstore.domaininteraction.CatalogueFlow;
 import nl.openvalue.bookstore.domaininteraction.ConflictException;
 import nl.openvalue.bookstore.domaininteraction.InvalidInputException;
+import nl.openvalue.bookstore.domaininteraction.InventoryFlow;
 import nl.openvalue.bookstore.domaininteraction.NotFoundException;
+import nl.openvalue.bookstore.domaininteraction.StockItemDTO;
+import nl.openvalue.bookstore.domaininteraction.StockItemDataService;
 import nl.openvalue.bookstore.domaininteraction.UnavailableException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -34,11 +41,36 @@ class BookQueriesTest {
 
     private static final UUID OTHER_ID = UUID.fromString("9c1d7e52-6a3b-4f08-8d2c-5e4b1a7f3c66");
 
+    private static final UUID EMMA_ID = UUID.fromString("50000000-0000-4000-8000-00000000000a");
+
+    private static final UUID DRACULA_ID = UUID.fromString("20000000-0000-4000-8000-00000000000b");
+
+    private static final UUID FRANKENSTEIN_ID = UUID.fromString("60000000-0000-4000-8000-00000000000c");
+
+    private static final BookDTO EMMA = new BookDTO(EMMA_ID, "9780141439587", "Emma", List.of("Jane Austen"),
+            "FICTION", new BigDecimal("7.99"), "EUR", 1815, "AVAILABLE");
+
+    private static final BookDTO DRACULA = new BookDTO(DRACULA_ID, "9780141439846", "Dracula",
+            List.of("Bram Stoker"), "FANTASY", new BigDecimal("6.99"), "EUR", 1897, "DISCONTINUED");
+
+    private static final BookDTO FRANKENSTEIN = new BookDTO(FRANKENSTEIN_ID, "9780141439471", "Frankenstein",
+            List.of("Mary Shelley"), "SCIENCE_FICTION", new BigDecimal("9.50"), "EUR", 1818, "AVAILABLE");
+
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private CatalogueFlow flow;
+
+    @MockitoBean
+    private InventoryFlow inventory;
+
+    /** Every book has a stock item unless a test says otherwise: 7 on hand, 2 reserved, so 5 available. */
+    @BeforeEach
+    void everyBookHasAStockItem() {
+        when(inventory.findByBookId(any(UUID.class))).thenAnswer(invocation -> new StockItemDTO(
+                invocation.getArgument(0), 7, 2, 3, 10, false));
+    }
 
     // --- search ---
 
@@ -61,7 +93,7 @@ class BookQueriesTest {
                 .andExpect(jsonPath("$[0].currency").value("EUR"))
                 .andExpect(jsonPath("$[0].status").value("AVAILABLE"))
                 .andExpect(jsonPath("$[0].publicationYear").doesNotExist())
-                .andExpect(jsonPath("$[0].*", hasSize(8)));
+                .andExpect(jsonPath("$[0].*", hasSize(10)));
     }
 
     @Test
@@ -152,6 +184,69 @@ class BookQueriesTest {
                 .andExpect(jsonPath("$.details[0].service").value("distributor"));
     }
 
+    /**
+     * Three rows in the order of the flow, sorted in no column in either direction: every column goes up then
+     * down or down then up. The ids start with 5, 2 and 6; all three first hex digits are 0 to 7, so Java's signed
+     * {@code UUID.compareTo} and PostgreSQL's unsigned byte order agree, and both see 5, 2, 6. ISBN 587, 846, 471;
+     * title E, D, F; authors J, B, M; genre FICTION, FANTASY, SCIENCE_FICTION; price 7.99, 6.99, 9.50; status
+     * AVAILABLE, DISCONTINUED, AVAILABLE; year 1815, 1897, 1818; on hand 8, 2, 4; reserved 3, 2, 3; available 5, 0,
+     * 1; inStock true, false, true; reorder level 2, 5, 3; reorder quantity 10, 20, 15; signal false, true, false.
+     */
+    @Test
+    void searchShowsTheAvailableStockAndInStockOfEachBook() throws Exception {
+        when(flow.search(null, null, null, null)).thenReturn(List.of(EMMA, DRACULA, FRANKENSTEIN));
+        when(inventory.findByBookId(EMMA_ID)).thenReturn(new StockItemDTO(EMMA_ID, 8, 3, 2, 10, false));
+        when(inventory.findByBookId(DRACULA_ID)).thenReturn(new StockItemDTO(DRACULA_ID, 2, 2, 5, 20, true));
+        when(inventory.findByBookId(FRANKENSTEIN_ID)).thenReturn(new StockItemDTO(FRANKENSTEIN_ID, 4, 3, 3, 15,
+                false));
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[*].id").value(contains("50000000-0000-4000-8000-00000000000a",
+                        "20000000-0000-4000-8000-00000000000b", "60000000-0000-4000-8000-00000000000c")))
+                .andExpect(jsonPath("$[*].isbn").value(contains("9780141439587", "9780141439846",
+                        "9780141439471")))
+                .andExpect(jsonPath("$[*].title").value(contains("Emma", "Dracula", "Frankenstein")))
+                .andExpect(jsonPath("$[*].authors").value(contains("Jane Austen", "Bram Stoker", "Mary Shelley")))
+                .andExpect(jsonPath("$[*].genre").value(contains("FICTION", "FANTASY", "SCIENCE_FICTION")))
+                .andExpect(jsonPath("$[*].price").value(contains("7.99", "6.99", "9.50")))
+                .andExpect(jsonPath("$[*].status").value(contains("AVAILABLE", "DISCONTINUED", "AVAILABLE")))
+                .andExpect(jsonPath("$[*].available").value(contains(5, 0, 1)))
+                .andExpect(jsonPath("$[*].inStock").value(contains(true, false, true)));
+
+        verify(inventory).findByBookId(EMMA_ID);
+        verify(inventory).findByBookId(DRACULA_ID);
+        verify(inventory).findByBookId(FRANKENSTEIN_ID);
+        verifyNoMoreInteractions(inventory);
+    }
+
+    @Test
+    void searchShowsAvailableAsANumberAndInStockAsABoolean() throws Exception {
+        when(flow.search(null, null, null, null)).thenReturn(List.of(book(BOOK_ID, "12.50",
+                List.of("Jane Austen"))));
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].available").isNumber())
+                .andExpect(jsonPath("$[0].available").value(5))
+                .andExpect(jsonPath("$[0].inStock").isBoolean())
+                .andExpect(jsonPath("$[0].inStock").value(true));
+    }
+
+    @Test
+    void searchPassesAMissingStockItemThroughAs404() throws Exception {
+        when(flow.search(null, null, null, null)).thenReturn(List.of(EMMA, DRACULA));
+        when(inventory.findByBookId(DRACULA_ID)).thenThrow(
+                new StockItemDataService.StockItemNotFoundException(DRACULA_ID));
+
+        ResultActions result = mockMvc.perform(get("/books"));
+
+        expectProblem(result, 404, "book-not-found", "Book not found")
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
     // --- get one ---
 
     @Test
@@ -172,7 +267,7 @@ class BookQueriesTest {
                 .andExpect(jsonPath("$.currency").value("EUR"))
                 .andExpect(jsonPath("$.status").value("AVAILABLE"))
                 .andExpect(jsonPath("$.publicationYear").value(1813))
-                .andExpect(jsonPath("$.*", hasSize(9)));
+                .andExpect(jsonPath("$.*", hasSize(11)));
     }
 
     @Test
@@ -295,6 +390,54 @@ class BookQueriesTest {
                 .andExpect(jsonPath("$.code").value("sample-unavailable"))
                 .andExpect(jsonPath("$.title").value("Sample unavailable"))
                 .andExpect(jsonPath("$.detail").value("The sample is unavailable"));
+    }
+
+    @Test
+    void findByIdShowsTheAvailableStockAndInStock() throws Exception {
+        when(flow.findById(BOOK_ID)).thenReturn(book(BOOK_ID, "12.50", List.of("Jane Austen")));
+        when(inventory.findByBookId(BOOK_ID)).thenReturn(new StockItemDTO(BOOK_ID, 4, 4, 3, 10, true));
+
+        mockMvc.perform(get("/books/{id}", BOOK_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").isNumber())
+                .andExpect(jsonPath("$.available").value(0))
+                .andExpect(jsonPath("$.inStock").isBoolean())
+                .andExpect(jsonPath("$.inStock").value(false));
+    }
+
+    @Test
+    void findByIdShowsInStockWhenOneCopyIsAvailable() throws Exception {
+        when(flow.findById(BOOK_ID)).thenReturn(book(BOOK_ID, "12.50", List.of("Jane Austen")));
+        when(inventory.findByBookId(BOOK_ID)).thenReturn(new StockItemDTO(BOOK_ID, 3, 2, 3, 10, true));
+
+        mockMvc.perform(get("/books/{id}", BOOK_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(1))
+                .andExpect(jsonPath("$.inStock").isBoolean())
+                .andExpect(jsonPath("$.inStock").value(true));
+    }
+
+    @Test
+    void findByIdPassesAMissingStockItemThroughAs404() throws Exception {
+        when(flow.findById(BOOK_ID)).thenReturn(book(BOOK_ID, "12.50", List.of("Jane Austen")));
+        when(inventory.findByBookId(BOOK_ID)).thenThrow(new StockItemDataService.StockItemNotFoundException(BOOK_ID));
+
+        ResultActions result = mockMvc.perform(get("/books/{id}", BOOK_ID));
+
+        expectProblem(result, 404, "book-not-found", "Book not found")
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void findByIdDoesNotAskForStockWhenTheBookIsUnknown() throws Exception {
+        when(flow.findById(BOOK_ID)).thenThrow(new BookDataService.BookNotFoundException(BOOK_ID));
+
+        ResultActions result = mockMvc.perform(get("/books/{id}", BOOK_ID));
+
+        expectProblem(result, 404, "book-not-found", "Book not found")
+                .andExpect(jsonPath("$.details").isEmpty());
+        verifyNoInteractions(inventory);
     }
 
     // --- helpers ---

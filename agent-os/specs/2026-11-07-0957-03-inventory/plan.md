@@ -56,8 +56,8 @@ Add the inventory slice through every onion layer of the `bookstore` module, mir
 | T4 | `InventoryFlow` (four use cases, events published after save); `InventoryFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | pr | PASS (r2) | ENDORSE (r2) | 1 | #24 (sdd/03-inventory/T4) | 3213e38 (squash) |
 | T5 | `CatalogueFlow.addBook` opens the stock item; `CatalogueFlowTest` edits (four constructor sites, additions, F22) | bookstore | [T2, T3] | 5 | critical | opus | pr | PASS (r1) | ENDORSE (r1) | 0 | #25 (sdd/03-inventory/T5) | e6a0e89 (squash) |
 | T6 | Command adapter: `InventoryCommands`, `ReceiveStockPayload`, `CorrectStockPayload`; `InventoryCommandsTest` | bookstore | [T4] | 6 | elevated | sonnet | pr | PASS (r1) | ENDORSE (r1) | 0 | #26 (sdd/03-inventory/T6) | afca7f7 (squash) |
-| T7 | Inventory query adapter: `InventoryQueries` with nested 400 exception, `StockView`, one new `QueryExceptionHandler` method; `InventoryQueriesTest` | bookstore | [T4] | 7 | elevated | sonnet | pr | PASS (r1) | ENDORSE (r1) | 0 | #27 (sdd/03-inventory/T7) | (squash pending) |
-| T8 | Book views composed with stock: `BookQueries`, `BookView`, `BookDetailView`; `BookQueriesTest` and `CatalogueIntegrationTest` edits | bookstore | [T4, T5] | 8 | critical | opus | pending | | | 0 | | |
+| T7 | Inventory query adapter: `InventoryQueries` with nested 400 exception, `StockView`, one new `QueryExceptionHandler` method; `InventoryQueriesTest` | bookstore | [T4] | 7 | elevated | sonnet | pr | PASS (r1) | ENDORSE (r1) | 0 | #27 (sdd/03-inventory/T7) | 5256383 (squash) |
+| T8 | Book views composed with stock: `BookQueries`, `BookView`, `BookDetailView`; `BookQueriesTest` and `CatalogueIntegrationTest` edits | bookstore | [T4, T5] | 8 | critical | opus | pr | PASS (r1) | ENDORSE (r1) | 0 | #28 (sdd/03-inventory/T8) | (squash pending) |
 | T9 | `InventoryIntegrationTest`, `StockEventRecorder`, `IntegrationTestBase` edit | bookstore | [T5, T6, T7, T8] | 9 | critical | opus | pending | | | 0 | | |
 | T10 | `http/inventory.http` | root | [T6, T7, T8] | 9 | standard | sonnet | pending | | | 0 | | |
 
