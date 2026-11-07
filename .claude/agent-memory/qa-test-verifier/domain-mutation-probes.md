@@ -29,6 +29,8 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 Flow-layer probes (mocked port and publisher):
 - "Returns the port result in order" tests: a stub that is "in neither id nor available order" can still be ascending in on hand or reserved, and a column that is constant across rows turns a stable sort into a no-op. Probe a sort by each DTO column, not only the one named in the list. Prove a survivor with a witness stub that is monotonic in no column.
 - Probe lists often name a mutant for one command only (toDomain outside the translator, value object before the load, save the loaded DTO). Run the counterpart in the other command too. It costs one run and closes the gap for the second command.
+- A new line in a shared verify helper (for example `verifyNoInteractions(newPort)` in `verifyNothingLookedUpOrSaved()`): add a stray harmless port call (`newPort.findLowStock()`) as the first statement of the method under test. Expected signature: every helper caller fails at the helper's line number, plus the separately named tests at their own lines, and nothing else. This proves the line bites in each caller in one run. Callers that survive are the rejection tests without the check (list them for FF9).
+- Swallowing probe on a new port call (`try { port.save(...) } catch (RuntimeException ignored) {}`) survives mocked flow tests by design. Run it as informational and name the integration test that owns atomicity.
 - Probe the details `message` separately from the field (for example the title passed instead of the domain message). A test that asserts only the field lets that mutant survive.
 
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
