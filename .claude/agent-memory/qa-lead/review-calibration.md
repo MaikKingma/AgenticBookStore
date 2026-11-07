@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling)
 metadata:
   type: feedback
 ---
@@ -45,4 +45,12 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
 8. **Required forms stated as parentheticals.** If a form requirement (an escape and not a literal, a specific API) reached the plan only in parentheses, it is no REJECT bar when the property it serves is proven on the gated bytes. Open a follow-up and rely on the hash baseline until merge. The fix is at strategy time: write forms as imperatives with a check command (see [[qa-directive-traps]] item 16).
 
-9. **No red run.** Tests written first with a green first run are not a gate finding outside an sdd-bugfix lead directive, provided every criterion clause bites on the gated bytes: a must-fail probe kills it, or I kill it by reading. Judge a clause with neither under lenses 3 and 4. The missing red run adds nothing.
+9. **Survivors equivalent on every reachable input.** A survivor on a money-adjacent clause (for example `toString()` for `toPlainString()` on a price) is inspection-proven, not a REJECT, when four things hold:
+   - an upstream invariant, pinned by its own tests (a scale-2 money type, a fixed-scale column), makes the outputs identical for every input that can reach the code;
+   - the strategy made the clause an inspection item;
+   - the listed falsifier (for example the trailing zero kept) is present and kills;
+   - a follow-up names the witness, and the witness becomes required once a later spec widens the input domain.
+   Rule 3's no-allowance clause is for survivors that change a reachable output.
+   **Pass-through survivors found late.** If a later task exposes a survivor in an already-endorsed sibling (the same handler pattern), restore consistency with a must-fail probe in the qa-final directive. Never drop it because the sibling is merged.
+
+10. **No red run.** Tests written first with a green first run are not a gate finding outside an sdd-bugfix lead directive, provided every criterion clause bites on the gated bytes: a must-fail probe kills it, or I kill it by reading. Judge a clause with neither under lenses 3 and 4. The missing red run adds nothing.
