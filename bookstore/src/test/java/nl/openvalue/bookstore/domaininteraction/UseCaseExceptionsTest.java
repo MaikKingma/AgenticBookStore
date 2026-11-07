@@ -191,4 +191,37 @@ class UseCaseExceptionsTest {
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThat(Modifier.isFinal(StockItemDataService.StockItemNotFoundException.class.getModifiers())).isTrue();
     }
+
+    @Test
+    void orderNotFoundIsANotFoundWithTheOrderNotFoundCodeAndTitle() {
+        UUID id = UUID.fromString("2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77");
+
+        OrderDataService.OrderNotFoundException exception = new OrderDataService.OrderNotFoundException(id);
+
+        assertThat(exception).isInstanceOf(NotFoundException.class);
+        assertThat(exception.code()).isEqualTo("order-not-found");
+        assertThat(exception.title()).isEqualTo("Order not found");
+        assertThat(exception.getMessage()).isNotBlank().contains(id.toString());
+        assertThat(exception.details()).isEmpty();
+        assertThatThrownBy(() -> exception.details().add(Map.of("a", "b")))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(Modifier.isFinal(OrderDataService.OrderNotFoundException.class.getModifiers())).isTrue();
+    }
+
+    @Test
+    void bookNotOrderableIsAConflictWithTheBookNotOrderableCodeAndTitle() {
+        UUID id = UUID.fromString("6b2e9d41-3a7c-4f58-8e10-d4c5a9b73f26");
+
+        BookNotOrderableException exception = new BookNotOrderableException(id);
+
+        assertThat(exception).isInstanceOf(ConflictException.class);
+        assertThat(exception.code()).isEqualTo("book-not-orderable");
+        assertThat(exception.title()).isEqualTo("Book not orderable");
+        assertThat(exception.getMessage()).isNotBlank().contains(id.toString());
+        assertThat(exception.details()).isEmpty();
+        assertThatThrownBy(() -> exception.details().add(Map.of("a", "b")))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(Modifier.isFinal(BookNotOrderableException.class.getModifiers())).isTrue();
+        assertThat(Modifier.isPublic(BookNotOrderableException.class.getModifiers())).isTrue();
+    }
 }
