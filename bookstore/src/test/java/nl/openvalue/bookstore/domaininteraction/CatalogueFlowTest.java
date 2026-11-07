@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -44,17 +48,26 @@ class CatalogueFlowTest {
 
     private static final UUID BOOK_ID = UUID.fromString("5d0c1a7e-3f2b-4c8d-9e6a-1b2c3d4e5f60");
 
+    // U+2003 EM SPACE, built from its code point so the source file stays ASCII.
+    private static final String EM_SPACE = Character.toString(0x2003);
+
     @Mock
     private BookDataService books;
 
+    @Mock
+    private StockItemDataService stockItems;
+
     @Captor
     private ArgumentCaptor<BookDTO> saved;
+
+    @Captor
+    private ArgumentCaptor<StockItemDTO> savedStockItem;
 
     private CatalogueFlow flow;
 
     @BeforeEach
     void setUp() {
-        flow = new CatalogueFlow(books, CLOCK);
+        flow = new CatalogueFlow(books, stockItems, CLOCK);
     }
 
     @Test
@@ -91,6 +104,7 @@ class CatalogueFlowTest {
         assertThat(conflict.title()).isEqualTo("ISBN already in catalogue");
         assertThat(conflict.details()).isEmpty();
         verify(books, never()).save(any());
+        verifyNoInteractions(stockItems);
     }
 
     @Test
@@ -101,6 +115,25 @@ class CatalogueFlowTest {
         verify(books).findByIsbn("9780141439518");
         verify(books).save(saved.capture());
         assertThat(saved.getValue().isbn()).isEqualTo("9780141439518");
+    }
+
+    @Test
+    void addBookOpensAnEmptyStockItemForTheNewBook() {
+        UUID returnedId = flow.addBook(ISBN, "Pride and Prejudice", List.of("Jane Austen"), "fiction",
+                new BigDecimal("12.50"), 1813);
+
+        verify(stockItems).save(savedStockItem.capture());
+        assertThat(savedStockItem.getValue()).isEqualTo(new StockItemDTO(returnedId, 0, 0, 3, 10, false));
+    }
+
+    @Test
+    void addBookSavesTheBookBeforeItsStockItem() {
+        flow.addBook(ISBN, "Pride and Prejudice", List.of("Jane Austen"), "fiction", new BigDecimal("12.50"), 1813);
+
+        InOrder order = inOrder(books, stockItems);
+        order.verify(books).findByIsbn(ISBN);
+        order.verify(books).save(any());
+        order.verify(stockItems).save(any());
     }
 
     @Test
@@ -309,6 +342,17 @@ class CatalogueFlowTest {
     }
 
     @Test
+    void changingThePriceOrDiscontinuingNeverTouchesStock() {
+        when(books.findById(BOOK_ID)).thenReturn(storedBook("AVAILABLE"));
+
+        flow.changePrice(BOOK_ID, new BigDecimal("14.90"));
+        flow.discontinue(BOOK_ID);
+
+        verify(books, times(2)).save(any());
+        verifyNoInteractions(stockItems);
+    }
+
+    @Test
     void findByIdReturnsTheStoredBook() {
         BookDTO stored = storedBook("AVAILABLE");
         when(books.findById(BOOK_ID)).thenReturn(stored);
@@ -329,7 +373,7 @@ class CatalogueFlowTest {
     @Test
     void addChecksThePublicationYearAgainstTheFlowsClock() {
         // In 2000 the latest allowed publication year is 2001; with the real clock 2027 would still be allowed.
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
 
         Throwable thrown = catchThrowable(() -> flowIn2000.addBook(ISBN, "Pride and Prejudice",
                 List.of("Jane Austen"), "fiction", new BigDecimal("12.50"), 2027));
@@ -342,7 +386,7 @@ class CatalogueFlowTest {
 
     @Test
     void changePriceRestoresTheStoredBookWithTheFlowsClock() {
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
         BookDTO publishedIn2027 = new BookDTO(BOOK_ID, ISBN, "Pride and Prejudice", List.of("Jane Austen"),
                 "FICTION", new BigDecimal("12.50"), "EUR", 2027, "AVAILABLE");
         when(books.findById(BOOK_ID)).thenReturn(publishedIn2027);
@@ -356,7 +400,7 @@ class CatalogueFlowTest {
 
     @Test
     void discontinueRestoresTheStoredBookWithTheFlowsClock() {
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
         BookDTO publishedIn2027 = new BookDTO(BOOK_ID, ISBN, "Pride and Prejudice", List.of("Jane Austen"),
                 "FICTION", new BigDecimal("12.50"), "EUR", 2027, "AVAILABLE");
         when(books.findById(BOOK_ID)).thenReturn(publishedIn2027);
@@ -396,7 +440,8 @@ class CatalogueFlowTest {
     @Test
     void stripsUnicodeWhitespaceAroundSearchCriteria() {
         // U+2003 EM SPACE is whitespace to strip() but not to trim().
-        flow.search(" pride ", null, " austen ", " poetry ");
+        flow.search(EM_SPACE + "pride" + EM_SPACE, null, EM_SPACE + "austen" + EM_SPACE,
+                EM_SPACE + "poetry" + EM_SPACE);
 
         verify(books).search("pride", null, "austen", "POETRY", 100);
     }
@@ -417,6 +462,7 @@ class CatalogueFlowTest {
     private void verifyNothingLookedUpOrSaved() {
         verify(books, never()).findByIsbn(any());
         verify(books, never()).save(any());
+        verifyNoInteractions(stockItems);
     }
 
     private static BookDTO storedBook(String status) {

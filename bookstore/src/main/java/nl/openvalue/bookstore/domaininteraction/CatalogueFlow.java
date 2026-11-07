@@ -20,6 +20,7 @@ import nl.openvalue.bookstore.domain.Isbn;
 import nl.openvalue.bookstore.domain.Money;
 import nl.openvalue.bookstore.domain.PriceOutOfRangeException;
 import nl.openvalue.bookstore.domain.PublicationYearOutOfRangeException;
+import nl.openvalue.bookstore.domain.StockItem;
 import nl.openvalue.bookstore.domain.Title;
 import nl.openvalue.bookstore.domain.UnknownGenreException;
 import org.springframework.stereotype.Service;
@@ -36,16 +37,19 @@ public class CatalogueFlow {
     private static final int SEARCH_LIMIT = 100;
 
     private final BookDataService books;
+    private final StockItemDataService stockItems;
     private final Clock clock;
 
-    public CatalogueFlow(BookDataService books, Clock clock) {
+    public CatalogueFlow(BookDataService books, StockItemDataService stockItems, Clock clock) {
         this.books = books;
+        this.stockItems = stockItems;
         this.clock = clock;
     }
 
     /**
-     * Adds an available book and returns its id. Every value is checked before the ISBN is looked up, so an invalid
-     * request is rejected as such even when its ISBN is already in the catalogue.
+     * Adds an available book, opens an empty stock item for it in the same transaction and returns its id. Every value
+     * is checked before the ISBN is looked up, so an invalid request is rejected as such even when its ISBN is already
+     * in the catalogue.
      */
     public UUID addBook(String isbn, String title, List<String> authors, String genre, BigDecimal price,
             int publicationYear) {
@@ -57,6 +61,7 @@ public class CatalogueFlow {
             throw new BookDataService.IsbnAlreadyExistsException(normalisedIsbn);
         });
         books.save(new BookDTO(book));
+        stockItems.save(new StockItemDTO(StockItem.openFor(book.id(), clock)));
         return book.id().value();
     }
 

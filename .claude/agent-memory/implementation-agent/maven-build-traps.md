@@ -25,6 +25,9 @@ metadata:
   space, and prove every probe restore with `shasum -a 256` against a baseline.
 - `-q` with `-l <log>` leaves the log empty for `help:describe`; read the plugin descriptor instead with
   `unzip -p <plugin jar> META-INF/maven/plugin.xml` and grep it.
+- Edit cannot match a literal non-ASCII char (e.g. U+2003) in `old_string`: the char cannot be emitted reliably and the
+  edit fails "not found". Replace that one line by number with an ASCII-only `perl -i -pe 'if ($. == N) {...}'`,
+  verify with `git diff -U0`, and report the Write/Edit-only deviation in the outbox.
 
 Stack skills: project-level `clean-hexagonal-onion`, `hexagonal-slice`, `layer-testing`, `ddd-building-blocks`
 (under `.claude/skills/`); user-level `tdd`, `agent-comms`.

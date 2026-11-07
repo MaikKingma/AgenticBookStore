@@ -25,6 +25,8 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - `rg` here is a zsh shell function, not a binary on PATH. Inside `bash script.sh` it gives "rg: command not found" (exit 127), which can pass for an empty result. Run every `rg` check directly in the Bash tool, never from a script. Keep greps that scripts run on ugrep `grep`.
 
+- `git show <rev>:<path> --output=<file>` and `git diff ... --output=<file>` in the Bash tool printed to stdout and left an empty file. Use a plain `> <file>` redirect, then check the size with `wc -c` (an empty file can look like an empty diff).
+
 - The Edit tool trims trailing whitespace in `old_string` and `new_string`. A probe that ends in `, ` (for example `super("code", `) restores without the space, and a restore using the same trimmed string then fails with "String to replace not found". Anchor probe edits on text that does not end in a space (include the next token), and after the last restore compare the file hashes with the before-snapshot.
 
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

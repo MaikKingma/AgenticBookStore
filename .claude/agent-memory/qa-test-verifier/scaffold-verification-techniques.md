@@ -19,6 +19,9 @@ Rule: prove provenance of generated files by regenerating, not by reading the im
 - Reversing a rework edit needs the exact old comment text too, which an artifact paraphrase rarely gives. Keep a byte copy of every untracked test file in the scratchpad at the end of each round. Without one, the implementer's Edit `toolUseResult` (`oldString`/`newString`) in its subagent transcript under `~/.claude/projects/<proj>/<session>/subagents/*.jsonl` holds the old lines verbatim (parse with `python3 -I`, read-only).
 - An ArchUnit engine spike counts only as Failures 1 / Errors 0 with an AssertionError raised from `ArchUnitTestDescriptor`, never as 0 tests. Use different rules from the impl's spike.
 
+- Literal-to-constant replacements (for example U+2003 literals replaced by an `EM_SPACE` concatenation, possibly rewrapped): write a `python3 -I` script that rewrites the base line into the expected ASCII form (`'"'+ch -> 'CONST+"'`, `ch+'"' -> '"+CONST'`), removes all whitespace from both sides and compares. Pair it with `od -An -tx1` of the base line (the `e2 80 83` triples). This proves "nothing else changed in the call" even across a line wrap.
+- Evidence names across specs: the scratchpad is shared, so spec N-1 left `t<n>-qa-*` files (hashes included, which qa-final of that spec relied on). Never overwrite them. Prefix this spec's evidence `t<n>-qa-s<NN>-` and say so in the verdict.
+
 - Workflow YAML (no actionlint installed): write your own `ruby -ryaml` checker (Psych loads `on` as `true`; assert `on` values are `nil` for unfiltered triggers), then prove it can fail by running it on a scratchpad copy mutated with sed (add `branches:`, drop a flag). Check pinned action majors exist with `gh api repos/<owner>/<action>/releases/latest --jq .tag_name`.
 
 Related: [[shell-traps]]
