@@ -245,6 +245,58 @@ class BookQueriesTest {
                 .andExpect(jsonPath("$.details").isEmpty());
     }
 
+    @Test
+    void notFoundPassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        when(flow.findById(any(UUID.class))).thenThrow(new NotFoundException("sample-not-found", "Sample not found",
+                "No sample with that id"));
+
+        mockMvc.perform(get("/books/{id}", BOOK_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-not-found"))
+                .andExpect(jsonPath("$.title").value("Sample not found"))
+                .andExpect(jsonPath("$.detail").value("No sample with that id"));
+    }
+
+    @Test
+    void conflictPassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        when(flow.search(null, null, null, null)).thenThrow(new ConflictException("sample-conflict",
+                "Sample conflict", "The sample is in conflict"));
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-conflict"))
+                .andExpect(jsonPath("$.title").value("Sample conflict"))
+                .andExpect(jsonPath("$.detail").value("The sample is in conflict"));
+    }
+
+    @Test
+    void invalidInputPassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        when(flow.search(null, null, null, null)).thenThrow(new InvalidInputException("sample-invalid",
+                "Sample invalid", "The sample is invalid", List.of(Map.of("field", "sample", "message", "bad"))));
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-invalid"))
+                .andExpect(jsonPath("$.title").value("Sample invalid"))
+                .andExpect(jsonPath("$.detail").value("The sample is invalid"));
+    }
+
+    @Test
+    void unavailablePassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        when(flow.findById(any(UUID.class))).thenThrow(new UnavailableException("sample-unavailable",
+                "Sample unavailable", "The sample is unavailable"));
+
+        mockMvc.perform(get("/books/{id}", BOOK_ID))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-unavailable"))
+                .andExpect(jsonPath("$.title").value("Sample unavailable"))
+                .andExpect(jsonPath("$.detail").value("The sample is unavailable"));
+    }
+
     // --- helpers ---
 
     private static BookDTO book(UUID id, String price, List<String> authors) {

@@ -285,6 +285,19 @@ class BookCommandsTest {
                 .andExpect(jsonPath("$.details[0].id").value("9c1d7e52-6a3b-4f08-8d2c-5e4b1a7f3c66"));
     }
 
+    @Test
+    void notFoundPassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        doThrow(new NotFoundException("sample-not-found", "Sample not found", "No sample with that id"))
+                .when(flow).discontinue(any(UUID.class));
+
+        mockMvc.perform(post("/books/{id}/commands/discontinue", BOOK_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-not-found"))
+                .andExpect(jsonPath("$.title").value("Sample not found"))
+                .andExpect(jsonPath("$.detail").value("No sample with that id"));
+    }
+
     // --- unavailable ---
 
     @Test
@@ -298,6 +311,19 @@ class BookCommandsTest {
         expectProblem(result, 503, "distributor-unavailable", "Distributor unavailable")
                 .andExpect(jsonPath("$.details.length()").value(1))
                 .andExpect(jsonPath("$.details[0].service").value("distributor"));
+    }
+
+    @Test
+    void unavailablePassesTheCodeTitleAndMessageOfTheExceptionToTheProblem() throws Exception {
+        doThrow(new UnavailableException("sample-unavailable", "Sample unavailable", "The sample is unavailable"))
+                .when(flow).discontinue(any(UUID.class));
+
+        mockMvc.perform(post("/books/{id}/commands/discontinue", BOOK_ID))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(content().contentType("application/problem+json"))
+                .andExpect(jsonPath("$.code").value("sample-unavailable"))
+                .andExpect(jsonPath("$.title").value("Sample unavailable"))
+                .andExpect(jsonPath("$.detail").value("The sample is unavailable"));
     }
 
     // --- the handler on its own ---
