@@ -84,15 +84,15 @@ Interpretations recorded (contradiction check C1 to C7 found nothing requiring a
 
 | Spec scenario | Tests (owning task) |
 |---|---|
-| Valid book is added | `CatalogueIntegrationTest.validBookIsAddedAndCanBeRead` (T8); `CatalogueFlowTest.addsAValidBookAsAvailableAndReturnsItsId` (T3); `BookCommandsTest.addReturns202WithTheNewBookId` (T5); `BookQueriesTest.findByIdReturnsTheDetailView` (T6); `BookTest.addToCatalogueCreatesAnAvailableBookWithANewId` (T1); `GenreTest.parsesAnyCase` (T1) |
-| Duplicate ISBN is rejected | `CatalogueIntegrationTest.duplicateIsbnIsRejected` (T8); `CatalogueFlowTest.rejectsADuplicateIsbn`, `checksDuplicatesWithTheNormalisedIsbn` (T3); `BookCommandsTest.addMapsAConflictTo409` (T5); `BookDataServiceImplTest.rejectsASecondBookWithTheSameIsbn`, `findsABookByIsbn` (T4); `IsbnTest.normalisesHyphensAndSpaces` (T1) |
-| Invalid checksum is rejected | `CatalogueIntegrationTest.invalidChecksumIsRejected` (T8); `IsbnTest.rejectsABadChecksum` (T1); `CatalogueFlowTest.rejectsAnInvalidIsbnWithFieldDetails` (T3); `BookCommandsTest.addMapsInvalidInputTo422` (T5) |
+| Valid book is added | `CatalogueIntegrationTest.validBookIsAddedAndCanBeRead` (T8); `CatalogueFlowTest.addsAValidBookAsAvailableAndReturnsItsId` (T3); `BookCommandsTest.addReturns202WithTheNewBookId` (T5); `BookQueriesTest.findByIdReturnsTheDetailViewWithTheAuthorsArrayAndThePublicationYear` (T6); `BookTest.addToCatalogueCreatesAnAvailableBookWithANewId` (T1); `GenreTest.parsesAnyCase` (T1) |
+| Duplicate ISBN is rejected | `CatalogueIntegrationTest.duplicateIsbnIsRejected` (T8); `CatalogueFlowTest.rejectsADuplicateIsbn`, `checksDuplicatesWithTheNormalisedIsbn` (T3); `BookCommandsTest.addMapsConflictTo409IsbnAlreadyExists` (T5); `BookDataServiceImplTest.rejectsASecondBookWithTheSameIsbn`, `findsABookByIsbn` (T4); `IsbnTest.normalisesHyphensAndSpaces` (T1) |
+| Invalid checksum is rejected | `CatalogueIntegrationTest.invalidChecksumIsRejected` (T8); `IsbnTest.rejectsABadChecksum` (T1); `CatalogueFlowTest.rejectsAnInvalidIsbnWithFieldDetails` (T3); `BookCommandsTest.addMapsInvalidInputTo422WithCodeAndDetails` (T5) |
 | Rounding | `MoneyTest.roundsHalfEvenToTwoDecimals` (T1); `CatalogueIntegrationTest.pricesAreRoundedHalfEven` (T8) |
 | Architecture guards the type | `ArchitectureTest.NO_DOUBLE_OR_FLOAT_FOR_MONEY` passes on production code (T7); `ArchitectureSelfTest.noDoubleOrFloatForMoney` names `archfixtures.domain.PricedBook` and the other three violators (T7) |
-| Price change on available book | `CatalogueIntegrationTest.priceChangeOnAnAvailableBook` (T8); `BookTest.changePriceUpdatesTheAvailableBooksPrice` (T1); `CatalogueFlowTest.changesThePriceOfAnAvailableBook` (T3); `BookCommandsTest.changePriceReturns202WithoutBody` (T5) |
-| Price change on discontinued book | `CatalogueIntegrationTest.priceChangeOnADiscontinuedBookIsRejectedAndThePriceIsUnchanged` (T8); `BookTest.changePriceOnADiscontinuedBookIsRejected` (T1); `CatalogueFlowTest.rejectsAPriceChangeOnADiscontinuedBook` (T3); `BookCommandsTest.changePriceMapsAConflictTo409` (T5) |
-| Search by author fragment and genre | `CatalogueIntegrationTest.searchByAuthorFragmentAndGenre` (T8); `BookDataServiceImplTest.searchCombinesCriteriaWithAnd`, `searchWithoutCriteriaReturnsEveryBookSortedByTitle`, `searchSortsBooksWithTheSameTitleByIsbn` (T4); `CatalogueFlowTest.searchesWithNormalisedCriteriaTheCanonicalGenreAndALimitOf100` (T3); `BookQueriesTest.searchPassesTheQueryParametersToTheFlow` (T6) |
-| Unknown genre | `CatalogueIntegrationTest.unknownGenreIsRejected` (T8); `GenreTest.rejectsAnUnknownGenre` (T1); `CatalogueFlowTest.rejectsAnUnknownGenreInSearchListingTheValidGenres` (T3); `BookQueriesTest.searchMapsUnknownGenreTo422` (T6) |
+| Price change on available book | `CatalogueIntegrationTest.priceChangeOnAnAvailableBook` (T8); `BookTest.changePriceUpdatesTheAvailableBooksPrice` (T1); `CatalogueFlowTest.changesThePriceOfAnAvailableBook` (T3); `BookCommandsTest.changePriceReturns202WithoutABodyAndPassesTheAmount` (T5) |
+| Price change on discontinued book | `CatalogueIntegrationTest.priceChangeOnADiscontinuedBookIsRejectedAndThePriceIsUnchanged` (T8); `BookTest.changePriceOnADiscontinuedBookIsRejected` (T1); `CatalogueFlowTest.rejectsAPriceChangeOnADiscontinuedBook` (T3); `BookCommandsTest.changePriceMapsConflictTo409BookDiscontinued` (T5) |
+| Search by author fragment and genre | `CatalogueIntegrationTest.searchByAuthorFragmentAndGenre` (T8); `BookDataServiceImplTest.searchCombinesCriteriaWithAnd`, `searchWithoutCriteriaReturnsEveryBookSortedByTitle`, `searchSortsBooksWithTheSameTitleByIsbn` (T4); `CatalogueFlowTest.searchesWithNormalisedCriteriaTheCanonicalGenreAndALimitOf100` (T3); `BookQueriesTest.searchPassesTheFourRawQueryParametersToTheFlowInOrder` (T6) |
+| Unknown genre | `CatalogueIntegrationTest.unknownGenreIsRejected` (T8); `GenreTest.rejectsAnUnknownGenre` (T1); `CatalogueFlowTest.rejectsAnUnknownGenreInSearchListingTheValidGenres` (T3); `BookQueriesTest.searchMapsInvalidInputTo422UnknownGenreWithTheGenreList` (T6) |
 | Free-text search | `CatalogueIntegrationTest.freeTextSearchMatchesTitleOrAuthor` (T8); `BookDataServiceImplTest.searchMatchesTitleOrAuthorForFreeText` (T4) |
 
 | Rule beyond the scenarios | Tests |
@@ -101,22 +101,22 @@ Interpretations recorded (contradiction check C1 to C7 found nothing requiring a
 | Money: arithmetic, comparison, toString, negative, non-EUR, unparsable, scale-insensitive equality | `MoneyTest` (T1) |
 | Title 1 to 200 trimmed; AuthorName 1 to 120 trimmed | `TitleTest`, `AuthorNameTest` (T1) |
 | Genre: hyphen or underscore, whitespace, null and blank, ten constants in order | `GenreTest` (T1) |
-| Price greater than 0.00 and at most 500.00 | `BookTest` boundaries (T1); `CatalogueFlowTest.rejectsAPriceOutOfRangeOnAdd`, `rejectsAnOutOfRangePriceChange` (T3); `BookCommandsTest.changePriceMapsInvalidInputTo422` (T5) |
+| Price greater than 0.00 and at most 500.00 | `BookTest` boundaries (T1); `CatalogueFlowTest.rejectsAPriceOutOfRangeOnAdd`, `rejectsAnOutOfRangePriceChange` (T3); `BookCommandsTest.changePriceMapsInvalidInputTo422PriceOutOfRange` (T5) |
 | Publication year 1450 to next year | `BookTest` boundaries (T1); `CatalogueFlowTest.rejectsAPublicationYearOutOfRange` (T3) |
 | Authors 1 to 5, ordered | `BookTest` (T1); `CatalogueFlowTest.rejectsAnInvalidNumberOfAuthors`, `rejectsAnInvalidAuthorName`, `rejectsAnInvalidTitle` (T3); `BookDataServiceImplTest.keepsAuthorsInTheirOrder` (T4) |
 | Discontinued check precedes the range check | `BookTest.discontinuedCheckPrecedesThePriceRange` (T1) |
 | Discontinuing twice is a no-op | `BookTest.discontinuingTwiceIsANoOp` (T1); `CatalogueFlowTest.discontinuingADiscontinuedBookSucceeds` (T3); `CatalogueIntegrationTest.discontinuingTwiceIsANoOp` (T8) |
 | restore keeps id and status, still validates | `BookTest.restoreKeepsIdAndStatus`, `restoreStillValidatesInvariantsForTheAuthorCount`, `...ForThePrice`, `...ForThePublicationYear` (T1); `BookDomainMapperTest.mapsAnAvailableDtoToTheDomainAndBackToAnEqualDto`, `mapsADiscontinuedDtoToTheDomainAndBackToAnEqualDto`, `stillAppliesTheBookInvariantsWhenRestoring` (T2) |
 | Port exceptions carry the spec codes | `UseCaseExceptionsTest` (T2) |
-| 404 on get, change-price, discontinue | `BookQueriesTest.findByIdMapsNotFoundTo404` (T6); `BookCommandsTest.changePriceMapsNotFoundTo404`, `discontinueMapsNotFoundTo404` (T5); `CatalogueFlowTest` pass-through (T3); `BookDataServiceImplTest.findByIdThrowsBookNotFoundForAnUnknownId` (T4); `CatalogueIntegrationTest.unknownBookIsNotFound` (T8) |
-| 400 validation-failed | `BookCommandsTest.addRejectsMissingFieldsWith400`, `addRejectsABlankAuthorNameWith400`, `addRejectsANonDecimalPriceWith400`, `changePriceRejectsAMissingPriceWith400` (T5); `CatalogueIntegrationTest.incompleteBookIsRejectedWith400` (T8) |
+| 404 on get, change-price, discontinue | `BookQueriesTest.findByIdMapsNotFoundTo404BookNotFound` (T6); `BookCommandsTest.changePriceMapsNotFoundTo404BookNotFound`, `discontinueMapsNotFoundTo404` (T5); `CatalogueFlowTest` pass-through (T3); `BookDataServiceImplTest.findByIdThrowsBookNotFoundForAnUnknownId` (T4); `CatalogueIntegrationTest.unknownBookIsNotFoundOnGet`, `unknownBookIsNotFoundOnChangePrice`, `unknownBookIsNotFoundOnDiscontinue` (T8) |
+| 400 validation-failed | `BookCommandsTest.addRejectsMissingFieldsWithValidationFailedListingEveryField`, `addRejectsABlankAuthorNameNamingTheListElement`, `addRejectsANonDecimalPriceWith400`, `changePriceRejectsAMissingPriceWith400` (T5); `CatalogueIntegrationTest.incompleteBookIsRejectedWith400` (T8) |
 | Genre in AddBookPayload follows the same rule | `CatalogueFlowTest.rejectsAnUnknownGenreOnAddListingTheValidGenres` (T3); `CatalogueIntegrationTest.unknownGenreOnAddIsRejected` (T8) |
 | Blank criteria are absent; `?genre=` is not 422 | `CatalogueFlowTest.treatsBlankCriteriaAsAbsent` (T3) |
 | Search: title only, author only, case-insensitive contains, genre exact, each book once, cap 100, `%` and `_` literal, no criteria | `BookDataServiceImplTest` (T4) |
 | Save round trip, update and version, optimistic locking | `BookDataServiceImplTest.savesANewBookAndFindsItById`, `updatesAnExistingBookAndIncrementsItsVersion`, `rejectsAStaleUpdate` (T4) |
 | Discontinued books are included and marked | `CatalogueIntegrationTest.discontinuedBooksAreIncludedInSearchWithTheirStatus` (T8) |
-| Prices are strings with two decimals; view shapes | `BookQueriesTest.searchReturnsBookViewsWithJoinedAuthorsAndStringPrice`, `findByIdReturnsTheDetailView` (T6) |
-| ProblemDetail shape for every use-case exception including 503 | `BookCommandsTest.mapsUnavailableTo503`, `BookQueriesTest.mapsUnavailableTo503` plus the 404, 409 and 422 cases (T5, T6) |
+| Prices are strings with two decimals; view shapes | `BookQueriesTest.searchReturnsBookViewsWithJoinedAuthorsAndAStringPrice`, `findByIdReturnsTheDetailView` (T6) |
+| ProblemDetail shape for every use-case exception including 503 | `BookCommandsTest.unavailableMapsTo503WithTheCodeAndDetailsOfTheException`, `BookQueriesTest.searchMapsUnavailableTo503WithTheCodeAndDetailsOfTheException`, `findByIdMapsUnavailableTo503` plus the 404, 409 and 422 cases (T5, T6) |
 | Clock bean is UTC and wired | `ClockConfigTest.providesAUtcClock` (T3) |
 
 ## Checksum-verified test ISBNs
@@ -132,6 +132,9 @@ Interpretations recorded (contradiction check C1 to C7 found nothing requiring a
 | 9780140296907 | Jane Austen: A Life, Claire Tomalin, history (title match only) |
 | 9791090636071 | valid 979 prefix (`IsbnTest`) |
 | 9771234567898 | valid checksum, wrong prefix 977 (`IsbnTest`) |
+| 9780141439600 | valid, check digit 0 (`IsbnTest`); spare ISBN in the smoke run |
+| 9780141439617 | The History of England, Jane Austen, history (genre decoy in the author-plus-genre scenario) |
+| 9780141439747 | Mathilda, Mary Shelley, fiction (author decoy in the author-plus-genre scenario) |
 
 ## Spec 01 follow-ups
 

@@ -1,10 +1,10 @@
 ---
 spec: 02-catalogue
 source: docs/spec-pack/specs/02-catalogue.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-07T02:20:00Z
-gate2: (pending)
+gate2: 2026-11-07T09:37:58Z
 qa-lead: on
 base: factory
 spec-branch: sdd/02-catalogue/spec
@@ -35,17 +35,17 @@ Build the catalogue slice through every onion layer of the `bookstore` module, t
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Domain: value objects, `Book` aggregate, nine domain exceptions, domain tests | bookstore | [] | 1 | critical | opus | pr | PASS (r2) | ENDORSE | 1 | #9 (sdd/02-catalogue/T1) | |
-| T7 | Money ArchUnit rule, six violator fixtures plus one control, self-test entries, folded follow-ups F10, F11, F12 (descriptions), F13, F15 | bookstore | [T1] | 2 | critical | opus | pr | PASS (r3) | ENDORSE (r3; REJECT r1) | 2 | #10 (sdd/02-catalogue/T7) | |
-| T2 | Four use-case exceptions, `BookDTO`, `BookDomainMapper`, `BookDataService` port with nested `BookNotFoundException` and `IsbnAlreadyExistsException` | bookstore | [T1, T7] | 3 | elevated | sonnet | pr | PASS (r1) | ENDORSE | 0 | #11 (sdd/02-catalogue/T2) | |
-| T4 | `V1__create_catalogue.sql`, `BookJPA`, `BookJPAMapper`, `BookRepository`, `BookDataServiceImpl`, `BookDataServiceImplTest` | bookstore | [T2] | 4 | critical | opus | pr | PASS (r2) | ENDORSE | 1 | #12 (sdd/02-catalogue/T4) | |
-| T3 | `CatalogueFlow` (five use cases) and `ClockConfig`, `CatalogueFlowTest`, `ClockConfigTest` | bookstore | [T2, T4] | 5 | critical | opus | pr | PASS (r1) | ENDORSE | 0 | #13 (sdd/02-catalogue/T3) | |
-| T5 | Command adapter: `BookCommands`, `AddBookPayload`, `ChangePricePayload`, `CommandResult`, `CommandExceptionHandler`, `BookCommandsTest` | bookstore | [T3] | 6 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #14 (sdd/02-catalogue/T5) | |
-| T6 | Query adapter: `BookQueries`, `BookView`, `BookDetailView`, `QueryExceptionHandler`, `BookQueriesTest` | bookstore | [T3] | 7 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #15 (sdd/02-catalogue/T6) | |
-| T10 | Fix task (amendment A3): `BookCommandsTest` pins the `details` pass-through of the 404 and 409 handlers | bookstore | [T5] | 8 | elevated | sonnet | pr | PASS (r1) | ENDORSE | 0 | #16 (sdd/02-catalogue/T10) | |
-| T11 | Fix task (amendments A4, A5): `BookCommandsTest` and `BookQueriesTest` pin `code` and `title` pass-through per handler (six handlers) | bookstore | [T10, T6] | 8 | elevated | sonnet | pr | PASS (r2) | ENDORSE (r2; REJECT r1) | 1 | #17 (sdd/02-catalogue/T11) | |
-| T8 | `CatalogueIntegrationTest` covering every HTTP scenario of the spec | bookstore | [T5, T6] | 8 | critical | opus | pr | PASS (r2) | ENDORSE | 1 | #18 (sdd/02-catalogue/T8) | |
-| T9 | `http/catalogue.http` with one request per endpoint | root | [T5, T6] | 8 | standard | sonnet | pr | PASS (r1) | ENDORSE | 0 | #19 (sdd/02-catalogue/T9) | |
+| T1 | Domain: value objects, `Book` aggregate, nine domain exceptions, domain tests | bookstore | [] | 1 | critical | opus | merged | PASS (r2) | ENDORSE | 1 | #9 (sdd/02-catalogue/T1) | 8b121e8 (squash) |
+| T7 | Money ArchUnit rule, six violator fixtures plus one control, self-test entries, folded follow-ups F10, F11, F12 (descriptions), F13, F15 | bookstore | [T1] | 2 | critical | opus | merged | PASS (r3) | ENDORSE (r3; REJECT r1) | 2 | #10 (sdd/02-catalogue/T7) | 8bfa160 (squash) |
+| T2 | Four use-case exceptions, `BookDTO`, `BookDomainMapper`, `BookDataService` port with nested `BookNotFoundException` and `IsbnAlreadyExistsException` | bookstore | [T1, T7] | 3 | elevated | sonnet | merged | PASS (r1) | ENDORSE | 0 | #11 (sdd/02-catalogue/T2) | 8b59d07 (squash) |
+| T4 | `V1__create_catalogue.sql`, `BookJPA`, `BookJPAMapper`, `BookRepository`, `BookDataServiceImpl`, `BookDataServiceImplTest` | bookstore | [T2] | 4 | critical | opus | merged | PASS (r2) | ENDORSE | 1 | #12 (sdd/02-catalogue/T4) | 18d0ff5 (squash) |
+| T3 | `CatalogueFlow` (five use cases) and `ClockConfig`, `CatalogueFlowTest`, `ClockConfigTest` | bookstore | [T2, T4] | 5 | critical | opus | merged | PASS (r1) | ENDORSE | 0 | #13 (sdd/02-catalogue/T3) | cf76fba (squash) |
+| T5 | Command adapter: `BookCommands`, `AddBookPayload`, `ChangePricePayload`, `CommandResult`, `CommandExceptionHandler`, `BookCommandsTest` | bookstore | [T3] | 6 | elevated | sonnet | merged | PASS (r2) | ENDORSE | 1 | #14 (sdd/02-catalogue/T5) | bb4457f (squash) |
+| T6 | Query adapter: `BookQueries`, `BookView`, `BookDetailView`, `QueryExceptionHandler`, `BookQueriesTest` | bookstore | [T3] | 7 | elevated | sonnet | merged | PASS (r2) | ENDORSE | 1 | #15 (sdd/02-catalogue/T6) | 3bb6aed (squash) |
+| T10 | Fix task (amendment A3): `BookCommandsTest` pins the `details` pass-through of the 404 and 409 handlers | bookstore | [T5] | 8 | elevated | sonnet | merged | PASS (r1) | ENDORSE | 0 | #16 (sdd/02-catalogue/T10) | e4a276c (squash) |
+| T11 | Fix task (amendments A4, A5): `BookCommandsTest` and `BookQueriesTest` pin `code` and `title` pass-through per handler (six handlers) | bookstore | [T10, T6] | 8 | elevated | sonnet | merged | PASS (r2) | ENDORSE (r2; REJECT r1) | 1 | #17 (sdd/02-catalogue/T11) | d2e568f (squash) |
+| T8 | `CatalogueIntegrationTest` covering every HTTP scenario of the spec | bookstore | [T5, T6] | 8 | critical | opus | merged | PASS (r2) | ENDORSE | 1 | #18 (sdd/02-catalogue/T8) | efd5540 (squash) |
+| T9 | `http/catalogue.http` with one request per endpoint | root | [T5, T6] | 8 | standard | sonnet | merged | PASS (r1) | ENDORSE | 0 | #19 (sdd/02-catalogue/T9) | 15d1828 (squash) |
 
 Execution order, one task at a time: T1, T7, T2, T4, T3, T5, T6, T10 (fix task, amendment A3), T11 (fix task, amendment A4), T8, T9. T4 merges before T3 because a `@Service CatalogueFlow` without a `BookDataService` bean breaks the three existing full-context tests. T7 precedes T2 so the money rule guards every later layer as it lands.
 
@@ -68,7 +68,7 @@ Execution order, one task at a time: T1, T7, T2, T4, T3, T5, T6, T10 (fix task, 
 | 422 | `publication-year-out-of-range` | Publication year out of range | `PublicationYearOutOfRangeException` | `[{field: "publicationYear", message}]` |
 | 503 | from the exception | from the exception | `UnavailableException` (nothing throws it in spec 02; both handlers map it) | from the exception |
 
-Per endpoint: add gives 202, 400, 409 `isbn-already-exists`, the seven 422 codes; change-price gives 202, 400, 404, 409 `book-discontinued`, 422 `price-out-of-range`; discontinue gives 202, 404; search gives 200, 422 `unknown-genre`; get gives 200, 404. Accepted defaults (not in the spec): a concurrent update ends as HTTP 500 (`ObjectOptimisticLockingFailureException` is not mapped); malformed JSON, wrong JSON types and bad UUIDs give Boot's empty-body 400.
+Per endpoint: add gives 202, 400, 409 `isbn-already-exists`, the seven 422 codes; change-price gives 202, 400, 404, 409 `book-discontinued`, 422 `price-out-of-range`; discontinue gives 202, 404; search gives 200, 422 `unknown-genre`; get gives 200, 404. Accepted defaults (not in the spec): a concurrent update ends as HTTP 500 (`ObjectOptimisticLockingFailureException` is not mapped); malformed JSON, wrong JSON types and bad UUIDs give Boot's default 400 (an empty body in the MockMvc slice; on the live app Boot's default error JSON with timestamp, status, error and path, plus one WARN line).
 
 ## Tasks
 
@@ -404,7 +404,10 @@ T9-6 Referee per C0-1; 4 Started lines unchanged.
 
 ## Final QA sweep and Gate 2
 
-(pending)
+- qa-final: PASS (2026-11-07T09:37:58Z; verdict `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`): fresh clone of the spec tip 15d1828, `./mvnw clean verify` BUILD SUCCESS, bookstore 316 tests and distributor 3 tests, 0 failures, 0 errors, 0 skipped, `Total time: 11.913 s`, wall clock 12.90 s; one container, four contexts, exactly one accepted HHH000247; both test orders green; Turkish-locale run green with the `Genre.parse` probe killed; live smoke of `http/catalogue.http` (14 requests plus follow-up GETs, all as expected, database rows and constraints as expected); whole-diff greps clean (`grep -ri discount bookstore/src` empty); ten scenarios and the Tests (required) list traced; integrity 74 hashes OK plus the three superseded entries; PR readiness checklist: failing 0, skips 0 to 0, gitlinks none, base ancestor yes, CI runs 42357925004 and 42357920479 green on the tip.
+- QA lead final-review: META ENDORSE final r1; Gate 2 QA assessment confidence high; no acceptance criterion untraced; no human override; hot spots T7, T4, T5, T6, T11, T8 (every rework test-only, no production defect); standards proposals S8 to S16 for a future `agent-os/standards/testing.md` (ledger `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-02-catalogue.md`, section "Gate 2 QA assessment").
+- Gate 2 self-accepted by the orchestrator (2026-11-07T09:37:58Z): qa-final PASS endorsed with confidence high; all eleven task PRs merged; no unattributed stragglers; the diff is confined to the spec's file scopes plus tests; every acceptance criterion covered by a verdict.
+- Open follow-ups: F17 (ArchitectureTest class Javadoc), F21 (Turkish-locale test for the search lower-casing), F22 (literal U+2003 in CatalogueFlowTest), F23 (ChangePricePayload regex by inspection), F24 (toPlainString witness, optional), F25 (result-order test data, low), F26 (shape.md ISBN table, fixed below), F27 (constraint-name query on PostgreSQL 18 needs `contype <> 'n'`); spec 01 deferrals F1 to F8 (F1 and F4 recommended for a higher priority now that a slice context exists).
 
 ## Amendments
 
