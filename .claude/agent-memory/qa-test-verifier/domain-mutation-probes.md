@@ -20,5 +20,7 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 
 - Pass-through `Clock` parameters: always probe "use `Clock.systemUTC()` instead of the parameter". A test whose year is rejected by both the fixed clock and the real one (for example 2028 against a 2026 clock) survives. The witness is a fixed clock in the past plus a year only the real clock accepts.
 - Parameterized per-class tests (several exception classes with no shared base): a one-class mutation must fail only index `[n]`. That proves the parametrisation binds every class.
+- Oracle trap: flow tests that compute the expected message by calling production code (a `domainMessage(() -> mapper...)` helper) fail inside the oracle when that code is mutated, before the flow assertion runs. The kill is real, but prove the flow assertion bites with a temporary oracle-free witness (exact type, code, `never().save`), run it under the mutation and on restored code, then `rm` it.
+- Short-circuit trap: a probe that breaks two halves at once (blank genre and blank text criteria) can be killed by the first half alone (the genre throws before `search` is verified). Split it into a probe for the second half so that half is shown pinned on its own.
 
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
