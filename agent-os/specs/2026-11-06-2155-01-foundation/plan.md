@@ -1,9 +1,10 @@
 ---
 spec: 01-foundation
 source: docs/spec-pack/specs/01-foundation.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-06T21:55:00Z
+gate2: 2026-11-07T00:59:12Z
 qa-lead: on
 base: factory
 spec-branch: sdd/01-foundation/spec
@@ -32,11 +33,11 @@ Create the Maven multi-module build (Java 25, Spring Boot 4.1.2, Spring AI BOM 2
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Build skeleton: both modules generated from start.spring.io with curl, root POM, single wrapper, .gitattributes, .gitignore, .editorconfig | root | [] | 1 | critical | opus | merged | PASS | ENDORSE | 1 | #2 (sdd/01-foundation/T1) | squash via PR #2 |
-| T2 | CI workflow: `verify` on ubuntu-latest, `windows-build` on windows-latest, on every push and every pull request | root | [T1] | 2 | elevated | sonnet | pr | PASS | ENDORSE | 1 | #3 (sdd/01-foundation/T2) | |
-| T3 | Bookstore runtime and database configuration plus test infrastructure | bookstore | [T1] | 2 | critical | opus | pr | PASS | ENDORSE | 1 | #4 (sdd/01-foundation/T3) | |
-| T6 | Distributor configuration (127.0.0.1, port 8090, actuator health and info) with context and health tests | distributor | [T1] | 2 | standard | sonnet | pr | PASS | ENDORSE | 1 | #5 (sdd/01-foundation/T6) | |
-| T4 | Eight layer packages with package-info.java and ArchitectureTest (20 named rules passing on the empty packages) | bookstore | [T1] | 3 | critical | opus | pr | PASS | ENDORSE | 1 | #6 (sdd/01-foundation/T4) | |
-| T5 | Fixtures in nl.openvalue.archfixtures and ArchitectureSelfTest proving every rule bites | bookstore | [T4] | 4 | critical | opus | pr | PASS | ENDORSE | 1 | #7 (sdd/01-foundation/T5) | |
+| T2 | CI workflow: `verify` on ubuntu-latest, `windows-build` on windows-latest, on every push and every pull request | root | [T1] | 2 | elevated | sonnet | merged | PASS | ENDORSE | 1 | #3 (sdd/01-foundation/T2) | 8dfb069 (squash) |
+| T3 | Bookstore runtime and database configuration plus test infrastructure | bookstore | [T1] | 2 | critical | opus | merged | PASS | ENDORSE | 1 | #4 (sdd/01-foundation/T3) | 88becf0 (squash) |
+| T6 | Distributor configuration (127.0.0.1, port 8090, actuator health and info) with context and health tests | distributor | [T1] | 2 | standard | sonnet | merged | PASS | ENDORSE | 1 | #5 (sdd/01-foundation/T6) | 9fb2a96 (squash) |
+| T4 | Eight layer packages with package-info.java and ArchitectureTest (20 named rules passing on the empty packages) | bookstore | [T1] | 3 | critical | opus | merged | PASS | ENDORSE | 1 | #6 (sdd/01-foundation/T4) | aa2a921 (squash) |
+| T5 | Fixtures in nl.openvalue.archfixtures and ArchitectureSelfTest proving every rule bites | bookstore | [T4] | 4 | critical | opus | merged | PASS | ENDORSE | 1 | #7 (sdd/01-foundation/T5) | 389bf4a (squash) |
 
 Execution order, one task at a time: T1, T2, T3, T6, T4, T5. Pack tasks 7 (push, confirm both CI jobs green) and 8 (measure `./mvnw -q verify`) are orchestrator work.
 
@@ -312,9 +313,17 @@ T5-5 `find bookstore/src/test/java/nl/openvalue/archfixtures bookstore/src/test/
 
 - Follow-ups from the T5 meta-review (for the qa-final brief and the spec 02 QA strategy; hardening H1 deferred by orchestrator decision of 2026-11-07T00:21:03Z): F10 the positive control (event-only process class) is asserted absent only from rule 1, so a shared LayeredArchitecture instance (M10) survives; F11 a 21st rule written as an `@ArchTest` method (M13) is not checked against the fixtures; F12 the per-rule check uses `detail.contains(fqn)`, so three one-word layer swaps in ArchitectureTest survive (match the violator as the first class named, check `getDescription()` against the standard); F13 built-in controls never asserted (rule 8 on command.BookController, rule 4 on primitive and array fields); F14 only the command suffix set is asserted in full; F15 two wider rule changes survive (rule 3 opened to an unrelated layer, rule 4 opened to `nl.openvalue..`).
 
+## Final QA sweep and Gate 2
+
+- qa-final (opus): round 1 FAIL on tip 389bf4a for the base-ancestor item only (origin/factory had moved to 07cfbba, the owner's commit adding `.claude/settings.json`); fixed by merging origin/factory into the spec branch (merge commit a997d98, no rebase, no force-push, no product change); round 2 PASS on tip a997d98. Verdict: `.claude/comms/mailboxes/qa-final/outbox/final-verdict.md`.
+- QA lead final-review: ENDORSE, Gate 2 QA assessment confidence high; all 50 plan criteria, all 11 pack scenarios, the Tests (required) list and the Definition of done traced. Residual risks R1 to R8 and standards proposals S1 to S7 in the QA ledger.
+- Fresh-clone `./mvnw clean verify` on a997d98: BUILD SUCCESS, Total time 9.450 s (10.31 s real); warm `./mvnw -q verify`: 8.14 s real (orchestrator measurement on 389bf4a: 8 s). Budget 60 s.
+- CI on a997d98: push run 42320019674 and pull_request run 42320024299, `verify` and `windows-build` green.
+- Gate 2 self-accepted by the orchestrator on 2026-11-07T00:59:12Z.
+
 ## Amendments
 
-- %s, orchestrator (T5 meta-review H1): the QA lead's hardening recommendation for ArchitectureSelfTest (first-named-class matching, rule descriptions checked against the standard, no @ArchTest methods) is deferred: the pack scenarios are met, the 20 rules are correct today (T4 line-by-line review, T5 dump), and the pack spec adds no such criterion. F10 to F15 go to the spec 02 QA strategy and are reported to the main session.
+- 2026-11-07T00:21:03Z, orchestrator (T5 meta-review H1): the QA lead's hardening recommendation for ArchitectureSelfTest (first-named-class matching, rule descriptions checked against the standard, no @ArchTest methods) is deferred: the pack scenarios are met, the 20 rules are correct today (T4 line-by-line review, T5 dump), and the pack spec adds no such criterion. F10 to F15 go to the spec 02 QA strategy and are reported to the main session.
 - 2026-11-06T23:24Z, orchestrator (impl-t4 question): the T4 criterion "no package-info.class is produced" was an orchestrator addition, not a pack requirement. maven-compiler-plugin 3.15.0 (managed by Boot 4.1.2) writes an empty package-info.class for Javadoc-only package-info.java by default; suppressing it needs a POM or .mvn change outside T4's scope and outside the pack spec. Clause "no package-info.class is produced" dropped from the T4 criterion and the T4-5 class-file check replaced by a source-level check (Javadoc plus package declaration only, no annotations, no imports). Confirmed by the main session. No file scope change.
 - 2026-11-06T22:22Z, orchestrator (after T1 meta-review): the expected tuple in QA directive T1-7 was wrong; `git check-attr eol -- mvnw mvnw.cmd x.sh .githooks/pre-commit x.ps1 x.cmd` must give (lf, crlf, lf, lf, crlf, crlf) in argument order. Corrected in place. No consequence for T1 (the verifier checked argument by argument).
 - 2026-11-06T22:22Z, orchestrator (Q-T1-W): framework warnings that no task's criteria own (Mockito/Byte Buddy dynamic agent, JDK CDS, flyway-parent `prefixes.txt` 401) are accepted and recorded, not fixed in spec 01; reported to the main session as a follow-up candidate. See QA feed-forward W1.
