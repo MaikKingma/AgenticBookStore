@@ -1,0 +1,2 @@
+- [Spring tx event traps](spring-tx-event-traps.md) — listener order voids rollback proofs, BEFORE_COMMIT thrower, swallowed after-commit errors, test bean registration
+- [Spring MVC validation traps](spring-mvc-validation-traps.md) — Jackson 3 primitive nulls, class-level @Validated, boolean params, params conditions vs scoped advice

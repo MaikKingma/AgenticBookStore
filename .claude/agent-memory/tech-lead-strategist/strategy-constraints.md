@@ -22,7 +22,16 @@ metadata:
 - **Green after every merge, bean order.** Tasks run one at a time and every full-context test shares one context, so
   a task adding a bean with a constructor dependency must merge after the task providing it: data adapter (port
   impl) before the flow that injects the port, flow before the controllers, `Clock` config with its first consumer.
-  The pack task lists put the flow before the data adapter; flip it and say why in `dependsOn`.
+  The pack task lists put the flow before the data adapter; flip it and say why in `dependsOn`. The same holds for
+  data existence (a query adapter that composes flows merges after the task that guarantees the composed rows exist)
+  and for pins: a view change merges in the same task as the full-context tests that pin its key set.
+- **Transactional claims need a failure device.** With `saveAndFlush` adapters, removing `@Transactional` is invisible
+  on the happy path, so plan a behavioural proof per claim: a test-only `BEFORE_COMMIT` thrower plus an
+  `AFTER_ROLLBACK` recorder for "events after commit, none on rollback", a `@MockitoSpyBean` on the shared base that
+  throws for multi-aggregate atomicity. Inspection alone leaves the QA mutation probe surviving.
+- **Tool trap: escapes in tool input.** Write/Edit decode a typed backslash-u-hex sequence into the literal character
+  (it hit a strategy doc and an orchestrator brief). Java test data that needs such a character is built from code
+  points (`Character.toString(0x2003)`); every doc and source written gets a byte-level `[^\x00-\x7F]` grep.
 - **DoD vs orchestrator ledger.** Check DoD lines that write to `docs/spec-pack/orchestrator/progress.md`; the
   orchestrator may have decided not to edit it, which leaves the line unowned. Raise it as an open question.
 

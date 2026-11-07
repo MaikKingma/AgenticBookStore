@@ -15,6 +15,10 @@ Rule: one PostgreSQL container per test JVM and one Spring context for all books
 - `IntegrationTestBase` (RANDOM_PORT, `@AutoConfigureRestTestClient`, `@Import(PostgresTestConfig.class)`) is the one
   canonical context; context-load and health tests extend it too. Spec 07 adds a `@MockitoBean` there, which keeps
   sharing because it is on the base, never per subclass.
+- Test-only beans for full-context tests (event recorders, spies) go on `IntegrationTestBase`: a plain class added
+  to its `@Import` (never a stereotype: a test-sources `@Component` is component-scanned into every full context and
+  the `@Import` is ignored), `@MockitoSpyBean` or `@MockitoBean` fields on the base, state reset in the base
+  `@BeforeEach`. Every subclass then shares one key.
 - Never `@DirtiesContext`: closing a context stops the shared container under the other cached contexts.
 - Gate in task cards: the bookstore Surefire output shows one "Creating container for image" line and one Spring
   "Started ... in" line per distinct context; review any new context deliberately.
