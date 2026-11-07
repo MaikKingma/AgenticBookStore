@@ -50,7 +50,7 @@ Add the inventory slice through every onion layer of the `bookstore` module, mir
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Domain: `Quantity`, `DomainEvent`, `StockRunningLowEvent`, `StockItem`, six domain exceptions; `QuantityTest`, `StockItemTest` | bookstore | [] | 1 | critical | opus | pending | | | 0 | | |
+| T1 | Domain: `Quantity`, `DomainEvent`, `StockRunningLowEvent`, `StockItem`, six domain exceptions; `QuantityTest`, `StockItemTest` | bookstore | [] | 1 | critical | opus | pr | PASS (r2) | ENDORSE (r2) | 1 | #21 (sdd/03-inventory/T1) | (squash pending) |
 | T2 | `StockItemDTO`, `StockItemDomainMapper`, `StockItemDataService` with nested `StockItemNotFoundException`; `StockItemDomainMapperTest`, `UseCaseExceptionsTest` additions | bookstore | [T1] | 2 | elevated | sonnet | pending | | | 0 | | |
 | T3 | `V2__create_inventory.sql`, `StockItemJPA`, `StockItemJPAMapper`, `StockItemRepository`, `StockItemDataServiceImpl`; `StockItemDataServiceImplTest` | bookstore | [T2] | 3 | critical | opus | pending | | | 0 | | |
 | T4 | `InventoryFlow` (four use cases, events published after save); `InventoryFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | pending | | | 0 | | |
@@ -480,7 +480,11 @@ T10-7 Referee per C0-1 (7 Started lines; the file is not a build input); nothing
 
 ## QA feed-forward
 
-(none yet)
+- FF1 (from T1 meta-review; implDirective, every task, rework rounds): in a test-only rework round, never edit a production file, not even temporarily and not even inside the fileScope; describe the mutant the new test kills in the outbox artifact. Mutation probes are the verifier's job.
+- FF2 (qaDirective, every task): spec 02 left `t<n>-qa-*` files in the scratchpad. Before writing evidence, `ls -lT SP/t<n>-qa-*`; if a name already exists from before this round, use a distinct name and say so. Every cited evidence file carries an mtime inside this round's window.
+- FF3 (qaDirective, every task): `rg` is not on PATH inside `bash <script>` runs (exit 127). Run every `rg` item directly in the Bash tool, each with its positive control; a script's `rg` output is no evidence.
+- FF4 (qaDirective, any task that adds a comparison against a limit; first T2, T3 and T7): enumerate every comparison site against a limit in the task's production diff and run, per site, a probe that replaces the limit field with its default literal. A survivor is judged against the criterion text (C0-3).
+- Follow-up F28 (from T1, owed by the spec that next edits the signal logic, spec 07): tests that `ship` and `reserve` on an item whose signal is set and whose available stock is above the level, asserting the signal stays set.
 
 ## Amendments
 
