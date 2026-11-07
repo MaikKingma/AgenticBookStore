@@ -1,0 +1,22 @@
+---
+name: integration-test-probes
+description: Mutation-probe techniques and traps for full-context HTTP integration tests in the bookstore (combined search filters, view choice, transaction boundary, heap order, cleaner informational runs)
+metadata:
+  type: feedback
+---
+
+Rule: in a combined-criteria search scenario, every criterion needs a data row that only THAT criterion excludes. Probe each criterion one at a time, dropping it at the adapter (pass `null`).
+
+**Why:** spec-pack scenario data is often redundant. In "author=austen&genre=FICTION", every fiction book was by Austen, so dropping `author` left the exact list green, while the plan's extra row (an Austen book in another genre) only made genre load-bearing. The slice test killed the drop, but the full-context scenario did not.
+**How to apply:**
+- For each filter, ask which row would appear if that filter were gone. If no row would appear, the filter is a survivor. Prove it with a temporary witness class extending `IntegrationTestBase`: the same context, so no extra Started line. Show it passes on the real code and fails on the mutant, then `rm` it.
+- View probes: check which endpoint the asserting test reads. `GET /books/{id}` serialises the detail view, `GET /books` the list view. A price-format probe on the list view is not killed by a rounding test that reads the detail view, so probe both views.
+- Transaction boundary with `open-in-view: false` and lazy `@ElementCollection`: removing the class-level `@Transactional` gives `LazyInitializationException` and a 500 on change and discontinue. Method-level `readOnly` annotations keep reads working, so remove them too (findById, search) for the read-path proof.
+- An "order by removed" probe can survive by coincidence after an UPDATE: PostgreSQL appends the new tuple version, so heap order changes. Count on the tests without updates to kill it.
+- "Pre-check removed" probes on a DB-backed unique constraint survive end to end, because the constraint gives the same 409. They show up only as an extra `HHH000247` in the log. Count it.
+- Informational "cleaner removed" order runs are inconclusive when the last JUnit method of the earlier class commits no rows. Read the testcase order from the Surefire XML, and remember that a `[A-Za-z]+` regex drops names with digits.
+- List EVERY file a probe may touch in the before-snapshot script up front. An extra probe on an unlisted file needs a separate baseline-hash proof.
+- Data-only rework round: `diff` the minus-copy against the file. Its `NNNaMMM` headers give the insertion points, and from them the old-to-new line mapping for every carried-forward citation. Carry a probe forward only when at least one of its killing test methods is byte-identical. Re-run the probes whose killing test gained a row, and check that the mutant's actual list still excludes the new row (each witness hits only its own criterion).
+- Implementers sometimes run probes themselves by editing production files. Hash-check every production file against the task baselines before your own probes, and report the edit as a process note.
+
+Related: [[jpa-adapter-probes]], [[spring-runtime-probes]], [[domain-mutation-probes]]

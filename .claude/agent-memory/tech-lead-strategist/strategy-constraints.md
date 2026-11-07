@@ -19,6 +19,10 @@ metadata:
   task worktree unless the orchestrator creates the branch; say which in the strategy.
 - **Spec wording one to one.** Prefer a config that makes the spec's literal command valid (Windows CI: `shell: cmd`
   so `mvnw.cmd -B ...` runs as written) over rewording.
+- **Green after every merge, bean order.** Tasks run one at a time and every full-context test shares one context, so
+  a task adding a bean with a constructor dependency must merge after the task providing it: data adapter (port
+  impl) before the flow that injects the port, flow before the controllers, `Clock` config with its first consumer.
+  The pack task lists put the flow before the data adapter; flip it and say why in `dependsOn`.
 - **DoD vs orchestrator ledger.** Check DoD lines that write to `docs/spec-pack/orchestrator/progress.md`; the
   orchestrator may have decided not to edit it, which leaves the line unowned. Raise it as an open question.
 

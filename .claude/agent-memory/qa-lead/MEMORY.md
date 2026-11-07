@@ -1,1 +1,2 @@
-- [QA directive traps](qa-directive-traps.md) — traps in QA directives: snapshot rule, greps, probes, warnings, evidence files; read before writing a directive
+- [QA directive traps](qa-directive-traps.md) — traps in QA directives: snapshot rule, greps, probes, ArchUnit vacuity, warnings, evidence files, non-falsifying test data, tool-param escapes, .http replays; read before a directive
+- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework rounds, null guards as branches, REJECT vs inspection threshold, oracle helpers, impl edits outside scope; read before every review

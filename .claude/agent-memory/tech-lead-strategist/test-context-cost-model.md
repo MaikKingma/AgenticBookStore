@@ -18,6 +18,12 @@ Rule: one PostgreSQL container per test JVM and one Spring context for all books
 - Never `@DirtiesContext`: closing a context stops the shared container under the other cached contexts.
 - Gate in task cards: the bookstore Surefire output shows one "Creating container for image" line and one Spring
   "Started ... in" line per distinct context; review any new context deliberately.
+- Deliberate extra contexts per slice: one `@DataJpaTest` (shares the static container) and one `@WebMvcTest` per
+  controller (no container). Name the expected "Started" count in the gate. Lever if the budget gets tight: web slice
+  tests listing the same controllers and the same `@MockitoBean` set share one context.
+- Shared-database residue: `IntegrationTestBase` cleans before each test, never after, so committed rows can be there
+  when a JPA slice runs. Slice tests that need exact counts or fixed unique keys run `DatabaseCleaner` in
+  `@BeforeEach`; inside the slice's transaction the truncate is rolled back with the test.
 - Over budget is an open question for the orchestrator, never a reason to trim tests (standard section 5).
 
 Related: [[archunit-referee-design]], [[strategy-constraints]].
