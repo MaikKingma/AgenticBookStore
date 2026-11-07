@@ -5,4 +5,5 @@
 - [Domain mutation probes](domain-mutation-probes.md) — witnesses and bypass probes for domain invariants and flow translators, plus port-order probes
 - [JPA adapter probes](jpa-adapter-probes.md) — probes for JPA adapters on Hibernate 7
 - [Integration test probes](integration-test-probes.md) — probes for end-to-end integration tests
+- [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class and a restore-and-hash runner
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
