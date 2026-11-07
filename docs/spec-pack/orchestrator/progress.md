@@ -1,15 +1,15 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over four labs.
-Current phase: 3, spec 02 step 2 (run the cycle)
-Current spec: 02 (in progress). Goal: the catalogue slice through every onion layer (Book aggregate, Money, ISBN, search), the pattern every later slice mirrors.
+Current phase: 3, spec 03 step 1 (orient)
+Current spec: 03 (next). Spec 02 done and tagged `spec-02-done`.
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
-Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (budget 60)
+Clean `./mvnw clean verify` time: 13 s wall clock, Maven 12.5 s, after spec 02 (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
 | 01 | done | spec-01-done | 10 s (Maven 9.558 s) | PR #1 merged as b6f8534; review fixes on top; 56 + 3 tests, 0 skipped; CI run 42321683398 green (Linux verify, Windows build); see DoD 01 below |
-| 02 | in progress | | | orchestrator agent run started 2026-11-07 |
+| 02 | done | spec-02-done (3ce06cb) | 13 s (Maven 12.454 s) | PR #8 merged as 7655bfb; review fixes on top; 318 + 3 tests, 0 skipped; ArchitectureTest 21 rules; CI run 42360686186 green on the merge commit; see DoD 02 below |
 | 03 | todo | | | |
 | 04 | todo | | | |
 | 05 | todo | | | |
@@ -29,7 +29,7 @@ Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (b
 
 ## Manual checks for Maik
 
-- Optional: `gh auth refresh -h github.com -s workflow`. The gh token lacks the `workflow` scope, so the orchestrator pushed the branch that adds `.github/workflows/ci.yml` over SSH. Later specs that touch the workflow need the same workaround until the scope is added.
+- Done 2026-11-07: the gh token now has the `workflow` scope (`gh auth refresh -h github.com -s workflow`), so the SSH workaround for workflow-touching branches is no longer needed.
 - Spec-pack suggestion from the spec 01 review (no action needed now): no ArchUnit rule rejects a ninth top-level package in the bookstore (for example `util`). The standard says there are exactly eight. If you want it enforced, a later spec can add the rule and its fixture.
 
 ## Definition of done evidence
@@ -40,7 +40,15 @@ Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (b
 - `grep -ri h2 bookstore/pom.xml bookstore/src pom.xml` returns nothing: output empty, `wc -l` = 0.
 - Verify time recorded here: 10 s wall clock (Maven 9.558 s); the orchestrator measured 9.505 s on b6f8534 and 9.450 s on a fresh clone of a997d98.
 - `ArchitectureSelfTest` proves every rule fails on its fixture: Surefire `ArchitectureSelfTest` tests=28 failures=0 errors=0 skipped=0; `ArchitectureTest` tests=20. One self-test per rule asserts the designated violator is named as the origin of the violation; a mutation probe (query layer rule changed to the data layer) makes `queryIsNotAccessedByOtherLayers` fail with "names nl.openvalue.archfixtures.data.BookDataServiceImpl as origin", then the file was restored (`git checkout`, tree clean).
-- No agent files on `main`: not provable yet, the publish script comes with spec 09. Proxy: no product file references `docs/spec-pack`, `agent-os`, `.claude` or `CLAUDE.md` (review check); `main` is untouched (still 7c45791).
+- No agent files on `main`: not provable yet, the publish script comes with spec 09.
+
+### DoD 02 (2026-11-07, on factory after the review fixes, commit 3ce06cb)
+
+- All scenarios covered by tests: the ten scenarios map to named tests (map in `agent-os/specs/2026-11-07-0122-02-catalogue/shape.md` and the orchestrator ledger); the review traced every scenario to its test and the QA lead's Gate 2 matrix lists no untraced criterion.
+- `./mvnw verify` green: local `./mvnw -B clean verify` from the repo root: `Tests run: 318, Failures: 0, Errors: 0, Skipped: 0` (bookstore), `Tests run: 3, Failures: 0, Errors: 0, Skipped: 0` (distributor), `BUILD SUCCESS`, `Total time: 12.454 s`, 13 s wall clock. CI on the merge commit 7655bfb: run https://github.com/MaikKingma/AgenticBookStore/actions/runs/42360686186 success (`verify` and `windows-build`). The CI run on the tagged commit is checked after the push.
+- ArchUnit green: `ArchitectureTest` tests=21 failures=0 (20 spec 01 rules plus `NO_DOUBLE_OR_FLOAT_FOR_MONEY`); `ArchitectureSelfTest` proves the money rule names eight violator fixtures as origin (`double`, `float`, `Double` and `Float` fields and parameters) and ignores a control in `assistant`.
+- No discount concept anywhere: `grep -ri discount bookstore/src` prints nothing (`wc -l` = 0).
+ Proxy: no product file references `docs/spec-pack`, `agent-os`, `.claude` or `CLAUDE.md` (review check); `main` is untouched (still 7c45791).
 
 
 ## Decision log
@@ -64,5 +72,8 @@ Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (b
 - 2026-11-07 Phase 3, spec 01, judgment calls by the orchestrator agent, accepted: (1) `management.endpoint.health.show-components=always` in the bookstore, because the spec's Compose scenario expects `db` in the health response and Boot hides components by default; details stay hidden and the server binds to 127.0.0.1. Spec 01's property list now names it. (2) The plan-only clause "no package-info.class is produced" dropped (maven-compiler-plugin 3.15.0 writes one by default; not a pack requirement). (3) Rule 3 of the standard encoded as six ArchUnit rules; rule 9 as the single named ignoreDependency. (4) Framework warnings (Mockito dynamic agent, JDK CDS, flyway prefixes.txt 401) accepted, not fixed.
 - 2026-11-07 Phase 3, spec 01 review (fresh read-only subagent): no blocker. Fixed on factory before tagging: `DatabaseCleanerIntegrationTest` no longer asserts that the schema has no application table (that would fail on spec 02's first migration) and uses probe table names (`"CleanerProbe"`, `cleaner_probe_line`) instead of `"Order"` and `order_line`, which spec 04 may migrate; `ArchitectureSelfTest` now matches each violator as the origin of the violation (three one-token layer swaps survived before) and pins all seven naming suffix sets against the standard; `PostgresTestConfig` documents that `@DirtiesContext` must never be used in the bookstore suite; unused `testcontainers-junit-jupiter` dependency removed (it carries the only annotation that could silently skip tests when Docker is missing); empty start.spring.io boilerplate removed from both module POMs. Not changed: test-only stub type in `org.springframework.ai.archfixtures` (replace with a real Spring AI type in spec 08), `areAnnotatedWith` for rule 8 (meta-annotations only if a spec asks), CI running twice for PRs from the same repository (matches the spec literally), the test profile assertion (note for the spec 09 README: run tests through the wrapper or set `-Dspring.profiles.active=test` in the IDE).
 - 2026-11-07 Phase 3, spec 01: open follow-ups F1 to F15 from the QA lead are recorded in the plan and QA ledger for the spec 02 strategy; none blocks spec 01.
+- 2026-11-07 Phase 3, spec 02: orchestrator agent run completed. Spec PR #8 (https://github.com/MaikKingma/AgenticBookStore/pull/8) merged into factory as 7655bfb; task PRs #9 to #19 squash-merged into `sdd/02-catalogue/spec` (eleven tasks, two of them QA-driven fix tasks pinning exception handler pass-through); every rework round was test-only; qa-final PASS endorsed by the QA lead; ledger `.claude/comms/mailboxes/orchestrator/outbox/run-02-catalogue.md`; plan `agent-os/specs/2026-11-07-0122-02-catalogue/plan.md`.
+- 2026-11-07 Phase 3, spec 02 review (fresh read-only subagent): no blocker. Fixed on factory before tagging (commit 3ce06cb): (1) a negative price was rejected by the payload regex as 400 `validation-failed`, while the spec's API table lists "422 price out of range" and the flow already translated it; the regex now admits a sign, the web slice test and a new integration test (`negativePriceIsOutOfRange`) expect 422 `price-out-of-range` on add and change-price. (2) The money ArchUnit rule also rejects boxed `Double` and `Float` fields and parameters (the shape Jackson binds a JSON number to), with two new fixtures in the self-test. (3) `BookDataServiceImpl.insert` maps only the `uq_book_isbn` constraint to `IsbnAlreadyExistsException` and rethrows any other integrity violation. Recorded, not changed: `Money.of("-0.004")` rounds to 0.00 and is accepted (the rule is "not negative after scaling"); blank search criteria, including `genre=`, count as absent (so `GET /books?genre=` lists the whole catalogue instead of a 422). Documentation: the standard, the onion skill and spec 04 now say the `Clock` bean is created in spec 02 and reused by spec 04. The progress record itself landed in the commit after the tag because the update script failed on the first attempt.
+- 2026-11-07 Phase 3, spec 02, latent points for the next specs (from the review): `BookView` is pinned to exactly eight keys in `CatalogueIntegrationTest` and `BookQueriesTest`, spec 03 updates those pins deliberately when it adds `available` and `inStock`; `CatalogueFlow` gains a stock port in spec 03 so its tests and `BookQueriesTest` need the extra mock; `StockItemDataServiceImplTest` must seed a `book` row because of the foreign key; `OptimisticLockingFailureException` is unmapped (a stale update is a 500) until a spec asks for 409; follow-ups F1 to F8 (spec 01) and F17 to F27 (spec 02) are listed in the plans and QA ledgers.
 - 2026-11-07 Phase 3, spec 02 orientation, judgment calls: (1) `http/catalogue.http` lives in a repo-root `http/` folder, as spec 09 lists `http/*.http` next to `README.md` and `docs/architecture.md`. (2) The publication-year upper bound ("next year") needs the current time. Following the ddd skill (Phase 2 judgment call 3), `Book.addToCatalogue` and `restore` take a `java.time.Clock`, `CatalogueFlow` passes its injected `Clock`, and spec 02 creates the `Clock` bean (`Clock.systemUTC()`) in a root-package config class, the place the standard reserves for it; spec 04 then reuses that bean instead of creating it. Tests use a fixed clock.
 - 2026-11-06 Phase 1: bootstrap committed as 1cd9170 and pushed to origin/factory. GitHub default branch stays main. Skills gate passed: hexagonal-slice, clean-hexagonal-onion, ddd-building-blocks and layer-testing all appear in the session and load.
