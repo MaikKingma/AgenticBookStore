@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward)
 metadata:
   type: feedback
 ---
@@ -23,3 +23,13 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    On a low-risk criterion, a survivor that only distinguishes the decided wording (`strip()` vs `trim()`, `Locale.ROOT` vs the default locale) gets different treatment when the strategy listed no falsifier for it and the code holds the decided form. I verify it by reading, record it as inspection-proven, and feed forward a witness for later tasks.
    **Why:** the strategy's falsifier list is the advance bar. Spending the last rework round on a cosmetic distinction moves that bar after the fact.
    **How to apply:** prevent it at strategy time instead: name the witness in the falsifier list (see traps file item 15).
+
+4. **Survivor whose kill contradicts a pinned criterion.** If the only way to kill a surviving mutation is to change something an acceptance criterion pins (a fixture signature, for example), it is not a REJECT. Record it as a plan-level gap, recommend the plan amendment to the orchestrator (cheapest inside a rework round that runs anyway), and otherwise add a follow-up and a final-brief item. Say so when the pin came from my own Gate 1 rewrite. A survivor that can be killed in scope without touching a pin stays a REJECT under rule 3.
+   **Why:** a REJECT whose Required Action breaks a criterion cannot be met. Scope belongs to the orchestrator.
+   **How to apply:** verifiers tend to label all their own extra survivors "informational". Judge each one against the criterion text and the file scope, not against the directive's probe list.
+
+5. **Strengthening-only survivors.** A mutation that can only add violations (for example ArchUnit `allowEmptyShould(true)` -> `(false)` on imports that are never empty) does not weaken the guard. If the criterion pins the setting and the strategy made it a reading item, record it as inspection-proven, not a REJECT, even on money criteria. Rule 3's no-allowance clause is for survivors that let a violation through.
+   **Why:** the REJECT threshold protects the guard's direction; pinning a stricter-is-fine setting costs a rework round for no safety.
+
+6. **Edited killing assertion vs carry-forward (rule 1 b).** An edit voids carried probe evidence unless it is a monotonic strengthening I verify in the helper: for example an expected-violator list extended with the old entries as an unchanged prefix, checked by a loop that asserts each entry on its own (no count or exact-set check). Read the helper before accepting it.
+   **How to apply:** the implementer's list order decides which fixture a probe names first; demand a probe that only the new fixture can kill to show it is load-bearing.

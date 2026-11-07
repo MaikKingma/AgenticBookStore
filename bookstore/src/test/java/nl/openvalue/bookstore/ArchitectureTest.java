@@ -4,14 +4,20 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPac
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noCodeUnits;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.CompositeArchRule;
 import com.tngtech.archunit.lang.syntax.elements.ClassesShouldConjunction;
 import com.tngtech.archunit.library.Architectures.LayeredArchitecture;
+import java.util.List;
 
 /**
  * Encodes the dependency rules (section 2) and the naming rules (section 3) of the architecture standard, one named
@@ -123,6 +129,20 @@ class ArchitectureTest {
             .should().resideInAnyPackage(COMMAND, QUERY, ASSISTANT)
             .allowEmptyShould(true);
 
+    // Money rule, from the requirement "Money is exact" and the standard's "Never use double or float for money":
+    // no field and no method or constructor parameter of type double or float in domain, domaininteraction,
+    // command and query. Prices are Money in the domain and BigDecimal plus a currency code outside it.
+    @ArchTest
+    public static final ArchRule NO_DOUBLE_OR_FLOAT_FOR_MONEY = CompositeArchRule
+            .of(noFields()
+                    .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
+                    .should().haveRawType(double.class)
+                    .orShould().haveRawType(float.class))
+            .and(noCodeUnits()
+                    .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
+                    .should().haveRawParameterTypes(includeDoubleOrFloat()))
+            .allowEmptyShould(true);
+
     // Naming rules: top-level class names per package must end with one of these suffixes.
     @ArchTest
     public static final ArchRule COMMAND_CLASS_NAMES = classNames(COMMAND,
@@ -167,6 +187,15 @@ class ArchitectureTest {
             rule = rule.orShould().haveSimpleNameEndingWith(suffix);
         }
         return rule.allowEmptyShould(true);
+    }
+
+    /**
+     * True when any parameter, in any position, is a double or a float, so a floating-point price next to other
+     * parameters is caught too.
+     */
+    private static DescribedPredicate<List<JavaClass>> includeDoubleOrFloat() {
+        return DescribedPredicate.describe("include double or float", parameterTypes -> parameterTypes.stream()
+                .anyMatch(type -> type.isEquivalentTo(double.class) || type.isEquivalentTo(float.class)));
     }
 
     /**
