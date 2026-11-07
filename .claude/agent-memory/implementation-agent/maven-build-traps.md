@@ -30,5 +30,8 @@ metadata:
   edit fails "not found". Replace that one line by number with an ASCII-only `perl -i -pe 'if ($. == N) {...}'`,
   verify with `git diff -U0`, and report the Write/Edit-only deviation in the outbox.
 
+- Outbox `updated` stamps: always take them from `date -u`, never estimate. Estimated stamps once ran ahead of the real
+  clock, and QA orders its evidence by time.
+
 Stack skills: project-level `clean-hexagonal-onion`, `hexagonal-slice`, `layer-testing`, `ddd-building-blocks`
 (under `.claude/skills/`); user-level `tdd`, `agent-comms`.
