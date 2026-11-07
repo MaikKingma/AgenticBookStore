@@ -13,6 +13,12 @@ Rule: prove that every rule's package string resolves on the PRODUCTION import, 
 - Rule 8 FQN: put a real `@RestController` class in `data`, named `*Repository` so that no naming rule fires. Rule 9: put an `*Event` record in domain, used by a `process` class through a parameter and a method call, plus a non-Event field in another `process` class. Only the second must be reported (check with `grep -c` on the log).
 - Use your own probe class names (`QaProbe*`) so that impl leftovers cannot satisfy the probe.
 
+Self-test (fixture) review techniques:
+- Dump probe: a temporary `QaT5ProbeDetailsTest`-style class in `nl.openvalue.bookstore` evaluates every `@ArchTest` field on the fixture import and writes every detail to a scratch file. It turns "confirm the expectation map by reading each fixture" into quoted evidence, and it shows extra violators and detail counts, which containment assertions hide.
+- Containment-only assertions (`anyMatch(contains(fqn))`) cannot see a rule that reports TOO MUCH. Shared-LayeredArchitecture mutation: in ArchUnit 1.5.1, `whereLayer` constraints pile up on a shared instance, while `ignoreDependency` returns a copy. So rules 2 and 3 start reporting the rule-9 positive control and the self-test stays green. Check with detail counts from the dump. The fix is a control asserted absent from every rule.
+- Field-only completeness (`getDeclaredFields` + `@ArchTest`) misses a rule declared as an `@ArchTest static void m(JavaClasses)` method. Probe it: ArchitectureTest runs 21 tests and the self-test stays green.
+- Probe both halves of a two-package rule (each package string removed separately) and a rename that keeps the count, so both the size line and the set-equality line are proven to fail.
+
 Grep traps:
 - The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
 - The impl verifier and the QA verifier share the session scratchpad and the W7 prefix. Check `ls` first and use a role infix (`t4-qa-*`) so you never overwrite the impl's evidence.
