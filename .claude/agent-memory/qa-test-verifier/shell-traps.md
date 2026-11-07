@@ -17,4 +17,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - `echo ==== label` fails in zsh ("= not found", `=cmd` expansion) and aborts the rest of that Bash line, so a following grep silently never runs. Quote separators (`echo "== label"`) and re-check that every grep in a chained line printed.
 
-Related: [[scaffold-verification-techniques]]
+- `git grep -E` here does not understand `\s` (nor rely on `\b`): `git grep -c -E '^\s*@ArchTest'` exits 1 on a file with 20 of them. A `\s` alternative inside a skip/Disabled pattern is silently vacuous. Use `[[:space:]]`, drop anchors, and prove the pattern bites with `git -C <scratch> grep --no-index -n -E P <control-file>` (from the repo cwd `--no-index` refuses paths outside it).
+
+Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
