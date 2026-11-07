@@ -2,4 +2,5 @@
 - [Shell traps](shell-traps.md) — zsh glob/find-paren failures that look like empty results, git grep -E ignores \s, quoted paths with spaces, -l referee log, missing new mailbox
 - [ArchUnit probes](archunit-probes.md) — production-import non-vacuity, self-test detail-dump probe, shared-LayeredArchitecture and @ArchTest-method survivors, {@code} grep trap, scratch-name collisions
 - [Spring runtime probes](spring-runtime-probes.md) — always `clean test` for probes (stale target/), Docker-down recipe, entity probe rmdir, cleaner mutations, live spring-boot:run handling
+- [Domain mutation probes](domain-mutation-probes.md) — checksum-matching witness for ASCII/format clauses, restore-only bypass on a shared constructor, which null guards need tests, extras before the referee
 - [Final sweep checks](final-sweep-checks.md) — base moved under the spec branch, CI run ids from task branches, pull_request merge-ref line, mvnw in a scratch clone, memory vs status quote
