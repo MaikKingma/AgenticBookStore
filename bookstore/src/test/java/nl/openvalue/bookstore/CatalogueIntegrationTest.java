@@ -263,7 +263,7 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
 
         assertThat(books).singleElement().satisfies(view -> {
             assertThat(view.keySet()).containsExactlyInAnyOrder(
-                    "id", "isbn", "title", "authors", "genre", "price", "currency", "status");
+                    "id", "isbn", "title", "authors", "genre", "price", "currency", "status", "available", "inStock");
             assertThat(view).isEqualTo(Map.of(
                     "id", id.toString(),
                     "isbn", "9780141439600",
@@ -272,7 +272,9 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
                     "genre", "HISTORY",
                     "price", "12.50",
                     "currency", "EUR",
-                    "status", "AVAILABLE"));
+                    "status", "AVAILABLE",
+                    "available", 0,
+                    "inStock", false));
         });
     }
 
@@ -285,17 +287,36 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
         Map<String, Object> book = getBook(id);
 
         assertThat(book.keySet()).containsExactlyInAnyOrder(
-                "id", "isbn", "title", "authors", "genre", "price", "currency", "status", "publicationYear");
-        assertThat(book).isEqualTo(Map.of(
-                "id", id.toString(),
-                "isbn", "9780141439600",
-                "title", "Collected Letters",
-                "authors", List.of("Mary Shelley", "Jane Austen"),
-                "genre", "HISTORY",
-                "price", "12.50",
-                "currency", "EUR",
-                "status", "AVAILABLE",
-                "publicationYear", 1990));
+                "id", "isbn", "title", "authors", "genre", "price", "currency", "status", "publicationYear",
+                "available", "inStock");
+        assertThat(book).isEqualTo(Map.ofEntries(
+                Map.entry("id", id.toString()),
+                Map.entry("isbn", "9780141439600"),
+                Map.entry("title", "Collected Letters"),
+                Map.entry("authors", List.of("Mary Shelley", "Jane Austen")),
+                Map.entry("genre", "HISTORY"),
+                Map.entry("price", "12.50"),
+                Map.entry("currency", "EUR"),
+                Map.entry("status", "AVAILABLE"),
+                Map.entry("publicationYear", 1990),
+                Map.entry("available", 0),
+                Map.entry("inStock", false)));
+    }
+
+    @Test
+    void newBooksAreShownAsNotInStock() {
+        UUID id = addBook("9780141439518", "Pride and Prejudice", List.of("Jane Austen"), "fiction", "9.99", 1813);
+
+        Map<String, Object> book = getBook(id);
+        List<Map<String, Object>> books = search("/books");
+
+        assertThat(book.get("available")).isEqualTo(0);
+        assertThat(book.get("inStock")).isEqualTo(false);
+        assertThat(books).singleElement().satisfies(view -> {
+            assertThat(view.get("id")).isEqualTo(id.toString());
+            assertThat(view.get("available")).isEqualTo(0);
+            assertThat(view.get("inStock")).isEqualTo(false);
+        });
     }
 
     private static void assertBookNotFound(Map<String, Object> problem) {
