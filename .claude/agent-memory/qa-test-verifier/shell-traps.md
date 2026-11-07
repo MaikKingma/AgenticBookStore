@@ -23,4 +23,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - `grep` here is ugrep: a missing path (for example `http/` before T9) gives exit 2 with `ugrep: warning: ... No such file or directory`, and any matches in the other paths are still printed. Re-run on the existing paths alone so that "empty" means exit 1.
 
+- `rg` here is a zsh shell function, not a binary on PATH. Inside `bash script.sh` it gives "rg: command not found" (exit 127), which can pass for an empty result. Run every `rg` check directly in the Bash tool, never from a script. Keep greps that scripts run on ugrep `grep`.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

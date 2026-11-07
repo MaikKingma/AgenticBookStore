@@ -23,4 +23,7 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 - Oracle trap: flow tests that compute the expected message by calling production code (a `domainMessage(() -> mapper...)` helper) fail inside the oracle when that code is mutated, before the flow assertion runs. The kill is real, but prove the flow assertion bites with a temporary oracle-free witness (exact type, code, `never().save`), run it under the mutation and on restored code, then `rm` it.
 - Short-circuit trap: a probe that breaks two halves at once (blank genre and blank text criteria) can be killed by the first half alone (the genre throws before `search` is verified). Split it into a probe for the second half so that half is shown pinned on its own.
 
+- Parameter hard-coding on every read path: when the probe list pins a stored parameter against a hard-coded default on one path (for example reorder level in `lowStock()`), apply the same "hard-code the default" probe to every other branch that reads that parameter (for example the reset in `receive`). Tests often use the default value on the paths the list does not name, so the mutant survives there. Prove it is not equivalent with a temporary witness that tests both sides (level above and below the default).
+- Probe edits on a shared helper (one guard used by the constructor and a behaviour method) blur which caller is pinned. Inline the mutated check in the one caller instead.
+
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
