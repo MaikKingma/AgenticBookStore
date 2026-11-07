@@ -1,0 +1,41 @@
+# JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+
+# Add Pride and Prejudice and remember the new book id for the requests below.
+POST http://localhost:8080/books/commands/add
+Content-Type: application/json
+
+{
+  "isbn": "978-0-14-143951-8",
+  "title": "Pride and Prejudice",
+  "authors": ["Jane Austen"],
+  "genre": "fiction",
+  "price": "9.99",
+  "publicationYear": 1813
+}
+
+> {% client.global.set("bookId", response.body.id); %}
+
+###
+
+# Show the details of the book that was just added.
+GET http://localhost:8080/books/{{bookId}}
+
+###
+
+# Search the catalogue for Austen books in the fiction genre.
+GET http://localhost:8080/books?q=austen&genre=FICTION
+
+###
+
+# Change the price of the book to 12.50.
+POST http://localhost:8080/books/{{bookId}}/commands/change-price
+Content-Type: application/json
+
+{
+  "price": "12.50"
+}
+
+###
+
+# Discontinue the book.
+POST http://localhost:8080/books/{{bookId}}/commands/discontinue
