@@ -29,4 +29,8 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - The Edit tool trims trailing whitespace in `old_string` and `new_string`. A probe that ends in `, ` (for example `super("code", `) restores without the space, and a restore using the same trimmed string then fails with "String to replace not found". Anchor probe edits on text that does not end in a space (include the next token), and after the last restore compare the file hashes with the before-snapshot.
 
+- The Write tool trims a file whose only content is a U+2003 (it lands as a bare newline), so the non-ASCII positive control silently fails. Build it with `printf 'a\xe2\x80\x83b\n' > <scratch file>`, check with `od -An -tx1`, then `rg -c`. The em dash (U+2014) survives Write.
+
+- Probe runs go faster with two scripts in `.claude/comms/tmp/`: a probe runner (maven `-Dtest`, summary grep) and a restore script that `cp`s the FF7 `.orig` byte copy back and prints `shasum` beside the snap-before line. Edit mutates, the script restores and proves the hash in one call.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
