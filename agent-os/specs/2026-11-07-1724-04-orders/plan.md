@@ -60,7 +60,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Domain: `EmailAddress`, `OrderId`, `OrderStatus`, `OrderLineRequest`, `OrderLine`, `Order`, `OrderPlacedEvent`, five domain exceptions; `EmailAddressTest`, `OrderTest`, `StockItemTest` additions (F28) | bookstore | [] | 1 | critical | opus | done (branch `sdd/04-orders/T1`) | PASS (r2) | ENDORSE | 2 | #32 | 9bfe41b |
 | T2 | `OrderDTO`, `OrderLineDTO`, `PlaceOrderLineDTO`, `OrderDomainMapper`, `OrderDataService` with nested `OrderNotFoundException`, `BookNotOrderableException`; `OrderDomainMapperTest`, `UseCaseExceptionsTest` additions | bookstore | [T1] | 2 | elevated | sonnet | done (branch `sdd/04-orders/T2`) | PASS (r3) | ENDORSE (r1 REJECT) | 3 | #33 | 319bf05 |
-| T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical (proposal) | opus (proposal) | planned | | | | | |
+| T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical | opus | done (branch `sdd/04-orders/T3`) | PASS (r3) | ENDORSE | 3 | #34 | 32657ce |
 | T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical (proposal) | opus (proposal) | planned | | | | | |
 | T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
 | T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
@@ -512,6 +512,10 @@ From the QA lead's T2 reviews (ledger, Review log T2 r1 and T2 r3):
 - FF-T2-2 (T3, T4, T5, T6, generic): a value handed into a validating factory (`Money.of(amount, code)`, `new EmailAddress`, `OrderStatus.valueOf`) needs one witness the factory rejects, asserted as the exception at that layer; a value the factory accepts cannot tell a pass-through from a dropped argument. In the C0-18 inventory, list per field whether it is a plain pass-through (needs a non-default accepted value) or a hand-off into a validator (needs a rejected value).
 - FF-T2-3 (T3, T5, T6 implDirective, test data): every pass-through field of a mapper, DTO constructor, payload mapping or view is fed at least two distinct values across the task's tests, ids and instants included, each asserted as a literal that differs from the shared test constant. Prevention, not a new FAIL bar.
 - FF-T2-4 (all later verifiers, process): a rework verdict keeps the earlier rounds' sections in the artifact (append the new round on top); C0-1 baseline files hold `shasum` lines only.
+
+From the QA lead's T3 review (ledger, Review log T3 r3):
+
+- FF-T3-1 (qa-final brief only, no task directive): (a) the `, o.id desc` tiebreak of the customer query is pinned by inspection plus substitution probes; its removal survives because the index `ix_customer_order_customer_email (customer_email, placed_at desc, id desc)` supplies the order, so qa-final checks the hash of `OrderRepository.java` at the spec tip and quotes its line 18. (b) The `timestamptz` probe kill depends on a non-UTC JVM zone; qa-final runs a catalogue query showing `timestamp with time zone` for `placed_at` and `shipped_at`, `character varying(254)`, `numeric(10,2)` and the constraint names including `pk_order_line` and `fk_order_line_customer_order`.
 
 ## Amendments
 
