@@ -56,5 +56,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    - Sort and cap tests need rows inserted out of the expected order.
    - Rounding modes need both 10.005 and 10.015. A check-digit formula `(10 - s % 10) % 10` needs a valid case with check digit 0.
    - Mutation probes on annotations: removing a method-level `@Transactional` leaves a class-level one in force. Remove both, or the probe survives for the wrong reason.
+   - A guard's falsifier needs input that passes every later check once the guard is gone. Otherwise a downstream check rejects it by accident. Example: an "ASCII digits only" test with U+0668 at the check-digit position is rejected by the checksum arithmetic, so the `Character.isDigit` mutant survives. A witness that works: U+0661 replacing a 5 at a weight-1 position, because `0x661 - '0' - 5 = 1580`, which is 0 mod 10. Write "a non-ASCII digit that the naive checksum still accepts" into the directive.
+   - `strip()` versus `trim()` needs a non-ASCII whitespace witness: U+2003, written as the ` ` escape. U+00A0 is no witness, because `Character.isWhitespace` excludes it. `Locale.ROOT` casing needs a run with `-DargLine="-Duser.language=tr -Duser.country=TR"`. Ask for both at strategy time if the criterion matters, otherwise they end up as inspection-only.
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.

@@ -19,4 +19,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - `git grep -E` here does not understand `\s` (nor rely on `\b`): `git grep -c -E '^\s*@ArchTest'` exits 1 on a file with 20 of them. A `\s` alternative inside a skip/Disabled pattern is silently vacuous. Use `[[:space:]]`, drop anchors, and prove the pattern bites with `git -C <scratch> grep --no-index -n -E P <control-file>` (from the repo cwd `--no-index` refuses paths outside it).
 
+- Never guess heartbeat or message timestamps: take `date -u` each time. `stat` mtimes print local time (+0100 here), so convert them before comparing with UTC stamps in an order proof.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
