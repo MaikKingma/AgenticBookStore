@@ -65,6 +65,7 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    - (c) every probe run after the slip shows a failing line that the stray form cannot explain, or the stray form is equivalent. Example: a code typo left in place, while the next probe fails at the title line after the code line passed.
 
    If (c) fails for a probe, that probe has no evidence: CHALLENGE for a re-run. Prevention wording: [[qa-directive-traps]] item 3.
+   Two sort probes that give the same permutation leave byte-identical failure text, so the log cannot prove which mutant ran. On a pure pass-through asserted with `containsExactly`, accept one run per distinct permutation plus the column-by-column sequence argument: the kill is a function of the stub data, which I verify by reading.
 
 13. **A rework edit to an asserting line that follows a data edit.** Lens 6 ("changed expected value") is no REJECT when four things hold: production is hash-identical; the element set and the matcher are unchanged (the new expected value is the spec rule recomputed on the new inputs); every probe the old line killed was re-run and is still killed by some test; the edit kills more than before. Losing a redundant kill (a second test that also caught a mutant) is acceptable when the test named for that criterion still kills it with decorrelated data.
    **Why:** extra hardening asked by the orchestrator beyond my Required Action (tie data in a second test) changed the expected order; treating that as a loosening would punish a stronger test.
