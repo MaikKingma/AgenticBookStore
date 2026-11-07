@@ -2,6 +2,7 @@ package nl.openvalue.bookstore.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -255,6 +256,33 @@ class BookCommandsTest {
         expectProblem(result, 404, "book-not-found", "Book not found")
                 .andExpect(jsonPath("$.details").isArray())
                 .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void discontinueMapsNotFoundTo404WithTheDetailsOfTheException() throws Exception {
+        doThrow(new NotFoundException("book-not-found", "Book not found", "No book with that id",
+                List.of(Map.of("id", "3f2b8c1e-5d4a-4c7b-9a1e-0b6d2f8e7a10"))))
+                .when(flow).discontinue(BOOK_ID);
+
+        ResultActions result = mockMvc.perform(post("/books/{id}/commands/discontinue", BOOK_ID));
+
+        expectProblem(result, 404, "book-not-found", "Book not found")
+                .andExpect(jsonPath("$.details", hasSize(1)))
+                .andExpect(jsonPath("$.details[0].id").value("3f2b8c1e-5d4a-4c7b-9a1e-0b6d2f8e7a10"));
+    }
+
+    @Test
+    void changePriceMapsConflictTo409WithTheDetailsOfTheException() throws Exception {
+        doThrow(new ConflictException("book-discontinued", "Book discontinued", "The book is discontinued",
+                List.of(Map.of("id", "9c1d7e52-6a3b-4f08-8d2c-5e4b1a7f3c66"))))
+                .when(flow).changePrice(BOOK_ID, new BigDecimal("12.50"));
+
+        ResultActions result = mockMvc.perform(post("/books/{id}/commands/change-price", BOOK_ID)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"price\":\"12.50\"}"));
+
+        expectProblem(result, 409, "book-discontinued", "Book discontinued")
+                .andExpect(jsonPath("$.details", hasSize(1)))
+                .andExpect(jsonPath("$.details[0].id").value("9c1d7e52-6a3b-4f08-8d2c-5e4b1a7f3c66"));
     }
 
     // --- unavailable ---
