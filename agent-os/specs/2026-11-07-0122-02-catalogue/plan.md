@@ -42,11 +42,12 @@ Build the catalogue slice through every onion layer of the `bookstore` module, t
 | T3 | `CatalogueFlow` (five use cases) and `ClockConfig`, `CatalogueFlowTest`, `ClockConfigTest` | bookstore | [T2, T4] | 5 | critical | opus | pr | PASS (r1) | ENDORSE | 0 | #13 (sdd/02-catalogue/T3) | |
 | T5 | Command adapter: `BookCommands`, `AddBookPayload`, `ChangePricePayload`, `CommandResult`, `CommandExceptionHandler`, `BookCommandsTest` | bookstore | [T3] | 6 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #14 (sdd/02-catalogue/T5) | |
 | T6 | Query adapter: `BookQueries`, `BookView`, `BookDetailView`, `QueryExceptionHandler`, `BookQueriesTest` | bookstore | [T3] | 7 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #15 (sdd/02-catalogue/T6) | |
-| T10 | Fix task (amendment A3): `BookCommandsTest` pins the `details` pass-through of the 404 and 409 handlers | bookstore | [T5] | 8 | elevated | sonnet | pending | | | 0 | | |
+| T10 | Fix task (amendment A3): `BookCommandsTest` pins the `details` pass-through of the 404 and 409 handlers | bookstore | [T5] | 8 | elevated | sonnet | pr | PASS (r1) | ENDORSE | 0 | #16 (sdd/02-catalogue/T10) | |
+| T11 | Fix task (amendment A4): `BookCommandsTest` and `BookQueriesTest` pin `code` and `title` pass-through per handler | bookstore | [T10, T6] | 8 | elevated | sonnet | pending | | | 0 | | |
 | T8 | `CatalogueIntegrationTest` covering every HTTP scenario of the spec | bookstore | [T5, T6] | 8 | critical | opus | pending | | | 0 | | |
 | T9 | `http/catalogue.http` with one request per endpoint | root | [T5, T6] | 8 | standard | sonnet | pending | | | 0 | | |
 
-Execution order, one task at a time: T1, T7, T2, T4, T3, T5, T6, T10 (fix task, amendment A3), T8, T9. T4 merges before T3 because a `@Service CatalogueFlow` without a `BookDataService` bean breaks the three existing full-context tests. T7 precedes T2 so the money rule guards every later layer as it lands.
+Execution order, one task at a time: T1, T7, T2, T4, T3, T5, T6, T10 (fix task, amendment A3), T11 (fix task, amendment A4), T8, T9. T4 merges before T3 because a `@Service CatalogueFlow` without a `BookDataService` bean breaks the three existing full-context tests. T7 precedes T2 so the money rule guards every later layer as it lands.
 
 ## Contract shared by T3, T5, T6 and T8: ProblemDetail catalogue
 
@@ -182,6 +183,17 @@ Per endpoint: add gives 202, 400, 409 `isbn-already-exists`, the seven 422 codes
   - `./mvnw clean verify` BUILD SUCCESS, 0 skipped, 4 Started lines, 1 container; `grep -ri discount bookstore/src` empty.
 - implDirective: test-only task; copy the shape of `BookQueriesTest` lines 211 to 236 (T6) for the command side. Load the `layer-testing` skill first. The QA directive items below are required.
 - qaDirective: C0 plus T10-1: the two probes above must fail; T10-2: `git diff` of `BookCommandsTest.java` against the spec tip shows additions only; the four production files of T5 unchanged (hash against the T5 round 2 baseline); T10-3: referee last, 4 Started lines, 1 container, FF5 warning rule; T10-4: write `t10-qa-hashes.txt` for qa-final.
+
+### T11: Fix task: code and title pass-through per handler (amendment A4)
+
+- module: bookstore; dependsOn: [T10, T6]; batch 8; qaTier elevated; qaModel sonnet
+- fileScope: `bookstore/src/test/java/nl/openvalue/bookstore/command/BookCommandsTest.java`, `bookstore/src/test/java/nl/openvalue/bookstore/query/BookQueriesTest.java`
+- acceptanceCriteria:
+  - Four added tests, additions only, one per handler whose tests so far only ever see one catalogue code: command 404 (`CommandExceptionHandler.handleNotFound`), query 404, query 409, query 422 (`QueryExceptionHandler`). Each throws the use-case exception from the mocked flow with a code and title that are NOT that status's catalogue entry (for example `NotFoundException("sample-not-found", "Sample not found", "...")`, `ConflictException("sample-conflict", "Sample conflict", "...")`, `InvalidInputException("sample-invalid", "Sample invalid", "...", details)`) and asserts status, `application/problem+json`, `$.code` and `$.title` equal to those literals and `$.detail` equal to the exception message (FF7).
+  - Probes K1 to K4 (uncommitted, restored with Edit, snapshots per C0-3): each of the four handlers hard-coding that status's catalogue code and title instead of `exception.code()` and `exception.title()` makes its new test fail; on the real code all pass. No production file changes (`CommandExceptionHandler.java` and `QueryExceptionHandler.java` hashes unchanged).
+  - `./mvnw clean verify` BUILD SUCCESS, 0 skipped, 4 Started lines, 1 container; `grep -ri discount bookstore/src` empty.
+- implDirective: test-only task; load the `layer-testing` skill first. The QA directive items below are required.
+- qaDirective: C0 plus T11-1: probes K1 to K4 must fail; T11-2: `git diff` of both test files against the spec tip shows additions only; the command and query production files unchanged (hash against `t10-qa-hashes.txt` and `t6-qa-r2-hashes.txt`); T11-3: referee last, 4 Started lines, 1 container, FF5; T11-4: write `t11-qa-hashes.txt` (both test files and both handlers) for qa-final.
 
 ### T8: Catalogue integration test
 
@@ -382,6 +394,7 @@ T9-6 Referee per C0-1; 4 Started lines unchanged.
 - FF8 (from T5 meta-review; T6 impl and QA, T8 QA): author order is a domain rule, but the pinned T6 example "Jane Austen, Mary Shelley" is already alphabetical, so a `sorted()` in `BookView.from` or `BookDetailView.from` would survive. Keep the pinned example and add one case with authors `["Mary Shelley", "Jane Austen"]`, asserted exactly and in order in both views (`$[k].authors` equals "Mary Shelley, Jane Austen"; the detail `$.authors` is the full array in that order). Probe V7 must fail: authors sorted in both `from` methods.
 - Follow-up F23 (from T5): the `ChangePricePayload` price regex is pinned by inspection only (byte-equal to the `AddBookPayload` one, whose six-value test pins it); qa-final: `BookCommandsTest` and `ChangePricePayload` must hash to the T5 round 2 baseline at the tip, optionally smoke a change-price with "12." expecting 400; run grep C0-5c literally; T5 baseline `t5-qa-r2-hashes.txt`; T5 hot spot (one FAIL round, test only).
 - Follow-ups F24 (from T6, optional): a view price of `new BigDecimal("1E+2")` must print "100" in both views (`toPlainString()` witness; required only if a later spec feeds a view from anything other than `Money` or the `numeric(10,2)` column). F25 (from T6, low): the result-order test in `BookQueriesTest` supplies rows already in id and author order; result order is pinned by T4 and T8. qa-final: T6 baseline `t6-qa-r2-hashes.txt`; T6 hot spot (one FAIL round, tests only); the T5 details probes are closed by T10 (use T10's hash for `BookCommandsTest`).
+- FF9 (from T10 meta-review; T8 verifier): (a) HHH000247 stays at exactly one after T8 (the flow checks the normalised ISBN before inserting; a second one means the check was bypassed: trace it, do not accept it); (b) the `details`, `code` and `title` gaps in the web handlers cannot be reached end to end; the slice tests own them; (c) the 400 for an incomplete payload proves the command advice is live in the full context (probe E3) and the unknown-genre 422 proves the query advice; both assert `application/problem+json`, `$.code` and `$.title` as literals; (d) recommended: any add with several authors uses a non-alphabetical list, with the detail `authors` array and the joined search string asserted in order; (e) the Started count stays 4 (a fifth line is a FAIL under C0-7); (f) T8 touches no production file: the command package must match `t10-qa-hashes.txt` (after T11: `t11-qa-hashes.txt`), the query package `t6-qa-r2-hashes.txt`, the flow `t3-qa-hashes.txt`; E1 and E2 remain the only behavioural proof of T3's transaction boundary.
 - Carried to the qa-final brief (from T7): use the round 3 hash baseline for T7 integrity; F17 (ArchitectureTest class Javadoc) open; boxed `Double`/`Float` outside the rule (grep C0-5b covers them); T7 was a hot spot (one REJECT, two rework rounds, two plan amendments).
 - Carried to the qa-final brief (from T1): run `./mvnw -pl bookstore clean test -DargLine="-Duser.language=tr -Duser.country=TR"` green, then under the same argLine probe `Genre.parse` `toUpperCase(Locale.ROOT)` to `toUpperCase()`: `GenreTest.parsesAnyCase` must fail. Accepted residual risk: `strip()` versus `trim()` pinned by inspection only in `Title`, `AuthorName`, `Genre`.
 
@@ -390,6 +403,8 @@ T9-6 Referee per C0-1; 4 Started lines unchanged.
 (pending)
 
 ## Amendments
+
+- A4 (2026-11-07T07:28:54Z, orchestrator, after the T10 meta-review): fix task T11 added (test-only, `BookCommandsTest` and `BookQueriesTest`): four handlers only ever see one catalogue code in their tests, so a handler hard-coding that status's code and title instead of reading the exception survives (QA lead finding K, certain by reading). Opening the fix task before T8 saves a qa-final FAIL round. Gate re-run self-accepted by the orchestrator (test-only, cheap).
 
 - A3 (2026-11-07T07:12:43Z, orchestrator, after the T6 round 2 meta-review): fix task T10 added (test-only, `BookCommandsTest`): the merged T5 tests throw 404 and 409 exceptions with empty `details`, so a handler returning `List.of()` instead of `exception.details()` survives (confirmed by the QA lead by reading; the same gap was found and closed in T6). Opening the fix task before T8 saves a qa-final FAIL round. Gate re-run self-accepted by the orchestrator (test-only, in scope of the merged task's test file, cheap).
 
