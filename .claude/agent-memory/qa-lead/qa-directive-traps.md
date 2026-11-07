@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion); numbered list below
+description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion, backslash-u escapes decoded by tool parameters); numbered list below
 metadata:
   type: feedback
 ---
@@ -62,6 +62,9 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    - Mutation probes on annotations: removing a method-level `@Transactional` leaves a class-level one in force. Remove both, or the probe survives for the wrong reason.
    - A guard's falsifier needs input that passes every later check once the guard is gone. Otherwise a downstream check rejects it by accident. Example: an "ASCII digits only" test with U+0668 at the check-digit position is rejected by the checksum arithmetic, so the `Character.isDigit` mutant survives. A witness that works: U+0661 replacing a 5 at a weight-1 position, because `0x661 - '0' - 5 = 1580`, which is 0 mod 10. Write "a non-ASCII digit that the naive checksum still accepts" into the directive.
    - "Uses the given clock" needs a clock fixed in a past year (for example 2000-06-15) and a value that only the real clock accepts (year 2027). A clock fixed in the current real year gives the same bound as `Clock.systemUTC()`, so a code path that ignores the clock passes. Name this witness in the falsifier list of every task that hands a `Clock` on (mapper, flow).
-   - `strip()` versus `trim()` needs a non-ASCII whitespace witness: U+2003, written as the ` ` escape. U+00A0 is no witness, because `Character.isWhitespace` excludes it. `Locale.ROOT` casing needs a run with `-DargLine="-Duser.language=tr -Duser.country=TR"`. Ask for both at strategy time if the criterion matters, otherwise they end up as inspection-only.
+   - `strip()` versus `trim()` needs a non-ASCII whitespace witness: U+2003, written as the six-character Java escape (see item 16). U+00A0 is no witness, because `Character.isWhitespace` excludes it. `Locale.ROOT` casing needs a run with `-DargLine="-Duser.language=tr -Duser.country=TR"`. Ask for both at strategy time if the criterion matters, otherwise they end up as inspection-only.
+
+16. **Backslash-u escapes do not survive tool parameters.** A Java escape for U+2003 typed into a Write or Edit parameter lands on disk as the literal character, and a double backslash lands as two backslashes. Writing the backslash as its own escape (`u005C`, then `u2003`) lands the ASCII form. The Read output shows a literal U+2003 as a plain space, so only `od -c` or `rg '\x{2003}'` tells the two forms apart. In spec 02 this hit my own ledger and memory and the T3 witness.
+   **How to apply:** state a required form as an imperative in the plan text, not as a parenthetical. Name the check in the directive (`rg -c '\x{2003}' <file>` prints nothing, plus `grep -c 'u2003'`). In reviews, check the form with `od -c`, never by reading.
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.

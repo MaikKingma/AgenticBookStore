@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals)
 metadata:
   type: feedback
 ---
@@ -35,3 +35,11 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
 6. **Edited killing assertion vs carry-forward (rule 1 b).** An edit voids carried probe evidence unless it is a monotonic strengthening I verify in the helper: for example an expected-violator list extended with the old entries as an unchanged prefix, checked by a loop that asserts each entry on its own (no count or exact-set check). Read the helper before accepting it.
    **How to apply:** the implementer's list order decides which fixture a probe names first; demand a probe that only the new fixture can kill to show it is load-bearing.
+
+7. **Oracle helpers that call production code.** A test may compute an expected value by calling production code (for example the domain exception's message) when three things hold:
+   - (a) the helper calls nothing of the class under test;
+   - (b) every contract field (code, title, field name, list, exception type) stays a literal, so the oracle only adds a check;
+   - (c) the helper asserts its own precondition (for example `isNotNull`), so an upstream mutation still fails the test, only at a different line.
+   A contract field computed from production code is a REJECT. The verifier's "failure lands in the helper" is not a weakness.
+
+8. **Required forms stated as parentheticals.** If a form requirement (an escape and not a literal, a specific API) reached the plan only in parentheses, it is no REJECT bar when the property it serves is proven on the gated bytes. Open a follow-up and rely on the hash baseline until merge. The fix is at strategy time: write forms as imperatives with a check command (see [[qa-directive-traps]] item 16).
