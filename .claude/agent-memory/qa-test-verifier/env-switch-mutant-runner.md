@@ -28,4 +28,7 @@ Rule: when a probe list has 20+ mutants on a few small classes, write one "mutan
 - Tabulate with a `python3 -I` script whose data rows are literal snippets it first asserts occur in the live test file; one monotone input column a locked asserting line forces is acceptable only with a run showing its sort probe killed by another test.
 - Watch the result file with a Monitor `until`-style script that prints new lines and exits at the expected count. Background probe runs then report as they land.
 
+- Bean-validation payload probes (WebMvcTest, about 4 s each with `clean`, 60 probes in about 5 minutes): the generator in the bullet above fits. For a repeated regex class (`[^@\x00-\x20]` three times) probe per position and per side of the bound: space rejected (`\x20` to `\x1F`), `!` accepted (`\x20` to `\x21`), control char accepted (`\x00` to `\x0A`), `@` removed, `+` to `*`. Tests that feed the accepted side only in the first class leave the other positions alive.
+- A deprecation warning that moved an annotation position (HV000271, `@Valid` on a container): reproduce it as a probe that restores the old position and `grep -c` the probe's own log, so the "warning gone" claim rests on your evidence, not the implementer's log.
+
 Related: [[domain-mutation-probes]], [[integration-test-probes]], [[shell-traps]]

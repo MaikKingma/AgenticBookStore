@@ -30,4 +30,9 @@ metadata:
   then always monotone, so use at least four. Columns no use case changes (reserved, reorder level) are set by
   `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check.
 
+- MockMvc `jsonPath("$.details").value(List.of(...))` converts the actual array to the expected value's class and then
+  reports `but was:<null>`. Wrap it: `.value(equalTo(List.of(Map.of(...))))` (Hamcrest, no conversion).
+- Payload records: `@Valid List<@NotNull X>` logs Hibernate Validator warning HV000271 (container-level `@Valid`
+  deprecated). Write `List<@Valid @NotNull X>`; field paths stay `lines[1]` and `lines[1].bookId`.
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

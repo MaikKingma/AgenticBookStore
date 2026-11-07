@@ -62,7 +62,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 | T2 | `OrderDTO`, `OrderLineDTO`, `PlaceOrderLineDTO`, `OrderDomainMapper`, `OrderDataService` with nested `OrderNotFoundException`, `BookNotOrderableException`; `OrderDomainMapperTest`, `UseCaseExceptionsTest` additions | bookstore | [T1] | 2 | elevated | sonnet | done (branch `sdd/04-orders/T2`) | PASS (r3) | ENDORSE (r1 REJECT) | 3 | #33 | 319bf05 |
 | T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical | opus | done (branch `sdd/04-orders/T3`) | PASS (r3) | ENDORSE | 3 | #34 | 32657ce |
 | T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | done (branch `sdd/04-orders/T4`) | PASS (r3) | ENDORSE (r2 REJECT) | 3 | #35 | d956f76 |
-| T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
+| T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | done (branch `sdd/04-orders/T5`) | PASS (r1) | ENDORSE | 1 | #36 | ba6dc03 |
 | T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
 | T7 | `OrderIntegrationTest`, `OrderEventRecorder`, `IntegrationTestBase` edit, `IntegrationTestBaseHooksTest` additions | bookstore | [T5, T6] | 7 | critical (proposal) | opus (proposal) | planned | | | | | |
 | T8 | `http/orders.http` | root | [T5, T6] | 7 | standard (proposal) | sonnet (proposal) | planned | | | | | |
@@ -522,6 +522,10 @@ From the QA lead's T4 reviews (ledger, Review log T4 r2 and T4 r3):
 - FF-T4-1 (T6 and T7 implDirective and qaDirective, test data): shared fixture constants used by more than one ordering test are checked once for every attribute: in the asserted order (id order, request order) no attribute of the constants may be monotone, because one monotone attribute makes every ordering test that uses the constants monotone in it at once. Applies to T6 view lines (isbn, title, quantity, unitPrice, lineTotal; G7b) and to T7 fixtures where a T7 test asserts an order over fixed books. Verifiers probe every attribute of the ordered element and of the entity it stands for that the code holds in scope at the sort site.
 - FF-T4-2 (T6 and T7 implDirective and qaDirective; amends FF-T4-1): tabulate shared constants in every order the tests assert over them, the stored or request order as well as the sorted order, and do it for any replacement literal before writing it. Exempt are loaded values that no sort site holds; a verifier who finds one runs the carry-sort probe and names the killing test instead of asking for literal changes.
 
+From the QA lead's T5 review (ledger, Review log T5 r1):
+
+- FF-T5-1 (qa-final brief only, no task directive): (a) qa-final item 5 adds a live place with a tab in the domain part of the e-mail (built from `chr(9)`, shown with `od -c`): 400 `validation-failed`, field `customerEmail`, nothing stored; (b) hash check of `PlaceOrderPayload.java` at the spec tip against the T5 QA baseline. Follow-up F31 carries the in-test per-position witnesses (tab in the domain and top-level parts, `!` accepted there) for `PlaceOrderPayload` and `EmailAddress`.
+
 ## Amendments
 
 ### A1: T4 test data and QA reading (rework rounds 1 and 2)
@@ -533,3 +537,12 @@ Recorded 2026-11-07 by the orchestrator (self-accepted, test data and QA reading
 - Round 2 data: the BOOK_2 line of STORED_LINES has isbn 9780141439501, chosen by the orchestrator over the QA lead's 9780141439631, which would have made the stored line order ascending in isbn; the event test stubs a local BOOK_2 BookDTO with isbn 9780141439631; the shortage test's 2f book has isbn 9780141439556, and its short stock items have reorder levels 5, 2, 4 and reorder quantities 8, 12, 6.
 - C0-16 reading for this spec: "sorted in no column" covers every attribute of the ordered element, and of the entity it stands for, that the code holds in scope at the sort site. A loaded value that no sort site holds (the reserved count before reservation, kept only in a loop-local DTO) is exempt.
 - An unknown stored order status stays an untranslated IllegalArgumentException (a 500) per B7; in FF-T2-2, "translated" reads "asserted as the exception at that layer".
+
+### A2: T5 position of the cascade annotation (B8)
+
+Recorded 2026-11-07 by the orchestrator (self-accepted, endorsed by the QA lead in the T5 r1 review). Consequence: no behaviour, contract or scope change.
+
+- B8's `lines` component reads `@NotNull @Size(min = 1, max = 20) List<@Valid @NotNull OrderLinePayload> lines` instead of `@NotNull @Size(min = 1, max = 20) @Valid List<@NotNull OrderLinePayload> lines`.
+- Reason: with `@Valid` on the container, Hibernate Validator 9.1.5 logs `HV000271: Using @Valid on a container (java.util.List) is deprecated` (three lines per referee run), a fixable warning under C0-6(c).
+- Same validation and same field paths (`lines[i]`, `lines[i].bookId`, `lines[i].quantity`): the B8 text form passes all 43 OrderCommandsTest cases (verifier probe W7b, which logs HV000271 three times), and the delivered form logs none.
+- T5-1 reads `@Valid` in the type-argument position; probe W7 reads "`@Valid` removed from the list element type". No other constraint, test or scope change.
