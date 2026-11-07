@@ -550,6 +550,45 @@ class StockItemTest {
         assertThat(first).containsExactly(firstEvent);
     }
 
+    @Test
+    void reservingWhileSignalledAboveTheReorderLevelKeepsTheSignalAndRegistersNoEvent() {
+        StockItem item = StockItem.restore(BOOK_ID, 10, 0, 3, 10, true, CLOCK);
+
+        item.reserve(new Quantity(2));
+
+        assertThat(item.onHand()).isEqualTo(10);
+        assertThat(item.reserved()).isEqualTo(2);
+        assertThat(item.available()).isEqualTo(8);
+        assertThat(item.lowStockSignalled()).isTrue();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void shippingWhileSignalledAboveTheReorderLevelKeepsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 10, 4, 3, 10, true, CLOCK);
+
+        item.ship(new Quantity(2));
+
+        assertThat(item.onHand()).isEqualTo(8);
+        assertThat(item.reserved()).isEqualTo(2);
+        assertThat(item.available()).isEqualTo(6);
+        assertThat(item.lowStockSignalled()).isTrue();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void shippingWhileSignalledAtTheReorderLevelKeepsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 5, 2, 3, 10, true, CLOCK);
+
+        item.ship(new Quantity(1));
+
+        assertThat(item.onHand()).isEqualTo(4);
+        assertThat(item.reserved()).isEqualTo(1);
+        assertThat(item.available()).isEqualTo(3);
+        assertThat(item.lowStockSignalled()).isTrue();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
     private static void assertRejectedReason(StockItem item, String reason) {
         assertThatThrownBy(() -> item.correct(new Quantity(2), reason))
                 .isInstanceOf(InvalidStocktakeReasonException.class)
