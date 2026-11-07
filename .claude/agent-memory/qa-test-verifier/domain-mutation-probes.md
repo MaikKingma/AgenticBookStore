@@ -35,4 +35,11 @@ Flow-layer probes (mocked port and publisher):
 - Swallowing probe on a new port call (`try { port.save(...) } catch (RuntimeException ignored) {}`) survives mocked flow tests by design. Run it as informational and name the integration test that owns atomicity.
 - Probe the details `message` separately from the field (for example the title passed instead of the domain message). A test that asserts only the field lets that mutant survive.
 
+Mapper hand-offs into validating factories (`Money.of(amount, code)`, `new EmailAddress`, `OrderStatus.valueOf`, `new Quantity`):
+- "Equivalent because the domain rejects it anyway" is wrong when the mutant drops the argument: the validator sits downstream of the mapped value and stored strings have no check constraint. Probe "drop the argument" (`Money.of(amount)`, hard-coded `"EUR"`, first-line currency for all lines) and need a rejected value (USD) asserted as the domain exception.
+- For every hand-off also probe the lenient-parse mutant (`valueOf` replaced by "SHIPPED else PLACED"): accepted values of both enum members cannot kill it, only a rejected value can.
+- Write the per-field pass-through inventory FIRST: plain fields need two accepted values, hand-offs need a rejected one. Fixtures that reuse one e-mail, id or instant everywhere let a "replace by the test's own literal" mutant survive; prove with a temporary witness test (snapshot, run on real code and under each mutant, `rm`).
+- Element-pick accessors (`lines.get(0)`): probe last and `get(1)`; witness has the first line's value differing from every later line.
+- Re-verification rounds: copy the runner and snapshot script with a new evidence prefix (sed the prefix) instead of reusing the old runner, or it overwrites the earlier round's logs; reuse the old mutant schemas when production is hash-equal, and pick test literals that differ from the mutants' hard-coded literals.
+
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
