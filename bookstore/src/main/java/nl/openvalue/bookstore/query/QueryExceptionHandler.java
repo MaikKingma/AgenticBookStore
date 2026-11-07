@@ -39,6 +39,13 @@ public class QueryExceptionHandler {
                 exception.code(), exception.details());
     }
 
+    @ExceptionHandler(InventoryQueries.InvalidQueryParameterException.class)
+    public ProblemDetail handleInvalidQueryParameter(InventoryQueries.InvalidQueryParameterException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "The query parameter '" + exception.parameter() + "' is invalid",
+                "Validation failed", "validation-failed",
+                List.of(Map.of("field", exception.parameter(), "message", exception.getMessage())));
+    }
+
     private static ProblemDetail problem(HttpStatus status, String detail, String title, String code,
             List<Map<String, String>> details) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
