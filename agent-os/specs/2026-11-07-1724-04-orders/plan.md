@@ -58,7 +58,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Domain: `EmailAddress`, `OrderId`, `OrderStatus`, `OrderLineRequest`, `OrderLine`, `Order`, `OrderPlacedEvent`, five domain exceptions; `EmailAddressTest`, `OrderTest`, `StockItemTest` additions (F28) | bookstore | [] | 1 | critical (proposal) | opus (proposal) | planned | | | | | |
+| T1 | Domain: `EmailAddress`, `OrderId`, `OrderStatus`, `OrderLineRequest`, `OrderLine`, `Order`, `OrderPlacedEvent`, five domain exceptions; `EmailAddressTest`, `OrderTest`, `StockItemTest` additions (F28) | bookstore | [] | 1 | critical | opus | done (branch `sdd/04-orders/T1`) | PASS (r2) | ENDORSE | 2 | #32 | 9bfe41b |
 | T2 | `OrderDTO`, `OrderLineDTO`, `PlaceOrderLineDTO`, `OrderDomainMapper`, `OrderDataService` with nested `OrderNotFoundException`, `BookNotOrderableException`; `OrderDomainMapperTest`, `UseCaseExceptionsTest` additions | bookstore | [T1] | 2 | elevated (proposal) | sonnet (proposal) | planned | | | | | |
 | T3 | `V3__create_orders.sql`, `OrderJPA`, `OrderLineJPA`, `OrderJPAMapper`, `OrderRepository`, `OrderDataServiceImpl`; `OrderDataServiceImplTest` | bookstore | [T2] | 3 | critical (proposal) | opus (proposal) | planned | | | | | |
 | T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical (proposal) | opus (proposal) | planned | | | | | |
@@ -501,7 +501,10 @@ T8-7 Referee per C0-1 (10 Started lines; the file is not a build input); nothing
 
 ## QA feed-forward
 
-(none yet)
+From the QA lead's T1 round 2 review (ledger, Review log T1 r2); both apply to T4:
+
+- FF-T1-1 (T4): `OrderFlowTest` holds one `placeOrder` rejection raised by `Order.place` itself: 21 distinct, known, in-stock books with quantity 1 give 422 `line-count-out-of-range`, details exactly `[{field: "lines", message: <non-blank>}]`, `save` never on both ports, `verifyNoInteractions(events)`. It is the behavioural home of the T1-2 "no event on a rejected place" (a throwing factory leaves no instance to inspect) and kills `Order.place` moved outside the translator in `placeOrder` (must-fail probe F27: the `Order.place` call taken out of the translator block; expected failure: the domain exception escapes and the test sees `OrderLineCountOutOfRangeException` instead of the use-case exception).
+- FF-T1-2 (T4, data): where a test asserts the element a rule reports out of a list (the shortage entries, the first unknown or discontinued book), one witness has the reported element neither first nor last in the request, and the shortage case holds a book with enough stock between two short ones (request order short, enough, short), so details name exactly the two short books (kills `get(0)`, `get(size - 1)` and "every requested book" substitutions; T1 r1 O14b).
 
 ## Amendments
 
