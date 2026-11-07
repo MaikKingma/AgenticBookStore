@@ -16,4 +16,7 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - Live `spring-boot:run`: start it through a script in `.claude/comms/tmp/` that redirects to a scratch log (the forked app does not write to `-l`). Wait with an until-loop script for "Started|FAILED|BUILD FAILURE". Stop it by killing the java PID from lsof. Exit 143 is the expected SIGTERM.
 - Compose activity in tests should be 0 lines ("Using Docker Compose file"), because Boot skips Compose in tests by default.
 
+- Web-slice advice probes: a sort "by A then B" needs its own tiebreak probe (drop only `thenComparing`). A test whose input already arrives in B order lets the field-only sort survive; prove the fix with a temporary witness class (fails on the mutant, passes on real code), then rm it under the snapshot rule.
+- `./mvnw ... -l <log>` prints nothing to the Bash tool and exits 1 on test failure: read the log with grep afterwards.
+
 Related: [[scaffold-verification-techniques]], [[shell-traps]]

@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run)
 metadata:
   type: feedback
 ---
@@ -14,7 +14,8 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
    **Why:** a mutant's kill depends only on the production bytes and on the killing test. Re-running is wasted budget, but an edited killing test silently voids the old evidence.
    **How to apply:** this is why I quote asserting lines into the ledger every round. If any of (a) to (c) fails, CHALLENGE for a re-run.
-   A verifier can prove (b) without my quotes: it copies the test file, deletes the inserted method and hashes the result against the earlier baseline. A non-probe check that depends on state across test classes (order independence) carries forward under the same conditions only when the inserted test writes fresh keys inside a rolled-back slice transaction after the cleaning hook.
+   A verifier can prove (b) without my quotes: it copies the test file, deletes the inserted method and hashes the result against the earlier baseline.
+   An input-only edit (data reordered, no asserting line changed) also keeps the carry. It is proven the same way: undo the edit in a copy and hash it. It holds only if no carried probe has the edited test as its only killer, or the edit keeps that probe's output different from the expected value. A non-probe check that depends on state across test classes (order independence) carries forward under the same conditions only when the inserted test writes fresh keys inside a rolled-back slice transaction after the cleaning hook.
 
 2. **Null guards count as validation branches.** In domain and domaininteraction code, an `Objects.requireNonNull` guard, or any null check that throws, needs a test that fails when it is removed. The exception is when the removal is equivalent: a later statement throws the same exception type on the same input (for example `List.copyOf(null)`, or a dereference of the field inside the constructor).
    **Why:** without the guard, an aggregate with a null field gets built silently, and no test notices.
@@ -43,3 +44,5 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    A contract field computed from production code is a REJECT. The verifier's "failure lands in the helper" is not a weakness.
 
 8. **Required forms stated as parentheticals.** If a form requirement (an escape and not a literal, a specific API) reached the plan only in parentheses, it is no REJECT bar when the property it serves is proven on the gated bytes. Open a follow-up and rely on the hash baseline until merge. The fix is at strategy time: write forms as imperatives with a check command (see [[qa-directive-traps]] item 16).
+
+9. **No red run.** Tests written first with a green first run are not a gate finding outside an sdd-bugfix lead directive, provided every criterion clause bites on the gated bytes: a must-fail probe kills it, or I kill it by reading. Judge a clause with neither under lenses 3 and 4. The missing red run adds nothing.
