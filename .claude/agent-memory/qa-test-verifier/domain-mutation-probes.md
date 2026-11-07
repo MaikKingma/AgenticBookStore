@@ -18,4 +18,7 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 - Rework rounds: keep a sha256 list of the fileScope from round 1. If `diff` shows only test files changed, cite the round 1 probe logs instead of repeating them, and re-probe only the Required Actions.
 - Verify guard-pinning tests with one deletion per run, not the impl's combined run. A combined run cannot show which test depends on which guard, and the expected signature is "N run, 1 failure, that test only".
 
+- Pass-through `Clock` parameters: always probe "use `Clock.systemUTC()` instead of the parameter". A test whose year is rejected by both the fixed clock and the real one (for example 2028 against a 2026 clock) survives. The witness is a fixed clock in the past plus a year only the real clock accepts.
+- Parameterized per-class tests (several exception classes with no shared base): a one-class mutation must fail only index `[n]`. That proves the parametrisation binds every class.
+
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
