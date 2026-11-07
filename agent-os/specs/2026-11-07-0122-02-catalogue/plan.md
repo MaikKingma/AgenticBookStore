@@ -36,7 +36,7 @@ Build the catalogue slice through every onion layer of the `bookstore` module, t
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Domain: value objects, `Book` aggregate, nine domain exceptions, domain tests | bookstore | [] | 1 | critical | opus | pr | PASS (r2) | ENDORSE | 1 | #9 (sdd/02-catalogue/T1) | |
-| T7 | Money ArchUnit rule, four violator fixtures plus one control, self-test entries, folded follow-ups F10, F11, F12 (descriptions), F13, F15 | bookstore | [T1] | 2 | critical | opus | pending | | | 0 | | |
+| T7 | Money ArchUnit rule, six violator fixtures plus one control, self-test entries, folded follow-ups F10, F11, F12 (descriptions), F13, F15 | bookstore | [T1] | 2 | critical | opus | pr | PASS (r3) | ENDORSE (r3; REJECT r1) | 2 | #10 (sdd/02-catalogue/T7) | |
 | T2 | Four use-case exceptions, `BookDTO`, `BookDomainMapper`, `BookDataService` port with nested `BookNotFoundException` and `IsbnAlreadyExistsException` | bookstore | [T1, T7] | 3 | elevated | sonnet | pending | | | 0 | | |
 | T4 | `V1__create_catalogue.sql`, `BookJPA`, `BookJPAMapper`, `BookRepository`, `BookDataServiceImpl`, `BookDataServiceImplTest` | bookstore | [T2] | 4 | critical | opus | pending | | | 0 | | |
 | T3 | `CatalogueFlow` (five use cases) and `ClockConfig`, `CatalogueFlowTest`, `ClockConfigTest` | bookstore | [T2, T4] | 5 | critical | opus | pending | | | 0 | | |
@@ -359,6 +359,7 @@ T9-6 Referee per C0-1; 4 Started lines unchanged.
 - FF1 (from T1 meta-review; applies to T2, T3, T4): in domain and domaininteraction code, an `Objects.requireNonNull` guard or any null check that throws counts as a C0-8 validation branch and needs a test that fails when the guard is removed, unless removing it is shown to be equivalent (a later statement throws the same exception type on the same input); the verifier names those cases in the C0-8 inventory.
 - FF2 (T3): one `CatalogueFlowTest` case puts U+2003 EM SPACE (Java escape `\u2003`) around a search criterion and verifies the stripped value; a `strip()` to `trim()` probe must make it fail (U+00A0 is no witness because `Character.isWhitespace` excludes it).
 - FF3 (T4): the JDBC round trip, or one extra test, stores a title of exactly 200 characters and an author name of exactly 120 characters and asserts both read back unchanged, so a column narrower than the domain limit fails.
+- Carried to the qa-final brief (from T7): use the round 3 hash baseline for T7 integrity; F17 (ArchitectureTest class Javadoc) open; boxed `Double`/`Float` outside the rule (grep C0-5b covers them); T7 was a hot spot (one REJECT, two rework rounds, two plan amendments).
 - Carried to the qa-final brief (from T1): run `./mvnw -pl bookstore clean test -DargLine="-Duser.language=tr -Duser.country=TR"` green, then under the same argLine probe `Genre.parse` `toUpperCase(Locale.ROOT)` to `toUpperCase()`: `GenreTest.parsesAnyCase` must fail. Accepted residual risk: `strip()` versus `trim()` pinned by inspection only in `Title`, `AuthorName`, `Genre`.
 
 ## Final QA sweep and Gate 2
