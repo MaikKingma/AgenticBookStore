@@ -1,15 +1,15 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over four labs.
-Current phase: 3, spec 02 step 1 (orient)
-Current spec: 02 (next). Spec 01 done and tagged `spec-01-done`.
+Current phase: 3, spec 02 step 2 (run the cycle)
+Current spec: 02 (in progress). Goal: the catalogue slice through every onion layer (Book aggregate, Money, ISBN, search), the pattern every later slice mirrors.
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
 Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
 | 01 | done | spec-01-done | 10 s (Maven 9.558 s) | PR #1 merged as b6f8534; review fixes on top; 56 + 3 tests, 0 skipped; CI run 42321683398 green (Linux verify, Windows build); see DoD 01 below |
-| 02 | todo | | | |
+| 02 | in progress | | | orchestrator agent run started 2026-11-07 |
 | 03 | todo | | | |
 | 04 | todo | | | |
 | 05 | todo | | | |
@@ -64,4 +64,5 @@ Clean `./mvnw clean verify` time: 10 s wall clock, Maven 9.6 s, after spec 01 (b
 - 2026-11-07 Phase 3, spec 01, judgment calls by the orchestrator agent, accepted: (1) `management.endpoint.health.show-components=always` in the bookstore, because the spec's Compose scenario expects `db` in the health response and Boot hides components by default; details stay hidden and the server binds to 127.0.0.1. Spec 01's property list now names it. (2) The plan-only clause "no package-info.class is produced" dropped (maven-compiler-plugin 3.15.0 writes one by default; not a pack requirement). (3) Rule 3 of the standard encoded as six ArchUnit rules; rule 9 as the single named ignoreDependency. (4) Framework warnings (Mockito dynamic agent, JDK CDS, flyway prefixes.txt 401) accepted, not fixed.
 - 2026-11-07 Phase 3, spec 01 review (fresh read-only subagent): no blocker. Fixed on factory before tagging: `DatabaseCleanerIntegrationTest` no longer asserts that the schema has no application table (that would fail on spec 02's first migration) and uses probe table names (`"CleanerProbe"`, `cleaner_probe_line`) instead of `"Order"` and `order_line`, which spec 04 may migrate; `ArchitectureSelfTest` now matches each violator as the origin of the violation (three one-token layer swaps survived before) and pins all seven naming suffix sets against the standard; `PostgresTestConfig` documents that `@DirtiesContext` must never be used in the bookstore suite; unused `testcontainers-junit-jupiter` dependency removed (it carries the only annotation that could silently skip tests when Docker is missing); empty start.spring.io boilerplate removed from both module POMs. Not changed: test-only stub type in `org.springframework.ai.archfixtures` (replace with a real Spring AI type in spec 08), `areAnnotatedWith` for rule 8 (meta-annotations only if a spec asks), CI running twice for PRs from the same repository (matches the spec literally), the test profile assertion (note for the spec 09 README: run tests through the wrapper or set `-Dspring.profiles.active=test` in the IDE).
 - 2026-11-07 Phase 3, spec 01: open follow-ups F1 to F15 from the QA lead are recorded in the plan and QA ledger for the spec 02 strategy; none blocks spec 01.
+- 2026-11-07 Phase 3, spec 02 orientation, judgment calls: (1) `http/catalogue.http` lives in a repo-root `http/` folder, as spec 09 lists `http/*.http` next to `README.md` and `docs/architecture.md`. (2) The publication-year upper bound ("next year") needs the current time. Following the ddd skill (Phase 2 judgment call 3), `Book.addToCatalogue` and `restore` take a `java.time.Clock`, `CatalogueFlow` passes its injected `Clock`, and spec 02 creates the `Clock` bean (`Clock.systemUTC()`) in a root-package config class, the place the standard reserves for it; spec 04 then reuses that bean instead of creating it. Tests use a fixed clock.
 - 2026-11-06 Phase 1: bootstrap committed as 1cd9170 and pushed to origin/factory. GitHub default branch stays main. Skills gate passed: hexagonal-slice, clean-hexagonal-onion, ddd-building-blocks and layer-testing all appear in the session and load.
