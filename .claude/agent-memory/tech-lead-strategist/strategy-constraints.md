@@ -32,6 +32,10 @@ metadata:
 - **Tool trap: escapes in tool input.** Write/Edit decode a typed backslash-u-hex sequence into the literal character
   (it hit a strategy doc and an orchestrator brief). Java test data that needs such a character is built from code
   points (`Character.toString(0x2003)`); every doc and source written gets a byte-level `[^\x00-\x7F]` grep.
+- **Criteria that cost QA rework rounds (specs 02, 03).** Name every falsifier test in the card up front; every
+  ordering claim gets reverse-ordered data and a tie inserted opposite to the asserted order; an "unchanged" claim
+  (signal, stock, version) gets success cases from both starting states; orchestrator-added criteria stay
+  source-level and inside the task's file scope. Put these in the plan's ground rules, not only in cards.
 - **DoD vs orchestrator ledger.** Check DoD lines that write to `docs/spec-pack/orchestrator/progress.md`; the
   orchestrator may have decided not to edit it, which leaves the line unowned. Raise it as an open question.
 
