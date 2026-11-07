@@ -2,4 +2,4 @@
 - [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist
 - [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps
 - [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
-- [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data
+- [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data, PER_CLASS hook guards

@@ -20,6 +20,14 @@ metadata:
   that matches all the other criteria but not this one (same-author other-genre row for genre, same-genre
   other-author row for author). QA probes each criterion by passing null for it. Open-in-view is off, so any get or change after an add goes through lazy authors and kills a
   removed flow `@Transactional`.
-- The full context is cached across `IntegrationTestBase` subclasses: a new subclass adds no Started line.
+- The full context is cached across `IntegrationTestBase` subclasses: a new subclass adds no Started line. A
+  `@MockitoSpyBean` on a port and a plain class in the base `@Import` keep it that way.
+- The base cleans BEFORE each test, not after: a `PER_CLASS` subclass's non-static `@BeforeAll` runs on the previous
+  class's leftover rows, so any row it inserts needs keys (ISBN, id) that no other test uses.
+- Verifier inspection greps (`assert|fail\(`, forbidden annotations) also match Javadoc and comments: keep those
+  tokens out of the prose of the file they grep.
+- Order claims over a whole list with fixed "added first / added last" rows: with three rows the insertion order is
+  then always monotone, so use at least four. Columns no use case changes (reserved, reorder level) are set by
+  `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check.
 
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
