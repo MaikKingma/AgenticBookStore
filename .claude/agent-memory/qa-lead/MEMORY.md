@@ -1,1 +1,1 @@
-- [QA directive traps](qa-directive-traps.md) — traps in QA directives: snapshot rule, greps, probes, warnings, evidence files; read before writing a directive
+- [QA directive traps](qa-directive-traps.md) — traps in QA directives: snapshot rule, greps, probes, ArchUnit vacuity, warnings, evidence files, non-falsifying test data; read before writing a directive

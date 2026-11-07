@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes); numbered list below
+description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion); numbered list below
 metadata:
   type: feedback
 ---
@@ -9,6 +9,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
 
 1. **"Clean working tree" before the gate.** Nothing is committed before the QA gate, so the tree always holds the impl's uncommitted changes. Never ask for an empty `git status`. Ask for `git status --porcelain` plus `shasum -a 256` of the probe-touched files, identical before the first probe and after the last restore. Verifiers have read-only git: they restore with Edit or rm, never checkout or stash.
    **Why:** a literal "clean tree" criterion cannot be met, and a verifier ends up either failing wrongly or hand-waving it.
+   Plan drafts also write it into impl criteria ("restored with `git checkout`, tree clean"): impl agents have read-only git too. Flag it at Gate 1 with the snapshot rewrite.
 
 2. **Path-reference ban vs `.gitignore`.** The team rule "no file references docs/spec-pack, agent-os, .claude, CLAUDE.md" (spec 09 strips them from `main`) collides with the root `.gitignore`, which must keep its `.claude/...` ignore entries. Every grep gate needs that exemption spelled out. In the spec PR diff on `factory`, agent files ride along (`.claude/agent-memory/**`, `agent-os/specs/**`), so whole-diff greps for qa-final run on product files only (diff minus `.claude/` and `agent-os/`). Report agent-file hits as findings for the orchestrator. The harness MEMORY.md index format uses em dashes.
 
@@ -22,6 +23,8 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    - `areAnnotatedWith` matches direct annotations only; `areMetaAnnotatedWith` also matches direct ones. Decide at strategy time which one the criterion asks for.
    - Never write "failure details contain the expected FQN" into a self-test criterion. ArchUnit details name origin AND target, and fixture chains across layers (A in query uses B in command, C in data uses A) make a designated violator the target of a neighbour rule. A one-token layer swap among near-identical rules then survives. Ask for an origin-anchored match (first `<...>` token starts with the FQN) plus `getDescription()` pinned per rule. Pinned descriptions also catch shared-instance stacking (stricter rules) and allowlist or suffix widening, which one sampled violator per rule cannot catch.
    - Completeness by reflection over `@ArchTest` fields misses `@ArchTest` methods. Add "declares no @ArchTest method" to the criterion.
+   - Layered descriptions render each constraint as `where layer '<name>' may ...` (javap of 1.5.1); the layer definition lines also contain `layer '`. Count or pin `where layer '`, never the bare token.
+   - A parameter predicate ("any parameter is double or float") needs a fixture whose floating-point parameter is not the only one. Single-parameter fixtures let an exact-list `haveRawParameterTypes(double.class)` pass.
 
 5. **Framework warnings vs task sequencing.** The verifier rule "green with a framework warning = FAIL" collides with skeleton-first specs: the first task's referee prints warnings that later tasks fix. At strategy time, give every expected warning an owning acceptance criterion. Known ones on this stack: Mockito inline-mock self-attach on JDK 25 (dynamic-agent and CDS warnings, fixed by a Surefire `-javaagent` argLine), JPA open-in-view, Flyway "No migrations found". Also the Maven `prefixes.txt` 401 warnings, which come from repositories declared in the pinned flyway-parent POM and are not machine-local. Put a warning-inventory item in C0: every warning quoted and classified as fixable here (FAIL), owned by a named criterion, or unowned (flag it).
    **Why:** otherwise verifiers wave warnings through as "environmental" or "owned elsewhere", and no task ever fixes the unowned ones.
@@ -45,5 +48,13 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
 13. **Base moved during the cycle.** An owner commit on the base breaks `merge-base --is-ancestor`. The fix is a merge into the spec branch (never rebase or force-push). Re-run the tip-identity items (fresh clone, counts, git facts, PR readiness, CI on the tip); carry the rest forward only with `git diff --name-status <old tip> <new tip>` showing no product file. The finalize commit moves the tip again: repeat the same check before the human merge.
 
 14. **Integration integrity at the final review.** Record each task's sha256 baselines in the ledger matrices; at final-review, hash the gated files at the spec tip and compare. One command proves that squash merges and base merges altered nothing a gate reviewed.
+
+15. **Test data that cannot falsify the criterion.** Check the data of every listed test, not only its name:
+   - Combined filters: each criterion needs a row that only it excludes. If every author match shares the genre, a dropped genre filter passes.
+   - Order claims ("422 before 409", "discontinued before range") need a case where both failures are present.
+   - A round trip through one mapper misses a symmetric column swap; demand one raw JDBC read of the stored row.
+   - Sort and cap tests need rows inserted out of the expected order.
+   - Rounding modes need both 10.005 and 10.015. A check-digit formula `(10 - s % 10) % 10` needs a valid case with check digit 0.
+   - Mutation probes on annotations: removing a method-level `@Transactional` leaves a class-level one in force. Remove both, or the probe survives for the wrong reason.
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.
