@@ -1,6 +1,7 @@
-- [Scaffold verification techniques](scaffold-verification-techniques.md) — regeneration diff with -w, wrapper sha, grep controls, BOM tally, snapshot script and cmp for probes, valid ArchUnit spike
+- [Scaffold verification techniques](scaffold-verification-techniques.md) — regeneration diff with -w, wrapper sha, grep controls, BOM tally, snapshot script and cmp for probes, rework carry-forward by hash (addition-only proof), valid ArchUnit spike
 - [Shell traps](shell-traps.md) — zsh glob/find-paren failures that look like empty results, git grep -E ignores \s, quoted paths with spaces, -l referee log, missing new mailbox
 - [ArchUnit probes](archunit-probes.md) — production non-vacuity, dump probe, shared-LayeredArchitecture survivor, parameter position/arity and per-half sweeps, in-scope kill = FAIL, fixture kills not reflective, violator order, expected survivors
 - [Spring runtime probes](spring-runtime-probes.md) — always `clean test` for probes (stale target/), Docker-down recipe, entity probe rmdir, cleaner mutations, live spring-boot:run handling
 - [Domain mutation probes](domain-mutation-probes.md) — checksum-matching witness for ASCII/format clauses, restore-only bypass on a shared constructor, which null guards need tests, extras before the referee
+- [JPA adapter probes](jpa-adapter-probes.md) — Hibernate 7 join dedup hides row-limit bugs (limit-2 witness), JDBC reads do not flush, tr-locale casing witness needs an upper-case I
 - [Final sweep checks](final-sweep-checks.md) — base moved under the spec branch, CI run ids from task branches, pull_request merge-ref line, mvnw in a scratch clone, memory vs status quote

@@ -1,2 +1,3 @@
 - [ArchUnit traps](archunit-traps.md) — mutable LayeredArchitecture, multi-line descriptions, array dependencies, additions-only Map edits
 - [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist
+- [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps

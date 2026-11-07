@@ -21,4 +21,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - Never guess heartbeat or message timestamps: take `date -u` each time. `stat` mtimes print local time (+0100 here), so convert them before comparing with UTC stamps in an order proof.
 
+- `grep` here is ugrep: a missing path (for example `http/` before T9) gives exit 2 with `ugrep: warning: ... No such file or directory`, and any matches in the other paths are still printed. Re-run on the existing paths alone so that "empty" means exit 1.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
