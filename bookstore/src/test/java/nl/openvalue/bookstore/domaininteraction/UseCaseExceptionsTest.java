@@ -174,4 +174,21 @@ class UseCaseExceptionsTest {
         assertThat(exception.details()).isEmpty();
         assertThat(Modifier.isFinal(BookDataService.IsbnAlreadyExistsException.class.getModifiers())).isTrue();
     }
+
+    @Test
+    void stockItemNotFoundIsANotFoundWithTheBookNotFoundCodeAndTitle() {
+        UUID bookId = UUID.fromString("5d0c1c3e-8f7a-4b21-a6d4-3c9e0b7a2f18");
+
+        StockItemDataService.StockItemNotFoundException exception =
+                new StockItemDataService.StockItemNotFoundException(bookId);
+
+        assertThat(exception).isInstanceOf(NotFoundException.class);
+        assertThat(exception.code()).isEqualTo("book-not-found");
+        assertThat(exception.title()).isEqualTo("Book not found");
+        assertThat(exception.getMessage()).isNotBlank().contains(bookId.toString());
+        assertThat(exception.details()).isEmpty();
+        assertThatThrownBy(() -> exception.details().add(Map.of("a", "b")))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(Modifier.isFinal(StockItemDataService.StockItemNotFoundException.class.getModifiers())).isTrue();
+    }
 }

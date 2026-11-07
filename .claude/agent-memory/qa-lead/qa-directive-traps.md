@@ -14,6 +14,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
 2. **Path-reference ban vs `.gitignore`.** The team rule "no file references docs/spec-pack, agent-os, .claude, CLAUDE.md" (spec 09 strips them from `main`) collides with the root `.gitignore`, which must keep its `.claude/...` ignore entries. Every grep gate needs that exemption spelled out. In the spec PR diff on `factory`, agent files ride along (`.claude/agent-memory/**`, `agent-os/specs/**`), so whole-diff greps for qa-final run on product files only (diff minus `.claude/` and `agent-os/`). Report agent-file hits as findings for the orchestrator. The harness MEMORY.md index format uses em dashes.
 
 3. **A probe must fail for the stated reason.** Make the verifier quote the failing assertion or exception line. Examples: a missing-migration entity without `@Id` fails as a mapping error, not as schema validation; a compile error is never a negative control.
+   Probe restores through the Edit tool can leave a stray form, because the tool trims trailing whitespace in `old_string`/`new_string`. A stray non-equivalent restore contaminates the next probe's kill. Direct verifiers to check `shasum` against the snap-before line after every restore, before the next probe, and to quote it per probe.
 
 4. **ArchUnit vacuity (allowEmptyShould everywhere).**
    - Every rule passes on empty packages, so the production run needs negative controls: a violating class in a real layer package, and a root-package class touching domain.

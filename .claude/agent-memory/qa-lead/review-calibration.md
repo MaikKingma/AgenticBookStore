@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling, disclosed probe-restore slips)
 metadata:
   type: feedback
 ---
@@ -58,3 +58,10 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 10. **No red run.** Tests written first with a green first run are not a gate finding outside an sdd-bugfix lead directive, provided every criterion clause bites on the gated bytes: a must-fail probe kills it, or I kill it by reading. Judge a clause with neither under lenses 3 and 4. The missing red run adds nothing.
 
 11. **Implementer edits outside its file scope.** In rework rounds, implementers sometimes mutate a production file themselves to prove their fix kills the survivor. If the file is restored, the verifier's own snapshot and baseline show it hash-identical, the runs did not overlap, and the gate evidence is the verifier's own, this is a process finding for the orchestrator, not a gate finding. Implementer probe logs are never gate evidence: a verdict that leans on them, or overlapping runs, gets a CHALLENGE. Prevention wording: [[qa-directive-traps]] item 17.
+
+12. **A disclosed probe-restore slip.** It is no finding when three things hold:
+   - (a) the before and after snapshots are identical;
+   - (b) every gated file's mtime is earlier than snap-after and the referee start, and its current hash equals snap-before, so the referee compiled exactly the received bytes;
+   - (c) every probe run after the slip shows a failing line that the stray form cannot explain, or the stray form is equivalent. Example: a code typo left in place, while the next probe fails at the title line after the code line passed.
+
+   If (c) fails for a probe, that probe has no evidence: CHALLENGE for a re-run. Prevention wording: [[qa-directive-traps]] item 3.
