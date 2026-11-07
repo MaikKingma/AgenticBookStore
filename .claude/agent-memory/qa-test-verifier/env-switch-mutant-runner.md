@@ -16,5 +16,7 @@ Rule: when a probe list has 20+ mutants on a few small classes, write one "mutan
 - Do not edit a running script (bash reads it incrementally); stop the background task with TaskStop, fix, restart.
 - Keep two or three plain Edit probes for things a schema cannot express (annotation attribute removed, `@ExceptionHandler` removed).
 - Run the final referee after the last probe, even if the last probe restored identical bytes; the order proof stays clean.
+- FF8 "one sort probe per distinct permutation": first list, for each column and both directions, which row permutation its sort gives. Probe one representative per distinct result. Then add a reversal probe for any non-identity permutation no column gives (for 3 rows there are 5). Use stable `Comparator` sorts on the view record in the schema. A column that is constant because of a domain invariant (for example a single-currency `Money`) is exempt; cite the invariant's file:line.
+- Watch the result file with a Monitor `until`-style script that prints new lines and exits at the expected count. Background probe runs then report as they land.
 
 Related: [[domain-mutation-probes]], [[integration-test-probes]], [[shell-traps]]

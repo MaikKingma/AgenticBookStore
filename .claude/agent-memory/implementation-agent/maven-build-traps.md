@@ -23,6 +23,7 @@ metadata:
 - Edit (probes and normal edits): a trailing space at the end of old/new string can be lost (a probe once left
   `"...",importOptions`; an anchor `X = ` once produced `X =new`). Make edits whole-line, never end an anchor with a
   space, and prove every probe restore with `shasum -a 256` against a baseline.
+- Surefire `-Dtest=A+B` matches nothing ("No tests matching pattern"); several classes are `-Dtest=A,B`.
 - `-q` with `-l <log>` leaves the log empty for `help:describe`; read the plugin descriptor instead with
   `unzip -p <plugin jar> META-INF/maven/plugin.xml` and grep it.
 - Edit cannot match a literal non-ASCII char (e.g. U+2003) in `old_string`: the char cannot be emitted reliably and the
