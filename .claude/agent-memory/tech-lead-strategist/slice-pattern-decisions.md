@@ -20,7 +20,9 @@ Status: the spec 02 bullets landed in code (checked 2026-11-07 against `Catalogu
   spec scenario names 400 for a range (spec 03 quantities), the payload repeats the range (`@NotNull Integer` plus
   `@Min`/`@Max`) and the domain keeps the rule as an unreachable 422. **Why:** one source of truth where the spec allows
   it; the standard itself does not forbid payload ranges. **Trap:** the domain rule must accept everything the payload
-  accepts (Hibernate `@NotBlank` trims only up to U+0020, so a domain `isBlank()`/`strip()` makes the 422 reachable).
+  accepts, with no `strip()` and no blank check in the domain, so the payload stays stricter and the 422 stays
+  unreachable over HTTP (hibernate-validator 9.1.5 `NotBlankValidator` calls `String.isBlank()`, so any whitespace
+  such as U+2003 is already a 400; verified with `javap -c` in spec 03 qa-final).
 - **Port shape:** `findById` throws the nested NotFound, natural-key finders return `Optional`, `save(DTO)` upserts by
   id onto the managed entity with `saveAndFlush`, DTOs carry no version. **Why:** `@Version` is honoured inside the
   flow's transaction without leaking persistence state into the domain; flushing in the adapter lets it translate

@@ -22,6 +22,7 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - Never guess heartbeat or message timestamps: take `date -u` each time. `stat` mtimes print local time (+0100 here), so convert them before comparing with UTC stamps in an order proof.
 
 - `grep` here is ugrep: a missing path (for example `http/` before T9) gives exit 2 with `ugrep: warning: ... No such file or directory`, and any matches in the other paths are still printed. Re-run on the existing paths alone so that "empty" means exit 1.
+- In the Bash tool, a `grep` or `rg` with no match shows "completed with no output", not "Exit code 1" (`git grep`, `lsof` and `cmp` do show their exit code). A negative control that cannot match looks the same. So every empty grep needs a positive control on a path that does match.
 
 - `rg` here is a zsh shell function, not a binary on PATH. Inside `bash script.sh` it gives "rg: command not found" (exit 127), which can pass for an empty result. Run every `rg` check directly in the Bash tool, never from a script. Keep greps that scripts run on ugrep `grep`.
 
