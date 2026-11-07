@@ -55,7 +55,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    - Combined filters: each criterion needs a row that only it excludes. If every author match shares the genre, a dropped genre filter passes.
    - Order claims ("422 before 409", "discontinued before range") need a case where both failures are present.
    - A round trip through one mapper misses a symmetric column swap; demand one raw JDBC read of the stored row.
-   - Sort and cap tests need rows inserted out of the expected order.
+   - Sort and cap tests need rows inserted out of the expected order. For a multi-key sort, this holds for every key, the tiebreak included. Two errors on one field, supplied in message order, let a field-only sort pass. An order-preserving claim ("author order kept") needs input that is not already sorted, or an added `sorted()` survives. Check the pinned example values in criteria too: "Jane Austen, Mary Shelley" is alphabetical.
    - "Each row once" over a collection join: Hibernate 7 removes duplicate root entities in memory, so an exact-list test at a large limit cannot see a `left join` without distinct. The falsifier needs a SQL limit that cuts into the duplicated rows: a book with two matching authors sorted first, a second match, and limit 2. Name it in the falsifier list.
    - On PostgreSQL, removing an HQL `escape '\'` clause is equivalent (backslash is the default LIKE escape), so the clause can only be an inspection item.
    - Rounding modes need both 10.005 and 10.015. A check-digit formula `(10 - s % 10) % 10` needs a valid case with check digit 0.
