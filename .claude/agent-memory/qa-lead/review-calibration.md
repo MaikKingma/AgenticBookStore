@@ -14,6 +14,7 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
    **Why:** a mutant's kill depends only on the production bytes and on the killing test. Re-running is wasted budget, but an edited killing test silently voids the old evidence.
    **How to apply:** this is why I quote asserting lines into the ledger every round. If any of (a) to (c) fails, CHALLENGE for a re-run.
+   A verifier can prove (b) without my quotes: it copies the test file, deletes the inserted method and hashes the result against the earlier baseline. A non-probe check that depends on state across test classes (order independence) carries forward under the same conditions only when the inserted test writes fresh keys inside a rolled-back slice transaction after the cleaning hook.
 
 2. **Null guards count as validation branches.** In domain and domaininteraction code, an `Objects.requireNonNull` guard, or any null check that throws, needs a test that fails when it is removed. The exception is when the removal is equivalent: a later statement throws the same exception type on the same input (for example `List.copyOf(null)`, or a dereference of the field inside the constructor).
    **Why:** without the guard, an aggregate with a null field gets built silently, and no test notices.
