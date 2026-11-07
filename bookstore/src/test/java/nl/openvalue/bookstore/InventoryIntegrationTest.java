@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import nl.openvalue.bookstore.command.CommandResult;
 import nl.openvalue.bookstore.domain.StockRunningLowEvent;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -32,6 +34,10 @@ class InventoryIntegrationTest extends IntegrationTestBase {
             };
 
     private static final UUID UNKNOWN_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
+
+    /** The application clock that stamps events; bracketing with it keeps the test valid under a fixed clock. */
+    @Autowired
+    private Clock clock;
 
     @Test
     void newBookHasAnEmptyStockItemAndIsShownAsNotInStock() {
@@ -88,12 +94,12 @@ class InventoryIntegrationTest extends IntegrationTestBase {
     void stocktakeDownToTheReorderLevelDeliversOneEventAfterCommit() {
         UUID id = addBook("9780141439518", "Pride and Prejudice");
         receive(id, 5).expectStatus().isAccepted();
-        Instant before = Instant.now();
+        Instant before = clock.instant();
 
         // A reason with a leading space is three characters and not blank: the payload and the domain both accept it.
         correct(id, 3, " ab").expectStatus().isAccepted().expectBody().isEmpty();
 
-        Instant after = Instant.now();
+        Instant after = clock.instant();
         assertThat(stockEvents.committed()).singleElement().satisfies(event -> {
             assertThat(event.bookId()).isEqualTo(id);
             assertThat(event.available()).isEqualTo(3);
