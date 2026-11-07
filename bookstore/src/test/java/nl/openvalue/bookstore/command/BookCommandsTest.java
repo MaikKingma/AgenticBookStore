@@ -147,7 +147,7 @@ class BookCommandsTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"abc", "12,50", "-5", "1e3", ".5", "12."})
+    @ValueSource(strings = {"abc", "12,50", "1e3", ".5", "12.", "-"})
     void addRejectsANonDecimalPriceWith400(String price) throws Exception {
         String body = """
                 {"isbn":"9780141439518","title":"Pride and Prejudice","authors":["Jane Austen"],
@@ -159,6 +159,25 @@ class BookCommandsTest {
         expectProblem(result, 400, "validation-failed", "Validation failed")
                 .andExpect(jsonPath("$.details[?(@.field=='price')]").exists());
         verifyNoInteractions(flow);
+    }
+
+    @Test
+    void addPassesANegativePriceToTheFlowSoTheDomainRejectsIt() throws Exception {
+        when(flow.addBook(anyString(), anyString(), anyList(), anyString(), any(BigDecimal.class), anyInt()))
+                .thenThrow(new InvalidInputException("price-out-of-range", "Price out of range",
+                        "The price is out of range",
+                        List.of(Map.of("field", "price", "message", "must be between 0.01 and 500.00"))));
+        String body = """
+                {"isbn":"9780141439518","title":"Pride and Prejudice","authors":["Jane Austen"],
+                 "genre":"FICTION","price":"-5","publicationYear":1813}""";
+
+        ResultActions result = mockMvc
+                .perform(post("/books/commands/add").contentType(MediaType.APPLICATION_JSON).content(body));
+
+        expectProblem(result, 422, "price-out-of-range", "Price out of range")
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verify(flow).addBook("9780141439518", "Pride and Prejudice", List.of("Jane Austen"), "FICTION",
+                new BigDecimal("-5"), 1813);
     }
 
     // --- change price ---

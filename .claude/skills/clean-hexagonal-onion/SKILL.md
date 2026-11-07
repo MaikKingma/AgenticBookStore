@@ -46,7 +46,7 @@ Walk this list top to bottom and take the first match.
 
 Nothing fits? Stop and ask. Do not create `util`, `common`, `shared`, `config`, `ports` or `adapters` packages.
 The root package itself only holds `BookstoreApplication` and the cross-cutting configuration a spec explicitly puts
-there (spec 04: the `Clock` bean; spec 12: `StorefrontConfig`), as section 1 of the standard says. Configuration of
+there (the `Clock` bean `ClockConfig`, created in spec 02; spec 12: `StorefrontConfig`), as section 1 of the standard says. Configuration of
 one adapter stays in that adapter (`AssistantConfig` in `assistant`).
 
 ## Dependency rules

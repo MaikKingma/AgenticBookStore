@@ -8,6 +8,7 @@ import nl.openvalue.bookstore.domaininteraction.BookDTO;
 import nl.openvalue.bookstore.domaininteraction.BookDataService;
 import nl.openvalue.bookstore.domaininteraction.BookDataService.BookNotFoundException;
 import nl.openvalue.bookstore.domaininteraction.BookDataService.IsbnAlreadyExistsException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Component;
@@ -37,13 +38,26 @@ public class BookDataServiceImpl implements BookDataService {
         repository.saveAndFlush(stored);
     }
 
-    /** The flush surfaces the unique ISBN constraint here, not later at commit. */
+    /** The flush surfaces the unique ISBN constraint here, not later at commit. Any other constraint is not ours. */
     private void insert(BookDTO book) {
         try {
             repository.saveAndFlush(BookJPAMapper.toNewEntity(book));
         } catch (DataIntegrityViolationException e) {
-            throw new IsbnAlreadyExistsException(book.isbn());
+            if (violates(e, "uq_book_isbn")) {
+                throw new IsbnAlreadyExistsException(book.isbn());
+            }
+            throw e;
         }
+    }
+
+    private static boolean violates(Throwable failure, String constraintName) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation
+                    && constraintName.equalsIgnoreCase(violation.getConstraintName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

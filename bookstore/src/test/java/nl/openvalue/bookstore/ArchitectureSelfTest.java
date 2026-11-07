@@ -47,6 +47,8 @@ class ArchitectureSelfTest {
     // A double as the only parameter, and a float as the first parameter.
     private static final String PRICE_TAG = FIXTURES + "domain.PriceTag";
     private static final String REPRICE_PAYLOAD = FIXTURES + "command.RepricePayload";
+    private static final String BOXED_PRICE_PAYLOAD = FIXTURES + "command.BoxedPricePayload";
+    private static final String BOXED_PRICE_VIEW = FIXTURES + "query.BoxedPriceView";
     // Control: a double field in assistant, a layer the money rule does not guard.
     private static final String TEMPERATURE_PROPERTIES = FIXTURES + "assistant.TemperatureProperties";
 
@@ -104,7 +106,7 @@ class ArchitectureSelfTest {
             Map.entry("SPRING_AI_ONLY_IN_ASSISTANT", List.of(FIXTURES + "command.ChatCommands")),
             Map.entry("REST_CONTROLLERS_ONLY_IN_COMMAND_QUERY_ASSISTANT", List.of(FIXTURES + "data.BookRestController")),
             Map.entry("NO_DOUBLE_OR_FLOAT_FOR_MONEY", List.of(PRICED_BOOK, PRICE_DTO, PRICE_PAYLOAD, PRICE_VIEW,
-                    REPRICE_PAYLOAD, PRICE_TAG)),
+                    REPRICE_PAYLOAD, PRICE_TAG, BOXED_PRICE_PAYLOAD, BOXED_PRICE_VIEW)),
             Map.entry("COMMAND_CLASS_NAMES", List.of(FIXTURES + "command.BookController")),
             Map.entry("QUERY_CLASS_NAMES", List.of(FIXTURES + "query.BookReader")),
             Map.entry("PROCESS_CLASS_NAMES", List.of(FIXTURES + "process.EventHandler")),
@@ -141,7 +143,7 @@ class ArchitectureSelfTest {
         Set<String> named = new TreeSet<>(List.of(EVENT_PROCESSOR, NESTED_CLASS, ANNOTATED_PACKAGE_INFO,
                 FIXTURES + "domain.BookAddedEvent", "org.springframework.ai.archfixtures.StubChatClient",
                 PRICED_BOOK, PRICE_DTO, PRICE_PAYLOAD, PRICE_VIEW, TEMPERATURE_PROPERTIES, PRICE_TAG,
-                REPRICE_PAYLOAD));
+                REPRICE_PAYLOAD, BOXED_PRICE_PAYLOAD, BOXED_PRICE_VIEW));
         EXPECTED_VIOLATORS.values().forEach(named::addAll);
 
         assertThat(named).allSatisfy(name -> assertThat(fixtures.contain(name)).as("fixture %s imported", name).isTrue());
@@ -360,7 +362,8 @@ class ArchitectureSelfTest {
             packages.add(matcher.group(1));
         }
         assertThat(packages).isEqualTo(new TreeSet<>(MONEY_RULE_PACKAGES));
-        assertThat(description).contains("have raw type double", "have raw type float", "include double or float");
+        assertThat(description).contains("have raw type double", "have raw type float", "include double or float",
+                "have raw type java.lang.Double", "have raw type java.lang.Float");
     }
 
     @Test

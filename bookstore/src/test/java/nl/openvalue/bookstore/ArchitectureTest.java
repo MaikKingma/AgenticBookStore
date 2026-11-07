@@ -130,14 +130,17 @@ class ArchitectureTest {
             .allowEmptyShould(true);
 
     // Money rule, from the requirement "Money is exact" and the standard's "Never use double or float for money":
-    // no field and no method or constructor parameter of type double or float in domain, domaininteraction,
-    // command and query. Prices are Money in the domain and BigDecimal plus a currency code outside it.
+    // no field and no method or constructor parameter of type double or float, boxed or not, in domain,
+    // domaininteraction, command and query. Prices are Money in the domain and BigDecimal plus a currency code
+    // outside it.
     @ArchTest
     public static final ArchRule NO_DOUBLE_OR_FLOAT_FOR_MONEY = CompositeArchRule
             .of(noFields()
                     .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
                     .should().haveRawType(double.class)
-                    .orShould().haveRawType(float.class))
+                    .orShould().haveRawType(float.class)
+                    .orShould().haveRawType(Double.class)
+                    .orShould().haveRawType(Float.class))
             .and(noCodeUnits()
                     .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
                     .should().haveRawParameterTypes(includeDoubleOrFloat()))
@@ -190,12 +193,13 @@ class ArchitectureTest {
     }
 
     /**
-     * True when any parameter, in any position, is a double or a float, so a floating-point price next to other
-     * parameters is caught too.
+     * True when any parameter, in any position, is a double or a float, boxed or not, so a floating-point price
+     * next to other parameters is caught too.
      */
     private static DescribedPredicate<List<JavaClass>> includeDoubleOrFloat() {
         return DescribedPredicate.describe("include double or float", parameterTypes -> parameterTypes.stream()
-                .anyMatch(type -> type.isEquivalentTo(double.class) || type.isEquivalentTo(float.class)));
+                .anyMatch(type -> type.isEquivalentTo(double.class) || type.isEquivalentTo(float.class)
+                        || type.isEquivalentTo(Double.class) || type.isEquivalentTo(Float.class)));
     }
 
     /**

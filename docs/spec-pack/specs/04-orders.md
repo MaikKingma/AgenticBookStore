@@ -32,7 +32,7 @@ Behaviour:
   snapshot values: rejects duplicate book lines (the flow merges them first), applies the 1 to 10 rule, registers
   `OrderPlacedEvent`.
 - `ship(Clock)`: only from PLACED, sets shippedAt; shipping twice throws `OrderAlreadyShippedException`.
-- A `java.time.Clock` bean is injected into flows so tests control time.
+- The `java.time.Clock` bean from spec 02 (`ClockConfig` in the root package) is injected into flows so tests control time. Do not declare a second one.
 
 ## Use case: place order (`OrderFlow.placeOrder`)
 Within one `@Transactional` boundary:
@@ -118,7 +118,7 @@ The system SHALL list a customer's orders, newest first, matching the e-mail add
 
 ## Tasks
 1. Value objects, `OrderLine`, `Order`, `OrderPlacedEvent` with tests.
-2. Port, DTOs, mapper, `OrderFlow.placeOrder`, `ship`, `findById`, `findByCustomer`; `Clock` bean in a config class
+2. Port, DTOs, mapper, `OrderFlow.placeOrder`, `ship`, `findById`, `findByCustomer`; reuse the `Clock` bean of spec 02
    in the root package.
 3. Migration `V3`: `customer_order` (avoid the reserved word `order`), `order_line`.
 4. Data, command, query adapters; exception handlers extended for the new exceptions.

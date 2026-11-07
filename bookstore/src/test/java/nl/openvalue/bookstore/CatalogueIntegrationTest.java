@@ -109,6 +109,19 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void negativePriceIsOutOfRange() {
+        UUID id = addBook("9780141439518", "Pride and Prejudice", List.of("Jane Austen"), "fiction", "9.99", 1813);
+
+        Map<String, Object> onAdd = problem(postAdd(payload("9780141439600", "Emma", List.of("Jane Austen"),
+                "fiction", "-5", 1815)), 422);
+        Map<String, Object> onChange = problem(changePrice(id, "-0.01"), 422);
+
+        assertThat(onAdd.get("code")).isEqualTo("price-out-of-range");
+        assertThat(onChange.get("code")).isEqualTo("price-out-of-range");
+        assertThat(getBook(id).get("price")).isEqualTo("9.99");
+    }
+
+    @Test
     void priceChangeOnADiscontinuedBookIsRejectedAndThePriceIsUnchanged() {
         UUID id = addBook("9780141439518", "Pride and Prejudice", List.of("Jane Austen"), "fiction", "9.99", 1813);
         discontinue(id).expectStatus().isAccepted().expectBody().isEmpty();

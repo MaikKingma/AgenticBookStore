@@ -12,7 +12,7 @@ No code is reused from earlier workshop repositories: only the layering, naming 
 
 Root package: `nl.openvalue.bookstore` (bookstore module) and `nl.openvalue.distributor` (distributor module).
 The root package of the bookstore holds `BookstoreApplication` and only the cross-cutting configuration a spec
-explicitly puts there (spec 04: the `Clock` bean; spec 12: `StorefrontConfig`, which serves the storefront and
+explicitly puts there (the `Clock` bean, created in spec 02 and reused from spec 04 on; spec 12: `StorefrontConfig`, which serves the storefront and
 touches no layer). Configuration of one adapter stays in that adapter. The bookstore module has exactly these
 top-level packages under the root:
 

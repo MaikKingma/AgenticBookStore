@@ -15,6 +15,6 @@ public record AddBookPayload(
         @NotBlank String title,
         @NotEmpty List<@NotBlank String> authors,
         @NotBlank String genre,
-        @NotBlank @Pattern(regexp = "\\d+(\\.\\d+)?") String price,
+        @NotBlank @Pattern(regexp = "-?\\d+(\\.\\d+)?") String price,
         @NotNull Integer publicationYear) {
 }
