@@ -1,0 +1,3 @@
+- [ArchUnit referee design](archunit-referee-design.md) — rule-3 split rationale, anti-vacuity guards, ArchUnit traps for specs adding rules
+- [Test context cost model](test-context-cost-model.md) — one container, one Spring context; what splits contexts; 60 s budget levers
+- [Strategy constraints](strategy-constraints.md) — module batching, stripped paths, substring DoD greps, shared Docker, git ownership

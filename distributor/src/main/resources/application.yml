@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: distributor
+
+server:
+  address: 127.0.0.1
+  port: 8090
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

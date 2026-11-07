@@ -1,0 +1,1 @@
+- [Repo conventions](repo-conventions.md) — factory base branch, merge-commit rule for spec PRs, module vocabulary, no allowlist, pack spec is the source of truth

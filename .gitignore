@@ -28,6 +28,9 @@ guide/build/
 !.env.example
 CLAUDE.local.md
 
+# Local working notes (never committed)
+notes/
+
 # Claude Code session state (never committed)
 .claude/comms/
 .claude/worktrees/

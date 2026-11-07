@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: bookstore
+  docker:
+    compose:
+      # spring-boot:run starts compose.yaml and derives the datasource from the running container.
+      # start-only keeps the database running across application restarts.
+      lifecycle-management: start-only
+      file: ./compose.yaml
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  address: 127.0.0.1
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      # Lists each health component (db among them) with its status only; details such as the URL stay hidden.
+      show-components: always
