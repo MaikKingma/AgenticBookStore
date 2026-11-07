@@ -24,4 +24,6 @@ Rule: prove provenance of generated files by regenerating, not by reading the im
 
 - Workflow YAML (no actionlint installed): write your own `ruby -ryaml` checker (Psych loads `on` as `true`; assert `on` values are `nil` for unfiltered triggers), then prove it can fail by running it on a scratchpad copy mutated with sed (add `branches:`, drop a flag). Check pinned action majors exist with `gh api repos/<owner>/<action>/releases/latest --jq .tag_name`.
 
+- Static request collections (`http/*.http`): one `python3 -I` script in the scratchpad checks everything from the file's own bytes (bodies cut with `sed -n 'a,b p'`, key sets vs the payload records, JSON types, ISBN-13 checksum with an invalid-digit control, difference from the sibling collection). Compare the handler and header lines to the sibling file by `sed -n 'Np' | shasum`. Combination inventory: grep the integration tests for each literal (reason text, price, ISBN) to find which input combinations no HTTP test exercises.
+
 Related: [[shell-traps]]
