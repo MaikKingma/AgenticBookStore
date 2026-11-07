@@ -43,7 +43,7 @@ Build the catalogue slice through every onion layer of the `bookstore` module, t
 | T5 | Command adapter: `BookCommands`, `AddBookPayload`, `ChangePricePayload`, `CommandResult`, `CommandExceptionHandler`, `BookCommandsTest` | bookstore | [T3] | 6 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #14 (sdd/02-catalogue/T5) | |
 | T6 | Query adapter: `BookQueries`, `BookView`, `BookDetailView`, `QueryExceptionHandler`, `BookQueriesTest` | bookstore | [T3] | 7 | elevated | sonnet | pr | PASS (r2) | ENDORSE | 1 | #15 (sdd/02-catalogue/T6) | |
 | T10 | Fix task (amendment A3): `BookCommandsTest` pins the `details` pass-through of the 404 and 409 handlers | bookstore | [T5] | 8 | elevated | sonnet | pr | PASS (r1) | ENDORSE | 0 | #16 (sdd/02-catalogue/T10) | |
-| T11 | Fix task (amendment A4): `BookCommandsTest` and `BookQueriesTest` pin `code` and `title` pass-through per handler | bookstore | [T10, T6] | 8 | elevated | sonnet | pending | | | 0 | | |
+| T11 | Fix task (amendments A4, A5): `BookCommandsTest` and `BookQueriesTest` pin `code` and `title` pass-through per handler (six handlers) | bookstore | [T10, T6] | 8 | elevated | sonnet | rework | r1 PASS | REJECT (r1) | 1 | | |
 | T8 | `CatalogueIntegrationTest` covering every HTTP scenario of the spec | bookstore | [T5, T6] | 8 | critical | opus | pending | | | 0 | | |
 | T9 | `http/catalogue.http` with one request per endpoint | root | [T5, T6] | 8 | standard | sonnet | pending | | | 0 | | |
 
@@ -189,11 +189,11 @@ Per endpoint: add gives 202, 400, 409 `isbn-already-exists`, the seven 422 codes
 - module: bookstore; dependsOn: [T10, T6]; batch 8; qaTier elevated; qaModel sonnet
 - fileScope: `bookstore/src/test/java/nl/openvalue/bookstore/command/BookCommandsTest.java`, `bookstore/src/test/java/nl/openvalue/bookstore/query/BookQueriesTest.java`
 - acceptanceCriteria:
-  - Four added tests, additions only, one per handler whose tests so far only ever see one catalogue code: command 404 (`CommandExceptionHandler.handleNotFound`), query 404, query 409, query 422 (`QueryExceptionHandler`). Each throws the use-case exception from the mocked flow with a code and title that are NOT that status's catalogue entry (for example `NotFoundException("sample-not-found", "Sample not found", "...")`, `ConflictException("sample-conflict", "Sample conflict", "...")`, `InvalidInputException("sample-invalid", "Sample invalid", "...", details)`) and asserts status, `application/problem+json`, `$.code` and `$.title` equal to those literals and `$.detail` equal to the exception message (FF7).
-  - Probes K1 to K4 (uncommitted, restored with Edit, snapshots per C0-3): each of the four handlers hard-coding that status's catalogue code and title instead of `exception.code()` and `exception.title()` makes its new test fail; on the real code all pass. No production file changes (`CommandExceptionHandler.java` and `QueryExceptionHandler.java` hashes unchanged).
+  - Six added tests, additions only, one per handler whose tests so far only ever see one catalogue code: command 404 (`CommandExceptionHandler.handleNotFound`), command 503 (`handleUnavailable`), query 404, query 409, query 422, query 503 (`QueryExceptionHandler`) (amendment A5 added the two 503 handlers; their tests throw `new UnavailableException("sample-unavailable", "Sample unavailable", "The sample is unavailable")`, a code that is neither `distributor-unavailable` nor `assistant-offline`). Each throws the use-case exception from the mocked flow with a code and title that are NOT that status's catalogue entry (for example `NotFoundException("sample-not-found", "Sample not found", "...")`, `ConflictException("sample-conflict", "Sample conflict", "...")`, `InvalidInputException("sample-invalid", "Sample invalid", "...", details)`) and asserts status, `application/problem+json`, `$.code` and `$.title` equal to those literals and `$.detail` equal to the exception message (FF7).
+  - Probes K1 to K6 plus the title-only variants K1t to K6t (uncommitted, restored with Edit, snapshots per C0-3): each of the six handlers hard-coding that status's catalogue code and title instead of `exception.code()` and `exception.title()` makes its new test fail; on the real code all pass. No production file changes (`CommandExceptionHandler.java` and `QueryExceptionHandler.java` hashes unchanged).
   - `./mvnw clean verify` BUILD SUCCESS, 0 skipped, 4 Started lines, 1 container; `grep -ri discount bookstore/src` empty.
 - implDirective: test-only task; load the `layer-testing` skill first. The QA directive items below are required.
-- qaDirective: C0 plus T11-1: probes K1 to K4 must fail; T11-2: `git diff` of both test files against the spec tip shows additions only; the command and query production files unchanged (hash against `t10-qa-hashes.txt` and `t6-qa-r2-hashes.txt`); T11-3: referee last, 4 Started lines, 1 container, FF5; T11-4: write `t11-qa-hashes.txt` (both test files and both handlers) for qa-final.
+- qaDirective: C0 plus T11-1: probes K1 to K6 and K1t to K6t must fail; T11-2: `git diff` of both test files against the spec tip shows additions only; the command and query production files unchanged (hash against `t10-qa-hashes.txt` and `t6-qa-r2-hashes.txt`); T11-3: referee last, 4 Started lines, 1 container, FF5; T11-4: write `t11-qa-hashes.txt` (both test files and both handlers) for qa-final.
 
 ### T8: Catalogue integration test
 
@@ -403,6 +403,8 @@ T9-6 Referee per C0-1; 4 Started lines unchanged.
 (pending)
 
 ## Amendments
+
+- A5 (2026-11-07T07:46:36Z, orchestrator, after the T11 round 1 meta-review REJECT): T11 extended to the two 503 handlers (`CommandExceptionHandler.handleUnavailable`, `QueryExceptionHandler.handleUnavailable`): every 503 test used the single code `distributor-unavailable`, which specs 06 and 07 name as a real catalogue code and spec 08 adds `assistant-offline` beside, so a hard-coded code survives (QA lead finding, verifier probes K5 and K6). Folded into the open fix task instead of a third one. Gate re-run self-accepted by the orchestrator (test-only, same file scope).
 
 - A4 (2026-11-07T07:28:54Z, orchestrator, after the T10 meta-review): fix task T11 added (test-only, `BookCommandsTest` and `BookQueriesTest`): four handlers only ever see one catalogue code in their tests, so a handler hard-coding that status's code and title instead of reading the exception survives (QA lead finding K, certain by reading). Opening the fix task before T8 saves a qa-final FAIL round. Gate re-run self-accepted by the orchestrator (test-only, cheap).
 
