@@ -21,6 +21,14 @@ metadata:
 - Hibernate 7 removes duplicate root entities in memory, so a `join` over a collection without `distinct` passes
   an exact-list "each book once" test. Only a limit smaller than the joined row count exposes it (SQL
   `fetch first n rows` counts joined rows): pair a multi-author match with a small limit to pin `exists`.
+- To pin a tiebreak column in `order by`, insert the tie row that must come last first: a small in-memory
+  PostgreSQL sort keeps heap (insertion) order for ties, so a dropped tiebreak then fails. Use fixed UUIDs with a
+  first hex digit 0 to 7 (PostgreSQL compares `uuid` unsigned, `UUID.compareTo` signed). Hibernate 7.4 accepts
+  arithmetic (`s.a - s.b`) in a JPQL `order by`. Also give the lower-id tie row the higher value in every other
+  column, or a wrong tiebreak column (`s.onHand` instead of `s.bookId`) orders the rows the same way and survives;
+  check every exact-list test that has a tie, not just the one about ordering.
+- A find-then-insert `save` that skips the update branch fails with `DuplicateKeyException`
+  (`NonUniqueObjectException`) when the entity is already managed, not with an optimistic-lock error.
 
 Pointer: verified Hibernate and Spring Data facts for spec 02 live in the spec folder's `references.md`.
 Related: [[maven-build-traps]].

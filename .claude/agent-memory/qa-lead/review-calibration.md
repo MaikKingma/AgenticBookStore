@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling, disclosed probe-restore slips)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling, disclosed probe-restore slips, asserting lines re-ordered in rework to follow a data edit)
 metadata:
   type: feedback
 ---
@@ -65,3 +65,7 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    - (c) every probe run after the slip shows a failing line that the stray form cannot explain, or the stray form is equivalent. Example: a code typo left in place, while the next probe fails at the title line after the code line passed.
 
    If (c) fails for a probe, that probe has no evidence: CHALLENGE for a re-run. Prevention wording: [[qa-directive-traps]] item 3.
+
+13. **A rework edit to an asserting line that follows a data edit.** Lens 6 ("changed expected value") is no REJECT when four things hold: production is hash-identical; the element set and the matcher are unchanged (the new expected value is the spec rule recomputed on the new inputs); every probe the old line killed was re-run and is still killed by some test; the edit kills more than before. Losing a redundant kill (a second test that also caught a mutant) is acceptable when the test named for that criterion still kills it with decorrelated data.
+   **Why:** extra hardening asked by the orchestrator beyond my Required Action (tie data in a second test) changed the expected order; treating that as a loosening would punish a stronger test.
+   **How to apply:** before endorsing, check by reading which mutants only the edited test kills (for example a level-relative order key, only visible where rows have different levels) and confirm they still die.
