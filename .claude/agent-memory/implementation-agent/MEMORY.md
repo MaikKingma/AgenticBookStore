@@ -1,1 +1,2 @@
+- [ArchUnit traps](archunit-traps.md) — mutable LayeredArchitecture, multi-line descriptions, array dependencies, additions-only Map edits
 - [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist

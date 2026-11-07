@@ -19,6 +19,17 @@ Self-test (fixture) review techniques:
 - Field-only completeness (`getDeclaredFields` + `@ArchTest`) misses a rule declared as an `@ArchTest static void m(JavaClasses)` method. Probe it: ArchitectureTest runs 21 tests and the self-test stays green.
 - Probe both halves of a two-package rule (each package string removed separately) and a rename that keeps the count, so both the size line and the set-equality line are proven to fail.
 
+- Shared-LayeredArchitecture probe via a lazily cached `layers()` (static field without initializer, so class-init order cannot null it) makes every layered description, rule 1's ignoreDependency copy included, show 8 `where layer '` clauses: the copy shares the constraint list.
+
+Composite and parameter-predicate rules (money rule style):
+- Beyond the directive's mutations, sweep the parameter position and arity: last-only (`skip(Math.max(0, size()-1))`), skip-first (`skip(1)`), skip-first-unless-lone (`skip(size() > 1 ? 1 : 0)`), multi-parameter-only (`size() > 1 &&`), `allMatch`. Also drop each package from ONE half only, for all halves × packages. A SET comparison of the description hides a per-half drop. Kills: a count of the full package bracket per half, and one fixture per position (lone, first, middle, last).
+- Judge your own survivors against the criterion text, not the M list. A survivor on a money criterion that can be killed inside the file scope is a FAIL, not informational (qa-lead CP3/CP5 in its ledger's cross-task patterns). Prove the kill with a temporary probe before writing the Required Action.
+- Propose the kill as a FIXTURE, not a reflective test of a private helper: the orchestrator rejected the reflective form (couples the self-test to an implementation detail) and amended the plan with fixtures instead. If the fixture is outside the fileScope, say it needs a plan amendment.
+- `assertReportsExpectedViolators` stops at the first missing violator, so list order decides which fixture a probe names. When a probe must name a specific fixture, check the order, and grep the printed details to show the mutant is live.
+- Expected survivors, not defects: `isEquivalentTo` to `isAssignableTo` on primitives (equivalent), and `allowEmptyShould(true)` to `false` (only stricter, and both imports are non-empty).
+- A rule on `haveRawType(double.class)` does not cover boxed `Double`; the C0-5b grep is the only guard for wrappers.
+- Surefire `-Dtest` joins classes with a comma; `A+B` matches nothing and fails the build with "No tests matching pattern".
+
 Grep traps:
 - The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
 - The impl verifier and the QA verifier share the session scratchpad and the W7 prefix. Check `ls` first and use a role infix (`t4-qa-*`) so you never overwrite the impl's evidence.
