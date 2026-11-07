@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion, backslash-u escapes decoded by tool parameters); numbered list below
+description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion, backslash-u escapes decoded by tool parameters, request-collection smoke replays); numbered list below
 metadata:
   type: feedback
 ---
@@ -69,5 +69,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    **How to apply:** state a required form as an imperative in the plan text, not as a parenthetical. Name the check in the directive (`rg -c '\x{2003}' <file>` prints nothing, plus `grep -c 'u2003'`). In reviews, check the form with `od -c`, never by reading.
 
 17. **Implementers probing production in rework.** A test-only implementer whose round failed on a surviving mutation tends to re-create the mutant in the production file to show its fix kills it, even after declining to do so in round 0. Put this into every test-only task's implDirective: "Never edit a file outside your fileScope, not even temporarily; mutation probes on production code are the verifier's job (describe the mutant in your outbox)." Judging rule: [[review-calibration]] item 11.
+
+18. **Request collections (`http/*.http`) differ from the E2E inputs.** The file's sample values (hyphenated ISBN on a successful add, lowercase genre, `q` combined with a filter) are often not the combinations the integration tests send, so "the endpoints are proven by E2E" does not cover the file. In the review, diff the file's inputs against the E2E calls and name each uncovered combination as a smoke item. The smoke must replay the file's own bytes (bodies cut out with `sed -n` and sent with `curl --data @file`), never re-typed requests. `ijhttp` is usually absent, so the JetBrains `> {% %}` handler syntax stays an inspection-only residual.
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.
