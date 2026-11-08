@@ -34,4 +34,9 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - An advice made to extend `ResponseEntityExceptionHandler` while it handles `HttpMessageNotReadableException` itself fails context start ("Ambiguous @ExceptionHandler method mapped"), so every slice test errors. Quote that line, and say the type-mismatch test sees no response at all.
 - Witness runs through the probe runner reuse `<id>.log` (CONTROL, the survivor id) and overwrite the batch logs. Give witness runs their own ids or a log suffix.
 
+- Unscoped path-guarded advice that rethrows (405/415): probe set is guard -> always-API, guard removed per handler method, headers dropped, Accept collapsed to one type, content type removed / problem+json, status hard-coded, message without the method. The rethrow-same-exception claim is proven by one mutant that throws a NEW exception of the same type: the module log must then show `Failure in @ExceptionHandler` (baseline count 0). A guard on a handler type that no non-API route can raise (415 outside /api in the distributor: /mcp answers 400, actuator health 405) survives and is unobservable over HTTP; say so, suggest a direct unit test, do not FAIL.
+- Spring Framework 7: `HttpHeaders` is no longer a `Map` (no `containsKey`/`put`); mutants use `getFirst`, `addAll(HttpHeaders)`, `setAccept`. A mutant that fails to compile gives no kill evidence: read the first lines of each probe log before tabulating.
+- To prove a new log WARN is not new behaviour, run the same guard test with the new class moved aside and grep the line there.
+- Never write a heartbeat stamp from memory: take `date -u` at each bump (a future stamp is the failure mode flagged against impl artifacts).
+
 Related: [[scaffold-verification-techniques]], [[shell-traps]]
