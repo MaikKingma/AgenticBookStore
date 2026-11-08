@@ -1,5 +1,6 @@
 package nl.openvalue.distributor.api;
 
+import java.math.BigDecimal;
 import nl.openvalue.distributor.catalog.RestockOrder;
 import nl.openvalue.distributor.catalog.RestockService;
 import org.springframework.http.HttpStatus;
@@ -31,13 +32,27 @@ public class RestockOrdersController {
         if (request.ean() == null || request.ean().isBlank()) {
             throw new InvalidRequestException("ean must not be blank");
         }
-        Integer quantity = request.quantity();
-        if (quantity == null || quantity < MIN_QUANTITY || quantity > MAX_QUANTITY) {
+        BigDecimal quantity = request.quantity();
+        if (!isWholeNumberInRange(quantity)) {
             throw new InvalidRequestException(
-                    "quantity must be a number between " + MIN_QUANTITY + " and " + MAX_QUANTITY);
+                    "quantity must be a whole number between " + MIN_QUANTITY + " and " + MAX_QUANTITY);
         }
-        RestockOrder order = restockService.placeOrder(request.ean(), quantity, request.retailerReference());
+        RestockOrder order = restockService.placeOrder(request.ean(), quantity.intValueExact(),
+                request.retailerReference());
         return RestockOrderResponse.of(order);
+    }
+
+    /**
+     * Exact, no rounding: {@code 10.0} and {@code 1e2} are whole numbers, {@code 0.9999} and {@code 500.0000000001}
+     * are not in range. The range is checked first, so a huge exponent never reaches the fraction check.
+     */
+    private static boolean isWholeNumberInRange(BigDecimal quantity) {
+        if (quantity == null
+                || quantity.compareTo(BigDecimal.valueOf(MIN_QUANTITY)) < 0
+                || quantity.compareTo(BigDecimal.valueOf(MAX_QUANTITY)) > 0) {
+            return false;
+        }
+        return quantity.stripTrailingZeros().scale() <= 0;
     }
 
     @GetMapping("/{id}")
