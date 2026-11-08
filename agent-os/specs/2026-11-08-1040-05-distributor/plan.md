@@ -157,6 +157,12 @@ From the QA lead's T5 r1 review:
 
 - FF9 (qa-final): a live latency run with a health control (the production sleeper really delays `/api` calls and not `/actuator/health`), restock POST and GET under `failure-rate=1.0` (503 envelope), checked against the T5 hash baseline. The optional test-only hardening F-s05-8 stays a follow-up (orchestrator decision: the live qa-final check covers the clause).
 
+Orchestrator decision during T6 (answer to impl-t6's question, 2026-11-08):
+
+- FF10 (T6 verifier, T7, qa-final): the spec-mandated empty `logging.pattern.console` makes logback print the status line `|-ERROR in ch.qos.logback.classic.PatternLayout("") - Empty or null pattern.` on stderr once per STDIO context start (`logging.threshold.console: "OFF"` does not silence it; L7's assumption did not hold). `application-stdio.yml` stays verbatim because the pack spec decides the settings. Confirmed and tightened by the QA lead (T6 r1): the line is accepted with that exact text at a count equal to the STDIO context starts of the same run, proven by the `Started DistributorApplication` lines in `distributor/target/distributor-stdio-test.log` (4 today); every line strictly between `Running nl.openvalue.distributor.mcp.McpStdioModeTest` and its `Tests run` line, and in that class's Surefire XML only inside `<system-err>`; never in `<system-out>` or on captured stdout. Any other count, place or text is a FAIL to explain. Real-jar STDIO start: exactly one such line on stderr.
+- FF11 (T7 verifier, qa-final repeats on the final jar): real-jar STDIO run from a driver whose working directory is the session scratchpad (so `distributor-stdio.log` never lands in the repo), stdout and stderr captured separately; `initialize`, `notifications/initialized`, `tools/list`; stdout only JSON-RPC with the four tool names and serverInfo `distributor-catalog` 1.0.0; stderr quoted in full with exactly one FF10 line; `distributor-stdio.log` holds `Started DistributorApplication`. qa-final also checks the C0-7 console count (5) and the FF10 count in the default, alphabetical and reverse-alphabetical orders. Full text: QA ledger "Feed-forward issued".
+- Rationale correction (rule 14): `logging.threshold.console: "OFF"` (L7) is a redundant belt on the event path; it does not silence the logback status line.
+
 ## Amendments
 
 (none)
