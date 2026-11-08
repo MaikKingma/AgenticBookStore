@@ -43,4 +43,8 @@ Mapper hand-offs into validating factories (`Money.of(amount, code)`, `new Email
 - Element-pick accessors (`lines.get(0)`): probe last and `get(1)`; witness has the first line's value differing from every later line.
 - Re-verification rounds: copy the runner and snapshot script with a new evidence prefix (sed the prefix) instead of reusing the old runner, or it overwrites the earlier round's logs; reuse the old mutant schemas when production is hash-equal, and pick test literals that differ from the mutants' hard-coded literals.
 
+Nested use-case exceptions (port-nested `final class X extends NotFound/InvalidInput/Conflict/UnavailableException`):
+- The four bases share one constructor shape, so a superclass swap compiles. Probe per class: swap superclass, one-letter code typo, title text change, detail without the ISBN or constant detail, `final` dropped. A parameterized test with two inputs fails both rows per probe.
+- One probe runner (perl exact-once guard, `.orig` restore, hash beside snap-before) makes ten probes about 4 s of Maven each. Take the heartbeat `updated` from `date -u`, never an estimate.
+
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
