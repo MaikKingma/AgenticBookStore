@@ -57,5 +57,9 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      would let an NPE escape); a negative in every value assumed unsigned.
    - Year rules "clock year + 1 accepted, + 2 rejected" with a clock fixed in the current year match the real clock;
      cards keep writing them (spec 06 T4). Rewrite to the past-year clock (2001 accepted, 2002 rejected).
+   - A choice between two values (override or recommended, given or default) is a relation, not a pass-through: two
+     values per field still let "keep the higher", "zero means absent" and "use only when different" survive. List
+     data below, equal to and above the counterpart, the zero value and both range ends (spec 06 T4 spent both
+     rework rounds on it). Equal needs a counterpart in another currency to be visible.
    - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the
      local answer (409); a call would have produced the remote's 503 (spec 06 qa-final plan).

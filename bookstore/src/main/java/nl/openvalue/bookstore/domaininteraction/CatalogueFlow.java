@@ -38,11 +38,14 @@ public class CatalogueFlow {
 
     private final BookDataService books;
     private final StockItemDataService stockItems;
+    private final DistributorAppService distributor;
     private final Clock clock;
 
-    public CatalogueFlow(BookDataService books, StockItemDataService stockItems, Clock clock) {
+    public CatalogueFlow(BookDataService books, StockItemDataService stockItems, DistributorAppService distributor,
+            Clock clock) {
         this.books = books;
         this.stockItems = stockItems;
+        this.distributor = distributor;
         this.clock = clock;
     }
 
@@ -56,13 +59,41 @@ public class CatalogueFlow {
         Book book = translatingDomainExceptions(() -> Book.addToCatalogue(new Isbn(isbn), new Title(title),
                 authors.stream().map(AuthorName::new).toList(), Genre.parse(genre), Money.of(price),
                 publicationYear, clock));
-        String normalisedIsbn = book.isbn().value();
-        books.findByIsbn(normalisedIsbn).ifPresent(existing -> {
-            throw new BookDataService.IsbnAlreadyExistsException(normalisedIsbn);
-        });
-        books.save(new BookDTO(book));
-        stockItems.save(new StockItemDTO(StockItem.openFor(book.id(), clock)));
-        return book.id().value();
+        rejectWhenInCatalogue(book.isbn().value());
+        return saveWithEmptyStockItem(book);
+    }
+
+    /**
+     * Imports a title from the distributor, opens an empty stock item for it in the same transaction and returns its
+     * id. The price is the override when one is given, otherwise the distributor's recommended price. The steps run in
+     * this order, so each failure is reported before any later step runs:
+     * <ol>
+     * <li>the ISBN and, when given, the override price are checked, so an invalid request is rejected without a
+     * lookup or a remote call;</li>
+     * <li>an ISBN already in the catalogue is rejected as a conflict, without calling the distributor;</li>
+     * <li>the title is looked up at the distributor with the normalised ISBN; an unknown title is not found;</li>
+     * <li>a title the distributor no longer supplies is rejected as not orderable;</li>
+     * <li>the book is built from the requested ISBN and the distributor's title, authors, genre and publication year,
+     * then saved together with its empty stock item.</li>
+     * </ol>
+     * The remote call runs inside the use-case transaction, so a database connection stays open while the distributor
+     * answers; the timeouts of the distributor client bound that time. Port exceptions pass through unchanged.
+     */
+    public UUID importFromDistributor(String isbn, BigDecimal priceOverride) {
+        Isbn requested = translatingDomainExceptions(() -> new Isbn(isbn));
+        Money override = priceOverride == null ? null : translatingDomainExceptions(() -> Money.of(priceOverride));
+        String normalisedIsbn = requested.value();
+        rejectWhenInCatalogue(normalisedIsbn);
+        DistributorTitleDTO title = distributor.findTitle(normalisedIsbn)
+                .orElseThrow(() -> new DistributorAppService.TitleNotFoundAtDistributorException(normalisedIsbn));
+        if (!title.orderable()) {
+            throw new DistributorAppService.TitleNotOrderableException(normalisedIsbn);
+        }
+        Book book = translatingDomainExceptions(() -> Book.addToCatalogue(requested, new Title(title.title()),
+                title.authors().stream().map(AuthorName::new).toList(), Genre.parse(title.genre()),
+                override != null ? override : Money.of(title.recommendedPrice(), title.currency()),
+                title.publicationYear(), clock));
+        return saveWithEmptyStockItem(book);
     }
 
     /** Changes the price of a book; the book decides whether its price may change. */
@@ -104,6 +135,19 @@ public class CatalogueFlow {
     @Transactional(readOnly = true)
     public BookDTO findById(UUID bookId) {
         return books.findById(bookId);
+    }
+
+    private void rejectWhenInCatalogue(String normalisedIsbn) {
+        books.findByIsbn(normalisedIsbn).ifPresent(existing -> {
+            throw new BookDataService.IsbnAlreadyExistsException(normalisedIsbn);
+        });
+    }
+
+    /** Saves a new book and opens its empty stock item; a unique-constraint race on the ISBN still gives 409. */
+    private UUID saveWithEmptyStockItem(Book book) {
+        books.save(new BookDTO(book));
+        stockItems.save(new StockItemDTO(StockItem.openFor(book.id(), clock)));
+        return book.id().value();
     }
 
     private static String absentWhenBlank(String criterion) {

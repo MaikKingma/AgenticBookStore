@@ -41,7 +41,7 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 | T1 | Port `DistributorAppService`, two DTO records, three nested exceptions | bookstore | [] | 1 | standard | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T1`) | PASS (r0) | ENDORSE | 0 | #67 | 37dbd0e |
 | T2 | Contract JSON captured live from the distributor, README, `http/distributor.http` additions | bookstore | [] | 2 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T2`) | PASS (r0) | ENDORSE | 0 | #69 | 62079f8 |
 | T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T3`) | PASS (r2) | ENDORSE | 2 | #75 | 8ee41d4 |
-| T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | pending | | | | | |
+| T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T4`) | PASS (r2) | ENDORSE | 2 | #78 | ab52051 |
 | T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
 | T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | pending | | | | | |
 | T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | pending | | | | | |
@@ -161,6 +161,12 @@ From the QA lead's T3 r2 review (full text in the QA ledger, FF-6 to FF-8):
 - FF-6 (T4 implDirective and qaDirective): in at least one success test the stubbed `DistributorTitleDTO` carries an isbn different from the requested ISBN (for example request `978-0-14-143951-8`, stub isbn `9789900010050`); the saved BookDTO isbn is `9780141439518`. Must-fail probe F17: the book is built from the DTO isbn instead of the normalised request ISBN.
 - FF-7 (T4 to T8 C0 baselines): bookstore total after T3 is 792 (DistributorAppServiceImplTest 97, DistributorAppServiceImplWiringTest 5); ACL WARN baseline exactly 66 (`grep -c -E " WARN .*DistributorAppServiceImpl +:" <referee log>`); every later gate runs `shasum -a 256 -c` on the scratchpad file `s06-T3-qa-r2-hashes.txt` from the repo root (6 of 6 OK) unless T8 owns the change of the test file.
 - FF-8 (qa-final): T3 hash integrity (or T8's baseline); the three FU-T3 must-fail probes on the tip; a live import of Pride and Prejudice whose stored isbn equals the request.
+
+From the QA lead's T4 r2 review (full text in the QA ledger, FF-9 to FF-11):
+
+- FF-9 (T5 to T8 C0 baselines): bookstore total after T4 is 829 (CatalogueFlowTest 70); ACL WARN stays exactly 66; every later gate also runs `shasum -a 256 -c` on the scratchpad file `s06-T4-qa-r2-hashes.txt` (2 of 2 OK). T7 probes that mutate `CatalogueFlow.java` restore it to sha `f8d925e4...`.
+- FF-10 (T5 to T8 implDirective and qaDirective): value-relation sweep. Wherever code chooses or compares between two values (override vs recommended, given vs default, request vs stored), tests hold data below, equal and above, the zero value and both domain range ends, each asserted as a literal or as the exact 422; implementers table the sweep in the outbox (input x relation x test). For T5: price `"0"` and `"0.00"` reach the flow as `new BigDecimal("0")` and `new BigDecimal("0.00")` (captor literals), next to G12's `"-5"`.
+- FF-11 (qa-final): T4 hash integrity; a live import of The Last Man with an override below its captured 11.99 (for example 7.50) stores 7.50 EUR; residual R7 accepted: the remote call widens the window between the duplicate check and the save, closed by the unique constraint and the adapter's 409 translation (no second check, by plan AC2; the lead card's wording differed).
 
 ## Amendments
 
