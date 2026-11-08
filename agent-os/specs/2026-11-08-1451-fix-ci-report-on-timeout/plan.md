@@ -1,12 +1,13 @@
 ---
 spec: fix-ci-report-on-timeout
 source: ci-performance read-only review (PR #46, merged as a7047c3), bug report of 2026-11-08
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; owner delegated all plan and gate approvals)
 created: 2026-11-08T14:59:00Z
 origin: main-session bug report, lite bugfix cycle
 gate1: 2026-11-08T14:59:00Z
 qa-lead: on
+gate2: 2026-11-08T15:43:09Z
 base: factory
 branch: sdd/fix-ci-report-on-timeout/spec
 module-vocabulary: [root, bookstore, distributor]
@@ -147,6 +148,20 @@ QA lead's brief and final review, both gates).
   - [x] Open questions: none (res-1's open questions are answered by the reproduction run and the T1 probes).
   - [x] Lite path checklist ticked above; QA lead strategy skipped per the lite rule, the directives above are the
     strategy; qa-lead registered at Phase 2/3.
+
+- Gate 2 self-accepted 2026-11-08T15:43Z by the orchestrator (owner delegated gate approval). Checklist:
+  - [x] qa-final PASS (opus, `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`) endorsed by the QA lead
+    (META ENDORSE final r1); Gate 2 QA confidence high; every criterion traced (AC1 to AC6 and the bug's expected
+    behaviour a, b, c) in the QA lead ledger section "Gate 2 QA assessment".
+  - [x] PR readiness: failing 0, skip count 0 -> 0, gitlinks none, base ancestor yes (factory 19d3000).
+  - [x] Every task PR merged into the spec branch: #56 (T1, squash 514d1ed). No task dropped.
+  - [x] No unattributed stragglers; `git diff origin/factory...origin/sdd/fix-ci-report-on-timeout/spec` is confined to
+    `.github/workflows/ci.yml` (+2 lines), the spec folder and agent memory.
+  - [x] Bugfix evidence: red-before run 42491917218 (cancelled, report and upload skipped, 0 artifacts); green-after run
+    42492864936 (failure, "has timed out after 10 minutes", report and upload ran, 1 artifact with 38 reports); normal
+    green runs 42492829810, 42494758963, 42494754374 (upload skipped, 0 artifacts); supersede witness 42492795854.
+    Blast radius closed or deferred as in bug.md. Throwaway PRs #54 and #57 closed unmerged, branches deleted, no caches.
+  - [x] Residual risks accepted (QA lead ledger 1 to 7). Standards proposals P1 to P3 are follow-ups, not blockers.
 
 ## Amendments
 

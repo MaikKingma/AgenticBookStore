@@ -2,7 +2,7 @@
 bug: fix-ci-report-on-timeout
 severity: S3
 path: lite+research
-status: open
+status: fixed
 closes: [ci-performance review finding (PR #46, merged as a7047c3)]
 ---
 # Bug: a hung test leaves CI without the test report and without the Surefire reports artifact
