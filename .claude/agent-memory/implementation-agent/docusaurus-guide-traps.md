@@ -17,5 +17,14 @@ metadata:
 - Template leftovers to delete after create-docusaurus: blog/, src/pages, src/components, static/img,
   static/.nojekyll, docs tutorials, the template's own .gitignore. The generated package name is derived from the
   path; rename it and run `npm install --package-lock-only` to refresh the lockfile name.
+- Theming: Infima dark variables sit on `html[data-theme='dark']`, so a bare `[data-theme='dark']` block loses; use the
+  `html[...]` form. Set `--ifm-link-decoration` per `.markdown a`, not globally (underlines the navbar). `.navbar`
+  needs `color` set (hamburger icon is currentColor) and its mobile menu needs scoped `--ifm-menu-*` vars. An empty
+  Prism theme (`{plain: {}, styles: []}`) lets `--prism-color` / `--prism-background-color` and `.token.*` rules in CSS
+  own the code colours. Body background is on `html`, not `body`.
+- `node --test` exits 0 with "tests 0" on an unmatched glob and counts an emptied file as one pass; a zero-test guard
+  inside `scripts/**` can only read the `check` script's glob and count registrations (package.json is out of scope).
+- A README provenance line cannot hold a font CDN host when a rule bans those strings in `guide/`: source fonts from the
+  upstream GitHub tag (static woff2) and subset with a scratch-venv fonttools, never a CDN or npm package.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
