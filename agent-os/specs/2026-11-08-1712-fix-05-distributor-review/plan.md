@@ -1,12 +1,13 @@
 ---
 spec: fix-05-distributor-review
 source: docs/spec-pack/specs/05-distributor-service.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-08T17:12:25Z
 origin: spec 05 read-only review (main session), four findings confirmed as bugs 2026-11-08
 gate1: 2026-11-08T17:37:09Z
 qa-lead: on
+gate2: 2026-11-08T19:46:30Z
 base: factory
 branch: sdd/fix-05-distributor-review/spec
 module-vocabulary: [root, bookstore, distributor]
@@ -314,7 +315,12 @@ leadDirective: evidence chain for T3 (test-only fix): regression test `distribut
 
 ## Final sweep and Gate 2
 
-(filled at the end of the cycle)
+- qa-final (opus): PASS, `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`. Tip c8a3de2, base factory a8fceb1 (not moved). Referee 684 + 190 tests, 0 failures, 22.9 s. Every branch-level negative control at the tip shows exactly its stated red set with the other tasks green (T1-F1 one test, T1-F2 three tests per A1 and R1, T2 four tests plus the path-guard mutant, T3 midnight probe red pre-fix and green post-fix, fixed-2000 control green). None of the four bug.md recipes reproduces at the tip; all reproduce on base (in-process and on the live jar). F1 through the real wiring: duplicates in 10/10 trials on factory wiring, 0/10 on the tip; live at failure rate 0.2: 92 of 400 calls 503, every body the envelope. Blast-radius greps as expected; integrity checker 16 OK (committed bytes equal every gated byte). PR readiness: failing 0, skips 0 -> 0, no gitlinks, base ancestor, CI green on the tip sha.
+- QA lead final review: ENDORSE, Gate 2 QA confidence high (`.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-05-distributor-review.md`, "Final review" and "Gate 2 QA assessment").
+- Gate 2 self-accepted by the orchestrator (Maik approves only the end result) at 2026-11-08T19:46:30Z: qa-final PASS endorsed with high confidence and no untraced criterion; all three task PRs merged (#62, #63, #64); no stragglers; the product diff is the 13 gated files (distributor only, no POM, no resources, no bookstore file).
+- Residual risks (accepted): the structural F1 test cannot tell a capture-once `ThreadLocalRandom` wiring apart (D5, guarded by reading `ChaosWebConfig.java:30`); two handler guard paths unreachable in the shipped config; the F3 shared-context property is pinned by a log count only.
+- Follow-ups (deferred): (1) unit test of `ApiRequestMismatchHandler` for the 415 guard and the context-path prefix; (2) guard on Spring's decoded lookup path instead of the raw URI (`/api;v=1/titles`, `/%61pi/titles` get Boot's 405 body, same as base); (3) 406 empty body; (4) `/mcp` returns a serialised `McpError` with a stack trace (same as base); (5) review-checklist additions from bug.md Prevention for specs 06, 07, 08; (6) the string `"10.0"` is accepted by design (D2) without a committed test; (7) README error wording once (2) and (3) are decided.
+- Standards proposals (QA lead; for the main session): (1) tests never compute an expected date from a clock, they inject a shared fixed `@Primary` `Clock` and assert literals; (2) a singleton never holds a non-thread-safe generator or formatter; (3) a whole-number request field binds as `BigDecimal` with range and scale checks, never `Integer` under Jackson's float-to-int coercion; (4) every error status a REST surface can return is in the README error table and has a test asserting status, body shape and content type.
 
 ## QA feed-forward
 

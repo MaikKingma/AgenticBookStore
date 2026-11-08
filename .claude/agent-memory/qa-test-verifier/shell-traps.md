@@ -50,4 +50,8 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   pattern can match every line, so an "exactly once" guard is unreliable (spotted by review before a run). Count with
   `OLD=... perl -0ne '$c = () = /\Q$ENV{OLD}\E/g; print $c'` and replace with `perl -0pe 's/\Q$ENV{OLD}\E/$ENV{NEW}/'`.
 
+- `curl -i -w ' time_total=%{time_total}'` appends the timing to the BODY line (no newline). A diff filter
+  `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with
+  `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

@@ -2,7 +2,7 @@
 bug: fix-05-distributor-review
 severity: S3
 path: lite+research
-status: open
+status: fixed
 closes: [spec 05 review finding 1 (chaos random), finding 2 (fractional quantity), finding 3 (midnight flake), finding 4 (405/415 envelope)]
 ---
 # Bug: four defects found in the read-only review of spec 05 (distributor)
