@@ -1,6 +1,6 @@
 ---
 name: qa-directive-traps
-description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion incl. defaults, single production values, regex positions, unreached states and random-UUID claims, backslash-u escapes decoded by tool parameters, request-collection smoke replays, shared test base keys, failure devices and boundary probes that lazy loads defeat, fixed clocks near the run date, logback initialised once per JVM for in-process app tests, README commands that write user config); numbered list below
+description: Recurring traps when writing verifier directives in this repo's SDD cycle (clean-tree snapshots, greps, probes, ArchUnit vacuity, warnings, timestamps, evidence files, CI run ids, moved base, final integrity hashes, test data that cannot falsify a criterion incl. defaults, single production values, regex positions, unreached states and random-UUID claims, backslash-u escapes decoded by tool parameters, request-collection smoke replays, shared test base keys, failure devices and boundary probes that lazy loads defeat, fixed clocks near the run date, logback initialised once per JVM for in-process app tests, README commands that write user config, injected seams proven only with fakes); numbered list below
 metadata:
   type: feedback
 ---
@@ -106,5 +106,12 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    A README criterion "every command was run" must exclude commands that write the user's tool configuration (`claude mcp add`): check those against `--help` plus the live-proven URL and arguments; prove the client connection with a headless `claude -p --mcp-config <tmp> --strict-mcp-config --output-format stream-json` run (init event: server connected, tool list; a tool_use event).
 
 20. **Rework diffs need the gated bytes on disk.** Snapshots hold only hashes, and untracked files have no git copy, so a rework verifier must reconstruct the earlier test file (spec 03 T3: from the implementer's transcript, after a first guessed reversal failed its hash). Put into C0 or every directive: "at snap-before, `cp` each fileScope test file to SP as `<prefix>-<File>.orig`; a rework round diffs the current file against that copy". The hash match still proves any reconstruction, so a reconstructed reversal is valid evidence, just expensive.
+
+22. **Injected seams proven only with fakes.** A design that injects a sleeper, random or clock lets the unit tests
+   prove the logic with recording fakes, while the production implementation (`Thread.sleep` body) and its wiring
+   (`millis -> { }` in the config) fall to no test. A gate grep (spec 05 T1 Clock) or a qa-final live check (T5
+   sleeper) is no regression guard. At strategy time name one task falsifier per seam that keeps the card's pins and
+   the context count: call the production implementation directly (elapsed at least N ms), and time the wired path
+   as the MINIMUM over several calls against the pinned value (a lower bound never flakes on correct code).
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.
