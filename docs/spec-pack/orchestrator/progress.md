@@ -1,10 +1,10 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over four labs.
-Current phase: 3, spec 03 step 2 (run the cycle)
-Current spec: 03 (in progress). Goal: the inventory aggregate with stock levels, receiving and stocktake corrections, the low-stock domain event published after commit, and stock figures on the book views.
+Current phase: 3, change request D6 (between spec 05 and spec 06)
+Current spec: 06 next (todo). D6 (workshop levels 0 to 4) is applied first, as Maik asked.
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
-Clean `./mvnw clean verify` time: 13 s wall clock, Maven 12.5 s, after spec 02 (budget 60)
+Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
@@ -12,7 +12,7 @@ Clean `./mvnw clean verify` time: 13 s wall clock, Maven 12.5 s, after spec 02 (
 | 02 | done | spec-02-done (3ce06cb) | 13 s (Maven 12.454 s) | PR #8 merged as 7655bfb; review fixes on top; 318 + 3 tests, 0 skipped; ArchitectureTest 21 rules; CI run 42360686186 green on the merge commit; see DoD 02 below |
 | 03 | done | spec-03-done | 13 s (Maven 12.513 s); 19 s on the merge commit | PR #20 merged as 9266a56; task PRs #21 to #30; review fix on top; 476 + 3 tests, 0 skipped; ArchitectureTest 21 rules; CI run 42395237141 green on the merge commit; see DoD 03 below |
 | 04 | done | spec-04-done | 21 s (Maven 20.583 s) | PR #31 merged as dc7edc3 (task PRs #32 to #39); review findings fixed through /sdd-bugfix, PR #40 merged as 1bd62fc (task PRs #41, #42); 684 + 3 tests, 0 skipped; ArchitectureTest 21 rules; see DoD 04 below |
-| 05 | in progress | | | orchestrator agent run in its own git worktree since 2026-11-08, in parallel with the spec 04 bugfix (Maik) |
+| 05 | done | spec-05-done | 24 s wall clock | PR #43 merged as d35108d (task PRs #44, #45, #50, #52, #53, #58, #59, #60); review findings fixed through /sdd-bugfix, PR #61 merged as c7af854 (task PRs #62 to #64); 684 + 190 tests, 0 skipped; CI run 42516930015 green on c7af854; see DoD 05 below |
 | 06 | todo | | | |
 | 07 | todo | | | |
 | 08 | todo | | | |
@@ -72,6 +72,13 @@ Clean `./mvnw clean verify` time: 13 s wall clock, Maven 12.5 s, after spec 02 (
 - `grep -ri "cancel" bookstore/src/main/java` returns nothing (`wc -l` = 0).
 - Events in `domain`, publishing in flows: `StockRunningLowEvent` and `OrderPlacedEvent` implement `DomainEvent`; only `InventoryFlow` and `OrderFlow` publish; both stock-changing order use cases (place, ship) publish pulled stock events inside the transaction.
 
+### DoD 05 (2026-11-08, on factory after the bugfix merge, commit c7af854)
+
+- `./mvnw verify` green: local `./mvnw clean verify` from the repo root on c7af854, exit 0, 24 s wall clock; Surefire totals 874 tests (bookstore 684, distributor 190), 0 failures, 0 errors, 0 skipped. CI run 42516930015 green on c7af854 (verify and windows-build).
+- MCP round-trip test green: `McpServerIntegrationTest` 12 tests, 0 failures (now on a shared fixed clock, so no midnight flake); `McpStdioModeTest` 4 tests, 0 failures.
+- Claude Code smoke test recorded: a single-machine headless stand-in passed (Claude Code 2.1.319, HTTP and STDIO, `search_titles` found Frankenstein), recorded in PR #43. The two-machine run with the workshop-day version is a manual check for Maik (below).
+- `java -jar distributor/target/distributor.jar` starts in under 10 seconds: `Started DistributorApplication in 1.087 seconds (process running for 1.247)`, measured by the main session on c7af854. Spot check on the same run: `PATCH /api/titles` answers 405 `{"errorCode":"METHOD_NOT_ALLOWED",...}`.
+
 ## Decision log
 
 - 2026-11-06 Phase 0: tool checks all pass (Java 25.0.4, Docker 29.8.2, Node 24.20.0, npm 11.19.0, git 2.50.1, gh as MaikKingma with ADMIN on MaikKingma/AgenticBookStore, start.spring.io answers).
@@ -118,3 +125,5 @@ Clean `./mvnw clean verify` time: 13 s wall clock, Maven 12.5 s, after spec 02 (
 - 2026-11-08 fix-ci-report-on-timeout (/sdd-bugfix, lite, S3, driven by an orchestrator agent in its own worktree with self-accepted gates): spec PR #55 merged into factory as 3a24476 (T1 #56). Root cause: the `Build and test` step had no step timeout, so a hang ran into the job timeout, which GitHub reports as cancelled, skipping the `!cancelled()` report and `failure()` upload steps. Fix: `timeout-minutes: 10` on the step (below the job's 15), so a hang fails the step and the report and artifact run. Evidence on real runners: red-before run 42491917218 (cancelled, no artifact), green-after run 42492864936 (failure, artifact with all reports), normal green runs upload nothing; CI on the merge commit 42496436823 green. qa-final PASS, QA lead ENDORSE. Residual: a hang before the build step still ends as a job timeout; the 10 below 15 rule is held by a comment. Standards proposals P1 to P3 in the spec folder `agent-os/specs/2026-11-08-1451-fix-ci-report-on-timeout/`.
 - 2026-11-08 Phase 3, spec 05 (parallel, own worktree): orchestrator run completed. Spec PR #43 merged into factory as d35108d after `spec-04-done`, with factory merged into the spec branch first (89ff3b5); task PRs #44, #45, #50, #52, #53, #58, #59, #60; qa-final PASS, QA lead ENDORSE; Gates self-accepted. Referee on d35108d (main session): 684 + 177 tests, 21.013 s, 21 s wall; `McpServerIntegrationTest` 12/0/0/0. Self-accepted calls: hand-written request checks with 400 `INVALID_REQUEST`, MCP `limit` clamped to 1 to 20, Clock `Europe/Amsterdam`, restock with an unknown EAN is 404 `TITLE_NOT_FOUND` (as spec 06 expects), UUID restock ids, 150 seed titles (120 classics, 30 invented new releases, `97899` EAN prefix except Pride and Prejudice), the STDIO stderr pattern line accepted, no STDIO launcher module. Ledger archived at `.claude/comms/archive/2026-11-08-05-distributor/`.
 - 2026-11-08 spec 05 review (fresh read-only subagent): no blocker or major, four minors, all fixed through /sdd-bugfix (`fix-05-distributor-review`): a non-thread-safe random generator shared across request threads in the chaos interceptor, a fractional restock quantity truncated instead of 400, an MCP test that can fail across midnight Amsterdam, and 405/415 errors that bypass the distributor's error envelope. `spec-05-done` waits for that fix.
+- 2026-11-08 fix-05-distributor-review (/sdd-bugfix, lite plus one senior researcher, driven by an orchestrator agent in its own worktree with self-accepted gates): spec PR #61 merged into factory as c7af854 (T1 #62 thread-local random in the chaos interceptor and a `BigDecimal` quantity so 1.5 or 500.7 get 400 `INVALID_REQUEST`; T2 #63 `ApiRequestMismatchHandler` gives `/api/` 405 and 415 the envelope with codes `METHOD_NOT_ALLOWED` and `UNSUPPORTED_MEDIA_TYPE`; T3 #64 a shared fixed clock for the MCP test). Red on the unfixed code and green after, reproduced independently by QA and qa-final. Side effect accepted: the JSON string "10.0" now gives 201. Follow-ups in its plan.md (raw-URI path check, 406 empty body, `/mcp` stack trace on a bad request, four standards proposals); the review briefs of specs 06 to 08 check thread-unsafe singleton state, numeric coercion of request bodies, wall-clock reads in tests and the error envelope on every status.
+- 2026-11-08 Phase 3, spec 05 done: referee 24 s on c7af854, tagged `spec-05-done`.
