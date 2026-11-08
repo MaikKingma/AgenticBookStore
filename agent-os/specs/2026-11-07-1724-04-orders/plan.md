@@ -1,9 +1,10 @@
 ---
 spec: 04-orders
 source: docs/spec-pack/specs/04-orders.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-07T18:16:51Z
+gate2: 2026-11-08T01:23:13Z
 qa-lead: on
 base: factory
 spec-branch: sdd/04-orders/spec
