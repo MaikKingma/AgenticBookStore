@@ -42,7 +42,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 | T1 | Catalogue model, seed loader, Clock bean, seed data (titles, subjects, shared ISBNs) | distributor | [] | 1 | critical | opus | opus | done (branch `sdd/05-distributor/T1`) | PASS (r1) | ENDORSE | 1 | #44 | 5827249 |
 | T2 | Search and restock services | distributor | [T1] | 2 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T2`) | PASS (r1) | ENDORSE | 1 | #45 | af7aaf1 |
 | T3 | MCP server, four read-only tools, round-trip test | distributor | [T2] | 3 | critical | opus | opus | done (branch `sdd/05-distributor/T3`) | PASS (r2) | ENDORSE | 2 | #50 | a0737c9 |
-| T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | pending | | | | | |
+| T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | done (branch `sdd/05-distributor/T4`) | PASS (r2) | ENDORSE | 2 | #52 | 9afb516 |
 | T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
 | T6 | STDIO profile and its in-process verification | distributor | [T3, T5] | 6 | critical | opus | opus | pending | | | | | |
 | T7 | finalName `distributor`, README, startup proof | distributor | [T5, T6] | 7 | elevated | sonnet | sonnet | pending | | | | | |
@@ -148,6 +148,10 @@ From the QA lead's T3 r2 review (T4 to T8 and qa-final):
 
 - FF6: the `ToolInputValidator` WARN "Tool (search_titles) input validation failed: ... required property 'query' not found" is accepted at exactly 1 in the distributor section (source: `McpServerIntegrationTest.searchTitlesWithoutQueryIsAToolError`); any other count, tool or property must be attributed to a named test or flagged.
 - FF7: the three BeanPostProcessorChecker lines appear once per context that loads the MCP annotation scanner; expected count = 3 x the number of `Registered tools: 4` lines in the distributor section (T3 baseline 6 from 2 contexts); whether a slice loads the scanner is observed, not assumed.
+
+From the QA lead's T4 r2 review:
+
+- FF8 (T5 implementer and verifier): `ChaosApiTest` sends one `/api/...` request with `accept(MediaType.APPLICATION_PROBLEM_JSON)` and asserts status 503, content type exactly `application/json` and the `TEMPORARILY_UNAVAILABLE` envelope; the verifier's probe CT-rm (remove `.contentType(MediaType.APPLICATION_JSON)` from the advice's `envelope(...)` helper) must fail under `-Dtest=ChaosApiTest`. The T4 test files stay unedited.
 
 ## Amendments
 
