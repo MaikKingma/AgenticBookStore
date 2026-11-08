@@ -117,6 +117,10 @@ only the slides template and a Teams background), so the tokens are written into
 has 4.2:1 on white, so it is an accent colour only; teal `#014046` carries buttons and links. Montserrat is
 self-hosted with its licence, no CDN, no new npm dependency.
 
+Maik (2026-11-08, later the same day): the workshop guide site (spec 11) uses the same brand. Dark mode uses navy as
+background and mist as primary (10.7:1); if a dark-mode pair cannot meet AA, the switch is turned off.
+
 Files changed: `specs/12-storefront.md` (Visual design notes, requirement "OpenBook branding", definition of done
-screenshots), `orchestrator/decisions.md` (D7), `orchestrator/progress.md` (decision log line).
+screenshots), `specs/11-workshop-guide-site.md` (Visual design section, requirement "OpenValue brand", task 1),
+`orchestrator/decisions.md` (D7), `orchestrator/progress.md` (decision log lines).
 
