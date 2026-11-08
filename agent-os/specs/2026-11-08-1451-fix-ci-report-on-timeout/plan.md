@@ -63,7 +63,7 @@ QA lead's brief and final review, both gates).
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | a hung test ends `Build and test` as failed so the report and the Surefire artifact are produced | root | [] | B1 | elevated | opus | sonnet | pending | | sdd/fix-ci-report-on-timeout/T1 | |
+| T1 | a hung test ends `Build and test` as failed so the report and the Surefire artifact are produced | root | [] | B1 | elevated | opus | sonnet | PASS r1 | #56 | sdd/fix-ci-report-on-timeout/T1 | ENDORSE |
 
 ### T1: step timeout on Build and test
 
@@ -128,7 +128,9 @@ QA lead's brief and final review, both gates).
 
 ## QA feed-forward
 
-(none yet)
+- T1 r1 (verifier PASS, QA lead ENDORSE; ledger `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-ci-report-on-timeout.md`):
+  evidence runs red-before 42491917218, green-after 42492864936, normal green 42492829810, supersede witness
+  42492795854. qa-final reuses them and re-checks the spec-branch tip.
 
 ## Gate record
 
@@ -148,7 +150,11 @@ QA lead's brief and final review, both gates).
 
 ## Amendments
 
-(none)
+- A1 2026-11-08T15:24Z, orchestrator (QA lead note N1 at T1 r1): T1 AC6 "no file outside `ci.yml` changed on the task
+  branch" reads "no product file outside `ci.yml` changed on the task branch"; the spec-folder bookkeeping commit that
+  records `pr:` and the QA lead verdict in this plan (sdd-cycle Phase 2/3 step 2i) and the task's
+  `chore(agent-memory)` commit are process files, not product files. Gate re-run self-accepted: a wording
+  clarification, no behaviour or evidence changes.
 
 ## Decisions log (orchestrator, self-accepted)
 
