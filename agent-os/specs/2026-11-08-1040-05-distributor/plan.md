@@ -40,7 +40,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Catalogue model, seed loader, Clock bean, seed data (titles, subjects, shared ISBNs) | distributor | [] | 1 | critical | opus | opus | done (branch `sdd/05-distributor/T1`) | PASS (r1) | ENDORSE | 1 | #44 | 5827249 |
-| T2 | Search and restock services | distributor | [T1] | 2 | elevated | sonnet | sonnet | pending | | | | | |
+| T2 | Search and restock services | distributor | [T1] | 2 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T2`) | PASS (r1) | ENDORSE | 1 | #45 | af7aaf1 |
 | T3 | MCP server, four read-only tools, round-trip test | distributor | [T2] | 3 | critical | opus | opus | pending | | | | | |
 | T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | pending | | | | | |
 | T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
@@ -139,6 +139,10 @@ From the QA lead's T1 r1 review (details in the QA ledger, "Feed-forward issued"
 - FF2 (T2, fallback T3): decide and pin the behaviour of `TitleCatalog.findByEan(null)` (today a `NullPointerException` from `Map.copyOf`); a missing `ean` must never surface as an unexplained NPE through REST or MCP.
 - FF3 (every verifier): classify survivors against the C0 gate checks; one `Clock.systemUTC()` probe per Clock consumer.
 - FF4 (T8 replay and qa-final): a new release's `releaseDate` equals today's Europe/Amsterdam date minus its `releasedDaysAgo` in a live run.
+
+From the QA lead's T2 r1 review:
+
+- FF5 (T3 verifier): if a tool-error text is built from `TitleNotFoundException.getMessage()`, a prefix probe on that message (`"No title with EAN "` -> `"No title for EAN "`) must fail at the G12b exact-text assertion in `CatalogMcpToolsTest`; if T3 builds its own string, the verifier says so and skips the probe.
 
 ## Amendments
 
