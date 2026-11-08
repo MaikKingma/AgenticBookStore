@@ -27,5 +27,9 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - `./mvnw ... -l <log>` prints nothing to the Bash tool and exits 1 on test failure: read the log with grep afterwards.
 - Before trusting a spec claim about what a Jakarta constraint accepts, `javap -c` the validator class from the jar in `BOOT-INF/lib`. Hibernate Validator 9.x `NotBlankValidator` calls `String.isBlank()`, so any `Character.isWhitespace` character (U+2003, for example) is blank and gives 400. U+00A0 is not whitespace and passes. Send both as live controls; a "trims only up to U+0020" premise is false.
 - A curl `-i` response file read in Python text mode turns CRLF into LF, so `split("\r\n\r\n")` finds nothing and the parsed id is empty. Open the file with `newline=""`. Before a replay chains ids, check that the first parsed id is non-empty, because empty ids send later requests to `/books/` and still return plausible 404s.
+- "Stored, not echoed" request fields (the response omits them by contract): MockMvc cannot see them, so probe the controller passing `null` instead. Witness: a temporary class in the same `@WebMvcTest` + `@Import(Service)` slice that `@Autowired`s the real service and reads the stored record after the 201.
+- A probe that adds a record component breaks every constructor call (compile error, no evidence). To add a JSON key, add a `public String getX()` method to the record instead; Jackson serialises it.
+- An advice made to extend `ResponseEntityExceptionHandler` while it handles `HttpMessageNotReadableException` itself fails context start ("Ambiguous @ExceptionHandler method mapped"), so every slice test errors. Quote that line, and say the type-mismatch test sees no response at all.
+- Witness runs through the probe runner reuse `<id>.log` (CONTROL, the survivor id) and overwrite the batch logs. Give witness runs their own ids or a log suffix.
 
 Related: [[scaffold-verification-techniques]], [[shell-traps]]
