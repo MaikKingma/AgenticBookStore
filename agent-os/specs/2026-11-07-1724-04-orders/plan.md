@@ -64,7 +64,7 @@ Add the ordering slice through every onion layer of the `bookstore` module, mirr
 | T4 | `OrderFlow` (`placeOrder`, `ship`, `findById`, `findByCustomer`); `OrderFlowTest` | bookstore | [T2, T3] | 4 | critical | opus | done (branch `sdd/04-orders/T4`) | PASS (r3) | ENDORSE (r2 REJECT) | 3 | #35 | d956f76 |
 | T5 | Command adapter: `OrderCommands`, `PlaceOrderPayload`, `OrderLinePayload`; `OrderCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | done (branch `sdd/04-orders/T5`) | PASS (r1) | ENDORSE | 1 | #36 | ba6dc03 |
 | T6 | Query adapter: `OrderQueries` with nested 400 exception, `OrderView`, `OrderLineView`, `OrderSummaryView`, one new `QueryExceptionHandler` method; `OrderQueriesTest` | bookstore | [T4] | 6 | elevated | sonnet | done (branch `sdd/04-orders/T6`) | PASS (r1) | ENDORSE | 1 | #37 | aa03a82 |
-| T7 | `OrderIntegrationTest`, `OrderEventRecorder`, `IntegrationTestBase` edit, `IntegrationTestBaseHooksTest` additions | bookstore | [T5, T6] | 7 | critical (proposal) | opus (proposal) | planned | | | | | |
+| T7 | `OrderIntegrationTest`, `OrderEventRecorder`, `IntegrationTestBase` edit, `IntegrationTestBaseHooksTest` additions | bookstore | [T5, T6] | 7 | critical | opus | done (branch `sdd/04-orders/T7`) | PASS (r2) | ENDORSE | 2 | #38 | 11811ce |
 | T8 | `http/orders.http` | root | [T5, T6] | 7 | standard (proposal) | sonnet (proposal) | planned | | | | | |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8. T3 (data adapter, the `OrderDataService` bean) merges before T4 because a `@Service` whose port bean is missing breaks every full-context test; the pack task list puts the flow (pack task 2) before the migration and adapter (pack tasks 3 and 4), so the order is flipped on purpose. T5 and T6 both need the `OrderFlow` bean. T7 needs both controllers live. Spec task mapping: spec 1 = T1; spec 2 = T2 + T4; spec 3 = T3; spec 4 = T3 + T5 + T6; spec 5 = T7 + T8. Expected Spring `Started` lines in the bookstore section of the referee after each merge: T1 to T2: 7; T3 to T4: 8 (+ `OrderDataServiceImplTest`); T5: 9 (+ `@WebMvcTest(OrderCommands)`); T6 to T8: 10 (+ `@WebMvcTest(OrderQueries)`); one `Creating container` line throughout. Baseline before T1: bookstore 476 tests, distributor 3, 7 `Started` lines, Total time about 17 s.
@@ -530,6 +530,8 @@ From the QA lead's T6 review (ledger, Review log T6 r1):
 
 - FF-T6-1 (T7 qaDirective and qa-final brief): `OrderFlow.findById` and `findByCustomer` return the port result without a restore, so "the domain rejects it" or "it cannot be restored" is no equivalence argument for a survivor downstream of a read; judge it by whether a stored row without a check constraint can carry the value, then by rule 3. A3 applies to any order claim T7 makes over orders with lines. qa-final adds a hash check of `OrderView.java`, `OrderQueries.java` and `OrderSummaryView.java` at the spec tip against the T6 QA baseline. Follow-up F32 (a mixed-currency stub in `OrderQueriesTest`) is deferred.
 
+From the QA lead's T7 review (ledger, Review log T7 r2): qa-final brief items only. (a) Hash check of the four T7 files at the spec tip against the T7 r2 QA baseline; (b) qa-final does not re-run J1 as written, J1c is the boundary evidence (A4); (c) `index(l) asc` and the removed tiebreak stay inspection items guarded by the `OrderRepository.java` hash (FF-T3-1 a). FF-T7-1 (boundary probes defeated by lazy loads) goes to later strategies through the QA lead's memory.
+
 ## Amendments
 
 ### A1: T4 test data and QA reading (rework rounds 1 and 2)
@@ -558,3 +560,11 @@ Recorded 2026-11-07 by the orchestrator (self-accepted, QA reading only, text fr
 - At a sort or pass-through site whose ordered element holds a child list (an OrderDTO with its lines), "sorted in no column" covers the element's own components and accessors (for OrderDTO: id, customerEmail, status, placedAt, shippedAt, total(), currency(), and values a view derives from it such as itemCount and the line count).
 - Attributes of a child element reached by a positional pick (the first line's book id) are outside, unless the sort statement already holds the child columns flat (a fetch-joined `order by`, as in T3).
 - A column that every app write path keeps constant (currency EUR) is exempt on a mocked pass-through that holds no comparator; the exemption ends when a spec widens Money (F30).
+
+### A4: T7 boundary probe (T7 r1, r2)
+
+Recorded 2026-11-08 by the orchestrator (self-accepted, QA probe text only, from the QA lead's T7 r2 review). Consequence: no production, test or scope change.
+
+- T7-3 J1 as written is non-viable: removing the class-level @Transactional from OrderFlow also closes the session for the lazy BookJPA.authors load, so every place fails with LazyInitializationException before any write.
+- The boundary probe is J1c: class-level @Transactional(noRollbackFor = RuntimeException.class) on OrderFlow; both spy scenarios fail at their state assertions (customer_order count 0; status PLACED). The rollback-device scenario is not expected to fail under J1c; K1, J3 and K2 prove its device.
+- T7 also carries one test beyond the named list, `shortagesAreReportedInRequestOrderNamingOnlyTheShortBooks` (three short books and one fitting book, seeded by SQL with fixed ids), because the pack's two-book shortage scenario cannot meet the A1 reading on its own; accepted by the orchestrator.
