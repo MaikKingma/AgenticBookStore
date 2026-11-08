@@ -54,4 +54,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with
   `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
 
+- The worktree guard refuses a command whose path has backslash-escaped spaces (`.../OpenValue\ AI/...`) as "too complex"; the same path in double quotes runs. Prefer worktree-relative paths for `rg`/`grep` and double-quoted absolute paths for scripts.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
