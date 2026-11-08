@@ -36,7 +36,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #71 | sdd/11-workshop-guide/T1 | ENDORSE |
-| T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | verifying | #73 | sdd/11-workshop-guide/T2 | |
+| T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | PASS r1 | #73 | sdd/11-workshop-guide/T2 | ENDORSE |
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | pending | | | |
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | pending | | | |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4] | B5 | critical | opus | sonnet | pending | | | |
@@ -100,6 +100,22 @@ From the T1 meta-review (qa-lead ENDORSE r1; full wording in the QA ledger revie
 - FF-7 (T6): end `guide/docs/index.md` with a newline. `guide/package.json:21` (two keys on one line) is a follow-up,
   no later task owns that file.
 - FF-8 (T4, recommended): a `docs/**` file with a NUL byte is an error instead of being skipped (R3).
+
+From the T2 meta-review (qa-lead ENDORSE r1):
+
+- FF-9 (C0-1, T3 and every later rendered check): rendered tooling lives in the scratchpad folder
+  `s11-guide-verify/` with its own Playwright and axe-core install, versions quoted; `res-1-pw` is not acceptable
+  from T3 on.
+- FF-10 (T3 verifier, first guide PR gated by guide.yml): bind CI evidence as T2 did (`headRefOid`,
+  `gh run list --commit <full sha>`, run JSON saved unfiltered); the `check` step shows the contrast pair lines and
+  the FF-1 guard; build green, deploy and release skipped; `git diff --name-only <pr-base>...HEAD -- .github` is empty
+  (guide.yml stays blob b2848628).
+- FF-11 (C0-3/C0-4, every task changing `guide/**`): local gates stay mandatory; a CI run is extra evidence, not a
+  substitute.
+- FF-12 (final brief): `docs/spec-pack/**`-only changes on factory do not trigger guide.yml; qa-final runs
+  `npm run check` against the merged pack itself; the path filter is a Gate 2 residual for the owner.
+- Gate 2 owner notes: O1 the `workshop-2026` tag stays on the first deploy commit, later pushes replace the zip;
+  O2 GitHub compares the gate value case-insensitively (`TRUE` opens it too).
 
 ## Amendments
 
