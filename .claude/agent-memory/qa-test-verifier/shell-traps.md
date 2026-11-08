@@ -43,5 +43,15 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - The worktree-isolation guard refuses `bash <script> git -C <other repo> ...` (git in the argv), but direct
   `git -C <scratch clone> ...` calls are allowed. Run git facts on a scratch clone directly; keep git out of script args.
+  The same guard also refuses a bare `bash --version` ("cannot be shown not to run git"). `bash <abs script in the
+  worktree>` works, and `git -C <worktree>` inside such a script ran fine.
+
+- Mutant generators: `grep -cF -- "$OLD"` with a newline in `$OLD` treats it as two patterns, and the empty second
+  pattern can match every line, so an "exactly once" guard is unreliable (spotted by review before a run). Count with
+  `OLD=... perl -0ne '$c = () = /\Q$ENV{OLD}\E/g; print $c'` and replace with `perl -0pe 's/\Q$ENV{OLD}\E/$ENV{NEW}/'`.
+
+- `curl -i -w ' time_total=%{time_total}'` appends the timing to the BODY line (no newline). A diff filter
+  `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with
+  `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
 
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -131,6 +132,29 @@ class ChaosInterceptorTest {
         assertThat(handle(new ChaosProperties(1, 0.0), 0.0)).isTrue();
 
         assertThat(events).containsExactly("sleep 1");
+    }
+
+    @Test
+    void asksTheRandomSourceForAGeneratorOnEveryDraw() {
+        FixedRandom random = new FixedRandom(0.5, events);
+        List<String> sourceCalls = new ArrayList<>();
+        Supplier<RandomGenerator> recordingSource = () -> {
+            sourceCalls.add("get");
+            return random;
+        };
+        ChaosInterceptor interceptor = new ChaosInterceptor(new ChaosProperties(0, 0.3), recordingSource,
+                millis -> events.add("sleep " + millis));
+
+        assertThat(sourceCalls).isEmpty();
+        assertThat(interceptor.preHandle(new MockHttpServletRequest(), new MockHttpServletResponse(), new Object()))
+                .isTrue();
+        assertThat(sourceCalls).hasSize(1);
+        assertThat(interceptor.preHandle(new MockHttpServletRequest(), new MockHttpServletResponse(), new Object()))
+                .isTrue();
+
+        assertThat(sourceCalls).hasSize(2);
+        assertThat(random.draws).isEqualTo(2);
+        assertThat(interceptor.randomSource()).isSameAs(recordingSource);
     }
 
     @Test

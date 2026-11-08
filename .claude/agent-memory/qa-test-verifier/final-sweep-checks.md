@@ -24,4 +24,11 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 - The IT `problem()` helper asserts the status before it reads the body, but RestTestClient prints the response to the log. `grep '"status":400' <log>` gives the field and message for the failure shape.
 - Scratch IT methods: `place(...).expectBody(JSON_OBJECT).returnResult()` with `getStatus()` / `getResponseBody()` records a record-only scenario without asserting it. A `System.out.println("TAG " + problem)` line per method makes the log quotable. Remove the worktree with `--force`.
 
+- Simpler bugfix ladder when the brief allows it: one detached worktree per task AT THE TIP, revert only that task's
+  production files with `git -C <wt> show <base>:<path> > <file>`, run the union of all tasks' regression classes
+  (exact red set = own tests only, other tasks green = cross control), restore with `show HEAD:`, porcelain empty.
+- Surefire `runOrder=reversealphabetical` sorts by fully qualified name, and an upper-case class in the root package
+  (`...distributor.HealthEndpointTest`) sorts BEFORE lower-case subpackages, so reverse runs it last. To prove a
+  shared context starts from a given class, run `-Dtest=A,B -Dsurefire.runOrder=alphabetical` and count `Started`.
+
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

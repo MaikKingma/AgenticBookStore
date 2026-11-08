@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
+@Import(FixedClockTestConfiguration.class)
 class HealthEndpointTest {
 
     @Autowired
@@ -26,6 +28,27 @@ class HealthEndpointTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.status").isEqualTo("UP");
+    }
+
+    @Test
+    void wrongMethodOnActuatorKeepsSpringBootsDefaultBody() {
+        // Outside /api/ the envelope handler rethrows, so Boot answers as before: no errorCode in the body.
+        restTestClient.post().uri("/actuator/health").exchange()
+                .expectStatus().isEqualTo(405)
+                .expectHeader().valueEquals("Allow", "GET")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(405)
+                .jsonPath("$.errorCode").doesNotExist();
+    }
+
+    @Test
+    void unknownApiPathKeepsSpringBootsDefault404Body() {
+        // The accepted known limit of spec 05: an unmapped /api/ path is not an envelope error.
+        restTestClient.get().uri("/api/no-such-resource").exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(404)
+                .jsonPath("$.errorCode").doesNotExist();
     }
 
     @Test

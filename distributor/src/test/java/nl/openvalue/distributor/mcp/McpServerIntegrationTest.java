@@ -12,12 +12,12 @@ import io.modelcontextprotocol.spec.McpSchema.InitializeResult;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import nl.openvalue.distributor.FixedClockTestConfiguration;
 import nl.openvalue.distributor.catalog.Availability;
 import nl.openvalue.distributor.catalog.Title;
 import nl.openvalue.distributor.catalog.TitleCatalog;
@@ -29,12 +29,14 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
 // Same class annotations as HealthEndpointTest, so both share one cached context.
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
+@Import(FixedClockTestConfiguration.class)
 class McpServerIntegrationTest {
 
     private static final String PRIDE_AND_PREJUDICE = "9780141439518";
@@ -168,7 +170,8 @@ class McpServerIntegrationTest {
 
     @Test
     void checkAvailabilityReportsStockAndDelivery() {
-        LocalDate today = LocalDate.now(clock);
+        // The fixed clock of FixedClockTestConfiguration is in effect, so the delivery dates below are literals.
+        assertThat(LocalDate.now(clock)).isEqualTo(LocalDate.of(2026, 11, 6));
         Title backorder = anyTitleWith(Availability.BACKORDER);
         Title outOfPrint = anyTitleWith(Availability.OUT_OF_PRINT);
 
@@ -180,10 +183,10 @@ class McpServerIntegrationTest {
                 Map.of("ean", outOfPrint.ean()))));
 
         assertThat(inStockReport).isEqualTo(Map.of("ean", "9780141439518", "availability", "IN_STOCK",
-                "warehouseQuantity", 240, "expectedDeliveryDate", plusTwoWorkingDays(today).toString()));
+                "warehouseQuantity", 240, "expectedDeliveryDate", "2026-11-10"));
         assertThat(backorderReport).isEqualTo(Map.of("ean", backorder.ean(), "availability", "BACKORDER",
                 "warehouseQuantity", backorder.warehouseQuantity(),
-                "expectedDeliveryDate", today.plusDays(14).toString()));
+                "expectedDeliveryDate", "2026-11-20"));
         assertThat(outOfPrintReport)
                 .containsOnlyKeys("ean", "availability", "warehouseQuantity", "expectedDeliveryDate")
                 .containsEntry("ean", outOfPrint.ean())
@@ -238,18 +241,6 @@ class McpServerIntegrationTest {
 
     private Title anyTitleWith(Availability availability) {
         return catalog.all().stream().filter(title -> title.availability() == availability).findFirst().orElseThrow();
-    }
-
-    private static LocalDate plusTwoWorkingDays(LocalDate start) {
-        LocalDate date = start;
-        int remaining = 2;
-        while (remaining > 0) {
-            date = date.plusDays(1);
-            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                remaining--;
-            }
-        }
-        return date;
     }
 
     private List<Map<String, Object>> parse(String text) {

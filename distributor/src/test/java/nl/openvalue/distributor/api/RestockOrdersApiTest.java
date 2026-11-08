@@ -3,6 +3,7 @@ package nl.openvalue.distributor.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +33,7 @@ class RestockOrdersApiTest {
     private static final String IN_STOCK_EAN = ApiTestFixtures.IN_STOCK_EAN;
     private static final String BACKORDER_EAN = ApiTestFixtures.BACKORDER_EAN;
     private static final String OUT_OF_PRINT_EAN = ApiTestFixtures.OUT_OF_PRINT_EAN;
+    private static final String QUANTITY_MESSAGE = "quantity must be a whole number between 1 and 500";
 
     @TestConfiguration
     static class FixtureWorld {
@@ -201,6 +203,45 @@ class RestockOrdersApiTest {
     }
 
     @Test
+    void fractionalQuantityIs400WithTheQuantityMessageAndIsNeverTruncated() throws Exception {
+        // Truncated, 500.7, 1.5 and 10.5 would pass the range check and 0.5 would fail it; none may be truncated.
+        for (String fractional : new String[] {"500.7", "1.5", "10.5", "0.5"}) {
+            expectQuantityRejected(rawQuantityBody(fractional));
+        }
+    }
+
+    @Test
+    void integralValuedQuantitiesAreAccepted() throws Exception {
+        assertThat(created(rawQuantityBody("10.0")).get("quantity")).isEqualTo(10);
+        assertThat(created(rawQuantityBody("1e2")).get("quantity")).isEqualTo(100);
+        assertThat(created(rawQuantityBody("500.0")).get("quantity")).isEqualTo(500);
+        assertThat(created(rawQuantityBody("\"10\"")).get("quantity")).isEqualTo(10);
+    }
+
+    @Test
+    void blankEanIsReportedBeforeAFractionalQuantity() throws Exception {
+        ResultActions result = order("{\"ean\":\"\",\"quantity\":1.5}");
+
+        ApiTestFixtures.expectErrorEnvelope(result, 400, "INVALID_REQUEST");
+        assertThat(message(result)).isEqualTo("ean must not be blank");
+    }
+
+    @Test
+    void quantityBoundariesAreExactOnBothSidesWithNoRounding() throws Exception {
+        assertThat(created(rawQuantityBody("1")).get("quantity")).isEqualTo(1);
+        expectQuantityRejected(rawQuantityBody("0.9999"));
+        assertThat(created(rawQuantityBody("500")).get("quantity")).isEqualTo(500);
+        expectQuantityRejected(rawQuantityBody("500.0000000001"));
+    }
+
+    @Test
+    void fractionsBelowDoubleResolutionAreRejectedNotRoundedToTheBound() throws Exception {
+        // As doubles these read 500.0 and 1.0, so a check done on a double would accept them and store 500 and 1.
+        expectQuantityRejected(rawQuantityBody("500.00000000000001"));
+        expectQuantityRejected(rawQuantityBody("1.0000000000000001"));
+    }
+
+    @Test
     void placedOrderIsFetchedById() throws Exception {
         Map<String, Object> first = created("{\"ean\":\"" + IN_STOCK_EAN + "\",\"quantity\":10}");
         Map<String, Object> second = created("{\"ean\":\"" + BACKORDER_EAN + "\",\"quantity\":37}");
@@ -217,8 +258,57 @@ class RestockOrdersApiTest {
                 "RESTOCK_ORDER_NOT_FOUND");
     }
 
+    @Test
+    void wrongMethodIs405WithTheEnvelopeAndTheAllowHeader() throws Exception {
+        ResultActions result = mockMvc.perform(put("/api/restock-orders").contentType(MediaType.APPLICATION_JSON)
+                .content(quantityBody(10)));
+
+        ApiTestFixtures.expectErrorEnvelope(result, 405, "METHOD_NOT_ALLOWED");
+        assertThat(result.andReturn().getResponse().getHeader("Allow")).isEqualTo("POST");
+        assertThat(message(result)).isEqualTo("Method PUT is not allowed here");
+    }
+
+    @Test
+    void wrongMethodAnswersTheEnvelopeAsApplicationJsonEvenWhenProblemJsonIsAccepted() throws Exception {
+        ResultActions result = mockMvc.perform(put("/api/restock-orders").accept("application/problem+json"));
+
+        ApiTestFixtures.expectErrorEnvelope(result, 405, "METHOD_NOT_ALLOWED");
+        assertThat(result.andReturn().getResponse().getContentType()).startsWith("application/json");
+    }
+
+    @Test
+    void nonJsonBodyIs415WithTheEnvelopeAndTheAcceptHeader() throws Exception {
+        ResultActions textBody = mockMvc.perform(post("/api/restock-orders").contentType(MediaType.TEXT_PLAIN)
+                .content(quantityBody(10)));
+        ResultActions noContentType = mockMvc.perform(post("/api/restock-orders").content(quantityBody(10)));
+
+        for (ResultActions result : new ResultActions[] {textBody, noContentType}) {
+            ApiTestFixtures.expectErrorEnvelope(result, 415, "UNSUPPORTED_MEDIA_TYPE");
+            // The supported types of the mapping (JSON, YAML and the +json family) are all kept, not only the first.
+            assertThat(result.andReturn().getResponse().getHeader("Accept"))
+                    .contains("application/json")
+                    .contains("application/yaml");
+            assertThat(message(result)).isEqualTo("The request body must be application/json");
+        }
+    }
+
     private static String quantityBody(int quantity) {
         return "{\"ean\":\"" + IN_STOCK_EAN + "\",\"quantity\":" + quantity + "}";
+    }
+
+    /** A body with the IN_STOCK EAN and {@code rawQuantity} written into the JSON as is. */
+    private static String rawQuantityBody(String rawQuantity) {
+        return "{\"ean\":\"" + IN_STOCK_EAN + "\",\"quantity\":" + rawQuantity + "}";
+    }
+
+    private void expectQuantityRejected(String json) throws Exception {
+        ResultActions result = order(json);
+        ApiTestFixtures.expectErrorEnvelope(result, 400, "INVALID_REQUEST");
+        assertThat(message(result)).isEqualTo(QUANTITY_MESSAGE);
+    }
+
+    private static Object message(ResultActions result) throws Exception {
+        return ApiTestFixtures.readMap(result.andReturn().getResponse().getContentAsString()).get("message");
     }
 
     private ResultActions order(String json) throws Exception {

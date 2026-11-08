@@ -15,6 +15,10 @@ Traps (Spring AI 2.0.2, MCP Java SDK 2.1.0; re-check on a BOM bump):
   argument fails with an NPE error result. No default-value attribute exists.
 - @McpAnnotations defaults are readOnlyHint=false, destructiveHint=true: set them for read-only tools.
 - Tool results are serialized by Spring AI's own JsonHelper (default Jackson 3 mapper), not Boot's.
+- Tool arguments are validated against the generated JSON Schema by the MCP SDK before binding: `limit: 2.7` or
+  `"3"` is a tool error, `1e1` passes. `spring.jackson.*` changes do not reach this path.
+- Raw curl round trip works: initialize, read `Mcp-Session-Id` header, send notifications/initialized, tools/call;
+  Accept must list both application/json and text/event-stream.
 - The MCP client classes (HttpClientStreamableHttpTransport, McpClient) are in mcp-core, which the
   server starter brings in, so tests need no extra dependency. The BOM does not manage io.modelcontextprotocol.sdk.
 

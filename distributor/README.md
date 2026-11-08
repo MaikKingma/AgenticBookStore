@@ -28,16 +28,19 @@ The service listens on `http://127.0.0.1:8090`. Health check: `http://127.0.0.1:
 | `GET /api/titles` | Search. Optional `q`, `subject` (code prefix), `availability`, `page` (default 0), `size` (default 20, 1 to 50) |
 | `GET /api/titles/{ean}` | One title |
 | `GET /api/subjects` | Subject codes and labels |
-| `POST /api/restock-orders` | Body `{"ean": "...", "quantity": 10, "retailerReference": "..."}`, quantity 1 to 500 |
+| `POST /api/restock-orders` | Body `{"ean": "...", "quantity": 10, "retailerReference": "..."}`, quantity a whole number from 1 to 500 |
 | `GET /api/restock-orders/{id}` | A placed order |
 
-Every error is JSON with exactly `errorCode` and `message`:
+Every error is JSON with exactly `errorCode` and `message`. The one exception is an unknown path, which answers
+with Spring Boot's default 404 body.
 
 | Status | errorCode | When |
 |---|---|---|
 | 400 | `INVALID_REQUEST` | A bad parameter or a missing or malformed body |
 | 404 | `TITLE_NOT_FOUND` | Unknown EAN |
 | 404 | `RESTOCK_ORDER_NOT_FOUND` | Unknown order id |
+| 405 | `METHOD_NOT_ALLOWED` | The method is not supported on this path (the `Allow` header lists the ones that are) |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` | A request body that is not application/json (the `Accept` header lists the supported types) |
 | 422 | `NOT_ORDERABLE` | The title is out of print |
 | 503 | `TEMPORARILY_UNAVAILABLE` | Only when the chaos knobs below are on |
 

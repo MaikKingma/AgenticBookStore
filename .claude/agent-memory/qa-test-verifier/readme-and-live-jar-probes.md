@@ -45,4 +45,12 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
   port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
 - `clean test` order runs delete `target/<app>.jar`: rebuild (`clean verify`) before live runs from the jar.
 
+- Tip-vs-base live comparison: one session script per phase starts both jars (`--server.port`), polls health, runs
+  one driver against each URL, stops by PID and waits for exit, then diffs only the outside-scope requests. For a
+  chaos share, `seq 1 400 | xargs -P 8 -I{} sh -c 'curl -o d/b{} -w %{http_code} ... > d/c{}'` gives one body and
+  code file per request (no interleaving); count codes and check every 503 body afterwards.
+- Thread-safety repro through real wiring: draw from the wired supplier on 8 threads, then count values seen on more
+  than one thread with per-thread sort+dedupe, merge, sort, adjacent-equal (primitive arrays; a HashMap of 1.6M boxed
+  longs is slow and heap-hungry).
+
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]

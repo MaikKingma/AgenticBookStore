@@ -15,5 +15,12 @@ metadata:
   then matches exactly (no charset suffix).
 - An unhandled exception in a slice shows up as a thrown `ServletException` (test ERROR, not a 500 assertion), which
   is how a missing request check surfaces.
+- Jackson 3 default `ACCEPT_FLOAT_AS_INT` silently truncates `500.7` into an `Integer`/`int` body field. Bind numeric
+  body fields that need range or wholeness checks as `BigDecimal` and check in the controller (fix-05 T1); a guard test
+  that asserts a reworded error message cannot be green on the pre-fix code, so say so in the evidence.
+- 405 never reaches a scoped `@RestControllerAdvice` (null handler); use an unscoped advice with a request-path guard
+  that rethrows the same exception outside `/api/` (fix-05 T2). Rethrowing the same instance is silent; only a different
+  one logs `Failure in @ExceptionHandler`. The rethrow path makes `DefaultHandlerExceptionResolver` log one WARN
+  `Resolved [...]` line in the module run, a new but expected line.
 - Exact JSON asserts: read the body with a static `JsonMapper.builder().build()` into `Map<String, Object>`; ints come
   back as `Integer`, so `isEqualTo(7)` works and `Map.equals` pins the key set.

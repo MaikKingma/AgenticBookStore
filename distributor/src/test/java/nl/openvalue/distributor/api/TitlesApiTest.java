@@ -1,6 +1,7 @@
 package nl.openvalue.distributor.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -252,6 +253,16 @@ class TitlesApiTest {
                 Map.of("code", "FIC009000", "label", "Fantasy"),
                 Map.of("code", "FIC028000", "label", "Science Fiction"),
                 Map.of("code", "HIS002000", "label", "Aviation history")));
+    }
+
+    @Test
+    void wrongMethodIs405WithTheEnvelopeAndTheAllowHeader() throws Exception {
+        ResultActions result = mockMvc.perform(delete("/api/titles"));
+
+        ApiTestFixtures.expectErrorEnvelope(result, 405, "METHOD_NOT_ALLOWED");
+        assertThat(result.andReturn().getResponse().getHeader("Allow")).isEqualTo("GET");
+        Map<String, Object> body = ApiTestFixtures.readMap(result.andReturn().getResponse().getContentAsString());
+        assertThat(body.get("message")).isEqualTo("Method DELETE is not allowed here");
     }
 
     private Map<String, Object> okBody(MockHttpServletRequestBuilder request) throws Exception {
