@@ -1,6 +1,6 @@
 ---
 name: mapper-test-witnesses
-description: What DomainMapper and DTO-convenience-constructor tests need so QA mutation probes die on the first round (validating hand-offs and single-literal pass-throughs)
+description: What DomainMapper, DTO-convenience-constructor and flow-translator tests need so QA mutation probes die on the first round (validating hand-offs and single-literal pass-throughs)
 metadata:
   type: feedback
 ---
@@ -22,3 +22,13 @@ every time (QA lesson FF-T2-2, kept in the qa-test-verifier memory `domain-mutat
 **How to apply:** at the refactor step of any task that adds a `*DomainMapper` or DTO convenience constructor, list the fields
 the code hands on, tag each as hand-off or pass-through, and add the missing witnesses before reporting done. Related:
 [[flow-test-techniques]].
+
+The same walk applies to a flow that builds an aggregate from a port DTO inside the exception translator: every value-object
+constructor in that lambda (`new Title`, each `new AuthorName`, `Genre.parse`, `Money.of`) needs its own rejected DTO value
+asserted as the translated 422, or a "built outside the translator" mutant survives. Price literals need a second accepted
+value with cents (12.00 and 12 both save 12.00), and an id used in an exception message needs a second value too.
+
+Either-or hand-offs (an optional override against a default) need every relation on both sides: override below and above
+the default, equal amount made distinguishable through another field (default in a rejected currency), zero, negative and
+null, plus both ends of each domain range for both inputs. QA mutants "keep the higher", "zero means none" and "use the
+override only when it differs" survive an all-higher fixture. Build a sweep table input x relation before the first QA round.

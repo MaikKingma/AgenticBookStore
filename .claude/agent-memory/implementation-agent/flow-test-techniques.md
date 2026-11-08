@@ -41,3 +41,8 @@ metadata:
   tabulate every order the constant appears in. Constant columns (every reorder level 3) also let a sort survive,
   because Java sorts are stable: vary them unless validation or an asserted literal pins them. Before-values derived
   from asserted after-values and quantities can be pinned; show another test kills that sort instead.
+- Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with
+  `perl -0pe` from a `cp -p` original in the scratchpad, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and
+  compares `shasum`; flag "MUTANT NOT APPLIED" when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.
+- An external-port DTO that carries its own key (distributor isbn) gets a stub value different from the request, so
+  a flow that builds from the DTO key fails the saved-record assertion.
