@@ -20,4 +20,21 @@ Rule: probe the Node harness with one fs-based runner script, not shell edits.
 - Offline matcher trap: WebKit's pageerror `String(e)` is `XMLHttpRequest cannot load file: //...` with no `Error: ` prefix and a space after `file:`. Match `^(Error: )?XMLHttpRequest cannot load file:.* due to access control checks\.$`. Playwright Firefox `context.route` never sees `file://` requests, so "aborted 0" proves nothing alone: after measuring, `fetch('https://example.com/x')` must move the abort counter 0 -> 1 in every engine. The hash route `#/no-such-page` rendering `Page Not Found` proves the client router works from file://.
 - Bash tool guard: a one-line `for ... tail -c1 ...` over repo files was refused as a git-like compound; put loops in a script file.
 
+Rule: for a checker with pure rule modules, mutate the WIRING (`runChecks`, the site-rules glue), not only the rule functions.
+
+**Why:** a rule module can be at 100 % line coverage with every unit mutant killed while the pipeline can still drop it: discarding a rule's errors in `check.mjs`, not printing its report lines, passing `darkMode` wrong all survived 136 green tests. Deleting an entry of a declarative table (required contrast pairs) survives too unless a test pins the table.
+**How to apply:**
+- Probe set per task: one mutant per `report(...)` call, per `errors:` spread, per `lines.push(...)`, plus "remove one entry of every pair/manifest table". Each in its own `node --test` run; survivors become Required Actions with the failing assertion sketched.
+- Run real-file probes in three layers (`npm run check`, `node --test`, `node scripts/check.mjs` separately): node:test fixtures that read the real CSS fail first and mask whether the checker itself catches the defect.
+- `node --test --experimental-test-coverage` gives line/branch per file without a dependency; quote it but never use it as the verdict.
+- Rendered checks: a hover read right after `locator.hover()` returns the pre-transition colour (transparent) in light mode; wait ~450 ms before `getComputedStyle`. Probe pages: copy an `.mdx` into `guide/docs/`, build with `docusaurus build --out-dir <abs scratch dir>` (absolute path works, also with `--config docusaurus.offline.config.ts`), restore the tree, serve with `docusaurus serve --dir <dir> --port N`. WebKit `file://` woff2 responses have status 0, so assert `FontFace.status`, not response codes. A negative control = delete one woff2 in a copy, expect that face `error`.
+- Audit text colours by walking text nodes and compositing the effective background (alpha over ancestors); it catches what a variable-level checker cannot (Infima overrides, hover overlays).
+- Third-party font provenance: fetch the README URLs into a fresh dir and compare sha256 with the "source" column; no tool needed to prove upstream integrity.
+
+Rule: re-verify a pinned table with generated per-line removal probes plus a "lower the pin with the removal" control.
+
+**Why:** a count pin alone is satisfied by swapping or editing an entry; a name pin alone misses entries nobody listed. A probes file that reads the table source and emits one remove-this-line probe per entry (53 probes ran in 8 s) shows both layers; the control (remove an entry and lower the minimum in the test) must still fail through the by-name test.
+**How to apply:** also mutate entries' fg/bg/kind (not only remove them): non-pinned entries survive content edits, report that as an observation. After a probe run `diff -r` against the snapshot can show `Only in ...: components`: the runner's `mkdirSync` leaves an empty dir after the file is removed, `rmdir` it, re-check, then run the final gates.
+- Regex block-comment stripping (`/\/\*[\s\S]*?\*\//`) over a test file undercounts when a string literal holds `/*` (a title `scripts/**` swallows tests up to the next `*/`): compare the guard's count with a naive line count per file. Direction is safe (never a vacuous pass) but the printed "N test cases" is only a lower bound.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

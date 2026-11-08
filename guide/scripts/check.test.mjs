@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runChecks} from './check.mjs';
-import {goodPackage} from './lib/test-fixtures.mjs';
+import {goodPackage, goodSiteFiles} from './lib/test-fixtures.mjs';
 
 const EM_DASH = String.fromCodePoint(0x2014);
 const CHECK_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check.mjs');
@@ -16,6 +16,8 @@ function makeTree(files = {}) {
   const all = {
     'package.json': JSON.stringify(goodPackage()),
     'docs/index.md': '---\ntitle: Welcome\nslug: /\n---\n\nHello.\n',
+    'scripts/a.test.mjs': "import {test} from 'node:test';\ntest('real case', () => {});\n",
+    ...goodSiteFiles(),
     ...files,
   };
   for (const [rel, content] of Object.entries(all)) {
@@ -105,7 +107,10 @@ test('runChecks: the ascii rule reaches README, sidebars, scripts and nested doc
     },
     (root) => {
       const {errors} = runChecks(root);
-      const files = errors.map((e) => e.split(':')[1].trim()).sort();
+      const files = errors
+        .filter((e) => e.startsWith('ascii:'))
+        .map((e) => e.split(':')[1].trim())
+        .sort();
       assert.deepEqual(files, ['README.md', 'docs/x/y.md', 'scripts/a.mjs', 'scripts/rules/b.mjs', 'sidebars.ts']);
     },
   );
