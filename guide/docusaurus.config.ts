@@ -1,6 +1,11 @@
-import {themes as prismThemes} from 'prism-react-renderer';
+import type {PrismTheme} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+
+// An empty Prism theme on purpose: a theme would put colour values and inline styles
+// into code blocks. The code colours are variables in src/css/custom.css, the only
+// file that holds colour values.
+const brandPrismTheme: PrismTheme = {plain: {}, styles: []};
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -63,8 +68,9 @@ const config: Config = {
       items: [],
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.dracula,
+      theme: brandPrismTheme,
+      darkTheme: brandPrismTheme,
+      additionalLanguages: ['bash', 'powershell', 'java', 'json', 'yaml'],
     },
   } satisfies Preset.ThemeConfig,
 };

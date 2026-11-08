@@ -1,30 +1,297 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * OpenValue 2026 brand for the workshop guide (decision D7).
+ *
+ * This file is the only place in guide/ that holds a colour value. Every other
+ * stylesheet and component uses var(--...), inherit, currentColor or transparent;
+ * `npm run check` fails on anything else. The same check reads this file by
+ * variable name and verifies the contrast of every pair listed in
+ * scripts/rules/contrast-pairs.mjs, in light mode and in dark mode.
+ *
+ * Rules that keep the pairs honest:
+ * - Blue is only a non-text accent (4.2:1 on white). Never use it for small text.
+ * - Sage is decorative only (2.8:1 on white). Never use it for text.
+ * - A variable used in a contrast pair is declared here with a hex value or a
+ *   single var() reference, so the check can resolve it.
  */
 
-/* You can override the default Infima variables here. */
-:root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+/* Montserrat, latin subset, self-hosted. Provenance: guide/README.md. */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/montserrat-latin-400.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/montserrat-latin-600.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/montserrat-latin-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Light mode, also the base of dark mode. */
+:root {
+  /* The seven brand values. */
+  --ov-navy: #1D252D;
+  --ov-blue: #3D7DC9;
+  --ov-teal: #014046;
+  --ov-sage: #809FA2;
+  --ov-mist: #CBD9DA;
+  --ov-snow: #F1F5F6;
+  --ov-white: #FFFFFF;
+
+  /* Typography: Montserrat, code keeps the default monospace stack. */
+  --ifm-font-family-base: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ifm-code-font-size: 95%;
+
+  /* Primary: teal and its six generated shades. */
+  --ifm-color-primary: #014046;
+  --ifm-color-primary-dark: #013A3F;
+  --ifm-color-primary-darker: #01363C;
+  --ifm-color-primary-darkest: #012D31;
+  --ifm-color-primary-light: #01464D;
+  --ifm-color-primary-lighter: #014A51;
+  --ifm-color-primary-lightest: #01535B;
+
+  /* Text, headings, background and links. */
+  --ifm-font-color-base: var(--ov-navy);
+  --ifm-font-color-base-inverse: var(--ov-white);
+  --ifm-font-color-secondary: var(--ov-navy);
+  --ifm-color-content: var(--ov-navy);
+  --ifm-color-content-inverse: var(--ov-white);
+  --ifm-color-content-secondary: var(--ov-navy);
+  --ifm-background-color: var(--ov-white);
+  --ifm-background-surface-color: var(--ov-white);
+  --ifm-heading-color: var(--ov-navy);
+  --ifm-link-color: var(--ifm-color-primary);
+  --ifm-link-hover-color: var(--ifm-color-primary-dark);
+
+  /* Infima greys, remapped onto the brand (used for borders, hovers, kbd, quotes). */
+  --ifm-color-emphasis-0: var(--ov-white);
+  --ifm-color-emphasis-100: var(--ov-snow);
+  --ifm-color-emphasis-200: var(--ov-mist);
+  --ifm-color-emphasis-300: var(--ov-mist);
+  --ifm-color-emphasis-400: var(--ov-sage);
+  --ifm-color-emphasis-500: var(--ov-sage);
+  --ifm-color-emphasis-600: var(--ov-teal);
+  --ifm-color-emphasis-700: var(--ov-teal);
+  --ifm-color-emphasis-800: var(--ov-navy);
+  --ifm-color-emphasis-900: var(--ov-navy);
+  --ifm-color-emphasis-1000: var(--ov-navy);
+  --ifm-hover-overlay: var(--ov-mist);
+  --ifm-blockquote-color: var(--ifm-color-emphasis-800);
+  --ifm-table-stripe-background: var(--ov-snow);
+  --ifm-scrollbar-track-background-color: var(--ov-snow);
+  --ifm-scrollbar-thumb-background-color: var(--ov-sage);
+  --ifm-scrollbar-thumb-hover-background-color: var(--ov-teal);
+
+  /* Code: inline code on mist, code blocks on snow, no syntax colours outside the brand. */
+  --ifm-code-background: var(--ov-mist);
+  --prism-color: var(--ov-navy);
+  --prism-background-color: var(--ov-snow);
+  --docusaurus-highlighted-code-line-bg: var(--ov-mist);
+  --guide-code-accent: var(--ov-teal);
+  --guide-code-border: var(--ov-mist);
+
+  /* Navbar: navy with white text, a blue accent line. */
+  --ifm-navbar-background-color: var(--ov-navy);
+  --ifm-navbar-link-color: var(--ov-white);
+  --ifm-navbar-link-hover-color: var(--ov-mist);
+  --ifm-navbar-link-active-color: var(--ov-mist);
+  --guide-navbar-accent: var(--ov-blue);
+  --guide-navbar-hover-bg: var(--ov-teal);
+  --guide-navbar-menu-color: var(--ov-white);
+  --guide-navbar-menu-active: var(--ov-mist);
+  --guide-navbar-menu-bg: var(--ov-teal);
+
+  /* Sidebar menu, breadcrumbs, tabs, table of contents. */
+  --ifm-menu-color: var(--ov-navy);
+  --ifm-menu-color-active: var(--ifm-color-primary);
+  --ifm-menu-color-background-active: var(--ifm-hover-overlay);
+  --ifm-menu-color-background-hover: var(--ifm-hover-overlay);
+  --ifm-breadcrumb-color-active: var(--ifm-color-primary);
+  --ifm-breadcrumb-item-background-active: var(--ifm-hover-overlay);
+  --ifm-tabs-color: var(--ov-navy);
+  --ifm-tabs-color-active: var(--ifm-color-primary);
+  --ifm-toc-link-color: var(--ov-navy);
+
+  /* Admonitions. Infima types: secondary is note, success is tip, caution is warning. */
+  --ifm-color-secondary-contrast-background: var(--ov-snow);
+  --ifm-color-secondary-contrast-foreground: var(--ov-navy);
+  --ifm-color-secondary-dark: var(--ov-sage);
+  --ifm-color-success-contrast-background: var(--ov-snow);
+  --ifm-color-success-contrast-foreground: var(--ov-navy);
+  --ifm-color-success-dark: var(--ov-teal);
+  --ifm-color-info-contrast-background: var(--ov-snow);
+  --ifm-color-info-contrast-foreground: var(--ov-navy);
+  --ifm-color-info-dark: var(--ov-blue);
+  --ifm-color-warning-contrast-background: var(--ov-mist);
+  --ifm-color-warning-contrast-foreground: var(--ov-navy);
+  --ifm-color-warning-dark: var(--ov-navy);
+  --ifm-color-danger-contrast-background: var(--ov-navy);
+  --ifm-color-danger-contrast-foreground: var(--ov-white);
+  --ifm-color-danger-dark: var(--ov-blue);
+  --guide-alert-note-code: var(--ov-mist);
+  --guide-alert-tip-code: var(--ov-mist);
+  --guide-alert-info-code: var(--ov-mist);
+  --guide-alert-warning-code: var(--ov-snow);
+  --guide-alert-danger-code: var(--ov-teal);
+
+  /* LevelProgress: current level filled teal with a white label, others on snow outlined in sage. */
+  --guide-level-current-bg: var(--ov-teal);
+  --guide-level-current-fg: var(--ov-white);
+  --guide-level-current-border: var(--ov-navy);
+  --guide-level-inactive-bg: var(--ov-snow);
+  --guide-level-inactive-fg: var(--ov-navy);
+  --guide-level-inactive-border: var(--ov-sage);
+}
+
+/* Dark mode: navy background, mist primary, white text. */
+html[data-theme='dark'] {
+  --ifm-color-primary: #CBD9DA;
+  --ifm-color-primary-dark: #B7C3C4;
+  --ifm-color-primary-darker: #ADB8B9;
+  --ifm-color-primary-darkest: #8E9899;
+  --ifm-color-primary-light: #DFEFF0;
+  --ifm-color-primary-lighter: #E9FAFB;
+  --ifm-color-primary-lightest: #FFFFFF;
+
+  --ifm-font-color-base: var(--ov-white);
+  --ifm-font-color-base-inverse: var(--ov-navy);
+  --ifm-font-color-secondary: var(--ov-white);
+  --ifm-color-content: var(--ov-white);
+  --ifm-color-content-inverse: var(--ov-navy);
+  --ifm-color-content-secondary: var(--ov-white);
+  --ifm-background-color: var(--ov-navy);
+  --ifm-background-surface-color: var(--ov-navy);
+  --ifm-heading-color: var(--ov-white);
+  --ifm-link-color: var(--ifm-color-primary);
+  --ifm-link-hover-color: var(--ov-white);
+
+  --ifm-color-emphasis-0: var(--ov-navy);
+  --ifm-color-emphasis-100: var(--ov-teal);
+  --ifm-color-emphasis-200: var(--ov-teal);
+  --ifm-color-emphasis-300: var(--ov-sage);
+  --ifm-color-emphasis-400: var(--ov-sage);
+  --ifm-color-emphasis-500: var(--ov-sage);
+  --ifm-color-emphasis-600: var(--ov-mist);
+  --ifm-color-emphasis-700: var(--ov-mist);
+  --ifm-color-emphasis-800: var(--ov-white);
+  --ifm-color-emphasis-900: var(--ov-white);
+  --ifm-color-emphasis-1000: var(--ov-white);
+  --ifm-hover-overlay: var(--ov-teal);
+  --ifm-table-stripe-background: var(--ov-teal);
+  --ifm-scrollbar-track-background-color: var(--ov-navy);
+  --ifm-scrollbar-thumb-background-color: var(--ov-sage);
+  --ifm-scrollbar-thumb-hover-background-color: var(--ov-mist);
+
+  --ifm-code-background: var(--ov-teal);
+  --prism-color: var(--ov-white);
+  --prism-background-color: var(--ov-teal);
+  --docusaurus-highlighted-code-line-bg: var(--ov-navy);
+  --guide-code-accent: var(--ov-mist);
+  --guide-code-border: var(--ov-sage);
+
+  --ifm-menu-color: var(--ov-white);
+  --ifm-tabs-color: var(--ov-white);
+  --ifm-toc-link-color: var(--ov-white);
+
+  --ifm-color-secondary-contrast-background: var(--ov-teal);
+  --ifm-color-secondary-contrast-foreground: var(--ov-white);
+  --ifm-color-success-contrast-background: var(--ov-teal);
+  --ifm-color-success-contrast-foreground: var(--ov-white);
+  --ifm-color-success-dark: var(--ov-mist);
+  --ifm-color-info-contrast-background: var(--ov-teal);
+  --ifm-color-info-contrast-foreground: var(--ov-white);
+  --ifm-color-info-dark: var(--ov-white);
+  --ifm-color-danger-contrast-background: var(--ov-white);
+  --ifm-color-danger-contrast-foreground: var(--ov-navy);
+  --guide-alert-note-code: var(--ov-navy);
+  --guide-alert-tip-code: var(--ov-navy);
+  --guide-alert-info-code: var(--ov-navy);
+  --guide-alert-warning-code: var(--ov-snow);
+  --guide-alert-danger-code: var(--ov-mist);
+
+  --guide-level-current-bg: var(--ov-mist);
+  --guide-level-current-fg: var(--ov-navy);
+  --guide-level-current-border: var(--ov-white);
+}
+
+/* Navbar: white text on navy in both modes. The mobile menu lives inside the navbar, so the
+   menu colours are scoped here too (Infima would otherwise use the page colours on navy). */
+.navbar {
+  border-bottom: 3px solid var(--guide-navbar-accent);
+  color: var(--ifm-navbar-link-color);
+  --ifm-menu-color: var(--guide-navbar-menu-color);
+  --ifm-menu-color-active: var(--guide-navbar-menu-active);
+  --ifm-menu-color-background-active: var(--guide-navbar-menu-bg);
+  --ifm-menu-color-background-hover: var(--guide-navbar-menu-bg);
+  --ifm-color-emphasis-200: var(--guide-navbar-hover-bg);
+}
+
+/* Links in page text are underlined, so colour is not the only cue (teal is close to navy). */
+.markdown a:not(.hash-link) {
+  text-decoration: underline;
+}
+
+/* Code blocks: a border, plain text and bold accent colour for the syntax. The Prism theme
+   in docusaurus.config.ts is empty on purpose, so the colours come from this file. */
+.theme-code-block {
+  border: 1px solid var(--guide-code-border);
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  font-style: italic;
+}
+
+.token.keyword,
+.token.builtin,
+.token.function,
+.token.tag,
+.token.class-name,
+.token.atrule,
+.token.selector,
+.token.important {
+  color: var(--guide-code-accent);
+  font-weight: 700;
+}
+
+/* Inline code inside an admonition sits on its own tint, one per type. */
+.alert--secondary {
+  --ifm-alert-background-color-highlight: var(--guide-alert-note-code);
+}
+
+.alert--success {
+  --ifm-alert-background-color-highlight: var(--guide-alert-tip-code);
+}
+
+.alert--info {
+  --ifm-alert-background-color-highlight: var(--guide-alert-info-code);
+}
+
+.alert--warning {
+  --ifm-alert-background-color-highlight: var(--guide-alert-warning-code);
+}
+
+.alert--danger {
+  --ifm-alert-background-color-highlight: var(--guide-alert-danger-code);
 }
