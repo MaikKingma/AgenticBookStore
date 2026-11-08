@@ -1,12 +1,13 @@
 ---
 spec: fix-04-order-validation
 source: docs/spec-pack/specs/04-orders.md
-status: in-progress
+status: done
 accepted-by: orchestrator (main session, self-accepted per Maik 2026-11-08)
 created: 2026-11-08T09:32:31Z
 origin: spec 04 read-only review (main session), decisions by Maik 2026-11-08
 gate1: 2026-11-08T09:30:00Z
 qa-lead: on
+gate2: 2026-11-08T11:07:19Z
 base: factory
 branch: sdd/fix-04-order-validation/spec
 module-vocabulary: [root, bookstore, distributor]
@@ -167,6 +168,14 @@ Approved exception to step 7 "a pre-existing test was modified" (Maik decisions 
 ```
 
 leadDirective: evidence chain for T2: regression test `bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java#placeTrimsAndLowerCasesASpacePaddedCustomerEmail`; failure shape on unfixed code: status 400 `validation-failed` on `customerEmail` where 202 is expected; root cause `bookstore/src/main/java/nl/openvalue/bookstore/command/PlaceOrderPayload.java:17` (the `@Pattern` and raw-value `@Size(max = 254)` validating the untrimmed value). Check impl `## Red evidence`, the verifier's independent `## Negative control`, that only the constraints and Javadoc of `customerEmail` change, that malformed addresses (inner whitespace, missing or double `@`, empty, blank, trimmed length 255) still give 400 on `customerEmail`, and that pre-existing test changes are confined to moving the two padded cases.
+
+## Final sweep and Gate 2
+
+- qa-final (opus): PASS, `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`. Fresh clone 684/0/0/0 + 3/0/0/0, 19.752 s; negative controls and cross controls per task red with the named shapes; cross-task scenarios (a) to (f) hold; blast radius 7 lines, deferred payloads unchanged.
+- QA lead final review: ENDORSE, Gate 2 QA confidence high (`.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-04-order-validation.md`).
+- Gate 2 self-accepted by the orchestrator (Maik approves only the end result, 2026-11-08) at 2026-11-08T11:07:19Z.
+- Deferred follow-ups: U+0130 Javadoc overclaim (`PlaceOrderPayload.java:22` and the validator Javadoc); NUL-only pad class proven by inspection only; spec 04 F31 e-mail pattern gap; integration tests for one book sent twice as 11 and -1 and for integer-overflow quantities (flow-level only today); cross-index witness in `placeListsEveryFaultyLineFieldInOrder`; parameterise `placeRejectsANonAsciiSpaceNextToAnAsciiSpaceAroundTheAddressWith400`.
+- Standards proposals: (1) a payload constraint may repeat a domain rule only where the spec names 400 for it; (2) a payload rule mirroring a domain normalisation judges the normalised value, with a custom constraint for UTF-16 length; (3) bugfix cycles with several root causes in shared files get cross negative controls.
 
 ## QA feed-forward
 

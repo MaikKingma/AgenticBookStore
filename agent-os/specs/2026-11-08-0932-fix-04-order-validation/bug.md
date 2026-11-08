@@ -2,7 +2,7 @@
 bug: fix-04-order-validation
 severity: S3
 path: lite
-status: open
+status: fixed
 closes: [spec 04 review finding 1 (quantity status), spec 04 review finding 1b (e-mail trimming)]
 ---
 # Bug: placing an order rejects a single out-of-range line and a space-padded e-mail with 400
