@@ -15,6 +15,7 @@ npm-debug.log*
 # Docusaurus (guide/)
 guide/.docusaurus/
 guide/build/
+guide/build-offline/
 
 # IDE and OS
 .idea/
