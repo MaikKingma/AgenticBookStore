@@ -44,7 +44,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 | T3 | MCP server, four read-only tools, round-trip test | distributor | [T2] | 3 | critical | opus | opus | done (branch `sdd/05-distributor/T3`) | PASS (r2) | ENDORSE | 2 | #50 | a0737c9 |
 | T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | done (branch `sdd/05-distributor/T4`) | PASS (r2) | ENDORSE | 2 | #52 | 9afb516 |
 | T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T5`) | PASS (r1) | ENDORSE | 1 | #53 | e4ebe46 |
-| T6 | STDIO profile and its in-process verification | distributor | [T3, T5] | 6 | critical | opus | opus | pending | | | | | |
+| T6 | STDIO profile and its in-process verification | distributor | [T3, T5] | 6 | critical | opus | opus | done (branch `sdd/05-distributor/T6`) | PASS (r1) | ENDORSE | 1 | #58 | 1bb2226 |
 | T7 | finalName `distributor`, README, startup proof | distributor | [T5, T6] | 7 | elevated | sonnet | sonnet | pending | | | | | |
 | T8 | `http/distributor.http`, replayed live | root | [T1, T4] | 8 | standard | sonnet | sonnet | pending | | | | | |
 
