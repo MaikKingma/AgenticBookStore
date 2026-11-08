@@ -44,7 +44,7 @@ Bundled owner decisions: both behaviours are Maik's decisions of 2026-11-08, one
 | id | summary | module | dependsOn | batch | qaTier | implModel | qaModel | pr | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|
 | T1 | A single order line with quantity 0, 11 or -1 gets 422 `quantity-out-of-range`; a missing quantity stays 400 | bookstore | [] | 1 | elevated | sonnet | opus | #41 (branch sdd/fix-04-order-validation/T1) | ENDORSE (r0, verifier PASS) |
-| T2 | Place accepts a `customerEmail` with surrounding whitespace, stores it trimmed and lower-cased; malformed stays 400 | bookstore | [T1] | 2 | elevated | sonnet | opus | | |
+| T2 | Place accepts a `customerEmail` with surrounding whitespace, stores it trimmed and lower-cased; malformed stays 400 | bookstore | [T1] | 2 | elevated | sonnet | opus | #42 (branch sdd/fix-04-order-validation/T2) | ENDORSE (r1, verifier PASS) |
 
 ## Tasks
 
@@ -174,4 +174,6 @@ leadDirective: evidence chain for T2: regression test `bookstore/src/test/java/n
 
 ## Amendments
 
-(none)
+- 2026-11-08, orchestrator: FF-T1 item (4) corrected before T2 started. The lead's witness "U+2003 padding stays 400" contradicted the green test `placeAcceptsALeadingNonAsciiSpaceAndPassesItUnchanged` (U+2003 is not stripped by `String.trim()` and is a legal core character). Replaced by: U+001F padding is accepted (inside the trim set, outside `\s`). The QA lead agreed and corrected its ledger and memory.
+- 2026-11-08, orchestrator (impl-t2 blocked question, within authority): the trimmed-length rule counts UTF-16 chars like `EmailAddress`, which a regex cannot do, so T2 uses option A: a constraint annotation `TrimmedLength` and its validator as nested types inside `PlaceOrderPayload.java` (fileScope unchanged; the suffix rules apply to top-level classes only; ArchitectureTest untouched and green).
+- Follow-up from the T2 meta-review, deferred (not caused by this fix): U+0130 lower-cases to two chars, so a 254-char address containing it passes the payload and gets the domain's 422 `invalid-email` instead of a 400; the payload Javadoc's "a request the domain would refuse is a 400" overclaims for that character.
