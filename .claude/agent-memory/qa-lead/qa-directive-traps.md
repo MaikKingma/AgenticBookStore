@@ -95,4 +95,6 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
 
 20. **Rework diffs need the gated bytes on disk.** Snapshots hold only hashes, and untracked files have no git copy, so a rework verifier must reconstruct the earlier test file (spec 03 T3: from the implementer's transcript, after a first guessed reversal failed its hash). Put into C0 or every directive: "at snap-before, `cp` each fileScope test file to SP as `<prefix>-<File>.orig`; a rework round diffs the current file against that copy". The hash match still proves any reconstruction, so a reconstructed reversal is valid evidence, just expensive.
 
+21. **Bugfix lite cycles have no strategy run.** sdd-bugfix tasks carry only the reference.md section 5 qaDirective, so the common block is missing: task-prefixed scratch names (item 10), the warning inventory with exact counts (item 5) and repo-relative hash baselines (item 14). At the first review, settle the gaps by reading the logs yourself and feed the block forward to the remaining tasks. Two tasks sharing test files also need "the earlier task's methods unchanged" in the later task's directive.
+
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.

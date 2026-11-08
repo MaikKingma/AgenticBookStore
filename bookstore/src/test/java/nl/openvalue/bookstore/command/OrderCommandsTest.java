@@ -287,14 +287,10 @@ class OrderCommandsTest {
         expectRejected(result, "lines[1].bookId");
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "{\"bookId\":\"1c7e92f4-3b86-4d05-8a1e-7f4b0d6e2c93\",\"quantity\":0}",
-            "{\"bookId\":\"1c7e92f4-3b86-4d05-8a1e-7f4b0d6e2c93\",\"quantity\":11}",
-            "{\"bookId\":\"1c7e92f4-3b86-4d05-8a1e-7f4b0d6e2c93\"}"
-    })
-    void placeRejectsLineQuantitiesOf0And11AndAMissingQuantityWith400(String secondLine) throws Exception {
-        ResultActions result = postPlace(placeBody(EMAIL, line(BOOK_A, 2), secondLine, line(BOOK_C, 3)));
+    @Test
+    void placeRejectsAMissingLineQuantityWith400() throws Exception {
+        ResultActions result = postPlace(placeBody(EMAIL, line(BOOK_A, 2),
+                "{\"bookId\":\"1c7e92f4-3b86-4d05-8a1e-7f4b0d6e2c93\"}", line(BOOK_C, 3)));
 
         expectRejected(result, "lines[1].quantity");
     }
@@ -304,9 +300,27 @@ class OrderCommandsTest {
         ResultActions result = postPlace(placeBody(EMAIL,
                 "{\"bookId\":\"%s\",\"quantity\":12}".formatted(BOOK_A),
                 line(BOOK_B, 4),
-                "{\"quantity\":0}"));
+                "{}"));
 
-        expectRejected(result, "lines[0].quantity", "lines[2].bookId", "lines[2].quantity");
+        expectRejected(result, "lines[2].bookId", "lines[2].quantity");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 11})
+    void placePassesALineQuantityOutside1To10ToTheFlow(int quantity) throws Exception {
+        List<PlaceOrderLineDTO> lines = List.of(new PlaceOrderLineDTO(BOOK_A, quantity));
+        doThrow(new InvalidInputException("quantity-out-of-range", "Quantity out of range",
+                "The quantity %d is not between 1 and 10".formatted(quantity),
+                List.of(Map.of("field", "lines", "message", "The quantity %d is not between 1 and 10".formatted(quantity)))))
+                .when(flow).placeOrder(EMAIL, lines);
+
+        ResultActions result = postPlace(placeBody(EMAIL, line(BOOK_A, quantity)));
+
+        verify(flow).placeOrder(EMAIL, lines);
+        verifyNoMoreInteractions(flow);
+        expectProblem(result, 422, "quantity-out-of-range", "Quantity out of range")
+                .andExpect(jsonPath("$.details").value(equalTo(List.of(Map.of("field", "lines", "message",
+                        "The quantity %d is not between 1 and 10".formatted(quantity))))));
     }
 
     // --- place: mapping of use-case exceptions ---

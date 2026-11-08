@@ -43,7 +43,7 @@ Bundled owner decisions: both behaviours are Maik's decisions of 2026-11-08, one
 
 | id | summary | module | dependsOn | batch | qaTier | implModel | qaModel | pr | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|
-| T1 | A single order line with quantity 0, 11 or -1 gets 422 `quantity-out-of-range`; a missing quantity stays 400 | bookstore | [] | 1 | elevated | sonnet | opus | | |
+| T1 | A single order line with quantity 0, 11 or -1 gets 422 `quantity-out-of-range`; a missing quantity stays 400 | bookstore | [] | 1 | elevated | sonnet | opus | #41 (branch sdd/fix-04-order-validation/T1) | ENDORSE (r0, verifier PASS) |
 | T2 | Place accepts a `customerEmail` with surrounding whitespace, stores it trimmed and lower-cased; malformed stays 400 | bookstore | [T1] | 2 | elevated | sonnet | opus | | |
 
 ## Tasks
@@ -170,7 +170,7 @@ leadDirective: evidence chain for T2: regression test `bookstore/src/test/java/n
 
 ## QA feed-forward
 
-(none yet)
+- FF-T1 (qa-lead, T1 meta-review, for T2): (1) name evidence files with a task prefix (`fix04-t2-qa-*`) and cite them by absolute path; never reuse T1 scratch names. (2) Warning inventory: quote and classify every warn, deprecat and self-attach line of the referee log; T1 baseline is 2 Maven prefixes.txt 401 lines, the Mockito self-attach plus JDK agent and CDS block once per module, and exactly 4 HHH000247 lines (23503 fk_order_line_book, 23505 uq_order_line_book, 23505 uq_book_isbn, 23503 fk_stock_item_book); any other line is a finding. (3) T2 leaves T1's work unchanged: `aSingleLineWithAQuantityOutside1To10IsRejectedWith422`, `placePassesALineQuantityOutside1To10ToTheFlow`, `placeRejectsAMissingLineQuantityWith400`, `placeListsEveryFaultyLineFieldInOrder`, `invalidPlacePayloadIsRejectedWith400` and `OrderLinePayload.java` (sha256 245d6e0deef4fcb895188a6c1c9c342b0e054117dedfa4e6922ba6d41fb52dc3), shown with a diff against the T1-merged base. (4) The clause "the same set String.trim() strips" needs a witness above U+0020: an address padded with U+2003 (built with `Character.toString(0x2003)`) stays 400 on `customerEmail`, next to the accepted tab padding; probe it against a strip() or \s based payload variant as a must-fail.
 
 ## Amendments
 
