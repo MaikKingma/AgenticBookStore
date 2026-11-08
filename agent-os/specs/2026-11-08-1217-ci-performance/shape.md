@@ -12,6 +12,8 @@ performing CI." There is no pack spec for this work; this folder is the spec.
    GitHub-hosted runners and choose the faster option. Weigh Docker Hub anonymous pull rate limits.
 2. A full test report on failure: the reactor continues past a failing module, every Surefire result is visible in the
    job summary, and the reports are uploaded as an artifact on failure. The job still fails when any test fails.
+   (Job summary part not gated and UNVERIFIED by QA, plan.md Amendment A3: GitHub exposes job summaries to no API
+   or CLI. The gated evidence is `-fae`, the annotations API, the uploaded artifact and the red job.)
 3. Other proven CI practices where they measurably help or are clearly correct: sensible cache keys, concurrency groups
    that cancel superseded runs, no duplicate work, pinned action versions, timeouts. Parallelism only if deterministic.
 
@@ -31,14 +33,17 @@ Every change is backed by before and after numbers from real runs (`measurements
 
 ## Findings that shaped the plan (research artifacts are in the orchestrator comms, summarised in measurements.md)
 
-- Images cost about 4 to 6 s of a 52 s verify job. The experiment (run 42480752749) showed a warm tarball cache
+- Images cost about 4 to 6 s of a 52 s verify job (research prose; the same-script baseline over the five warm runs
+  is a 58 s median with a 52 s minimum, plan.md Amendment A1). The experiment (run 42480752749) showed a warm tarball cache
   (restore plus `docker load`, median 7 s) is slower than a plain pull (median 5 s), and a cold cache run adds about 9 s.
   Cache scope is per branch, and this repo cuts a new branch per task, so many runs would be cold. Decision: no image
   cache. Ryuk off plus a background pre-pull of `postgres:18.6` saved a median of 7 s on the build step.
 - Docker Hub answered `ratelimit-limit: 100;w=3600` with `ratelimit-remaining: 100` on every runner, and GitHub
   documents that hosted-runner pulls are not rate limited. No mirror (a mirror adds an eviction failure mode).
 - `actions/setup-java` v6 with `cache: maven` already caches both `~/.m2/repository` and `~/.m2/wrapper/dists` and sets
-  `-ntp`. No extra cache step is needed. The real cache problem is scope: 28 of 44 push runs were cold, because task
+  `-ntp`. No extra cache step is needed. The real cache problem is scope: 28 of 44 push runs were cold (a research figure, not recomputed: its run set
+  cannot be restated and its grep text does not match setup-java's `maven cache is not found` line; this cycle had 1
+  cold verify job of 18, measurements.md "After"), because task
   branches cannot see sibling caches and nothing seeds the spec branch. Pushing to `sdd/*/spec` seeds it.
 - One task PR caused about 5 runs, 2 of them pure duplicates (push plus pull_request on one commit). Tag pushes ran
   full CI too.

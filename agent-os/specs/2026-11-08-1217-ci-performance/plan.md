@@ -1,10 +1,11 @@
 ---
 spec: ci-performance
 source: Maik's brief of 2026-11-08 (no pack spec; shape.md is the spec)
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 created: 2026-11-08T12:43:10Z
 gate1: 2026-11-08T12:43:10Z
+gate2: 2026-11-08T14:39:54Z
 qa-lead: on
 base: factory
 branch: sdd/ci-performance/spec
@@ -180,7 +181,11 @@ Batches are sequential because all three tasks edit `ci.yml`.
   both triggers, and seeds the spec-branch Maven cache that task PRs restore. Accepted cost (QA lead G7): with an open
   spec PR each spec-branch push runs twice. Reversible; spec 01 wording updated in T1.
 - 2026-11-08 Report in annotate-only mode (least privilege, works on fork PRs); summary evidence via the rendered public
-  run page (QA lead G1).
+  run page (QA lead G1). (Summary evidence superseded by A3: not gated, UNVERIFIED by QA.)
 - 2026-11-08 Rejected: Maven `-T 2`, Surefire parallelism, extra wrapper cache, image mirror, Dependabot (follow-up).
 - 2026-11-08 Gate 1 self-accepted: QA lead findings G1 to G8 folded into the criteria above (G1 T2 AC6, G2 T3 AC4,
   G3 T2 AC7, G4 reading checks plus T2 witness, G5 T1 AC6, G6 T2 AC5, G7 decision above, G8 T3 AC4 per run).
+- 2026-11-08T14:39Z Gate 2 self-accepted: qa-final PASS on tip d7e11a5 (runs 42488779335, 42488783421) endorsed by the
+  QA lead, Gate 2 QA confidence high with the A3 carve-out (job summary UNVERIFIED by QA); task PRs #47, #48, #51 merged;
+  no stragglers; product diff confined to `ci.yml` and spec 01. Finalize items F1 to F5 applied (measurements.md
+  "After", shape.md notes, decisions-log note). Standards proposals SP-1 to SP-5 (QA lead ledger) are follow-ups.

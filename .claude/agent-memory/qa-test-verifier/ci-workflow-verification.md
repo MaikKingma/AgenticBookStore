@@ -25,5 +25,7 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - Warning inventory diff: strip the log timestamp and PID before comparing `[WARNING]|WARNING: | WARN ` lines, else every line looks added and removed.
 - `python3 -I` ignores a `#!/usr/bin/env python3 -I` shebang; run `python3 -I script.py`. The Write tool, not a Bash heredoc, for script content.
 - A stamp written into `updated:` ahead of `date -u` is a trap; take the time from `date -u` right before each bump.
+- Cold Maven cache scan: setup-java prints `maven cache is not found` (and `maven-wrapper cache is not found`); a hit is `Cache restored from key: setup-java-Linux-x64-maven-<hash>`. A grep for `Cache not found` never matches and reports 0 cold runs; check the miss pattern on the spec branch's first push run first.
+- Referee on committed bytes without a clone or worktree: in a script, `git -C <wt> archive <sha> | tar -x -C <SP>/<prefix>-tree`, then `cd` there and run the budgeted `./mvnw`. `find -type f` counts one less than `git ls-tree -r` because `agent-os/product` is a symlink (mode 120000), not a missing file.
 
 Related: [[final-sweep-checks]], [[shell-traps]]
