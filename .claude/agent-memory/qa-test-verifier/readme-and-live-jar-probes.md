@@ -28,4 +28,11 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
 - A literal grep over a path that does not exist yet (`http/distributor.http` before T8) exits 2 with a warning and prints
   no matches: say so rather than calling it a clean empty result.
 
+- `.http` request collections: a `python3 -I` driver parses the file's own bytes (split on `###`, comments, request line, headers,
+  body by line range, emulate the `client.global.set(...)` handler), sends with http.client, and oracles every body from the seed
+  JSON plus today's Amsterdam date. Prove it bites with 4-5 mutated COPIES in the scratchpad (swap an EAN against its comment,
+  quantity 0 to 1, drop the handler, change a query); never edit the repo file. A comment-vs-seed rule must only fire when the
+  comment actually names a title (a first run FAILed on a comment that makes no title claim: driver defect, keep both outputs).
+  A mutant with an unresolved `{{var}}` makes Tomcat log "Invalid character found in the request target": attribute it.
+
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]
