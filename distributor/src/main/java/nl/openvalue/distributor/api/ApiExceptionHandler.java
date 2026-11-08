@@ -48,6 +48,11 @@ public class ApiExceptionHandler {
         return envelope(HttpStatus.UNPROCESSABLE_CONTENT, "NOT_ORDERABLE", exception.getMessage());
     }
 
+    @ExceptionHandler(TemporarilyUnavailableException.class)
+    public ResponseEntity<ErrorEnvelope> temporarilyUnavailable(TemporarilyUnavailableException exception) {
+        return envelope(HttpStatus.SERVICE_UNAVAILABLE, "TEMPORARILY_UNAVAILABLE", exception.getMessage());
+    }
+
     private static ResponseEntity<ErrorEnvelope> envelope(HttpStatus status, String errorCode, String message) {
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
