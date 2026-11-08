@@ -12,3 +12,5 @@
 - [STDIO shared-fork probes](stdio-shared-fork-probes.md) — in-process swapped-stream tests: order runs, green-but-leaking logging probes, stdout noise probes
 - [README and live-jar probes](readme-and-live-jar-probes.md) — README prose fact checks against data, 3-run jar start script, piped real-jar STDIO driver, claude mcp add checks
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and advice content-type probes for an MVC interceptor with a validated properties record
+- [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
+- [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime

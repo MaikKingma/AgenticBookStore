@@ -1,6 +1,6 @@
 ---
 name: final-sweep-checks
-description: qa-final (PR readiness) traps in this repo - base branch moving under the spec branch, CI run ids that belong to task branches, running mvnw inside a scratch clone
+description: qa-final (PR readiness) traps in this repo - base branch moving under the spec branch, CI run ids that belong to task branches, running mvnw inside a scratch clone, bugfix negative-control ladder with cross controls in throwaway worktrees
 metadata:
   type: feedback
 ---
@@ -16,5 +16,12 @@ Rule: verify every PR-readiness fact against the live remote yourself. Never cop
 - The session scratchpad is shared across specs: a previous final sweep's `final-qa-clone` blocks `git clone`. Move it aside (`mv` to `spec<NN>-final-qa-clone`), never delete it.
 - Surefire-vs-source class lists: ArchitectureTest holds `@ArchTest` fields and no `@Test`, so list `@(Test|ArchTest)` holders. A tr_TR run proves its argLine took effect when the PostgreSQL detail line prints in Turkish (`Ayrıntı:`).
 - Writing your own memory changes the main checkout's `git status`. Quote the end status first, then write memory, and report the delta.
+
+Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway worktrees as a three-step ladder, then prove the cross-task paths in a scratch worktree at the tip.
+**Why:** a regression test that turns green when the OTHER task's fix lands does not pin its own defect. That gap only shows when the fixes are applied one at a time, and a single base-vs-tip run cannot see it.
+**How to apply:**
+- `git worktree add --detach .claude/worktrees/<name> <base>`, then `git -C <wt> checkout <tip> -- <test files>` (only there). Steps: base, then `cp` the other task's production file from the clone, then `cp` your own. Expect red, red, green, and `shasum` the files in every run. Run `clean test` from a script that `cd`s into the worktree.
+- The IT `problem()` helper asserts the status before it reads the body, but RestTestClient prints the response to the log. `grep '"status":400' <log>` gives the field and message for the failure shape.
+- Scratch IT methods: `place(...).expectBody(JSON_OBJECT).returnResult()` with `getStatus()` / `getResponseBody()` records a record-only scenario without asserting it. A `System.out.println("TAG " + problem)` line per method makes the log quotable. Remove the worktree with `--force`.
 
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

@@ -1,2 +1,4 @@
-- [QA directive traps](qa-directive-traps.md) — recurring verifier blind spots and the directive wording that closes them; read before writing a qaDirective
-- [Review calibration](review-calibration.md) — settled meta-review rules for verdict calibration and rework rounds; read before every review
+- [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit vacuity, warnings, evidence files, hash baselines, tool escapes, .http replays, logback, bugfix cycles; read before writing a directive
+- [Test-data falsifiers](qa-test-data-falsifiers.md) — data and witnesses that can falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex and unicode; read before a falsifier list
+- [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, warning greps; read before a CI spec strategy
+- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, null guards, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review

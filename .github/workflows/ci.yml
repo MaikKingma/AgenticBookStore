@@ -2,7 +2,15 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - factory
+      - 'sdd/*/spec'
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -10,27 +18,59 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    env:
+      # Ryuk (the Testcontainers reaper) is switched off here. Safe on ephemeral hosted runners only,
+      # because the runner VM is destroyed after the job. Never copy this to a persistent or self-hosted runner.
+      TESTCONTAINERS_RYUK_DISABLED: 'true'
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - name: Pre-pull Postgres image in background
+        run: |
+          nohup bash -c 'echo "postgres pull start $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" > "$RUNNER_TEMP/postgres-pull.log"; if docker pull postgres:18.6 >> "$RUNNER_TEMP/postgres-pull.log" 2>&1; then echo "postgres pull end $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" >> "$RUNNER_TEMP/postgres-pull.log"; else echo "postgres pull failed $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" >> "$RUNNER_TEMP/postgres-pull.log"; fi' > /dev/null 2>&1 &
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
       - name: Build and test
-        run: ./mvnw -B verify
+        # Must stay below the job timeout-minutes (15) so a hang ends this step as failed instead of cancelling the job, which lets the report and upload steps run.
+        timeout-minutes: 10
+        run: ./mvnw -B -fae verify
+      - name: Test report
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
+        with:
+          report_paths: '**/target/surefire-reports/TEST-*.xml'
+          annotate_only: true
+          module_reports: '([^/]+)/target/surefire-reports/'
+          detailed_summary: true
+          group_suite: true
+          failed_summary_logs: true
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: surefire-reports-${{ github.job }}-attempt-${{ github.run_attempt }}
+          path: '**/target/surefire-reports/**'
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Show Postgres pre-pull log and image digest
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/postgres-pull.log" || echo "no pre-pull log found"
+          docker image inspect --format '{{index .RepoDigests 0}}' postgres:18.6 || echo "postgres:18.6 not present locally"
 
   windows-build:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
       - name: Compile only
         shell: cmd
-        run: mvnw.cmd -B -DskipTests verify
+        run: mvnw.cmd -B -fae -DskipTests verify
