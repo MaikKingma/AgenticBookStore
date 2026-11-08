@@ -1,24 +1,26 @@
-# Spec 10: Harness reference solutions and lab branches
+# Spec 10: Harness reference solutions and level branches
 
 > Modules: repository root · Depends on: 09 · Capability: `workshop-harness`
 
 ## Why
-Participants need a known-good answer for every lab, to compare against and to catch up with. These branches are
+Participants need a known-good answer for every level, to compare against and to catch up with. These branches are
 also the facilitator's demo material. Every file below is deliberately small: the lesson is that a good harness is
 lean, layered, and verified, not long.
 
 ## What changes
-Branches created from `lab-1-start` (see `product/roadmap.md`):
-`solution/lab-2`, `solution/lab-3`, `start/lab-4-openspec`, `start/lab-4-speckit`, `start/lab-4-agentos`.
+Branches created from `level-0-start` (see `product/roadmap.md`):
+`solution/level-1`, `solution/level-2`, `solution/level-3`, `start/level-4-openspec`, `start/level-4-speckit`,
+`start/level-4-agentos`.
 Each branch adds files on top of the previous one. `./mvnw verify` stays green on all of them.
 
 ## Out of scope
-- Feature code. Only two Lab 3 exercise references live on `solution/lab-3`: the "cancel order" use case (it proves
-  the skill works) and the multi-role contributor ACL contract test from Part D (it proves the MCP exercise works).
+- Feature code. Only two exercise references exist: the multi-role contributor ACL contract test from Level 2
+  Part B on `solution/level-2` (it proves the MCP exercise works) and the "cancel order" use case on
+  `solution/level-3` (it proves the skill works).
 
 ---
 
-## Branch `solution/lab-2`: context engineering
+## Branch `solution/level-1`: context engineering
 
 ### `CLAUDE.md` (keep under 60 lines; this is the full reference text)
 ```markdown
@@ -108,19 +110,118 @@ paths:
 
 ### Acceptance scenarios
 #### Scenario: Rules load on demand
-- **GIVEN** a fresh session on `solution/lab-2`
+- **GIVEN** a fresh session on `solution/level-1`
 - **WHEN** the user asks a question that does not touch `domain` and then runs `/memory` or `/context`
 - **THEN** `CLAUDE.md` is loaded and neither `docs/architecture.md` nor `.claude/rules/domain.md` is; after Claude edits a file in `domain`, the rule is loaded
 
-#### Scenario: Lab 1 task with context
-- **WHEN** the Lab 1 discount prompt is run three times in fresh sessions
+#### Scenario: Level 0 task with context
+- **WHEN** the Level 0 discount prompt is run three times in fresh sessions
 - **THEN** at least two runs end with `./mvnw verify` green and a `Money`-based discount in the domain with a new migration (record outcomes)
 
 ---
 
-## Branch `solution/lab-3`: behavioural controls
+## Branch `solution/level-2`: give your agent eyes (LSP + MCP)
+
+`solution/level-1` plus `.mcp.json`, the MCP-assisted ACL contract test, the LSP setup note and the plugin
+declaration below.
+
+### `.mcp.json` (project scope)
+```json
+{
+  "mcpServers": {
+    "distributor": {
+      "type": "http",
+      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+    }
+  }
+}
+```
+
+### `.claude/settings.json` (plugin declaration)
+```json
+{
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": { "source": "github", "repo": "anthropics/claude-plugins-official" }
+    }
+  },
+  "enabledPlugins": {
+    "jdtls-lsp@claude-plugins-official": true
+  }
+}
+```
+Documented in the official docs (checked 2026-11-08): `enabledPlugins` and `extraKnownMarketplaces` may be set in a
+repository's `.claude/settings.json` (https://code.claude.com/docs/en/settings-reference#enabledplugins,
+https://code.claude.com/docs/en/settings-reference#extraknownmarketplaces, and "Require plugins per repository" at
+https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository). Claude Code honours
+`extraKnownMarketplaces` only after the participant accepts the workspace trust dialog. A plugin that its
+marketplace lists by a relative path loads from the marketplace copy once those entries apply; `jdtls-lsp` is listed
+as `./plugins/jdtls-lsp` in the official `marketplace.json`. The docs describe no install prompt: the plugin should
+simply load after trust, and the `jdtls` binary is still needed. *Re-verify at build time* (scenario below). If the
+plugin does not load from this declaration, remove both keys and document only the install command
+`/plugin install jdtls-lsp@claude-plugins-official`.
+
+### `docs/lsp-setup.md` (the LSP setup note, for humans, at most 40 lines)
+- What the language server gives: Claude Code's built-in, read-only LSP tool with go to definition, find
+  references, type info, document and workspace symbols, implementations and call hierarchy; diagnostics are reported
+  automatically after every edit. No enable flag exists or is needed.
+- Install the binary (the plugin does not ship it; JDK 17 or later): macOS `brew install jdtls`; Arch Linux
+  `yay -S jdtls`; other Linux: extract a JDT LS release and put a `jdtls` wrapper script on the `PATH`; Windows: WSL.
+  Check with `which jdtls` (PowerShell: `Get-Command jdtls`).
+- Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official`; if the marketplace is missing, first
+  `/plugin marketplace add anthropics/claude-plugins-official`. On this branch the plugin is also declared in
+  `.claude/settings.json`.
+- Verify: a deliberate type error in a `.java` file makes Claude Code print `Found N new diagnostic issues ...`.
+- Troubleshooting: nothing appears, check `/plugin` (tab **Errors**) and `claude --debug`;
+  `Executable not found in $PATH: "jdtls"` means the binary is missing.
+- Reference: https://code.claude.com/docs/en/plugins/code-intelligence
+
+### Level 2 exercise reference implementation
+The multi-role contributor ACL contract test from Level 2 Part B: a test in `DistributorAppServiceImplTest` (spec
+06) with `MockRestServiceServer` and a response body under `src/test/resources/contracts/distributor/` whose shape
+was taken from the distributor MCP (`get_title` on a title with a TRANSLATOR or ILLUSTRATOR contributor). It proves
+that only authors end up in our catalogue. Built in Claude Code with the distributor MCP connected.
+
+### Requirement: The language server works on the real repository
+On `solution/level-2`, Claude Code's LSP tool SHALL report diagnostics and resolve references for the bookstore
+module through the `jdtls-lsp` plugin.
+
+#### Scenario: Type error is reported and fixed
+- **GIVEN** `solution/level-2` and `jdtls` installed
+- **WHEN** a type error is introduced in a bookstore domain class
+- **THEN** Claude Code reports the diagnostic and the agent fixes it
+
+#### Scenario: Find references across layers
+- **GIVEN** `solution/level-2` and `jdtls` installed
+- **WHEN** Claude is asked to find all references to `Money.of`
+- **THEN** the LSP tool returns usages in at least two layers
+
+#### Scenario: Plugin loads from the project declaration
+- **GIVEN** a fresh clone of `solution/level-2`, `jdtls` on the `PATH`, and no user-scope install of `jdtls-lsp`
+- **WHEN** Claude Code starts in the repository and the participant accepts the workspace trust dialog
+- **THEN** `/plugin` lists `jdtls-lsp` as enabled without a manual install (record the result; if it fails, apply
+  the fallback above)
+
+### Acceptance scenarios
+#### Scenario: MCP is available
+- **GIVEN** the distributor is running
+- **WHEN** Claude Code starts in the repository and the user approves the project MCP server
+- **THEN** `/mcp` shows `distributor` connected with 4 tools
+
+#### Scenario: ACL contract test from real MCP data
+- **WHEN** `./mvnw verify` runs on `solution/level-2`
+- **THEN** the multi-role contributor contract test is green and asserts that only authors are imported
+
+---
+
+## Branch `solution/level-3`: behavioral control
+
+`solution/level-2` plus permissions, hooks, the git hook, the skill, the command, the subagent and the PowerShell
+hook variants.
 
 ### `.claude/settings.json`
+Extends the file from `solution/level-2`: keep its `extraKnownMarketplaces` and `enabledPlugins` keys and add
+`permissions` and `hooks`.
 ```json
 {
   "permissions": {
@@ -290,19 +391,7 @@ Report either "PASS" or a numbered list of findings. Each finding: file and line
 (quote it from docs/architecture.md), and a one-line fix suggestion. Do not report style nits.
 ```
 
-### `.mcp.json` (project scope)
-```json
-{
-  "mcpServers": {
-    "distributor": {
-      "type": "http",
-      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
-    }
-  }
-}
-```
-
-### Lab 3 exercise reference implementation
+### Level 3 exercise reference implementation
 "Customers can cancel an order that has not shipped yet": `OrderStatus.CANCELLED`, `Order.cancel(Clock)`,
 `StockItem.release(Quantity)`, `OrderFlow.cancelOrder`, `POST /orders/{id}/commands/cancel` (202; 404; 409 when
 shipped or already cancelled), migration if a `cancelled_at` column is added, tests per layer. Built by running the
@@ -327,19 +416,14 @@ shipped or already cancelled), migration if a `cancelled_at` column is added, te
 - **WHEN** a fresh session receives "Customers must be able to cancel an order that has not shipped yet."
 - **THEN** Claude loads the `new-use-case` skill without being told to (visible in the transcript)
 
-#### Scenario: MCP is available
-- **GIVEN** the distributor is running
-- **WHEN** Claude Code starts in the repository and the user approves the project MCP server
-- **THEN** `/mcp` shows `distributor` connected with 4 tools
-
 ---
 
-## Branches `start/lab-4-*`: spec-driven development tracks
-Each is `solution/lab-3` plus one framework installed, initialised and committed, so participants skip installation.
+## Branches `start/level-4-*`: spec-driven development tracks
+Each is `solution/level-3` plus one framework installed, initialised and committed, so participants skip installation.
 Pin versions from `product/tech-stack.md`. Commit the generated files as they are; review them for anything that
 contradicts `CLAUDE.md`.
 
-### `start/lab-4-openspec`
+### `start/level-4-openspec`
 1. `openspec init --tools claude` (non-interactive).
 2. `openspec/config.yaml`: add project context and artefact rules (*verify the key names against the installed
    version's `docs/customization.md`*):
@@ -359,7 +443,7 @@ contradicts `CLAUDE.md`.
    place and ship order behaviour (copy the requirements from spec 04 of this pack, `### Requirement:` and
    `#### Scenario:` headings with WHEN/THEN bullets). `openspec validate --strict` must pass.
 
-### `start/lab-4-speckit`
+### `start/level-4-speckit`
 1. `uv tool install specify-cli==1.3.1`, then
    `specify init --here --force --integration claude --script sh --integration-options="--no-model-invocation"`
    (the option keeps Spec Kit's skills out of Claude's automatic skill listing; participants invoke them explicitly).
@@ -368,9 +452,10 @@ contradicts `CLAUDE.md`.
    > weakened. II. Tests first, per layer, one test per acceptance scenario. III. Money is exact (Money, BigDecimal),
    > never floating point. IV. Schema changes only through new Flyway migrations. V. Small, scoped changes that
    > pass ./mvnw verify before every commit.
-3. Diff `.claude/settings.json` after init and make sure the Lab 3 hooks and permissions are intact.
+3. Diff `.claude/settings.json` after init and make sure the Level 3 hooks and permissions and the
+   Level 2 plugin declaration are intact.
 
-### `start/lab-4-agentos`
+### `start/level-4-agentos`
 1. `git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/agent-os/.git` (main branch,
    includes install-script fixes after v3.0.0), then `~/agent-os/scripts/project-install.sh` in the repository.
 2. `/plan-product` with `product/mission.md` and `product/tech-stack.md` of this pack as input (paste them from the
@@ -383,14 +468,20 @@ contradicts `CLAUDE.md`.
 ### Acceptance scenario (all three tracks)
 #### Scenario: Rehearsed in time
 - **GIVEN** a fresh clone on the track's start branch
-- **WHEN** a facilitator who has not used the framework before ships Lab 4 brief A following `workshop/sdd-framework-guide.md`
+- **WHEN** a facilitator who has not used the framework before ships Level 4 brief A following `workshop/sdd-framework-guide.md`
 - **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
 
 ## Tasks
-1. Create `solution/lab-2` with the files above; run its scenarios.
-2. Create `solution/lab-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
-3. Create the three `start/lab-4-*` branches; rehearse each.
-4. Optionally create `solution/lab-4-<track>-<brief>` from the rehearsals.
+1. Create `solution/level-1` with the files above; run its scenarios.
+2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
+   contract test with the distributor MCP; run its scenarios.
+3. LSP rehearsal: run the LSP scenarios on macOS, on Linux, and on Windows through WSL against the real repository.
+   Per OS, record the first-index time and whether the Maven multi-module build resolves (references across
+   `bookstore` packages, no false diagnostics). If LSP fails on an OS, stop and ask Maik before writing a workaround.
+4. Create `solution/level-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
+5. Create the three `start/level-4-*` branches; rehearse each.
+6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
 
 ## Definition of done
 - All branches exist, verify green on each, every acceptance scenario above checked and recorded.
+- LSP rehearsal recorded for macOS, Linux and Windows through WSL (first-index time, multi-module result).

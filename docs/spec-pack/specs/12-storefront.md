@@ -4,7 +4,7 @@
 
 ## Why
 Participants should see the application they are harnessing, not only JSON. A small React storefront makes the
-catalogue, stock, orders and the assistant visible in a browser, gives Lab 1 a place where a broken discount is
+catalogue, stock, orders and the assistant visible in a browser, gives Level 0 a place where a broken discount is
 obvious, and shows agents a second technology inside the same repository and the same referee. It replaces the
 static chat page that spec 08 originally planned.
 
@@ -20,7 +20,7 @@ static chat page that spec 08 originally planned.
   history by e-mail, assistant chat.
 
 ## Out of scope
-- Authentication, accounts, payments, addresses, discounts (Lab 1), cancelling orders (Lab 3).
+- Authentication, accounts, payments, addresses, discounts (Level 0), cancelling orders (Level 3).
 - Any business rule in the browser. The storefront shows what the REST adapters return and sends what the command
   adapters accept. Where the UI mirrors a server limit for usability (quantity 1 to 10, at most 20 lines, 1000
   characters per chat message, no basket button for books that cannot be ordered), the server stays the authority

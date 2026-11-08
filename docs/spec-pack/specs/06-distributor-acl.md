@@ -19,7 +19,7 @@ is a classic trap: the shortest path is to call the REST API from a controller w
 
 ## Out of scope
 - The restock process itself (spec 07). Searching the distributor from the bookstore API (the agent uses MCP for that).
-- Contract tests for titles with TRANSLATOR or ILLUSTRATOR contributors: deliberately left for the Lab 3 MCP exercise.
+- Contract tests for titles with TRANSLATOR or ILLUSTRATOR contributors: deliberately left for the Level 2 MCP exercise.
   Do map roles correctly (authors only), just do not add a dedicated test for multi-role titles.
 
 ## Port (domaininteraction)
@@ -119,7 +119,7 @@ No type from the distributor's wire format SHALL appear outside the `acl` packag
   error envelopes. Request and response bodies come from JSON files under
   `src/test/resources/contracts/distributor/` that were captured from the real distributor API (spec 05) with
   `http/distributor.http`, so the contract matches reality. Capture only titles whose contributors are all AUTHOR
-  (multi-role titles are the Lab 3 exercise).
+  (multi-role titles are the Level 2 exercise).
 - `CatalogueFlowTest` additions (import with mocked port), `BookCommandsTest` additions.
 - `DistributorImportIntegrationTest` (`@SpringBootTest` extending `IntegrationTestBase`, with
   `@MockitoBean DistributorAppService`: the HTTP contract is already covered by the unit contract tests).

@@ -12,59 +12,76 @@ and stay online after the workshop as take-home material.
   repository. The version is pinned in `product/tech-stack.md`. `guide/` is not a Maven module: it has its own
   `package.json`, and CI installs the pinned Node.js with `actions/setup-node`. Participants never need Node.js.
 - Content generated from `workshop/workshop-plan.md`, `workshop/sdd-framework-guide.md` and
-  `workshop/lab-4-feature-briefs.md` of this pack. Those files stay the source of truth; the site restructures them
+  `workshop/level-4-feature-briefs.md` of this pack. Those files stay the source of truth; the site restructures them
   for participants and removes facilitator-only notes (expected findings, risk table, rehearsal notes).
 - An offline bundle: the built static site as a zip attached to a GitHub release, and on the USB kit.
 
 ## Out of scope
 - Search services that need an API key (use the local search plugin or none), comments, analytics, i18n.
+- Accounts, a backend, or stored progress: the level progress indicator and the "Level cleared when" checklists are
+  static content.
 
 ## Information architecture
 ```
 guide/docs/
-  index.md                      # Welcome, agenda, what you will build, how to use this guide
-  00-before-you-start.md        # Prerequisites (mirrors the participant email), Lab 0 setup check
-  01-lab-break-the-agent.md
-  02-lab-context-engineering.md
-  03-lab-behavioural-controls/
-    index.md                    # Overview and catch-up
-    a-permissions.md
-    b-hooks.md
-    c-skills-and-commands.md
-    d-mcp.md
-    e-stretch-goals.md
-  04-lab-spec-driven/
-    index.md                    # Choose a track and a brief
-    track-a-openspec.md
-    track-b-speckit.md
-    track-c-agentos.md
-    feature-briefs.md
-  05-wrap-up.md                 # Recap map, Anthropic Academy links, next steps
+  index.md                                  # Welcome, agenda, the five levels, how to use this guide
+  00-setup-check.md                         # Prerequisites (mirrors the participant email), setup check, per-OS jdtls install, plugin install
+  01-level-0-break-the-agent.mdx            # Level 0: Break the agent
+  02-level-1-context-engineering.mdx        # Level 1: Context engineering
+  03-level-2-give-your-agent-eyes.mdx       # Level 2: Give your agent eyes (LSP + MCP); Part A LSP, Part B MCP, stretch
+  04-level-3-behavioral-control.mdx         # Level 3: Behavioral control; Parts A to C, optional Stop hook, stretch
+  05-level-4-spec-driven-development.mdx    # Level 4: Spec-driven development; track tabs, feature briefs
+  06-wrap-up.md                             # Who cleared which level, recap map, Anthropic Academy links, next steps
   reference/
     cheat-sheet.md              # Claude Code commands and files used today (one page, printable)
     architecture.md             # The onion, for participants
-    troubleshooting.md          # Windows hooks, usage limits, MCP not connecting, ANTHROPIC_API_KEY pitfall
+    troubleshooting.md          # Windows hooks, jdtls not starting, usage limits, MCP not connecting, ANTHROPIC_API_KEY pitfall
+guide/src/components/
+  LevelProgress.tsx             # Static level progress indicator, levels 0 to 4, current level highlighted
 ```
+One page per level. Level 3 shows its parts as sections of one page. Level 4 shows the three tracks as Docusaurus
+tabs and the feature briefs as a section of the same page.
 
 ## Page conventions
-- Every lab page starts with a box: **Goal**, **Start branch**, **Catch-up**: `git stash -u && git switch <branch>`,
-  **Time**.
+- Every level page is titled "Level N: name" with the names of the workshop plan: Level 0: Break the agent;
+  Level 1: Context engineering; Level 2: Give your agent eyes (LSP + MCP); Level 3: Behavioral control;
+  Level 4: Spec-driven development.
+- Every level page starts with the level progress indicator (`<LevelProgress current={N} />`: levels 0 to 4, the
+  current one highlighted), then a box: **Goal**, **Start branch**, **Catch-up**:
+  `git stash -u && git switch <branch>`, **Time**.
+- Every level page ends with a "Level cleared when" checklist (a Markdown task list) copied from the workshop plan.
 - Sync moments are marked with an admonition `:::info Sync moment` that says "Look up, Maik demos this now".
 - Checkpoints are `:::tip Checkpoint` with the exact command and the expected output.
 - Every command is in a code block with a copy button; OS-specific commands use Docusaurus tabs
   (macOS/Linux, Windows PowerShell). Hook script tabs: bash and PowerShell.
-- Lab 1 includes the observation card as a fill-in table participants copy into `notes/lab-1.md` (git-ignored).
+- Level 0 includes the observation card as a fill-in table participants copy into `notes/level-0.md` (git-ignored):
+  one row per failure mode with the columns **Failure mode**, **Evidence** (the failing test, the ArchUnit output or
+  the wrong file) and **Column** (didn't know, didn't care, didn't check), at least three rows, plus one line on
+  what went right.
+- The setup page lists the `jdtls` install per OS in tabs (macOS: `brew install jdtls`; Arch Linux: `yay -S jdtls`;
+  other Linux: a JDT LS release with a `jdtls` wrapper script on the `PATH`; Windows: through WSL), the check
+  `which jdtls` (PowerShell: `Get-Command jdtls`) and the plugin install `/plugin install jdtls-lsp@claude-plugins-official`.
 - No em dashes in any page.
 
 ## Requirements
 
-### Requirement: Complete lab coverage
-The site SHALL contain every step, command and checkpoint of Labs 0 to 4 from the workshop plan, and the three SDD tracks.
+### Requirement: Complete level coverage
+The site SHALL contain every step, command, checkpoint and "Level cleared when" check of the setup check and Levels 0
+to 4 from the workshop plan, and the three SDD tracks.
 
 #### Scenario: Content check
 - **GIVEN** the workshop plan
-- **WHEN** a reviewer compares each numbered step in sections 3 to 8 with the site
+- **WHEN** a reviewer compares each numbered step in sections 3 to 9 with the site
 - **THEN** every step and every command appears on the site, and no facilitator-only section does
+
+### Requirement: Level pages
+Every level page SHALL show its place in the level sequence and end with its "Level cleared when" checklist.
+
+#### Scenario: Level page structure
+- **GIVEN** the built site
+- **WHEN** a reviewer opens each of the five level pages
+- **THEN** the title is "Level N: name", the level progress indicator at the top shows levels 0 to 4 with level N
+  highlighted, and the page ends with a "Level cleared when" checklist identical to the workshop plan
 
 ### Requirement: Works offline
 The guide SHALL be usable without network access.
@@ -92,8 +109,8 @@ Pushes to `factory` that touch `guide/**` SHALL build and deploy the site to Git
 ## Tasks
 1. Scaffold Docusaurus (pinned version, classic, TypeScript config) in `guide/`, docs-only, OpenValue AI colours
    from the OpenValue design system. Add `guide/.docusaurus/` and `guide/build/` to the root `.gitignore`.
-2. Write `index.md`, `00-before-you-start.md`, `reference/*`.
-3. Write Lab 1 to Lab 4 pages and the SDD tracks from the pack.
+2. Write `index.md`, `00-setup-check.md`, `reference/*`, and the `LevelProgress` component.
+3. Write the Level 0 to Level 4 pages and the SDD tracks from the pack.
 4. Tabs for OS-specific commands, admonitions for sync moments and checkpoints.
 5. GitHub Actions workflow `guide.yml` with `paths: [guide/**]`: build on PR, deploy on push to `factory`,
    attach zip to release `workshop-2026`.

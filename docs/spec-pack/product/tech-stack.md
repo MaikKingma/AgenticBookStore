@@ -8,7 +8,7 @@
 | Item | Version / choice | Notes |
 |---|---|---|
 | Java | **25** (Eclipse Temurin 25 LTS) | `maven.compiler.release=25`. Boot 4.1.x supports Java 17 up to 27. |
-| Build | **Maven** via wrapper (`./mvnw`, `mvnw.cmd`), multi-module: `frontend`, `bookstore`, `distributor` | Maven chosen over the start.spring.io default (Gradle) because the hooks, docs and labs all assume `./mvnw`. One referee: `./mvnw clean verify` also tests and builds the storefront. |
+| Build | **Maven** via wrapper (`./mvnw`, `mvnw.cmd`), multi-module: `frontend`, `bookstore`, `distributor` | Maven chosen over the start.spring.io default (Gradle) because the hooks, docs and workshop levels all assume `./mvnw`. One referee: `./mvnw clean verify` also tests and builds the storefront. |
 | Spring Boot | **4.1.2** | Do not move to 4.2.x (RC at the time of writing). |
 | Spring AI | **2.0.2** via `org.springframework.ai:spring-ai-bom:2.0.2` | 2.0.x supports Boot 4.0.x and 4.1.x. Avoid 2.1 (RC, deprecates chat memory APIs). |
 | Database | **PostgreSQL 18**, image `postgres:18.6` | The only database, for local runs and tests. No H2, no embedded database anywhere. Docker is a participant prerequisite. Pinned 2026-11-06 from https://www.postgresql.org/support/versioning/ (18.6 released 2026-08-13) and https://hub.docker.com/_/postgres. |
