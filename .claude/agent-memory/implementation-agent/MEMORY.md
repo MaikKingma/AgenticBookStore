@@ -9,3 +9,4 @@
 - [Mapper test witnesses](mapper-test-witnesses.md) — validating-factory hand-offs need a rejected value; pass-throughs need a second literal; first/middle/last differ
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
+- [Docusaurus guide traps](docusaurus-guide-traps.md) — pinned Node scripts, serve needs siteDir, lockfile hits a banned-word scan, template leftovers, Playwright by absolute import

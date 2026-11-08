@@ -12,6 +12,10 @@ contrast), the checker is production code AND the oracle for every later task. T
    mutation probes on the checker source (rule returns no errors, comparator ignores order, count guard removed,
    whole-file instead of section-scoped search) that `node --test` must kill. Also prove test discovery: a throwaway
    failing test in the discovery pattern must turn `npm run check` red (catches `;` chaining and zero-test globs).
+   That probe proves discovery, not a vacuity guard: `node --test` exits 0 with `tests 0`. Put a criterion on the
+   harness task: check fails on zero executed tests (witnesses: test files deleted, emptied, glob to nothing).
+   Lockfiles hold third-party names (`postcss-lab-function`), so a word ban must exempt the top-level lockfile by
+   exact path.
 2. **Freeze the oracle.** Content tasks must not touch the checker: hash every checker file against the last gated
    baseline in each content task (a hash chain), not only a fileScope rule.
 3. **Coverage-manifest gaming.** Name these witnesses: snippet only inside `{/* */}` or `<!-- -->` must not count; a
