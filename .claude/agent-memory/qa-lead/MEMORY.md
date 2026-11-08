@@ -1,2 +1,2 @@
-- [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit, warnings, evidence files, non-falsifying data, escapes, .http replays, base keys, devices, near-today clocks, logback once per JVM; read before a directive
-- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework rounds, null guards as branches, REJECT vs inspection threshold, oracle helpers, impl edits outside scope; read before every review
+- [QA directive traps](qa-directive-traps.md) — recurring verifier blind spots and the directive wording that closes them; read before writing a qaDirective
+- [Review calibration](review-calibration.md) — settled meta-review rules for verdict calibration and rework rounds; read before every review
