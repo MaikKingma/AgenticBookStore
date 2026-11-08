@@ -38,7 +38,7 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Port `DistributorAppService`, two DTO records, three nested exceptions | bookstore | [] | 1 | standard | sonnet | sonnet | pending | | | | | |
+| T1 | Port `DistributorAppService`, two DTO records, three nested exceptions | bookstore | [] | 1 | standard | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T1`) | PASS (r0) | ENDORSE | 0 | #67 | 37dbd0e |
 | T2 | Contract JSON captured live from the distributor, README, `http/distributor.http` additions | bookstore | [] | 2 | elevated | sonnet | sonnet | pending | | | | | |
 | T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | pending | | | | | |
 | T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | pending | | | | | |
@@ -134,7 +134,11 @@ qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plu
 
 ## QA feed-forward
 
-(none yet)
+From the QA lead's T1 r0 review (full text in the QA ledger, "Feed-forward issued"):
+
+- FF-1 (C0-5c, every verifier and qa-final item 6): `rg -n '[^\x00-\x7F]' bookstore/src http` prints exactly the two pre-existing lines `bookstore/src/test/java/nl/openvalue/bookstore/domain/IsbnTest.java:67` and `:74` (spec 02 Arabic-Indic digit witnesses); any other line is a FAIL; the same grep on every fileScope file (JSON contract files and README included) is empty.
+- FF-2 (C0-6 baseline): bookstore section also accepts exactly two Maven `Could not transfer metadata /.meta/prefixes.txt ... 401` warnings (repositories of the pinned flyway parent POM); HHH000247 exactly 4 with their paired WARN lines; dispatcherServlet ERROR exactly 5. Distributor section unchanged through spec 06: 6 BeanPostProcessorChecker WARNs, 1 ToolInputValidator WARN, 4 logback "Empty or null pattern." lines, 1 DefaultHandlerExceptionResolver WARN. Bookstore total after T1 is 690.
+- FF-3 (T5, T7): the port exception details are fixed by T1: not found "The distributor has no title with ISBN <isbn>"; not orderable "The title with ISBN <isbn> cannot be ordered from the distributor"; unavailable is the detail the ACL passes. Detail assertions use exactly these strings.
 
 ## Amendments
 

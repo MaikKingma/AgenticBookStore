@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * The four use-case exceptions share no base class, so every behaviour is checked once per class. Each case below
@@ -173,6 +175,54 @@ class UseCaseExceptionsTest {
                 .isEqualTo("A book with ISBN 9780141439518 is already in the catalogue");
         assertThat(exception.details()).isEmpty();
         assertThat(Modifier.isFinal(BookDataService.IsbnAlreadyExistsException.class.getModifiers())).isTrue();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "9780141439518, The distributor has no title with ISBN 9780141439518",
+            "9789900010050, The distributor has no title with ISBN 9789900010050"})
+    void titleNotFoundAtDistributorIsANotFoundWithItsCodeTitleAndIsbnInTheMessage(String isbn, String detail) {
+        DistributorAppService.TitleNotFoundAtDistributorException exception =
+                new DistributorAppService.TitleNotFoundAtDistributorException(isbn);
+
+        assertThat(exception.getClass().getSuperclass()).isEqualTo(NotFoundException.class);
+        assertThat(exception.code()).isEqualTo("title-not-found-at-distributor");
+        assertThat(exception.title()).isEqualTo("Title not found at distributor");
+        assertThat(exception.getMessage()).isEqualTo(detail);
+        assertThat(exception.details()).isNotNull().isEmpty();
+        assertThat(Modifier.isFinal(DistributorAppService.TitleNotFoundAtDistributorException.class.getModifiers()))
+                .isTrue();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "9789900010678, The title with ISBN 9789900010678 cannot be ordered from the distributor",
+            "9789900010272, The title with ISBN 9789900010272 cannot be ordered from the distributor"})
+    void titleNotOrderableIsAnInvalidInputWithItsCodeTitleAndIsbnInTheMessage(String isbn, String detail) {
+        DistributorAppService.TitleNotOrderableException exception =
+                new DistributorAppService.TitleNotOrderableException(isbn);
+
+        assertThat(exception.getClass().getSuperclass()).isEqualTo(InvalidInputException.class);
+        assertThat(exception.code()).isEqualTo("title-not-orderable");
+        assertThat(exception.title()).isEqualTo("Title not orderable");
+        assertThat(exception.getMessage()).isEqualTo(detail);
+        assertThat(exception.details()).isNotNull().isEmpty();
+        assertThat(Modifier.isFinal(DistributorAppService.TitleNotOrderableException.class.getModifiers())).isTrue();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Connection refused", "Distributor answered with status 503"})
+    void distributorUnavailableIsAnUnavailableWithItsCodeTitleAndTheGivenDetail(String detail) {
+        DistributorAppService.DistributorUnavailableException exception =
+                new DistributorAppService.DistributorUnavailableException(detail);
+
+        assertThat(exception.getClass().getSuperclass()).isEqualTo(UnavailableException.class);
+        assertThat(exception.code()).isEqualTo("distributor-unavailable");
+        assertThat(exception.title()).isEqualTo("Distributor unavailable");
+        assertThat(exception.getMessage()).isEqualTo(detail);
+        assertThat(exception.details()).isNotNull().isEmpty();
+        assertThat(Modifier.isFinal(DistributorAppService.DistributorUnavailableException.class.getModifiers()))
+                .isTrue();
     }
 
     @Test
