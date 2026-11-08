@@ -91,10 +91,12 @@ jobs:
       - name: Cache npm packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~\AppData\Local\npm-cache
+          path: ${{ runner.temp }}\npm-cache
           key: npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             npm-${{ runner.os }}-
       - name: Compile only
         shell: cmd
+        env:
+          npm_config_cache: ${{ runner.temp }}\npm-cache
         run: mvnw.cmd -B -fae -DskipTests verify
