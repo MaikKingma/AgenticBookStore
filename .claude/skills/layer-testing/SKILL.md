@@ -102,7 +102,7 @@ report the difference.
 ## Speed budget
 
 - The standard says `./mvnw verify` stays under 60 seconds (the orchestrator measures `./mvnw clean verify`), and
-  the Lab 3 commit hook times out at 180 seconds.
+  the Level 3 commit hook times out at 180 seconds.
 - Measure the time after each spec and record it.
 - When it exceeds 60 seconds, report it as an open question instead of trimming tests.
 

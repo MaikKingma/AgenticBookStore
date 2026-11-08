@@ -8,8 +8,8 @@ something to protect: an architecture, conventions, a test suite, external integ
 ## Target users
 1. **Workshop participants** (J-Fall 2026 pre-conference workshop, beginner level, Java developers). They receive
    a working, tested, *brownfield* codebase with no agent configuration at all, and build up a harness around it
-   over four labs.
-2. **The facilitator** (Maik). Needs reproducible starting points per lab, reference solutions, and an app whose
+   over Levels 0 to 4.
+2. **The facilitator** (Maik). Needs reproducible starting points per level, reference solutions, and an app whose
    architecture an unconfigured agent will predictably violate.
 
 ## Solution
@@ -25,8 +25,8 @@ The codebase has:
 - An MCP server we built ourselves (distributor catalog), so participants see both sides of MCP.
 
 ## What success looks like
-- A participant who never configured Claude Code leaves with: a lean CLAUDE.md, path-scoped rules, one custom
-  skill, one command, a test-gated commit hook, permission rules, a working MCP connection, and one feature shipped
-  through a spec-driven workflow of their choice.
-- The facilitator can reset any participant to any lab start with one `git switch`.
-- `./mvnw verify` is green on `main` and on every lab branch, and finishes in under 60 seconds.
+- A participant who never configured Claude Code leaves with: a lean CLAUDE.md, path-scoped rules, a working
+  Java language server, a working MCP connection, one custom skill, one command, a test-gated commit hook,
+  permission rules, and one feature shipped through a spec-driven workflow of their choice.
+- The facilitator can reset any participant to any level start with one `git switch`.
+- `./mvnw verify` is green on `main` and on every level branch, and finishes in under 60 seconds.

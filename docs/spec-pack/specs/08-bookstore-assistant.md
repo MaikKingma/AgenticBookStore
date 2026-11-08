@@ -19,7 +19,7 @@ around a shared API key. The assistant is an **inbound adapter** in the onion: i
 ## Out of scope
 - Placing orders or changing anything through the assistant (read-only tools only).
 - Customer data in tool results (no order or e-mail tools).
-- RAG, embeddings, vector stores. MCP client to the distributor (that is Lab 4 brief C).
+- RAG, embeddings, vector stores. MCP client to the distributor (that is Level 4 brief C).
 
 ## Configuration
 ```yaml

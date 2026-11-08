@@ -3,7 +3,7 @@
 > Module: `bookstore` · Depends on: 01 · Capability: `catalogue`
 
 ## Why
-The catalogue is the heart of the bookstore and the area participants touch first: the Lab 1 and Lab 2 task
+The catalogue is the heart of the bookstore and the area participants touch first: the Level 0 and Level 1 task
 ("add discounts") lands here. It must show every onion layer once, cleanly, so an agent that reads the code can
 learn the pattern, and an agent that does not read it will visibly break it.
 
@@ -15,7 +15,7 @@ learn the pattern, and an agent that does not read it will visibly break it.
 - Data adapter: JPA entities and Flyway migration `V1__create_catalogue.sql`.
 
 ## Out of scope
-- **Discounts of any kind.** Do not add a discount, percentage or promotion concept. Discounts are the Lab 1 task.
+- **Discounts of any kind.** Do not add a discount, percentage or promotion concept. Discounts are the Level 0 task.
 - Stock levels (spec 03), authors as an aggregate (authors are value objects on a book), images, pagination beyond a result cap.
 
 ## Domain model

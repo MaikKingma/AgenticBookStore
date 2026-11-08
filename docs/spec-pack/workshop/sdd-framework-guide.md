@@ -2,7 +2,7 @@
 
 Two audiences use this file:
 - **Part 1**: Maik, building the Agentic Bookstore from this spec pack with the SDD framework of his choice.
-- **Part 2**: participants in Lab 4, choosing one of three tracks.
+- **Part 2**: participants in Level 4, choosing one of three tracks.
 
 Versions verified on 2026-11-06: OpenSpec 1.16.0, Spec Kit (`specify-cli`) 1.3.1, Agent OS 3.0. All three install
 into Claude Code as slash commands and skills. Re-check versions the day before the workshop and pin them.
@@ -51,7 +51,7 @@ openspec config set telemetry.enabled false              # optional, telemetry i
 openspec init --tools claude
 ```
 1. Put a summary of `product/tech-stack.md` and `product/architecture-standard.md` in `openspec/config.yaml` under
-   `context:`, and the testing rules under `rules:` (example on branch `start/lab-4-openspec`, spec 10).
+   `context:`, and the testing rules under `rules:` (example on branch `start/level-4-openspec`, spec 10).
 2. For each spec, in order, in Claude Code:
    `/opsx:propose spec-01-foundation` with the message "Create this change from docs/spec-pack/specs/01-foundation.md.
    Copy its requirements and scenarios verbatim into the delta spec."
@@ -88,16 +88,17 @@ git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/
 
 ---
 
-## Part 2: Lab 4 tracks for participants
+## Part 2: Level 4 tracks for participants
 
 Common start for every track:
 ```bash
-git stash -u                         # keep your own Lab 3 work if you like
-git switch start/lab-4-<track>       # openspec | speckit | agentos
+git stash -u                         # keep your own Level 3 work if you like
+git switch start/level-4-<track>     # openspec | speckit | agentos
 claude                               # new session; /model sonnet
 ```
-The start branches contain your Lab 3 harness (hooks, permissions, skill, `/ship`) plus the framework, already
-installed and configured. Pick a brief from `lab-4-feature-briefs.md`. Write the brief into the first command in
+The start branches are built from `solution/level-3`: your Level 2 and Level 3 harness (`.mcp.json`, the `jdtls-lsp`
+plugin declaration, hooks, permissions, skill, `/ship`) plus the framework, already installed and configured. Pick a
+brief from `level-4-feature-briefs.md`. Write the brief into the first command in
 your own words and add the answers to its questions: that is your contribution as the human.
 
 ### Track A: OpenSpec (about 35 minutes)
@@ -134,7 +135,7 @@ The active feature is stored in `.specify/feature.json`, not taken from the git 
 
 Gotchas: `/shape-spec` refuses to run outside plan mode. Agent OS needs bash: on Windows use WSL or Git Bash.
 
-### Definition of done (all tracks)
+### Level cleared when (all tracks)
 - Spec artefacts committed with the code.
 - `./mvnw verify` green in your terminal, including `ArchitectureTest`.
 - Committed through `/ship`, and the test-gate hook passed.

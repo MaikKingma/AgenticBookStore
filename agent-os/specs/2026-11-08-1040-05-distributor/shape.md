@@ -7,7 +7,7 @@ Source of truth: `docs/spec-pack/specs/05-distributor-service.md`. This file rec
 - Add to the existing `distributor` Maven module (plain Spring Boot 4.1.2 app, packages `api`, `mcp`, `catalog` under `nl.openvalue.distributor`): an in-memory catalogue of about 150 titles loaded from `titles.json`, a REST API under `/api` with its own error envelope, chaos knobs (default off), an MCP server (Spring AI 2.0.2, Streamable HTTP, SYNC) at `/mcp` with four read-only tools, a STDIO profile, and the executable jar `distributor/target/distributor.jar`.
 - The bookstore onion architecture, its ArchUnit rules and the bookstore skills do not apply to the distributor ("someone else's system").
 - Allowed paths: `distributor/**` and `http/distributor.http`. `bookstore/**` and the root `pom.xml` are not touched (the root already imports `spring-ai-bom` 2.0.2).
-- Out of scope (pack spec): persistence, authentication, UI, MCP write tools, the `list_new_releases` tool (Lab 3 stretch exercise).
+- Out of scope (pack spec): persistence, authentication, UI, MCP write tools, the `list_new_releases` tool (Level 2 stretch exercise).
 
 ## Decisions
 

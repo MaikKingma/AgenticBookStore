@@ -40,7 +40,7 @@ and carry it into `docs/architecture.md` when spec 09 creates that file.
   unavailable; 404 when the title is unknown at the distributor; 422 when it is not orderable.
 - Test isolation: from this spec on, any test that reserves stock can trigger a restock. `IntegrationTestBase`
   (spec 01) gets a `@MockitoBean DistributorAppService` with a default answer (CONFIRMED, delivery in 2 days), so no
-  test ever calls a real distributor, including when one is running locally during Lab 3.
+  test ever calls a real distributor, including when one is running locally from Level 2 on.
 
 ## Requirements
 

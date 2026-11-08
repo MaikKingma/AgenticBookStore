@@ -4,7 +4,7 @@
 > Read first: `product/architecture-standard.md`, `product/tech-stack.md`
 
 ## Why
-Every later spec and every workshop lab relies on two things: a build that is fast and identical on every laptop,
+Every later spec and every workshop level relies on two things: a build that is fast and identical on every laptop,
 and an architecture test that fails loudly when an agent puts code in the wrong layer. This spec creates both
 before any business code exists.
 

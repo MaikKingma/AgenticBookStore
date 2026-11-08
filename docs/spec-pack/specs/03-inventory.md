@@ -16,7 +16,7 @@ while each aggregate guards its own invariants.
 - Migration `V2__create_inventory.sql`.
 
 ## Out of scope
-- Restock ordering at the distributor (specs 06 and 07). Releasing reservations (Lab 3 exercise, see spec 04).
+- Restock ordering at the distributor (specs 06 and 07). Releasing reservations (Level 3 exercise, see spec 04).
 - Multiple warehouses.
 
 ## Domain model

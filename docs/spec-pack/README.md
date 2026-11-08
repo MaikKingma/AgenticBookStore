@@ -10,14 +10,14 @@ spec-driven development framework, the facilitator plan, the SDD track instructi
 | `product/mission.md` | Why the Agentic Bookstore exists and what success looks like | SDD framework (product context) |
 | `product/tech-stack.md` | Pinned versions and key properties (verified 2026-11-06) | SDD framework, builders |
 | `product/architecture-standard.md` | Clean Hexagonal Onion rules: layers, dependencies, naming, testing | SDD framework (constitution / standard / context) |
-| `product/roadmap.md` | Build order, repositories, factory branch, lab branches, build-week milestones | Maik |
+| `product/roadmap.md` | Build order, repositories, factory branch, level branches, build-week milestones | Maik |
 | `specs/01` to `specs/12` | One spec per increment, each with Why, scope, design notes, requirements with scenarios, tests, tasks, definition of done | SDD framework, one spec per cycle |
-| `workshop/workshop-plan.md` | Agenda, Labs 0 to 4 step by step, sync moments, debriefs, risks | Maik; source for the guide site |
-| `workshop/sdd-framework-guide.md` | Using this pack with OpenSpec, Spec Kit or Agent OS, and the three Lab 4 tracks | Maik and participants |
-| `workshop/lab-4-feature-briefs.md` | Three deliberately vague feature requests for Lab 4 | Participants |
+| `workshop/workshop-plan.md` | Agenda, setup check, Levels 0 to 4 step by step, sync moments, "Level cleared when" checks, debriefs, risks | Maik; source for the guide site |
+| `workshop/sdd-framework-guide.md` | Using this pack with OpenSpec, Spec Kit or Agent OS, and the three Level 4 tracks | Maik and participants |
+| `workshop/level-4-feature-briefs.md` | Three deliberately vague feature requests for Level 4 | Participants |
 | `orchestrator/progress.md` | Factory progress: phase, spec status, verify times, open questions, manual checks, decision log | Orchestrator, Maik |
 | `orchestrator/sdd-mapping.md` | The SDD tooling mapped to the cycle stages, and the folders it writes to | Orchestrator |
-| `orchestrator/decisions.md` | Decisions D1 to D5 and the files they changed | Orchestrator, Maik |
+| `orchestrator/decisions.md` | Decisions D1 to D6 and the files they changed | Orchestrator, Maik |
 
 Not copied into this repository: the source pack also holds `keynote/keynote-outline.md`, `orchestrator-prompt.md` and
 `factory-harness/skills/`. The four factory skills (`clean-hexagonal-onion`, `ddd-building-blocks`, `hexagonal-slice`,
@@ -30,7 +30,7 @@ Keynote deck (OpenValue design system, 31 slides): https://claude.ai/artifact/Lz
 2. Pick your SDD framework and follow `workshop/sdd-framework-guide.md` Part 1.
 3. Run one spec per cycle, in order 01, 02, 03, 04, 05, 06, 07, 08, 12, 09, 10, 11. Each spec is self-contained but
    assumes the previous ones are merged with `./mvnw verify` green.
-4. Spec 09 publishes the participant `main` without any agent or SDD files. Spec 10 creates the lab branches.
+4. Spec 09 publishes the participant `main` without any agent or SDD files. Spec 10 creates the level branches.
 5. Spec 11 builds the Docusaurus guide in `guide/` of the same repository.
 
 Spec format: every requirement uses `### Requirement:` with SHALL wording and `#### Scenario:` blocks with
@@ -47,11 +47,11 @@ scenarios and Agent OS shape documents.
 | Root package | `nl.openvalue.bookstore`, `nl.openvalue.distributor` | Any other |
 | Domain | Original bookstore domain: catalogue, inventory, orders, restocking, assistant | Closer to the publishing domain of the earlier workshop |
 | Distributor | Separate module, deliberately foreign model, read-only MCP tools, runs locally | Centrally hosted instance |
-| Spec pack location | Copied to `docs/spec-pack/` on `factory` only; the publish script strips it from `main` (it contains the lab solutions) | Keep it in a separate private repository |
+| Spec pack location | Copied to `docs/spec-pack/` on `factory` only; the publish script strips it from `main` (it contains the level solutions) | Keep it in a separate private repository |
 | Repositories | One mono repository (`bookstore`, `distributor`, `frontend`, `guide`) | A separate guide repository |
 | Storefront | React + Vite in `frontend/`, served by the bookstore under `/shop/` (spec 12) | A static chat page only |
-| Lab exercises kept out of the baseline | Discounts (Lab 1/2), cancel order (Lab 3), multi-role contributor contract test and `list_new_releases` MCP tool (Lab 3) | Different exercises |
-| Agenda | Keynote 45 min, labs 25/35/50/45, break 15, wrap-up 15 | Longer keynote by shortening Lab 3 stretch goals |
+| Level exercises kept out of the baseline | Discounts (Level 0/1), multi-role contributor contract test and `list_new_releases` MCP tool (Level 2), cancel order (Level 3) | Different exercises |
+| Agenda | Setup check 10 min, keynote 45 min, Levels 0 to 4 25/35/20/30/45, break 15, wrap-up 15 | Longer keynote by shortening the Level 2 and Level 3 stretch goals |
 
 ## Verify before the build week
 - Starter artifact names for Spring Boot 4 modular starters (generate with start.spring.io rather than typing them).
@@ -62,6 +62,8 @@ scenarios and Agent OS shape documents.
 - ArchUnit artifact `archunit-junit6` versus `archunit-junit5`, depending on the JUnit generation Boot 4.1.2 ships.
 - The current Haiku model id for the assistant (docs.claude.com/en/docs/about-claude/models).
 - How Claude Code runs hook commands on native Windows (spec 10).
+- Claude Code LSP with `jdtls-lsp`: native Windows (assume WSL until proven), Maven multi-module resolution and
+  first-index time (spec 10 rehearsal).
 - Spring AI 2.0 tool loop location for the `ScriptedChatModel` test double (spec 08).
 - Claude Code: new sessions start in auto permission mode (since v2.1.283); `/agents` no longer opens a wizard
   (since v2.1.198); AGENTS.md is read only when no CLAUDE.md exists, by default.

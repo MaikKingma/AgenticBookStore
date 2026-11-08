@@ -4,7 +4,7 @@
 
 ## Why
 Ordering is where business rules collide: prices are snapshotted, stock is reserved across several aggregates in one
-transaction, and failure must leave nothing half done. It gives the Lab 3 skill exercise ("cancel an order") a real
+transaction, and failure must leave nothing half done. It gives the Level 3 skill exercise ("cancel an order") a real
 place to land, and gives the assistant (spec 08) something meaningful to talk about.
 
 ## What changes
@@ -14,7 +14,7 @@ place to land, and gives the assistant (spec 08) something meaningful to talk ab
 - Migration `V3__create_orders.sql`.
 
 ## Out of scope
-- **Cancelling an order and releasing reserved stock.** This is the Lab 3 exercise. Do not add `cancel`,
+- **Cancelling an order and releasing reserved stock.** This is the Level 3 exercise. Do not add `cancel`,
   `release`, a CANCELLED status or a cancel endpoint. (`OrderStatus` has PLACED and SHIPPED only.)
 - Payments, customers as an aggregate, addresses, shipping costs, discounts.
 
@@ -126,4 +126,4 @@ The system SHALL list a customer's orders, newest first, matching the e-mail add
 
 ## Definition of done
 - Scenarios covered; `./mvnw verify` green; ArchUnit green.
-- `grep -ri "cancel" bookstore/src/main/java` returns nothing (reserved for Lab 3).
+- `grep -ri "cancel" bookstore/src/main/java` returns nothing (reserved for Level 3).

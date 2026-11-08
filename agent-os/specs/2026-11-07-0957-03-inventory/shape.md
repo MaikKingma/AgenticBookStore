@@ -6,7 +6,7 @@ Source of truth: `docs/spec-pack/specs/03-inventory.md`. These notes restate it,
 
 In scope (the pack spec's "What changes"): the `StockItem` aggregate with `Quantity`, the `DomainEvent` marker interface, `StockRunningLowEvent` and `InsufficientStockException` (plus five further domain exceptions the behaviour list implies); `InventoryFlow`, the `StockItemDataService` port, `StockItemDTO`, `StockItemDomainMapper`; `CatalogueFlow.addBook` opening an empty stock item in the same transaction; the command adapter (receive stock, correct stock after a stocktake), the query adapter (stock for a book, books at or below the reorder level); `BookView` and `BookDetailView` gaining `available` and `inStock`; the data adapter with `V2__create_inventory.sql`; `InventoryIntegrationTest` with the after-commit and rollback scenarios; the `CatalogueIntegrationTest` update; `http/inventory.http`.
 
-Out of scope: restock ordering at the distributor (specs 06 and 07), the production `process` listener (spec 07), releasing reservations (Lab 3), multiple warehouses, HTTP endpoints for `reserve` and `ship` (spec 04 calls them from `OrderFlow`), mapping a stale update to 409, a batch stock lookup for the search view, ArchUnit changes.
+Out of scope: restock ordering at the distributor (specs 06 and 07), the production `process` listener (spec 07), releasing reservations (Level 3), multiple warehouses, HTTP endpoints for `reserve` and `ship` (spec 04 calls them from `OrderFlow`), mapping a stale update to 409, a batch stock lookup for the search view, ArchUnit changes.
 
 ## Decisions
 

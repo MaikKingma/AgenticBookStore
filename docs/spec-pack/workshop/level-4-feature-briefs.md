@@ -1,7 +1,7 @@
-# Lab 4 Feature Briefs
+# Level 4 Feature Briefs
 
 Pick one. Each brief is written the way a product owner would ask for it: incomplete on purpose. Turning it into a
-precise, testable spec is the point of the lab. Facilitator notes at the bottom.
+precise, testable spec is the point of the level. Facilitator notes at the bottom.
 
 ## Brief A: Reviews and ratings (recommended for most people)
 > "Customers keep asking which books are actually good. Let them leave a rating from 1 to 5 stars and a short review

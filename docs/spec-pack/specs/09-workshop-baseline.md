@@ -1,21 +1,21 @@
-# Spec 09: Workshop baseline (seed data, human docs, sanitised main, lab-1 tag)
+# Spec 09: Workshop baseline (seed data, human docs, sanitised main, level-0 tag)
 
 > Modules: all · Depends on: 01 to 08 and 12 · Capability: `workshop-baseline`
 
 ## Why
 This spec turns a finished app into a workshop starting point: realistic demo data, the documentation a real
 brownfield repo would have (for humans, not agents), a `main` branch without any agent configuration, and proof
-that Lab 1 actually produces the failure modes the keynote promises.
+that Level 0 actually produces the failure modes the keynote promises.
 
 ## What changes
 - Demo seed data loaded only outside tests.
 - `http/` request collection and `docs/architecture.md` for humans.
 - `README.md` written for developers.
 - `scripts/publish-workshop-main.sh` and a CI guard that keeps `main` free of agent configuration.
-- Tag `lab-1-start`; Lab 1 rehearsal record (facilitator-only, not in the repo).
+- Tag `level-0-start`; Level 0 rehearsal record (facilitator-only, not in the repo).
 
 ## Out of scope
-- Any `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.mcp.json`, SDD folders on `main` (spec 10 adds them on lab branches).
+- Any `CLAUDE.md`, `.claude/`, `AGENTS.md`, `.mcp.json`, SDD folders on `main` (spec 10 adds them on level branches).
 
 ## Seed data
 - Flyway locations: the main `application.yml` (default profile) sets `classpath:db/migration,classpath:db/seed`;
@@ -45,7 +45,7 @@ that Lab 1 actually produces the failure modes the keynote promises.
   test commands (`./mvnw verify` needs Docker running). It reads like a normal team README. It contains no
   instructions addressed to AI agents.
 - `docs/architecture.md`: the architecture standard of this pack, rewritten for the team (layers, rules, naming,
-  testing, the documented process exception, the synchronous restock trade-off). Lab 2 imports it from `CLAUDE.md`.
+  testing, the documented process exception, the synchronous restock trade-off). Level 1 imports it from `CLAUDE.md`.
 - `http/*.http`: `catalogue.http`, `inventory.http`, `orders.http`, `assistant.http`, `distributor.http`,
   and `demo-flow.http` (search, place order, see low stock, see pending restock, receive stock).
 
@@ -57,17 +57,17 @@ that Lab 1 actually produces the failure modes the keynote promises.
    `.claude/worktrees/`, `.claude/commands/`, `.claude/skills/` and `.claude/settings.json`), `.mcp.json`,
    `openspec/`, `.specify/`, `specs/`, `agent-os/` (including the `agent-os/product` symlink and
    `agent-os/specs/`, where the SDD cycle writes its plan artefacts), `.githooks/`,
-   `docs/spec-pack/` (this pack contains the lab solutions, the orchestrator progress file and facilitator notes,
+   `docs/spec-pack/` (this pack contains the level solutions, the orchestrator progress file and facilitator notes,
    so it must never reach `main`). The list lives once, in the script, and the CI guard below reads the same list.
 3. Commits the result as a single commit "Agentic Bookstore: workshop baseline" on an orphan-based `main`
    (history starts fresh, so participants do not see agent-generated history), force-updates `main`, and moves tag
-   `lab-1-start` to it. Prints what it removed.
+   `level-0-start` to it. Prints what it removed.
 
-CI job `no-agent-config` (runs only on `main` and on tag `lab-1-start`): fails if any of the paths above exist,
+CI job `no-agent-config` (runs only on `main` and on tag `level-0-start`): fails if any of the paths above exist,
 including `.claude/agent-memory`, `.claude/comms`, `.claude/worktrees`, `agent-os/specs` and `docs/spec-pack`,
 and names the offending path.
 
-## Lab 1 traps (verify they are present, do not add hints)
+## Level 0 traps (verify they are present, do not add hints)
 - No discount, percentage or promotion concept anywhere.
 - `ddl-auto=validate`: a new column without a migration fails startup and the integration tests.
 - ArchUnit money rule (no double/float) and JPA-only-in-data rule.
@@ -97,18 +97,18 @@ The `main` branch SHALL contain no agent or SDD configuration, enforced by CI.
 #### Scenario: Publishing
 - **GIVEN** `factory` contains `CLAUDE.md`, `.claude/` (with `agent-memory/` and `skills/`), `agent-os/` (with the `product` symlink and `specs/`) and `docs/spec-pack/`
 - **WHEN** `scripts/publish-workshop-main.sh` runs
-- **THEN** `main` has one commit, none of those paths, `./mvnw verify` is green on it (CI on `ubuntu-latest` with Docker), and tag `lab-1-start` points to it
+- **THEN** `main` has one commit, none of those paths, `./mvnw verify` is green on it (CI on `ubuntu-latest` with Docker), and tag `level-0-start` points to it
 
-### Requirement: Lab 1 produces observable failures
-The baseline SHALL make the Lab 1 task fail visibly for an unconfigured agent in most runs.
+### Requirement: Level 0 produces observable failures
+The baseline SHALL make the Level 0 task fail visibly for an unconfigured agent, with at least three failure modes per run.
 
 #### Scenario: Rehearsal (facilitator, manual)
-- **GIVEN** a fresh clone of `lab-1-start` and a Claude Code session with no user-level `~/.claude/CLAUDE.md`
-- **WHEN** the Lab 1 prompt from the workshop plan is run three times in fresh sessions with `/model sonnet` (what participants use)
-- **THEN** at least two runs show at least one of: ArchUnit failure, failing or missing tests, missing migration, double for money, logic outside domain, unverified "tests pass" claim. Record the outcomes in the facilitator notes.
-- If fewer than two runs fail, use the fallback prompts below and rehearse again.
+- **GIVEN** a fresh clone of `level-0-start` and a Claude Code session with no user-level `~/.claude/CLAUDE.md`
+- **WHEN** the Level 0 prompt from the workshop plan is run three times in fresh sessions with `/model sonnet` (what participants use)
+- **THEN** every run shows at least three of: ArchUnit failure, failing or missing tests, missing migration, double for money, logic outside domain, unverified "tests pass" claim, each with evidence (the failing test, the ArchUnit output or the wrong file). This is the same bar as "Level cleared when" for Level 0. Record the outcomes and the evidence in the facilitator notes.
+- If any run shows fewer than three failure modes with evidence, use the fallback prompts below and rehearse again.
 
-Fallback Lab 1 prompts (more ambiguous, same area):
+Fallback Level 0 prompts (more ambiguous, same area):
 1. "Black Friday is coming. Make books cheaper for a weekend and show it in search."
 2. "Marketing wants a 'sale' badge and a crossed-out old price in the catalogue API."
 
@@ -121,7 +121,7 @@ Fallback Lab 1 prompts (more ambiguous, same area):
 2. `docs/architecture.md`, `README.md`, `http/` collection.
 3. Publish script, its test, CI guard job.
 4. Run the script; verify `main`; create tag.
-5. Lab 1 rehearsal three times; record results; adjust prompts if needed.
+5. Level 0 rehearsal three times; record results; adjust prompts if needed.
 
 ## Definition of done
-- `main` = one commit, verify green, guard green, tag `lab-1-start` set, rehearsal recorded.
+- `main` = one commit, verify green, guard green, tag `level-0-start` set, rehearsal recorded.

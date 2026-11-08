@@ -5,7 +5,7 @@
 ## Why
 The bookstore needs an external system to integrate with, and the workshop needs an MCP server that participants
 can read, run and connect to Claude Code. The distributor is both: a fictional book wholesaler with a REST API (used
-by the bookstore's ACL in spec 06) and an MCP server (used by the coding agent in Lab 3).
+by the bookstore's ACL in spec 06) and an MCP server (used by the coding agent in Level 2).
 
 Its model is **deliberately foreign** to the bookstore's (EAN instead of ISBN, cents instead of Money, subject
 codes instead of genres, contributors with roles). That is what makes the anti-corruption layer meaningful.
@@ -23,7 +23,7 @@ Spring app (`api`, `mcp`, `catalog` packages). The bookstore's ArchUnit rules do
 ## Out of scope
 - Persistence (in-memory is fine; restock orders are lost on restart), authentication, a UI.
 - Write tools in MCP. Restock orders are REST-only: agents get read-only tools by default.
-- `list_new_releases` MCP tool: this is the Lab 3 stretch exercise. Do not implement it (the seed data does contain
+- `list_new_releases` MCP tool: this is the Level 2 stretch exercise. Do not implement it (the seed data does contain
   release dates so the exercise works).
 
 ## Distributor model (JSON shape on the wire)
@@ -54,7 +54,7 @@ Spring app (`api`, `mcp`, `catalog` packages). The bookstore's ArchUnit rules do
   is fictional demo data.
 - Seed entries for new releases use `releasedDaysAgo` (0 to 60) instead of a fixed date; the loader converts it to
   `releaseDate` relative to the start date, so the data never ages.
-- At least 10 titles have TRANSLATOR or ILLUSTRATOR contributors (Lab 3 contract-test exercise), at least 5 are
+- At least 10 titles have TRANSLATOR or ILLUSTRATOR contributors (Level 2 contract-test exercise), at least 5 are
   BACKORDER, at least 5 are OUT_OF_PRINT, at least 3 have only an EBOOK format.
 - 20 titles are "shared" with the bookstore seed (spec 09): all IN_STOCK, all with AUTHOR-only contributors, one of
   them 9780141439518 (Pride and Prejudice). Their ISBNs are listed one per line in
