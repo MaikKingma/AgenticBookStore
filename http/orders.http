@@ -1,0 +1,94 @@
+# JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+
+# Add A Tale of Two Cities and remember the new book id as bookA.
+POST http://localhost:8080/books/commands/add
+Content-Type: application/json
+
+{
+  "isbn": "9780141439600",
+  "title": "A Tale of Two Cities",
+  "authors": ["Charles Dickens"],
+  "genre": "fiction",
+  "price": "12.50",
+  "publicationYear": 1859
+}
+
+> {% client.global.set("bookA", response.body.id); %}
+
+###
+
+# Add Wuthering Heights and remember the new book id as bookB.
+POST http://localhost:8080/books/commands/add
+Content-Type: application/json
+
+{
+  "isbn": "9780141439563",
+  "title": "Wuthering Heights",
+  "authors": ["Emily Bronte"],
+  "genre": "fiction",
+  "price": "8.00",
+  "publicationYear": 1847
+}
+
+> {% client.global.set("bookB", response.body.id); %}
+
+###
+
+# Receive a delivery of 5 copies of A Tale of Two Cities.
+POST http://localhost:8080/inventory/{{bookA}}/commands/receive
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+###
+
+# Receive a delivery of 2 copies of Wuthering Heights.
+POST http://localhost:8080/inventory/{{bookB}}/commands/receive
+Content-Type: application/json
+
+{
+  "quantity": 2
+}
+
+###
+
+# Place an order for 2 copies of A Tale of Two Cities and 1 copy of Wuthering Heights, then remember the order id.
+POST http://localhost:8080/orders/commands/place
+Content-Type: application/json
+
+{
+  "customerEmail": "Reader@Example.com",
+  "lines": [
+    { "bookId": "{{bookA}}", "quantity": 2 },
+    { "bookId": "{{bookB}}", "quantity": 1 }
+  ]
+}
+
+> {% client.global.set("orderId", response.body.id); %}
+
+###
+
+# Show the order. The price of each line is the price at the moment of ordering, and the total is 33.00.
+GET http://localhost:8080/orders/{{orderId}}
+
+###
+
+# List the orders of the customer, newest first. The lookup ignores case, so the lower-case address finds the order.
+GET http://localhost:8080/orders?customerEmail=reader@example.com
+
+###
+
+# Ship the order. The reserved copies leave the stock.
+POST http://localhost:8080/orders/{{orderId}}/commands/ship
+
+###
+
+# Show the order again. It is now shipped and has a shipping time.
+GET http://localhost:8080/orders/{{orderId}}
+
+###
+
+# Show the stock of A Tale of Two Cities. Of the 5 copies received, 3 remain on hand and none are reserved.
+GET http://localhost:8080/inventory/{{bookA}}

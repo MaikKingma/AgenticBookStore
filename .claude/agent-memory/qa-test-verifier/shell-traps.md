@@ -32,6 +32,8 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - The Write tool turns U+2003 into a plain space even between other characters (`a<U+2003>b` landed as `61 20 62`), and trims a file whose only content is a U+2003, so the non-ASCII positive control silently fails. Build it with `printf 'a\xe2\x80\x83b\n' > <scratch file>`, check with `od -An -tx1`, then `rg -c`. The em dash (U+2014) survives Write.
 
+- A snapshot file that holds porcelain status plus `shasum` lines: `grep " <path>$"` also matches the status line, so a hash lookup returns two lines and reports a false MISMATCH. Filter `grep -E '^[0-9a-f]{64}  '` first.
+
 - Probe runs go faster with two scripts in `.claude/comms/tmp/`: a probe runner (maven `-Dtest`, summary grep) and a restore script that `cp`s the FF7 `.orig` byte copy back and prints `shasum` beside the snap-before line. Edit mutates, the script restores and proves the hash in one call.
 
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

@@ -5,9 +5,9 @@ metadata:
   type: project
 ---
 
-Status: the spec 02 bullets landed in code (checked 2026-11-07 against `CatalogueFlow`, `BookDataService`,
-`BookQueries`); the spec 03 bullets are proposals in the spec 03 strategy, so verify them in the spec 03 plan under
-`agent-os/specs/` and in the code before relying on them.
+Status: the spec 02 and spec 03 bullets landed in code (checked 2026-11-07 against `CatalogueFlow`, `InventoryFlow`,
+`StockItemDTO`, `QueryExceptionHandler`); the spec 04 bullets are proposals in the spec 04 plan under `agent-os/specs/`,
+so verify them there and in the code before relying on them.
 
 - **Mappers are static final classes** (`BookDomainMapper.toDomain(dto, clock)`, `BookJPAMapper`). **Why:** the
   standard allows only `@Service`, `@Transactional`, `ApplicationEventPublisher` and the Logger in `domaininteraction`,
@@ -42,5 +42,18 @@ Status: the spec 02 bullets landed in code (checked 2026-11-07 against `Catalogu
 - **A request-parameter 400 in a query adapter** is a nested exception in the throwing controller plus one handler in
   the bean-validation shape. **Why:** tech-stack limits Jakarta Validation to payloads, and `params = "x=y"` mappings
   fail during handler lookup, where a package-scoped advice never runs.
+
+- **Multi-aggregate flows (spec 04):** every check before the first write; one private save-and-publish helper shared
+  by the use cases (root first, then the other aggregates sorted by id, then all pulled events). **Why:** sorted saves
+  avoid a probed 1 s deadlock between concurrent orders, and a shared helper lets the use case whose events are
+  observable prove the one whose events are empty today. A state check on the root (`ship`) runs before any other
+  aggregate is read.
+- **Payload subset for normalised strings (spec 04 e-mail):** the domain uses `trim()` (removes only chars at or below
+  U+0020), the payload pattern excludes `\x00-\x20` everywhere; `strip()` or `\s` in the payload breaks the subset.
+  Length is checked after lower-casing (U+0130 grows), which leaves one accepted 422 edge. **Why:** keeps the 422
+  unreachable without a second validator.
+- **Snapshots copied from another aggregate are plain strings** (order line isbn, title); money stays `Money`.
+  **Why:** re-validating a validated copy only adds untranslatable restore failures. Instants go to views as
+  `Instant.toString()` strings, truncated to micros in the domain (PostgreSQL rounds nanos; Linux clocks give nanos).
 
 Related: [[strategy-constraints]], [[test-context-cost-model]].
