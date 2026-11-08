@@ -20,6 +20,8 @@ import nl.openvalue.bookstore.domain.OrderPlacedEvent;
 import nl.openvalue.bookstore.domain.StockRunningLowEvent;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -275,16 +277,28 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertNothingStoredAndNoEvent();
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {0, 11, -1})
+    void aSingleLineWithAQuantityOutside1To10IsRejectedWith422(int quantity) {
+        // 20 on hand: the stock alone would allow the quantity, so only the quantity rule rejects the line.
+        UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
+        receive(a, 20);
+
+        Map<String, Object> problem = problem(place("reader@example.com", List.of(line(a, quantity))), 422);
+
+        assertFieldProblem(problem, "quantity-out-of-range", "Quantity out of range", "lines");
+        assertThat(getStock(a)).isEqualTo(stockView(a, 20, 0, 20, false));
+        assertNothingStoredAndNoEvent();
+    }
+
     @Test
     void invalidPlacePayloadIsRejectedWith400() {
         UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
         receive(a, 5);
 
         Map<String, Object> badEmail = problem(place("reader", List.of(line(a, 2))), 400);
-        Map<String, Object> badQuantity = problem(place("reader@example.com", List.of(line(a, 0))), 400);
 
         assertValidationFailed(badEmail, "customerEmail");
-        assertValidationFailed(badQuantity, "lines[0].quantity");
         assertThat(getStock(a)).isEqualTo(stockView(a, 5, 0, 5, false));
         assertNothingStoredAndNoEvent();
     }
