@@ -27,7 +27,7 @@ gate and green checks.
 | T1 | bookstore | [] | 1 | elevated | sonnet | `StorefrontConfig`, `StorefrontConfigTest` on `IntegrationTestBase`, test `static/shop/index.html`, `bookstore/pom.xml` resources (two parent entries re-declared plus the unfiltered dist entry) | #70 | sdd/12-storefront/T1 | PASS r1 | ENDORSE |
 | T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | #72 | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
 | T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | PASS r2 | ENDORSE |
-| T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | | | | |
+| T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | (pending) | sdd/12-storefront/T4 | PASS r3 | ENDORSE |
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | | | | |
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | | | | |
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | | | | |
@@ -74,6 +74,18 @@ Never fable.
   caches saved by a pull_request run do not reach later PRs, so cite the save lines of the spec-branch push run plus
   the restore lines of a later run, the npm-Windows restore included. The Windows `npm_config_cache` is set only on the
   `Compile only` step; any later Windows step that runs npm must set the same value. T3 bytes are in the QA ledger.
+- FF-T4 (qa-lead, T4 r3; applies to T5 to T10 and qa-final): Vitest baseline 5 files, 132 tests (130 passed + 2
+  expected fail); exactly 2 expected fail (setupTests.test.ts:56, :64) up to the spec tip, any other `.fails(` is a C0-3
+  FAIL; referee time baseline stays 22.249 s. T6 to T9 use the 17 `CONTRACT_CLASSES` (`wordmark` and `wordmark-book`
+  for "Open" and "Book"); `global.css` changes are additions only (`git diff -U0 -- frontend/src/styles/global.css` shows
+  no `^-[^-]` line unless the card names it). For every new `color` rule with an ob-on comment the verifier quotes the
+  surface it sits on (file:line) and FAILs a claim no CSS backs; a new focusable element on mist, teal or the error
+  background needs its ring surface checked (blue 2.91 on mist, 2.73 on teal, 3.70 on error background). C0-6 greps
+  scan test titles, comments and fixtures: implementers run the literal C0-6 grep set before handoff and build fixtures
+  holding a banned form from string parts; the only exemptions are A2 and A4. T4 bytes (contrast.test.ts except the A5
+  insertion in T6, styleContract.test.ts, tokens.css, fonts.css, OFL.txt, woff2, indexHtml.test.ts,
+  setupTests.test.ts, setupTests.ts) keep their T4 hashes; only `main.tsx` (T6) and `global.css` (T6 to T9, additions
+  only) may change.
 
 ## Amendments
 
@@ -96,6 +108,19 @@ Never fable.
   context is allowed in step `env` and `with`). Key, restore-key, pin and step order unchanged; the Linux job keeps
   `~/.npm`, which saved correctly. Consequence: T3 criterion 2's Windows path reads as amended. Gate re-run
   self-accepted.
+- A4 (2026-11-08, orchestrator, during T4): `frontend/src/assets/fonts/OFL.txt` is a byte-identical copy of the
+  pinned licence (`@fontsource/montserrat` 5.3.0 `LICENSE`, sha256
+  `f429f739351287574c0c3175a9222bb3e49c7cad3f568a04f2c08d74c107724e`); a licence file is never edited. The C0-6e URL
+  grep and the C0-6c `reserved` grep exempt exactly that file (licence text, not code). Also accepted in T4: the two
+  style tests read CSS with `node:fs` because Vitest 5.1.0 empties every CSS import including `?raw` (card criterion 2's
+  "Vite `?raw`" reads as amended); the 17 classes of `CONTRACT_CLASSES` in `styleContract.test.ts` are the styling
+  contract for T6 to T9: "pinned" means a rule names each class, and declarations are pinned only for the criterion 5
+  primitives; Vitest totals count the two `it.fails` "expected fail" tests. Gate re-run self-accepted.
+- A5 (2026-11-08, orchestrator, on the QA lead's T4 r3 recommendation): T6's fileScope gains
+  `frontend/src/styles/contrast.test.ts` (test-only, insertion-only) for an ob-on surface check: every
+  `/* ob-on: ... */` surface on a descendant selector `.X ...` must equal the background of the `.X` rule (or a
+  documented ancestor surface), with a fixture proving a false claim fails. Closes residual R10 (deleting the
+  `.site-footer` base rule left white footer links on snow undetected). Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 
