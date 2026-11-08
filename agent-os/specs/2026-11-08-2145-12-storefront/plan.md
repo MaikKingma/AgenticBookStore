@@ -84,6 +84,13 @@ Never fable.
   lines in `setupTests.test.ts` (nowhere else; the `{ fails: true }` options form stays banned). T4's verifier runs
   P10, P10c and P11 as must-fail probes. Consequence: residual R9 closes at T4. Gate re-run self-accepted (test-only
   addition inside the cycle's scope).
+- A3 (2026-11-08, orchestrator, after the T3 r1 FAIL): the T3 card literal `~\AppData\Local\npm-cache` for the Windows
+  npm cache does not exist on `windows-latest` (PR run 42528266851 logged "Path Validation Error" and saved nothing).
+  The Windows job now sets the location explicitly: the `Compile only` step gets `env: npm_config_cache:
+  ${{ runner.temp }}\npm-cache` and the `Cache npm packages` step caches `${{ runner.temp }}\npm-cache` (the `runner`
+  context is allowed in step `env` and `with`). Key, restore-key, pin and step order unchanged; the Linux job keeps
+  `~/.npm`, which saved correctly. Consequence: T3 criterion 2's Windows path reads as amended. Gate re-run
+  self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 

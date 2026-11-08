@@ -33,4 +33,8 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - Trap: `gh cache list --limit 100` returning exactly 100 entries means the list was cut off, so a "no probe cache" claim needs `--limit 1000 --json ref --jq` with a `length` total and a positive-control ref pattern.
 - Byte guards on a workflow (no `continue-on-error`/`|| true`/`-fn`, pins, ASCII): `python3 -I` on `git show <sha>:<file> > <SP>/x.yml`, plus one control copy per injected token written by a second script. Every guard must bite on its own control.
 
+- actions/cache with a missing path: the post step still concludes `success`, the job is green, and the only trace is the log line `[warning]Path Validation Error: Path(s) specified ... do(es) not exist, hence no cache is being saved.` (not an annotation, annotations API returned `[]`). Gate on the absence of a `Cache saved with key: <key>` line per cache step, and put `\[warning\]` (single bracket) in the warning-count pattern, since `##\[warning\]` misses it. Diff per-job normalised warning counts against the PR base's push run on the same tip sha.
+- Passing a Windows-runner cache path from a card literal is unverified until a run saves it: the `windows-latest` npm cache dir written by a Maven-installed Node was not `~\AppData\Local\npm-cache` (spec 12 T3).
+- `bash $HOME/...` and `$HOME` in argv trip the worktree guard ("cannot be shown not to run git"); use the literal home path for `with-budget.sh`.
+
 Related: [[final-sweep-checks]], [[shell-traps]]
