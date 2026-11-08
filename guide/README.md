@@ -58,9 +58,16 @@ Rules in place:
   pattern matches no file or when the matched files register no test case. Keep the `&&` chain in that script.
 - Colours (rule `colors`): no hex value, colour function or CSS named colour in a property value of any stylesheet
   other than `src/css/custom.css`, and none in a `style` prop of a `.tsx`, `.jsx`, `.mdx` or `.md` file. `inherit`,
-  `currentColor`, `transparent` and `var(--...)` are fine. Markdown anchors such as `[x](#cafe)` are not colours.
+  `currentColor`, `transparent` and `var(--...)` are fine. Markdown anchors such as `[x](#cafe)` are not colours, and a
+  name followed by `(` is a function, so `tan(45deg)` passes while `tan` alone is the colour.
+  What the rule scans: the property values of every `.css` file except `custom.css`, and the `style` props (JSX object or
+  HTML attribute) of every `.tsx`, `.jsx`, `.mdx` and `.md` file. What it does not scan, so review these by eye: `.ts`
+  files such as `docusaurus.config.ts`, a colour held in a `const` and referenced from a style prop, the SVG `fill` and
+  `stroke` attributes, an inline `<style>` element, and the system colours (`Canvas`, `LinkText` and so on).
 - Contrast: every pair in `scripts/rules/contrast-pairs.mjs` is checked in light and dark mode (see Brand below) and
-  printed with its ratio: 4.5 or more for text, 3.0 or more for non-text accents.
+  printed with its ratio: 4.5 or more for text, 3.0 or more for non-text accents. The table is pinned by
+  `scripts/contrast-pairs.test.mjs` (the required pairs by name and a minimum count), so a pair can be added but not
+  dropped quietly.
 - Brand and fonts: the seven brand values, the primary colours, the font stack, the three font faces and their
   provenance, the licence file, and no font CDN or font package anywhere in `guide/`.
 

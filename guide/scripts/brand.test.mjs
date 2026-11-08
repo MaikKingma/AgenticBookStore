@@ -90,6 +90,12 @@ test('restrictedTextErrors: blue and sage never carry normal text, in any case, 
   ]);
 });
 
+test('restrictedTextErrors: sage as the background of a text pair is an error of its own', () => {
+  assert.deepEqual(restrictedTextErrors([result({bgHex: '#809fa2', name: 's'})]), [
+    'brand: light s: text pair --a on --b uses sage #809FA2 as a background for text',
+  ]);
+});
+
 test('restrictedTextErrors: non-text pairs may use blue and sage', () => {
   assert.deepEqual(restrictedTextErrors([result({kind: 'nontext', fgHex: '#3D7DC9'}), result({kind: 'nontext', bgHex: '#809FA2'})]), []);
 });

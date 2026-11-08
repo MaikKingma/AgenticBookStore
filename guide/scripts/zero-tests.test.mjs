@@ -48,6 +48,31 @@ test('countTestCases: skipped, todo, commented and mid-line mentions do not coun
   assert.equal(countTestCases(text), 0);
 });
 
+test('countTestCases: registrations inside a block comment do not count', () => {
+  const text = [
+    '/*',
+    "test('a', () => {});",
+    "  it('b', () => {});",
+    '*/',
+    "/* test('c', () => {}); */",
+    "/** it('d', () => {}) */",
+    '',
+  ].join('\n');
+  assert.equal(countTestCases(text), 0);
+});
+
+test('countTestCases: a real registration after or between block comments still counts', () => {
+  const text = "/* note */\ntest('a', () => {});\n/*\ntest('b', () => {});\n*/\nit('c', () => {});\n";
+  assert.equal(countTestCases(text), 2);
+});
+
+test('zeroTestErrors: a test file that holds only commented-out cases fails the guard', () => {
+  const text = "import {test} from 'node:test';\n/*\ntest('old case', () => {});\n*/\n";
+  assert.deepEqual(zeroTestErrors({script: SCRIPT, matched: {[GLOB]: [{file: 'scripts/a.test.mjs', text}]}}), [
+    'zero-test guard: 1 test file matches but none registers a test case, so node:test would execute nothing',
+  ]);
+});
+
 test('countTestCases: an empty or whitespace-only file counts zero', () => {
   assert.equal(countTestCases(''), 0);
   assert.equal(countTestCases('\n  \n'), 0);
@@ -150,6 +175,15 @@ test('runChecks: a check glob that matches nothing fails the guard even when tes
   withGuardTree({'package.json': JSON.stringify({...goodPackage(), scripts: {check: script}})}, (root) => {
     assert.deepEqual(guardLines(runChecks(root).errors), [
       'zero-test guard: the node --test pattern "scripts/**/*.nothing.mjs" matches no test file',
+    ]);
+  });
+});
+
+test('runChecks: a test file that holds only a block comment with cases fails the guard', () => {
+  const text = "import {test} from 'node:test';\n/*\ntest('old case', () => {});\n*/\n";
+  withGuardTree({'scripts/a.test.mjs': text}, (root) => {
+    assert.deepEqual(guardLines(runChecks(root).errors), [
+      'zero-test guard: 1 test file matches but none registers a test case, so node:test would execute nothing',
     ]);
   });
 });

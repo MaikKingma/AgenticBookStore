@@ -160,6 +160,22 @@ test('evaluatePairs: a variable that is missing in a mode fails the pair and nam
   assert.deepEqual(errors, ['contrast: light accent: --accent is not defined']);
 });
 
+test('evaluatePairs: a background variable that is missing fails the pair and names that variable', () => {
+  const css = ':root { --fg: #000000; --accent: #000000; }';
+  const {errors, lines, results} = evaluatePairs({css, pairs: PAIRS, darkMode: false});
+  assert.deepEqual(errors, ['contrast: light body text: --bg is not defined', 'contrast: light accent: --bg is not defined']);
+  assert.deepEqual(lines, [
+    'FAIL contrast light body text: --fg on --bg (--bg is not defined)',
+    'FAIL contrast light accent: --accent on --bg (--bg is not defined)',
+  ]);
+  assert.deepEqual(results, []);
+});
+
+test('evaluatePairs: a foreground that is missing is reported before a missing background', () => {
+  const {errors} = evaluatePairs({css: ':root { }', pairs: PAIRS.slice(0, 1), darkMode: false});
+  assert.deepEqual(errors, ['contrast: light body text: --fg is not defined']);
+});
+
 test('evaluatePairs: no pair declared at all is an error, never a silent pass', () => {
   const {errors} = evaluatePairs({css: ':root { --fg: #000000; }', pairs: [], darkMode: true});
   assert.deepEqual(errors, ['contrast: no contrast pair is declared']);
@@ -201,6 +217,20 @@ test('colorModeErrors: switch off must also stop following the system colour sch
   assert.deepEqual(colorModeErrors({css: LIGHT_ONLY, config}).errors, [
     'contrast: colorMode.disableSwitch is true, so colorMode.respectPrefersColorScheme must be false',
   ]);
+});
+
+test('colorModeErrors: switch off without any respectPrefersColorScheme key fails too', () => {
+  const config = 'themeConfig = { colorMode: { disableSwitch: true } };';
+  const {errors, darkMode} = colorModeErrors({css: LIGHT_ONLY, config});
+  assert.deepEqual(errors, [
+    'contrast: colorMode.disableSwitch is true, so colorMode.respectPrefersColorScheme must be false',
+  ]);
+  assert.equal(darkMode, false);
+});
+
+test('colorModeErrors: switch off with respectPrefersColorScheme: false in any position is fine', () => {
+  const config = 'themeConfig = { colorMode: { respectPrefersColorScheme: false, disableSwitch: true } };';
+  assert.deepEqual(colorModeErrors({css: LIGHT_ONLY, config}), {errors: [], darkMode: false});
 });
 
 test('colorModeErrors: disableSwitch inside a comment does not count as set', () => {

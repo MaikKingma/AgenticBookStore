@@ -28,7 +28,8 @@ const COLOR_FUNCTIONS = ['rgb', 'rgba', 'hsl', 'hsla', 'hwb', 'lab', 'lch', 'okl
 const BOUNDARY_BEFORE = '(?<![\\w-])';
 const HEX = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![0-9a-z_-])/gi;
 const FUNCTION_CALL = new RegExp(`${BOUNDARY_BEFORE}(${COLOR_FUNCTIONS.join('|')})\\s*\\(`, 'gi');
-const NAMED = new RegExp(`${BOUNDARY_BEFORE}(${NAMED_COLORS.join('|')})(?![\\w-])`, 'gi');
+// A name followed by ( is a CSS function, not a colour: tan(45deg) is the math function.
+const NAMED = new RegExp(`${BOUNDARY_BEFORE}(${NAMED_COLORS.join('|')})(?![\\w-]|\\s*\\()`, 'gi');
 
 const HOME = 'colours belong in src/css/custom.css only; use a var(--...) reference, inherit, currentColor or transparent';
 

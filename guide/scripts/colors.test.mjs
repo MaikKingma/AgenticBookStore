@@ -49,6 +49,30 @@ test('colorTokens: var() references, custom property names, url() and lengths ar
   assert.deepEqual(colorTokens('calc(1px + 2rem) Montserrat, system-ui, sans-serif'), []);
 });
 
+test('colorTokens: a colour name inside a longer word or custom property name is not a colour', () => {
+  for (const text of [
+    'var(--my-red-tint)',
+    'var(--my-red)',
+    'var(--red-tint)',
+    'red-fade',
+    'fade-red',
+    'redish',
+    'predator',
+    'tint_red',
+    'red_tint',
+    'red2',
+  ]) {
+    assert.deepEqual(colorTokens(text), [], text);
+  }
+});
+
+test('colorTokens: the math function tan() is not the colour tan', () => {
+  assert.deepEqual(colorTokens('rotate(tan(45deg))'), []);
+  assert.deepEqual(colorTokens('calc(1px * tan( 45deg ))'), []);
+  assert.deepEqual(colorTokens('linear-gradient(navy, tan)'), ['navy', 'tan']);
+  assert.deepEqual(colorTokens('tan'), ['tan']);
+});
+
 test('colorTokens: a colour in the fallback of var() is still a colour literal', () => {
   assert.deepEqual(colorTokens('var(--x, #fff)'), ['#fff']);
   assert.deepEqual(colorTokens('var(--x, red)'), ['red']);

@@ -4,6 +4,7 @@
 // node:test with `&&`, so the checker is the place that can notice: it reads the
 // patterns of the `node --test` command, finds the files they match and requires at
 // least one registered test case. Pure functions only; check.mjs does the file reads.
+import {withoutBlockComments} from '../lib/text.mjs';
 
 // The patterns that follow `node --test` in a package.json script, up to the first &&.
 export function testGlobs(script) {
@@ -19,9 +20,9 @@ export function testGlobs(script) {
 }
 
 // How many test cases a test file registers: test( and it( at the start of a line.
-// test.skip, test.todo, comments and mid-line mentions do not count.
+// test.skip, test.todo, comments (line and block) and mid-line mentions do not count.
 export function countTestCases(text) {
-  return (text.match(/^[ \t]*(?:test|it)\s*\(/gm) ?? []).length;
+  return (withoutBlockComments(text).match(/^[ \t]*(?:test|it)\s*\(/gm) ?? []).length;
 }
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
