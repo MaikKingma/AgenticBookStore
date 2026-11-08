@@ -16,10 +16,10 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 | 06 | in progress | | | orchestrator agent run on Opus with `merge: true`, started 2026-11-08 after D6 |
 | 07 | todo | | | |
 | 08 | todo | | | |
-| 12 | todo | | | |
+| 12 | in progress (parallel) | | | orchestrator agent in its own worktree since 2026-11-08, `merge: false`; the spec PR merges after `spec-08-done`, the assistant page is built against the spec 08 contract text (Maik: run specs in parallel wherever possible) |
 | 09 | todo | | | |
 | 10 | todo | | | |
-| 11 | todo | | | |
+| 11 | in progress (parallel) | | | orchestrator agent in its own worktree since 2026-11-08, `merge: false`; branch names are fixed by D6; the spec PR waits for Maik's public-deploy gate and for `spec-10-done` |
 
 ## Open questions
 
@@ -128,3 +128,4 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 - 2026-11-08 fix-05-distributor-review (/sdd-bugfix, lite plus one senior researcher, driven by an orchestrator agent in its own worktree with self-accepted gates): spec PR #61 merged into factory as c7af854 (T1 #62 thread-local random in the chaos interceptor and a `BigDecimal` quantity so 1.5 or 500.7 get 400 `INVALID_REQUEST`; T2 #63 `ApiRequestMismatchHandler` gives `/api/` 405 and 415 the envelope with codes `METHOD_NOT_ALLOWED` and `UNSUPPORTED_MEDIA_TYPE`; T3 #64 a shared fixed clock for the MCP test). Red on the unfixed code and green after, reproduced independently by QA and qa-final. Side effect accepted: the JSON string "10.0" now gives 201. Follow-ups in its plan.md (raw-URI path check, 406 empty body, `/mcp` stack trace on a bad request, four standards proposals); the review briefs of specs 06 to 08 check thread-unsafe singleton state, numeric coercion of request bodies, wall-clock reads in tests and the error envelope on every status.
 - 2026-11-08 Phase 3, spec 05 done: referee 24 s on c7af854, tagged `spec-05-done`.
 - 2026-11-08, Maik, change request D6: the workshop labs become Levels 0 to 4 (setup check, Level 0 Break the agent, Level 1 Context engineering, Level 2 Give your agent eyes with hands-on LSP and MCP, Level 3 Behavioral control, Level 4 Spec-driven development), each with a "Level cleared when" check; branches and tags renamed (`level-0-start`, `solution/level-1` to `solution/level-3`, `start/level-4-<track>`); applied after `spec-05-done`, before spec 06; details and changed files in decisions.md D6. Maik's answers of 2026-11-08: the spec 09 rehearsal needs at least three failure modes per run; the setup check installs only the `jdtls` binary and the `jdtls-lsp` plugin is installed in Level 2 Part A; the jdtls risk row asks for a binary check at home.
+- 2026-11-08, Maik: run specs in parallel wherever possible. Dependency chain 06 > 07 > 08 > 12 > 09 > 10 > 11 is strict in the headers, so: spec 12 (frontend, small bookstore surface: `StorefrontConfig`, `bookstore/pom.xml` resource, root pom, CI cache) and spec 11 (`guide/`, branch names settled by D6) start now in their own worktrees with `merge: false`; each spec PR is merged by the main session in build order (12 after `spec-08-done`, 11 after `spec-10-done` and Maik's deploy gate), so tags stay in build order. The per-spec review and its bugfix run in a worktree in parallel with the next spec's orchestrator.
