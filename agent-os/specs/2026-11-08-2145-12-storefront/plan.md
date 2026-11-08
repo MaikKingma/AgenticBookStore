@@ -26,7 +26,7 @@ gate and green checks.
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | bookstore | [] | 1 | elevated | sonnet | `StorefrontConfig`, `StorefrontConfigTest` on `IntegrationTestBase`, test `static/shop/index.html`, `bookstore/pom.xml` resources (two parent entries re-declared plus the unfiltered dist entry) | #70 | sdd/12-storefront/T1 | PASS r1 | ENDORSE |
 | T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | #72 | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
-| T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | | |
+| T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | PASS r2 | ENDORSE |
 | T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | | | | |
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | | | | |
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | | | | |
@@ -69,6 +69,11 @@ Never fable.
   `xit`/`xdescribe`/`xtest` forms). T3 warning inventory: exactly 4 new `[ERROR] npm warn install-scripts ...
   fsevents@2.3.3` lines per frontend run, counted in both inventories (30+4 and 5+4). Carried to qa-final: the README
   claim that `./mvnw clean verify` packages dist into the bookstore becomes true at T3; check it at the tip.
+- FF-T3 (qa-lead, T3 r2; applies to T4 to T10 and qa-final): new baselines: referee 22.249 s (first run including the
+  frontend), local warning inventory 34 / 9, CI warnings `verify` 31 and `windows-build` 2. T10 cache-hit evidence:
+  caches saved by a pull_request run do not reach later PRs, so cite the save lines of the spec-branch push run plus
+  the restore lines of a later run, the npm-Windows restore included. The Windows `npm_config_cache` is set only on the
+  `Compile only` step; any later Windows step that runs npm must set the same value. T3 bytes are in the QA ledger.
 
 ## Amendments
 
