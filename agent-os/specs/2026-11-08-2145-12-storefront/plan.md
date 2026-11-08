@@ -25,7 +25,7 @@ gate and green checks.
 | id | module | dependsOn | batch | qaTier | qaModel | summary | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | bookstore | [] | 1 | elevated | sonnet | `StorefrontConfig`, `StorefrontConfigTest` on `IntegrationTestBase`, test `static/shop/index.html`, `bookstore/pom.xml` resources (two parent entries re-declared plus the unfiltered dist entry) | #70 | sdd/12-storefront/T1 | PASS r1 | ENDORSE |
-| T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | (pending) | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
+| T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | #72 | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
 | T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | | | | |
 | T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | | | | |
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | | | | |
