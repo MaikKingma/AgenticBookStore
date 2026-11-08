@@ -33,6 +33,18 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Cache frontend Node.js
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: frontend/node
+          key: node-${{ runner.os }}-${{ hashFiles('frontend/pom.xml') }}
+      - name: Cache npm packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
       - name: Build and test
         # Must stay below the job timeout-minutes (15) so a hang ends this step as failed instead of cancelling the job, which lets the report and upload steps run.
         timeout-minutes: 10
@@ -71,6 +83,18 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      - name: Cache frontend Node.js
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: frontend/node
+          key: node-${{ runner.os }}-${{ hashFiles('frontend/pom.xml') }}
+      - name: Cache npm packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~\AppData\Local\npm-cache
+          key: npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
       - name: Compile only
         shell: cmd
         run: mvnw.cmd -B -fae -DskipTests verify
