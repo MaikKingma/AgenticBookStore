@@ -122,6 +122,33 @@ class OrderCommandsTest {
         verifyNoMoreInteractions(flow);
     }
 
+    // The tab is written as the JSON escape, so the request body stays valid JSON; the flow gets the real tab.
+    @ParameterizedTest
+    @ValueSource(strings = {" reader@example.com", "reader@example.com ", "\\treader@example.com", "reader@example.com\\t"})
+    void placePassesASpacePaddedEmailToTheFlowUnchanged(String email) throws Exception {
+        postPlace(placeBody(email, line(BOOK_A, 4)))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.captor();
+        verify(flow).placeOrder(sent.capture(), eq(List.of(new PlaceOrderLineDTO(BOOK_A, 4))));
+        assertThat(sent.getValue()).isEqualTo(email.replace("\\t", "\t")).hasSize(19);
+        verifyNoMoreInteractions(flow);
+    }
+
+    @Test
+    void placeAcceptsA254CharacterEmailWithOneSpaceOnEachSideAndPassesItUnchanged() throws Exception {
+        String address = "Z".repeat(242) + "@example.com";
+        assertThat(address).hasSize(254);
+
+        postPlace(placeBody(" " + address + " ", line(BOOK_C, 6)))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.captor();
+        verify(flow).placeOrder(sent.capture(), eq(List.of(new PlaceOrderLineDTO(BOOK_C, 6))));
+        assertThat(sent.getValue()).hasSize(256).isEqualTo(" " + address + " ");
+        verifyNoMoreInteractions(flow);
+    }
+
     @Test
     void placeAcceptsALeadingNonAsciiSpaceAndPassesItUnchanged() throws Exception {
         String email = Character.toString(0x2003) + "a@b.co";
@@ -141,6 +168,47 @@ class OrderCommandsTest {
                 .andExpect(status().isAccepted());
 
         verify(flow).placeOrder("!a@b.co", List.of(new PlaceOrderLineDTO(BOOK_B, 5)));
+        verifyNoMoreInteractions(flow);
+    }
+
+    // U+001F is a control character below the space: String.trim() strips it, so it may pad the address.
+    @Test
+    void placePassesAnEmailPaddedWithAControlCharacterToTheFlowUnchanged() throws Exception {
+        String padded = Character.toString(0x1F) + "reader@example.com" + Character.toString(0x1F);
+
+        postPlace(placeBody("\\u001f" + "reader@example.com" + "\\u001f", line(BOOK_A, 4)))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.captor();
+        verify(flow).placeOrder(sent.capture(), eq(List.of(new PlaceOrderLineDTO(BOOK_A, 4))));
+        assertThat(sent.getValue()).isEqualTo(padded).hasSize(20);
+        verifyNoMoreInteractions(flow);
+    }
+
+    // The length limit counts UTF-16 chars, as String.trim().length() and EmailAddress do: 121 x U+1F600 is 242 chars.
+    @Test
+    void placeAcceptsA254CharacterEmailMadeOfSurrogatePairsAndPassesItUnchanged() throws Exception {
+        String email = Character.toString(0x1F600).repeat(121) + "@example.com";
+        assertThat(email).hasSize(254);
+
+        postPlace(placeBody("\\ud83d\\ude00".repeat(121) + "@example.com", line(BOOK_C, 6)))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.captor();
+        verify(flow).placeOrder(sent.capture(), eq(List.of(new PlaceOrderLineDTO(BOOK_C, 6))));
+        assertThat(sent.getValue()).isEqualTo(email);
+        verifyNoMoreInteractions(flow);
+    }
+
+    // U+2028 is a line terminator for the regex dot; it inside the address must still be accepted.
+    @Test
+    void placeAcceptsALineSeparatorInsideTheAddressAndPassesItUnchanged() throws Exception {
+        String email = "a" + Character.toString(0x2028) + "b@c.de";
+
+        postPlace(placeBody("a\\u2028b@c.de", line(BOOK_B, 5)))
+                .andExpect(status().isAccepted());
+
+        verify(flow).placeOrder(email, List.of(new PlaceOrderLineDTO(BOOK_B, 5)));
         verifyNoMoreInteractions(flow);
     }
 
@@ -212,8 +280,6 @@ class OrderCommandsTest {
             "a@b c.de",
             "a@b.c d",
             "a\\tb@c.de",
-            " reader@example.com",
-            "reader@example.com ",
             "a@b@c.de",
             "a@b.c@d",
             "@example.com",
@@ -231,6 +297,56 @@ class OrderCommandsTest {
         String email = "Z".repeat(243) + "@example.com";
         assertThat(email).hasSize(255);
 
+        ResultActions result = postPlace(placeBody(email, line(BOOK_A, 2)));
+
+        expectRejected(result, "customerEmail");
+    }
+
+    @Test
+    void placeRejectsASpacePaddedCustomerEmailWhoseTrimmedLengthIs255With400() throws Exception {
+        String address = "Z".repeat(243) + "@example.com";
+        assertThat(address).hasSize(255);
+
+        ResultActions result = postPlace(placeBody(" " + address + " ", line(BOOK_A, 2)));
+
+        expectRejected(result, "customerEmail");
+    }
+
+    // 122 x U+1F600 + "@example.com" is 134 code points but 256 UTF-16 chars, over the limit.
+    @Test
+    void placeRejectsA256CharacterCustomerEmailMadeOfSurrogatePairsWith400() throws Exception {
+        String email = Character.toString(0x1F600).repeat(122) + "@example.com";
+        assertThat(email).hasSize(256);
+
+        ResultActions result = postPlace(placeBody("\\ud83d\\ude00".repeat(122) + "@example.com", line(BOOK_A, 2)));
+
+        expectRejected(result, "customerEmail");
+    }
+
+    // U+2003 is above the space, so String.trim() keeps it: the trimmed address is 255 characters long.
+    @Test
+    void placeRejectsANonAsciiSpaceBeforeA254CharacterCustomerEmailWith400() throws Exception {
+        String address = "Z".repeat(242) + "@example.com";
+        assertThat(address).hasSize(254);
+
+        ResultActions result = postPlace(placeBody(Character.toString(0x2003) + address, line(BOOK_A, 2)));
+
+        expectRejected(result, "customerEmail");
+    }
+
+    // U+2003 is above the space: String.trim() keeps it, so it cannot pad the address next to an ASCII space.
+    @Test
+    void placeRejectsANonAsciiSpaceNextToAnAsciiSpaceAroundTheAddressWith400() throws Exception {
+        String em = Character.toString(0x2003);
+
+        for (String email : List.of(em + " a@b.co", "a@b.co " + em)) {
+            expectRejected(postPlace(placeBody(email, line(BOOK_A, 2))), "customerEmail");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"   ", "\\t", " \\t "})
+    void placeRejectsABlankCustomerEmailWith400(String email) throws Exception {
         ResultActions result = postPlace(placeBody(email, line(BOOK_A, 2)));
 
         expectRejected(result, "customerEmail");
