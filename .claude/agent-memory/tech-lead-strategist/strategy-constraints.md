@@ -36,6 +36,9 @@ metadata:
   ordering claim gets reverse-ordered data and a tie inserted opposite to the asserted order; an "unchanged" claim
   (signal, stock, version) gets success cases from both starting states; orchestrator-added criteria stay
   source-level and inside the task's file scope. Put these in the plan's ground rules, not only in cards.
+- **Seed data consumed by later specs: derive guards from the consumers.** Read the downstream specs (import invariants,
+  fixed years, contract values, ISBNs that must be absent) and pin each as a named seed test in the producing task;
+  facts a test cannot check (death years, fictional names) get an outbox table plus a QA spot-check.
 - **DoD vs orchestrator ledger.** Check DoD lines that write to `docs/spec-pack/orchestrator/progress.md`; the
   orchestrator may have decided not to edit it, which leaves the line unowned. Raise it as an open question.
 
