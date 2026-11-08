@@ -1,9 +1,10 @@
 ---
 spec: 05-distributor
 source: docs/spec-pack/specs/05-distributor-service.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-08T10:59:42Z
+gate2: 2026-11-08T16:54:47Z
 qa-lead: on
 base: factory
 spec-branch: sdd/05-distributor/spec
@@ -111,7 +112,7 @@ qaDirective of every task: C0 plus the task's T<n>-1..k section of the QA ledger
 - module: distributor; dependsOn: [T3, T5]; implModel opus (process-global streams and logback state in a shared Surefire fork, P1 in the QA ledger).
 - fileScope: R `application-stdio.yml`; T `mcp/McpStdioModeTest.java`.
 - acceptanceCriteria:
-  - `application-stdio.yml` with the spec's five settings verbatim (`spring.ai.mcp.server.stdio: true`, `spring.main.web-application-type: none`, `spring.main.banner-mode: "off"`, `logging.pattern.console: ""`, `logging.file.name: distributor-stdio.log`) plus `logging.threshold.console: "OFF"` (L7).
+  - `application-stdio.yml` with the spec's five settings verbatim (`spring.ai.mcp.server.stdio: true`, `spring.main.web-application-type: none`, `spring.main.banner-mode: "off"`, `logging.pattern.console: ""`, `logging.file.name: distributor-stdio.log`) plus `logging.threshold.console: "OFF"` (L7; a redundant belt on the console event path, it does not silence the logback status line, see FF10).
   - `McpStdioModeTest` (in process: swap `System.in`/`System.out` before `SpringApplicationBuilder(DistributorApplication.class).profiles("stdio")`, log file under `target/`, 5 s deadline, restore and close in `finally`): `stdioProfileAnswersInitializeOnStdout`, `stdioProfileStartsNoWebServer`, `stdioListsTheFourAnnotatedTools`, `stdoutCarriesOnlyJsonRpcLines` (G15a: at least two lines, each JSON-RPC 2.0, ids exactly the ids sent, no filtering). All four hold in both class orders of the shared fork (G15b). No stray `distributor-stdio.log` outside `target/`.
 
 ### T7: Packaging, README and startup proof
@@ -167,3 +168,10 @@ Orchestrator decision during T6 (answer to impl-t6's question, 2026-11-08):
 ## Amendments
 
 (none)
+
+## Final sweep and Gate 2
+
+- `origin/factory` (dda6cd1, includes `spec-04-done`) merged into the spec branch as 89ff3b5 before the sweep; agent-memory conflicts only, resolved by curation.
+- qa-final (opus) PASS on 89ff3b5 in a fresh clone, all 24 directive items; QA lead final-review ENDORSE, Gate 2 QA confidence high, no untraced pack clause, no human override. Referee: bookstore 684/0/0/0, distributor 177/0/0/0, 20.4 to 22.5 s. Jar start 1.2 s JVM time, 1.3 s to health UP.
+- Pack task 6 (manual Claude Code smoke on two machines): single-machine headless proxy PASS, Claude Code 2.1.319 (model claude-sonnet-5-5 via `--model sonnet`; the default model hit a usage limit), over HTTP and STDIO; the owner's two-machine run is pending (D-d).
+- Gate 2 self-accepted by the orchestrator (autonomous). Owner follow-ups: the two-machine smoke; one IntelliJ HTTP client run of `http/distributor.http`; F-s05-11 (empty console pattern stderr line); F-s05-13 (30 s graceful shutdown after Claude Code HTTP sessions); optional test-only F-s05-8, -1, -2, -5, -10, -12. Details: the QA lead's ledger, "Gate 2 QA assessment".

@@ -35,4 +35,14 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
   comment actually names a title (a first run FAILed on a comment that makes no title claim: driver defect, keep both outputs).
   A mutant with an unresolved `{{var}}` makes Tomcat log "Invalid character found in the request target": attribute it.
 
+- Headless Claude Code proxy (never `claude mcp add`): run `claude -p ... --mcp-config <scratch json> --strict-mcp-config
+  --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` from a script that `cd`s to the scratchpad (the
+  project's CLAUDE.md and settings stay out). Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`),
+  then the `tool_use` and its `tool_result`. A 429 `model_requires_usage_credits` on the default model kills the turn but
+  init still proves the connection; a retry with only `--model <alias>` gets the tool call (report it as a deviation).
+  The server log line `Client initialize request - Protocol: ... name=claude-code, version=...` proves the negotiated version.
+- After a Claude Code HTTP session, SIGTERM on a Boot MCP server hangs 30 s in graceful shutdown (open SSE GETs) while the
+  port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
+- `clean test` order runs delete `target/<app>.jar`: rebuild (`clean verify`) before live runs from the jar.
+
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]

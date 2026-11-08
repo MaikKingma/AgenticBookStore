@@ -24,7 +24,7 @@ Decided by the orchestrator from the pack spec, tech-stack and the research; che
 - L4 `search_titles` enforces the 4000-character cap in code: drop trailing items until the serialised text is under 4000.
 - L5 The seed loader uses Boot's `JsonMapper` with a strict per-call reader (`FAIL_ON_UNKNOWN_PROPERTIES`), not a custom mapper.
 - L6 The 20 shared ISBNs are IN_STOCK classics with fixed release dates and only AUTHOR contributors.
-- L7 The STDIO profile carries the spec's five settings verbatim plus `logging.threshold.console: "OFF"` (silences a logback stderr error caused by the empty console pattern; stdout stays JSON-RPC only).
+- L7 The STDIO profile carries the spec's five settings verbatim plus `logging.threshold.console: "OFF"` (a redundant belt on the console event path; correction after T6: it does not silence the logback "Empty or null pattern" status line on stderr that the spec's empty console pattern causes once per STDIO start, which is accepted and documented in the README, see plan.md FF10; stdout stays JSON-RPC only).
 - Search defaults: page 0, size 20; sorted by `titleName` case-insensitively, then `ean`; a blank `q` or `subject` is ignored; the subject prefix is compared case-insensitively against any of a title's codes; filters combine with AND.
 - Known limit, accepted: unmapped `/api/...` paths fall to Boot's default 404 body, not the envelope (no scenario covers it).
 
