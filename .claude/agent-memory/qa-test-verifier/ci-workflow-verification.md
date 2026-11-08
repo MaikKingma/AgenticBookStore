@@ -32,5 +32,8 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - Trap: `gh api repos/<r>/actions/jobs/<id>/logs > f` refuses Maven-coloured logs ("the response contains terminal escape sequences") and leaves a 0-byte file. Add `--allow-escape-sequences` and `wc -l` the file before grepping it.
 - Trap: `gh cache list --limit 100` returning exactly 100 entries means the list was cut off, so a "no probe cache" claim needs `--limit 1000 --json ref --jq` with a `length` total and a positive-control ref pattern.
 - Byte guards on a workflow (no `continue-on-error`/`|| true`/`-fn`, pins, ASCII): `python3 -I` on `git show <sha>:<file> > <SP>/x.yml`, plus one control copy per injected token written by a second script. Every guard must bite on its own control.
+- Gated-deploy workflows: count the gate bytes AND record each hit's job and step (track `^  <job>:` and `^      - name:` lines), so a moved `if` fails even when the count is right. Controls: unquoted `== true`, `||` for `&&`, one hit removed. Parse structure with js-yaml from an installed node tree (`createRequire(<dir>/package.json)`); YAML 1.2 keeps `on` as a string key.
+- Side-effect proof for an untriggerable push path: 404 on `pages`, `releases/tags/<t>`, `git/ref/heads/gh-pages`, `git/ref/tags/<t>`, plus empty `actions/variables`, `environments`, `deployments`. Also prove actionlint lints at all: a copy with `timeout-minute:` must report `unexpected key`.
+- `gh api` has no `--output` flag, and `git show --output=` prints to stdout. To read an action's README at a pinned SHA, use `gh api "repos/<o>/<r>/contents/README.md?ref=<sha>" -H "Accept: application/vnd.github.raw+json"`.
 
 Related: [[final-sweep-checks]], [[shell-traps]]
