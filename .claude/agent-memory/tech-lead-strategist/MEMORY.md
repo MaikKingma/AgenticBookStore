@@ -3,3 +3,4 @@
 - [Strategy constraints](strategy-constraints.md) — module batching, bean, data and pin order for green merges, failure devices for transactional claims, QA-rework criteria rules, escape trap, stripped paths, DoD greps
 - [Distributor design decisions](distributor-design-decisions.md) — spec 05 rationale: advice scope vs MCP, REST 400 vs MCP clamp, real services in slices, strict seed reader, tool text cap, shared ISBNs
 - [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422 split, port shape, events, DTO-derived values, multi-aggregate save order, payload subset for normalised strings, snapshots
+- [Guide site design decisions](guide-site-design-decisions.md) — spec 11: checker-first skeletons, marker-gated coverage, pack-anchored manifest, check-time source reading, contrast by CSS variable, Infima traps
