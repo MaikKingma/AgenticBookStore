@@ -39,7 +39,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Catalogue model, seed loader, Clock bean, seed data (titles, subjects, shared ISBNs) | distributor | [] | 1 | critical | opus | opus | pending | | | | | |
+| T1 | Catalogue model, seed loader, Clock bean, seed data (titles, subjects, shared ISBNs) | distributor | [] | 1 | critical | opus | opus | done (branch `sdd/05-distributor/T1`) | PASS (r1) | ENDORSE | 1 | #44 | 5827249 |
 | T2 | Search and restock services | distributor | [T1] | 2 | elevated | sonnet | sonnet | pending | | | | | |
 | T3 | MCP server, four read-only tools, round-trip test | distributor | [T2] | 3 | critical | opus | opus | pending | | | | | |
 | T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | pending | | | | | |
