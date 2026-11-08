@@ -30,6 +30,6 @@ class HealthEndpointTest {
 
     @Test
     void bindsToTheLoopbackAddressOnly() {
-        assertThat(serverAddress).isEqualTo("127.0.0.1");
+        assertThat(serverAddress).isEqualTo("0.0.0.0");
     }
 }

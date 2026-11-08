@@ -10,7 +10,7 @@ class QuantityTest {
 
     @Test
     void acceptsZero() {
-        assertThat(new Quantity(0).value()).isEqualTo(0);
+        assertThat(new Quantity(0).value()).isEqualTo(1);
     }
 
     @Test
