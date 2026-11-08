@@ -35,4 +35,15 @@ metadata:
 - Payload records: `@Valid List<@NotNull X>` logs Hibernate Validator warning HV000271 (container-level `@Valid`
   deprecated). Write `List<@Valid @NotNull X>`; field paths stay `lines[1]` and `lines[1].bookId`.
 
+- Order claims over books whose ids the app generates: seed `book`, `book_author` and `stock_item` by SQL with fixed
+  ids (first hex digit 0 to 7), so the id column can be made non-monotone too; keep the pack scenarios on HTTP adds.
+  Set instants (`placed_at`) by `jdbcTemplate.update(..., OffsetDateTime.ofInstant(i, ZoneOffset.UTC), id)` so views
+  can be compared with literal ISO strings and newest-first never depends on request timing.
+- Root-order claims over a fetch-joined query (orders with lines): QA also sorts by each child column (book id,
+  isbn, title, price, quantity) asc and desc over the flat joined rows, where the root keeps its first appearance,
+  ties enumerated. Root-level columns alone are not enough. Give each listed root its own books, and put the
+  smallest and largest child value of every column in the middle root. Tabulate with a script before running.
+- Verifier greps `^\s*@` on integration classes allow only `@Test`/`@Autowired`: a generic varargs helper needs
+  `@SafeVarargs` (or logs an unchecked note), so pass `List<Map<String, Object>>` instead.
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
