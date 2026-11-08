@@ -1,5 +1,6 @@
 package nl.openvalue.bookstore;
 
+import nl.openvalue.bookstore.domaininteraction.DistributorAppService;
 import nl.openvalue.bookstore.domaininteraction.StockItemDataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
@@ -20,7 +22,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * commit or after a rollback and can fail a transaction just before its commit, and the order event recorder, which
  * does the same for the order placed events; both are reset before every test. The
  * stock item store is a Mockito spy around the real store: it behaves as in production unless a test stubs it, for
- * example to make opening a stock item fail, and Mockito resets it after every test.
+ * example to make opening a stock item fail, and Mockito resets it after every test. The distributor port is a
+ * Mockito mock, so no full-context test can reach a distributor; a test stubs it for the answer it needs.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
@@ -41,6 +44,9 @@ public abstract class IntegrationTestBase {
 
     @MockitoSpyBean
     protected StockItemDataService stockItemDataService;
+
+    @MockitoBean
+    protected DistributorAppService distributorAppService;
 
     @BeforeEach
     void cleanDatabase() {

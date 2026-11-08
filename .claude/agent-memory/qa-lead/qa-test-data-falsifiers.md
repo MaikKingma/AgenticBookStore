@@ -50,7 +50,11 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      timeout that fails at once) and an upper bound below the sleep; plus a no-sleep positive control through the
      same public constructor (proves base URL and conversion). Connect timeout itself stays inspection-only.
    - "A body missing a required key" is one case per key: a single-key test lets every other key's check be dropped
-     (null field in the DTO or an NPE escaping the port). Null and empty lists are two cases.
+     (null field in the DTO or an NPE escaping the port). Null and empty lists are two cases. Per-key alone cost
+     spec 06 T3 two rework rounds. Also list: a null or broken element alone, first, last and in the middle (one
+     position lets `getFirst`/`allMatch` checks survive); a float in EVERY integer component (cents and quantity);
+     every optional key absent with its decided default (else the receiver flip `x.equals("CONST")` survives and
+     would let an NPE escape); a negative in every value assumed unsigned.
    - Year rules "clock year + 1 accepted, + 2 rejected" with a clock fixed in the current year match the real clock;
      cards keep writing them (spec 06 T4). Rewrite to the past-year clock (2001 accepted, 2002 rejected).
    - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the

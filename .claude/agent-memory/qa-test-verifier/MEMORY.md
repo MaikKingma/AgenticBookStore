@@ -15,3 +15,4 @@
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
 - [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls, byte proofs for derived files
+- [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies (null list elements, Jackson float-to-int cents), temporary QA test class, matrix index map, @Autowired falsifier

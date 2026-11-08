@@ -40,13 +40,14 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Port `DistributorAppService`, two DTO records, three nested exceptions | bookstore | [] | 1 | standard | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T1`) | PASS (r0) | ENDORSE | 0 | #67 | 37dbd0e |
 | T2 | Contract JSON captured live from the distributor, README, `http/distributor.http` additions | bookstore | [] | 2 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T2`) | PASS (r0) | ENDORSE | 0 | #69 | 62079f8 |
-| T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | pending | | | | | |
+| T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T3`) | PASS (r2) | ENDORSE | 2 | #75 | 8ee41d4 |
 | T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | pending | | | | | |
 | T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
 | T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | pending | | | | | |
 | T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | pending | | | | | |
+| T8 | Test-only follow-ups FU-T3-1 to FU-T3-3 in `DistributorAppServiceImplTest` (Amendment A1) | bookstore | [T3] | 8 | elevated | sonnet | sonnet | pending | | | | | |
 
-Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
+Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
 
 qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plus every `## QA feed-forward` entry recorded before the task starts.
 
@@ -132,6 +133,16 @@ qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plu
   6. `http/catalogue.http`: an import without price (EAN 9789900010159) and one with a price override (EAN 9789900010050), file style kept, a comment that the distributor must be running; existing requests unchanged.
   7. No new Started line (still 10).
 
+### T8: Test-only follow-ups to T3 (Amendment A1)
+
+- module: bookstore; dependsOn: [T3]; implModel sonnet; qaTier elevated (sonnet).
+- fileScope: `T/acl/DistributorAppServiceImplTest.java` only. No production change.
+- Acceptance criteria (the QA lead's FU-T3-1 to FU-T3-3, ledger review "T3 r2"):
+  1. FU-T3-1: a title body without `availability` (variant of a committed file) gives `orderable` true and no exception; the mutant `!title.availability().equals("OUT_OF_PRINT")` fails it.
+  2. FU-T3-2: `subjectCodes: [null, "FIC028000"]` gives FICTION and exactly one WARN `No bookstore genre for subject code null of EAN 9789900010050, using FICTION`; the mutant `filter(Objects::nonNull).findFirst()` fails it.
+  3. FU-T3-3: `listPriceCents: -999` gives `new BigDecimal("-9.99")`; the mutant `cents.abs()` fails it.
+  4. Existing tests unchanged (insertion only); FF-4e and the referee green; the new ACL WARN count stated exactly.
+
 ## QA feed-forward
 
 From the QA lead's T1 r0 review (full text in the QA ledger, "Feed-forward issued"):
@@ -145,6 +156,12 @@ From the QA lead's T2 r0 review:
 - FF-4 (T3 implDirective and qaDirective): (a) every stubbed distributor answer is the committed file loaded from the classpath `contracts/distributor/<name>`, never a retyped copy; bodies no capture holds (G4 missing key, G5 `XYZFIC028`, malformed JSON, empty body) are built in the test and named as variants. (b) Capture-day values are asserted as the README literals, never computed: restockOrderId `7597c6da-0041-473d-861a-d4b84c7fb204` and `207e15be-cf0e-47da-90e8-60396068690f`; expectedDeliveryDate 2026-11-10 and 2026-11-22; publicationYear 2026 for 9789900020080, 1813 for Pride and Prejudice; the ACL test holds no clock. (c) Strict request matching uses the committed `restock-confirmed-request.json` and `restock-backordered-request.json` (the distributor does not echo retailerReference, so that matcher is the only check on it). (d) The D-a cases with a capture use it for both methods: `restock-invalid-request-response.json` with 400, `unknown-path-404.json` with 404, each `isExactlyInstanceOf(DistributorUnavailableException.class)`; G6's must-not-appear literal is the 503 file's message. (e) No contract file changes in T3; at the T3 gate `shasum -a 256 -c` of the T2 hash baseline `s06-T2-qa-hashes.txt` (scratchpad) shows 33 of 33 OK.
 - FF-5 (qa-final): a later-day replay of `http/distributor.http` expects the README statuses and keys, not the capture-day ids and dates; the last appended GET needs a distributor started with `--distributor.chaos.failure-rate=1.0`; the contract bytes are proven by the T2 hash baseline.
 
+From the QA lead's T3 r2 review (full text in the QA ledger, FF-6 to FF-8):
+
+- FF-6 (T4 implDirective and qaDirective): in at least one success test the stubbed `DistributorTitleDTO` carries an isbn different from the requested ISBN (for example request `978-0-14-143951-8`, stub isbn `9789900010050`); the saved BookDTO isbn is `9780141439518`. Must-fail probe F17: the book is built from the DTO isbn instead of the normalised request ISBN.
+- FF-7 (T4 to T8 C0 baselines): bookstore total after T3 is 792 (DistributorAppServiceImplTest 97, DistributorAppServiceImplWiringTest 5); ACL WARN baseline exactly 66 (`grep -c -E " WARN .*DistributorAppServiceImpl +:" <referee log>`); every later gate runs `shasum -a 256 -c` on the scratchpad file `s06-T3-qa-r2-hashes.txt` from the repo root (6 of 6 OK) unless T8 owns the change of the test file.
+- FF-8 (qa-final): T3 hash integrity (or T8's baseline); the three FU-T3 must-fail probes on the tip; a live import of Pride and Prejudice whose stored isbn equals the request.
+
 ## Amendments
 
-(none yet)
+- A1 (2026-11-08T22:46Z, orchestrator, self-accepted): new task T8, test-only, inside T3's test file, carrying the QA lead's follow-ups FU-T3-1 to FU-T3-3 from the T3 r2 ENDORSE. Consequence: one more task PR before qa-final; no production change, no requirement change. Within authority (tests only, cheap and reversible).
