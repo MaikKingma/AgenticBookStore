@@ -63,7 +63,7 @@ QA lead's brief and final review, both gates).
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | a hung test ends `Build and test` as failed so the report and the Surefire artifact are produced | root | [] | B1 | elevated | opus | sonnet | pending | | sdd/fix-ci-report-on-timeout/T1 | |
+| T1 | a hung test ends `Build and test` as failed so the report and the Surefire artifact are produced | root | [] | B1 | elevated | opus | sonnet | in QA | #56 | sdd/fix-ci-report-on-timeout/T1 | |
 
 ### T1: step timeout on Build and test
 
