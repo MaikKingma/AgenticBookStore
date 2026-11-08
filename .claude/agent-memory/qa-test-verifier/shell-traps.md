@@ -36,4 +36,8 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - Probe runs go faster with two scripts in `.claude/comms/tmp/`: a probe runner (maven `-Dtest`, summary grep) and a restore script that `cp`s the FF7 `.orig` byte copy back and prints `shasum` beside the snap-before line. Edit mutates, the script restores and proves the hash in one call.
 
+- A multi-file `grep -h` (or `grep -c`) in the Bash tool did not print the files in argument order, so merged
+  failure blocks got pinned to the wrong probe. Quote kill reasons per log, or from a script that labels each block
+  with its probe id.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

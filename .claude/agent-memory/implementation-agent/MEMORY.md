@@ -4,4 +4,5 @@
 - [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
 - [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data, PER_CLASS hook guards
 - [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
+- [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
 - [Mapper test witnesses](mapper-test-witnesses.md) — validating-factory hand-offs need a rejected value; pass-throughs need a second literal; first/middle/last differ
