@@ -43,7 +43,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 | T2 | Search and restock services | distributor | [T1] | 2 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T2`) | PASS (r1) | ENDORSE | 1 | #45 | af7aaf1 |
 | T3 | MCP server, four read-only tools, round-trip test | distributor | [T2] | 3 | critical | opus | opus | done (branch `sdd/05-distributor/T3`) | PASS (r2) | ENDORSE | 2 | #50 | a0737c9 |
 | T4 | REST API under `/api` and the error envelope | distributor | [T2, T3] | 4 | critical | opus | sonnet | done (branch `sdd/05-distributor/T4`) | PASS (r2) | ENDORSE | 2 | #52 | 9afb516 |
-| T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
+| T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T5`) | PASS (r1) | ENDORSE | 1 | #53 | e4ebe46 |
 | T6 | STDIO profile and its in-process verification | distributor | [T3, T5] | 6 | critical | opus | opus | pending | | | | | |
 | T7 | finalName `distributor`, README, startup proof | distributor | [T5, T6] | 7 | elevated | sonnet | sonnet | pending | | | | | |
 | T8 | `http/distributor.http`, replayed live | root | [T1, T4] | 8 | standard | sonnet | sonnet | pending | | | | | |
@@ -152,6 +152,10 @@ From the QA lead's T3 r2 review (T4 to T8 and qa-final):
 From the QA lead's T4 r2 review:
 
 - FF8 (T5 implementer and verifier): `ChaosApiTest` sends one `/api/...` request with `accept(MediaType.APPLICATION_PROBLEM_JSON)` and asserts status 503, content type exactly `application/json` and the `TEMPORARILY_UNAVAILABLE` envelope; the verifier's probe CT-rm (remove `.contentType(MediaType.APPLICATION_JSON)` from the advice's `envelope(...)` helper) must fail under `-Dtest=ChaosApiTest`. The T4 test files stay unedited.
+
+From the QA lead's T5 r1 review:
+
+- FF9 (qa-final): a live latency run with a health control (the production sleeper really delays `/api` calls and not `/actuator/health`), restock POST and GET under `failure-rate=1.0` (503 envelope), checked against the T5 hash baseline. The optional test-only hardening F-s05-8 stays a follow-up (orchestrator decision: the live qa-final check covers the clause).
 
 ## Amendments
 

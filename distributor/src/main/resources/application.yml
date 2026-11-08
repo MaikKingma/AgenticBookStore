@@ -16,6 +16,11 @@ server:
   address: 127.0.0.1
   port: 8090
 
+distributor:
+  chaos:                  # demo knobs for /api/**, both off by default
+    latency-ms: 0         # milliseconds every call waits before it is handled
+    failure-rate: 0.0     # share of calls answered with 503 TEMPORARILY_UNAVAILABLE, 0.0 to 1.0
+
 management:
   endpoints:
     web:
