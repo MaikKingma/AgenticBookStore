@@ -9,4 +9,5 @@
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
 - [Seed data probes](seed-data-probes.md) — JSON/text seed mutants with a byte-identity generator, CRLF and at-minimum must-pass probes, author sourcing
 - [MCP tool probes](mcp-tool-probes.md) — @McpTool mutants over unit plus SDK-client class, runtime-enforced required params, output-cap boundary witnesses
+- [STDIO shared-fork probes](stdio-shared-fork-probes.md) — in-process swapped-stream tests: order runs, green-but-leaking logging probes, stdout noise probes
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and advice content-type probes for an MVC interceptor with a validated properties record
