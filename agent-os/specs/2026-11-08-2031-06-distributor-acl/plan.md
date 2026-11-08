@@ -1,0 +1,141 @@
+---
+spec: 06-distributor-acl
+source: docs/spec-pack/specs/06-distributor-acl.md
+status: in-progress
+accepted-by: orchestrator (autonomous)
+gate1: 2026-11-08T20:32:05Z
+qa-lead: on
+base: factory
+spec-branch: sdd/06-distributor-acl/spec
+modules: [root, bookstore, distributor]
+---
+
+# Plan: Spec 06 Distributor anti-corruption layer
+
+Restates `docs/spec-pack/specs/06-distributor-acl.md` (source of truth). Shaping decisions D-a to D-j are in `shape.md`, standards in `standards.md`, research summary in `references.md`. The full task cards (file scope, criteria, named tests, risks) are section 7 of the tech-lead strategy; the QA strategy (tiers, Gate 1 findings G0 to G15, common directive C0 and per-task directives, qa-final focus) is in the QA lead's ledger. Both live in the cycle's comms and are passed to every agent by path: `.claude/comms/mailboxes/lead-1/outbox/strategy-06-distributor-acl.md` (section 7) and `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-06-distributor-acl.md` (section "QA strategy"). Where a G finding and a card differ, the finding wins; G1 and G9 are already folded into the cards below.
+
+Path abbreviations: B = `bookstore/src/main/java/nl/openvalue/bookstore/`, T = `bookstore/src/test/java/nl/openvalue/bookstore/`, F = `bookstore/src/test/java/nl/openvalue/archfixtures/`, C = `bookstore/src/test/resources/contracts/distributor/`.
+
+## Summary
+
+Add the outbound anti-corruption layer to the distributor (spec 05): the port `DistributorAppService` (JDK types and DTOs, three nested exceptions), `DistributorAppServiceImpl` with Spring `RestClient` and `DistributorProperties` (base URL, 2 s connect, 5 s read), contract tests with `MockRestServiceServer` over JSON captured from the real distributor, the use case `CatalogueFlow.importFromDistributor` and `POST /books/commands/import-from-distributor` (202, 404, 409, 422, 503), one ArchUnit rule keeping `*AppServiceImpl` nested classes inside `acl`, and `DistributorImportIntegrationTest`. Referee `./mvnw clean verify` from the repo root, green after every task, budget 60 s (baseline about 22 s: bookstore 684 tests, distributor 190, 10 Started lines in the bookstore).
+
+## Ground rules for every task
+
+- The pack spec decides what; `docs/spec-pack/product/architecture-standard.md`, `tech-stack.md` and `docs/spec-pack/orchestrator/decisions.md` win. Bookstore code goes through the `hexagonal-slice` skill (with `clean-hexagonal-onion`, `ddd-building-blocks`, `layer-testing`); the standard and the spec win over the skills. A contradiction is reported as blocked, never resolved by the implementer.
+- Only the task's fileScope is edited, never anything else, not even temporarily. Never the distributor module.
+- Never skip, disable, delete or weaken a test or an ArchUnit rule; never edit an existing ArchitectureTest rule; never add `ignoreDependency`; no `@Disabled`, `assume*`, `@DirtiesContext`; never `--no-verify`.
+- Versions only from tech-stack.md; the only new dependency is `spring-boot-starter-restclient` (T3, no version). No WireMock, no MockServer, no `@RestClientTest`. No test calls the real distributor (live runs against a started distributor are evidence steps of T2, T7 and qa-final, never tests).
+- Time only through a fixed `Clock` in tests; never the wall clock.
+- Lessons from earlier reviews, binding: a payload constraint repeats a domain rule only where the spec names 400 (where a 422 domain code exists, the flow owns it); no mutable shared state in singletons (only final fields, unmodifiable tables); watch numeric coercion of request bodies (JSON numbers or booleans into String fields); every error status the spec names has a test asserting the ProblemDetail `code`; every distributor failure becomes one of the three port exceptions.
+- Falsifiers first: two values per pass-through field, both sides of every boundary, order witnesses with at least three rows not monotone in any column, authors in non-alphabetical order.
+- Plain English, no em dashes; every new or changed file is ASCII (`rg -n '[^\x00-\x7F]' <file>` empty). Product files and test code never reference `docs/spec-pack`, `agent-os`, `.claude`, `CLAUDE.md`. Never `ANTHROPIC_API_KEY`.
+- Git is read-only for every agent; the orchestrator owns commits, branches and PRs.
+- Every implementer records its final test method names in its outbox as the task's rows of the scenario-to-test map.
+- Scratch and evidence files: session scratchpad `/private/tmp/claude-501/-Users-maikkingma-OpenValue-AI-Conferences-AgenticBookStore/cb0898b6-6f7b-44fd-8024-5110d0f772e2/scratchpad/` with prefix `s06-T<n>-<role>-`. Long runs through `bash ~/.claude/scripts/with-budget.sh <s> ...`. One live distributor at a time (port 8090; check health first, use another port and say why if 8090 is taken).
+
+## Task table
+
+| id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| T1 | Port `DistributorAppService`, two DTO records, three nested exceptions | bookstore | [] | 1 | standard | sonnet | sonnet | pending | | | | | |
+| T2 | Contract JSON captured live from the distributor, README, `http/distributor.http` additions | bookstore | [] | 2 | elevated | sonnet | sonnet | pending | | | | | |
+| T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | pending | | | | | |
+| T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | pending | | | | | |
+| T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
+| T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | pending | | | | | |
+| T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | pending | | | | | |
+
+Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
+
+qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plus every `## QA feed-forward` entry recorded before the task starts.
+
+## Tasks
+
+### T1: Port, DTOs and nested exceptions
+
+- module: bookstore; dependsOn: []; implModel sonnet; qaTier standard (sonnet).
+- fileScope: `B/domaininteraction/DistributorAppService.java`, `B/domaininteraction/DistributorTitleDTO.java`, `B/domaininteraction/RestockConfirmationDTO.java`, `T/domaininteraction/UseCaseExceptionsTest.java`.
+- Acceptance criteria:
+  1. `DistributorAppService` declares exactly `Optional<DistributorTitleDTO> findTitle(String isbn)` and `RestockConfirmationDTO requestRestock(String isbn, int quantity, String retailerReference)`.
+  2. `DistributorTitleDTO` and `RestockConfirmationDTO` records have exactly the spec's components, names, types and order. JDK types only, no Spring import.
+  3. Nested `final class` exceptions in the interface (`BookDataService` style): `TitleNotFoundAtDistributorException extends NotFoundException` (`title-not-found-at-distributor`, "Title not found at distributor"), `TitleNotOrderableException extends InvalidInputException` (`title-not-orderable`, "Title not orderable"), `DistributorUnavailableException extends UnavailableException` (`distributor-unavailable`, "Distributor unavailable"); the detail names the ISBN where known.
+  4. `UseCaseExceptionsTest` asserts per exception: superclass, `code()`, `title()`, detail, `details()` empty and non-null.
+  5. Javadoc on `DistributorTitleDTO`: genre is the name of a bookstore genre constant; recommended price has scale 2; currency is EUR because the port rejects other currencies.
+
+### T2: Capture the contract files from the running distributor
+
+- module: bookstore (the root file `http/distributor.http` rides along); dependsOn: []; implModel sonnet; qaTier elevated (sonnet).
+- fileScope: `C/**` (JSON files and `README.md`), `http/distributor.http` (append requests only; existing requests unchanged).
+- Procedure: start the distributor (`./mvnw -pl distributor spring-boot:run` or the jar), check health, send each request as written in `http/distributor.http` (curl is fine), store each body verbatim; restart once with `--distributor.chaos.failure-rate=1.0` for the 503 body; stop the distributor afterwards.
+- Files (strategy section 7, t2): 14 all-AUTHOR titles (Pride and Prejudice 9780141439518; genre rows The Last Man 9789900010050, Connecticut Yankee 9789900010791, A Study in Scarlet 9789900010159, Sense and Sensibility 9789900010029, Frankenstein 9789900010043, Utopia 9789900010616, On the Origin of Species 9789900011163, Passages from the Life of a Philosopher 9789900011187, Little Women 9789900010821, The Raven 9789900010210; Pamela 9789900010678 OUT_OF_PRINT; Bleak House 9789900010272 BACKORDER; two-author 9789900020080); error bodies title-not-found 404, unknown-path 404, chaos 503; restock request/response pairs CONFIRMED, BACKORDERED, NOT_ORDERABLE, TITLE_NOT_FOUND, INVALID_REQUEST; derived files (exactly one change each) USD currency, unmapped subject `["XYZ000000", "FIC028000"]`, round price 1200, authors reversed.
+- Acceptance criteria:
+  1. Every file in `C/` is listed in `README.md` with source request (method, path, body), distributor run flags and capture date; derived files name their source file and the single change.
+  2. No captured title has a contributor whose role is not AUTHOR.
+  3. Every restock request body has all three keys (`ean`, `quantity`, `retailerReference`).
+  4. README lists the literal values later tests assert (restock order ids, expected delivery dates, release years, prices).
+  5. README and http comments contain no agent or pack paths; ASCII only; plain English.
+
+### T3: DistributorAppServiceImpl, DistributorProperties, starter, base-class mock
+
+- module: bookstore; dependsOn: [T1, T2]; implModel opus; qaTier critical (opus).
+- fileScope: `bookstore/pom.xml`, `B/acl/DistributorAppServiceImpl.java`, `B/acl/DistributorProperties.java`, `T/acl/DistributorAppServiceImplTest.java`, `T/acl/DistributorAppServiceImplWiringTest.java`, `T/IntegrationTestBase.java`.
+- Acceptance criteria: strategy section 7 t3 criteria 1 to 8 and its named tests, plus QA G3 to G8, G15. In short:
+  1. pom: `spring-boot-starter-restclient` without a version; nothing else added.
+  2. `DistributorProperties` is a `@ConfigurationProperties("distributor")` record (base-url, connect-timeout, read-timeout) with `@DefaultValue` `http://localhost:8090`, `2s`, `5s`, registered by `@EnableConfigurationProperties` on the impl; `BookstoreApplication` unchanged.
+  3. Public constructor `(RestClient.Builder, DistributorProperties)` sets base URL and the timeout request factory; package-private constructor `(RestClient)`; only final fields, unmodifiable genre table.
+  4. Private nested payload records with reference-typed components; translation exactly per the spec table and D-a; genre from the first subject code by longest-prefix match (`startsWith`), anything else (including missing or empty codes) FICTION with one WARN naming the code.
+  5. Only the three port exceptions or `Optional.empty()` leave a public method; error bodies parsed in a guarded block; the path variable goes through a URI template; a WARN with the status or exception class (not the body) when a failure becomes `DistributorUnavailableException`.
+  6. `IntegrationTestBase` gains `@MockitoBean protected DistributorAppService distributorAppService;` plus one Javadoc sentence; nothing else changes there.
+  7. `DistributorAppServiceImplTest` (`MockRestServiceServer` bound to a `RestClient.builder()`, contract files from `C/`): every translation row, two values per pass-through, the ten genre rows each parsed by `Genre.parse`, table completeness against `Genre.values()`, the derived files, restock CONFIRMED and BACKORDERED with strict request matching, 404 and 422 mappings for both methods, and every failure class of D-a for both methods (one case per required key, null and empty subject codes as two cases, malformed 404 and 422 bodies).
+  8. `DistributorAppServiceImplWiringTest` (`ApplicationContextRunner`): one `DistributorAppService` bean, defaults and overrides bound; loopback `HttpServer` test per G3 (handler returns a valid title after 2 s; connect 5 s, read 250 ms; elapsed between 200 and 1800 ms; positive control without sleep returns the full Pride and Prejudice DTO); never port 8090.
+
+### T4: Import use case in CatalogueFlow
+
+- module: bookstore; dependsOn: [T1, T3]; implModel opus; qaTier critical (opus).
+- fileScope: `B/domaininteraction/CatalogueFlow.java`, `T/domaininteraction/CatalogueFlowTest.java`, plus every other test file that calls `new CatalogueFlow(` (constructor update only; list them in the outbox).
+- Acceptance criteria:
+  1. The constructor gains `DistributorAppService`; `importFromDistributor(String isbn, BigDecimal priceOverride)` returns `UUID`; Javadoc states the order below and that the remote call runs inside the use-case transaction.
+  2. Order (D-f): build `Isbn` and, when non-null, the override `Money` inside the domain-exception translator; then `findByIsbn(normalised)` (present: 409, port not called); then `findTitle(normalised)` (empty: `TitleNotFoundAtDistributorException`); `orderable == false`: `TitleNotOrderableException`; then `Book.addToCatalogue` with the DTO's title, authors, `Genre.parse(genre)`, the override or `Money.of(recommendedPrice, currency)`, the publication year and the flow's clock; then the same private path as `addBook` (save book, open the empty stock item). Port exceptions pass through unchanged.
+  3. `CatalogueFlowTest` (mocked ports): strategy section 7 t4 tests plus G2 (both failures in one case for every order claim; authors not alphabetical). The year boundary uses a clock in the year 2000 (G1): year 2001 accepted, year 2002 gives 422 `publication-year-out-of-range`.
+
+### T5: ImportBookPayload and the command endpoint
+
+- module: bookstore; dependsOn: [T4]; implModel sonnet; qaTier elevated (sonnet).
+- fileScope: `B/command/ImportBookPayload.java`, `B/command/BookCommands.java`, `T/command/BookCommandsTest.java`.
+- Acceptance criteria:
+  1. `ImportBookPayload(@NotBlank String isbn, @Pattern(regexp = "-?\\d+(\\.\\d+)?") String price)`; no `@NotBlank` on price.
+  2. `POST /books/commands/import-from-distributor` returns 202 with `CommandResult(id)`; null-safe `new BigDecimal(price)`; `CommandExceptionHandler` unchanged.
+  3. `BookCommandsTest`: strategy section 7 t5 tests plus G12 (price "-5", isbn "abc", a hyphenated isbn and one with a leading space reach the flow; pinned results for a JSON number and a boolean sent as price or isbn, never a 500); 404, 409, 422, 503 each with ProblemDetail `code` and title from the real nested exception; 400 `validation-failed` with the field.
+
+### T6: ArchUnit rule and fixtures
+
+- module: bookstore; dependsOn: [T3]; implModel opus; qaTier critical (opus).
+- fileScope: `T/ArchitectureTest.java` (additions only), `T/ArchitectureSelfTest.java`, `F/command/DistributorProxyCommands.java`, `F/acl/LeakyAppServiceImpl.java`, `F/command/TitleImportCommands.java`.
+- Acceptance criteria:
+  1. One new `@ArchTest public static final ArchRule`: no classes outside `nl.openvalue..acl..` depend on classes nested at any depth in a class whose simple name ends with `AppServiceImpl`; `allowEmptyShould(true)`; a described predicate; a one-line comment. `git diff` of `ArchitectureTest` shows additions only; no `ignoreDependency`.
+  2. Fixtures: `DistributorProxyCommands` (a `@RestController` with a `RestClient` field and nothing from acl); `LeakyAppServiceImpl` with a package-private nested record, a record nested two levels deep (G9), and a method using them; `TitleImportCommands` (a `@RestController` with a field of the nested record type and a second field of the depth-2 type, no `RestClient`, no reference to the outer class). One-line "Fixture: ..." Javadoc.
+  3. `ArchitectureSelfTest`: `REST_CLIENT_ONLY_IN_ACL` lists `LeakyDelegate` (first) and `DistributorProxyCommands`; the new rule lists `TitleImportCommands`; `hasSize(21)` becomes 22 (D-j); only the three existing lines named by G11 change; a test method per new rule as for the others; a self-test that the violation names the depth-2 field.
+  4. Controls (G10, matched on the class or field causing the violation): the new rule does not report `LeakyAppServiceImpl`, nor a class depending on a nested class of a class not ending with `AppServiceImpl`; the new rule does not report `DistributorProxyCommands`, and `REST_CLIENT_ONLY_IN_ACL` does not report `TitleImportCommands`; the full rule description is pinned with `isEqualTo`.
+  5. Surefire shows 22 tests in `ArchitectureTest`; the production run is green with the real private records.
+
+### T7: DistributorImportIntegrationTest and the catalogue http example
+
+- module: bookstore (the root file `http/catalogue.http` rides along); dependsOn: [T5]; implModel sonnet; qaTier elevated (sonnet).
+- fileScope: `T/DistributorImportIntegrationTest.java`, `http/catalogue.http`.
+- Acceptance criteria:
+  1. Extends `IntegrationTestBase`, no class-level context annotation, stubs the inherited `distributorAppService`.
+  2. Import with the recommended price: 202; the book reads price "9.99", genre FICTION, authors ["Jane Austen"], every view field asserted as a literal; stock 0 through the existing stock read endpoint.
+  3. Override "12.00" posted with a hyphenated ISBN: price "12.00"; the port receives the digits only (G13).
+  4. Already in catalogue (set up through the add endpoint): 409 `isbn-already-exists`, `verifyNoInteractions(distributorAppService)`, exactly 1 book row and 1 stock row (G13).
+  5. Distributor down (stub throws `DistributorUnavailableException`): 503, title "Distributor unavailable", code `distributor-unavailable`, zero book and stock rows; also 404 and 422 with their codes and zero rows.
+  6. `http/catalogue.http`: an import without price (EAN 9789900010159) and one with a price override (EAN 9789900010050), file style kept, a comment that the distributor must be running; existing requests unchanged.
+  7. No new Started line (still 10).
+
+## QA feed-forward
+
+(none yet)
+
+## Amendments
+
+(none yet)
