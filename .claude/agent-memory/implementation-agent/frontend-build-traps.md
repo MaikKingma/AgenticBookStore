@@ -15,9 +15,20 @@ metadata:
   back with `vi.mocked(console.error)` and guard with `vi.isMockFunction`.
 - Vite's dev server binds `localhost`, which can be IPv6 only: `curl http://127.0.0.1:5173/` fails with code 000 until
   `server.host: '127.0.0.1'` is set.
-- `rg` is not on the Bash tool PATH here; use `grep -rnP '[^\x00-\x7F]'` for the byte-level ASCII check.
+- `rg` is not on the Bash tool PATH here and BSD grep has no `-P`. Byte-level ASCII check, in a script: `env LC_ALL=C grep
+  -rnI $'[\x80-\xff]' <paths>`. The Write tool stores U+2003 as a plain space, so a Written control file proves nothing; use
+  a committed file known to hold non-ASCII as the positive control.
+- C0-6 greps are literal and also hit test titles and comments: `fontsource` (6e) and `document title` (6d, the dot is a
+  wildcard) in an `it(...)` title fail the gate. Run the whole C0-6 list before handing off.
 - Must-fail probes for a shared setup file: one script with a loop that deletes one line per run via `grep -vF`, restores from
   a copy and compares `shasum` (see the T2 outbox for the pattern).
+- Vitest 5 turns every `*.css` import into an empty string, the `?raw`, `?inline` and glob forms too (plugin
+  `vitest:css-empty-post` matches `.css?`). To read stylesheets in a test use `node:fs`; tsconfig.app.json has
+  `types: ["vite/client"]` only, so start the test with `/// <reference types="node" />` (no config change). Use
+  `import.meta.dirname`, not `import.meta.url` (jsdom makes it a non-file URL). `?raw` works for html and other files.
+- Test sources are grepped for `https?://`, `.fails(`, module-level `const x = [`/`new`: write URL fixtures as
+  `${'https'}://host`, keep fixtures inside `it`/`describe`, and use `as const` for module-level tables.
+- A pinned font licence text can trip the QA greps (`reserved`, `https?://`): strip only the URL schemes and say so.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
