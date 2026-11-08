@@ -1,0 +1,303 @@
+/* OpenBook global styles. Mobile-first: the base rules are for a phone, and media queries add columns from tablet width.
+   Every colour is a token from tokens.css. A rule that sets "color" either sets a background in the same rule or names
+   the surface the text sits on in a comment inside the rule, so the contrast test can check the pair. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ob-navy);
+  background: var(--ob-snow);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ob-navy);
+  /* ob-on: --ob-snow, --ob-white */
+}
+
+h1 {
+  font-size: 1.75rem;
+}
+
+h2 {
+  font-size: 1.375rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+a {
+  color: var(--ob-teal);
+  text-underline-offset: 0.2em;
+  /* ob-on: --ob-snow, --ob-white */
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Layout */
+
+.page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+/* Header: a white surface with a navy bottom border, sticky at the top of the page */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  color: var(--ob-navy);
+  background: var(--ob-white);
+  border-bottom: 2px solid var(--ob-navy);
+}
+
+.site-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+}
+
+/* The wordmark is a logotype: "Open" in navy, "Book" in blue (see the logotype exemption in the contrast test). */
+
+.wordmark {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--ob-navy);
+  /* ob-on: --ob-white */
+}
+
+.wordmark-book {
+  color: var(--ob-blue);
+  /* ob-on: --ob-white */
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  padding: 0.25rem 0;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ob-navy);
+  border-bottom: 2px solid transparent;
+  /* ob-on: --ob-white */
+}
+
+.site-nav a:hover {
+  border-bottom-color: var(--ob-sage);
+}
+
+.site-nav a[aria-current="page"] {
+  border-bottom-color: var(--ob-blue);
+}
+
+.count-badge {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--ob-white);
+  background: var(--ob-teal);
+}
+
+/* Footer: navy */
+
+.site-footer {
+  margin-top: 3rem;
+  padding: 1.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--ob-white);
+  background: var(--ob-navy);
+}
+
+.site-footer a {
+  color: var(--ob-white);
+  /* ob-on: --ob-navy */
+}
+
+/* Cards and the book grid: one column on a phone, two from tablet width, three on a wide screen */
+
+.card {
+  padding: 1.25rem;
+  overflow-wrap: anywhere;
+  color: var(--ob-navy);
+  background: var(--ob-white);
+  border: 1px solid var(--ob-mist);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px var(--ob-shadow);
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.book-grid > * {
+  min-width: 0;
+}
+
+@media (min-width: 40rem) {
+  .book-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .book-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Buttons: primary is white on teal, secondary is teal on white */
+
+.button {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  transition: background-color 150ms ease-in-out;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-primary {
+  color: var(--ob-white);
+  background: var(--ob-teal);
+  border-color: var(--ob-teal);
+}
+
+.button-primary:hover {
+  background: var(--ob-navy);
+  border-color: var(--ob-navy);
+}
+
+.button-secondary {
+  color: var(--ob-teal);
+  background: var(--ob-white);
+  border-color: var(--ob-teal);
+}
+
+.button-secondary:hover {
+  background: var(--ob-mist);
+}
+
+/* Form controls */
+
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--ob-navy);
+  background: var(--ob-white);
+  border: 1px solid var(--ob-navy);
+  border-radius: 0.5rem;
+}
+
+/* Badges: in stock is white on teal, out of stock is navy on mist */
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.badge-in-stock {
+  color: var(--ob-white);
+  background: var(--ob-teal);
+}
+
+.badge-out-of-stock {
+  color: var(--ob-navy);
+  background: var(--ob-mist);
+}
+
+/* Alert for problem details: dark red text on a light red background */
+
+.alert {
+  padding: 1rem 1.25rem;
+  overflow-wrap: anywhere;
+  color: var(--ob-error-text);
+  background: var(--ob-error-bg);
+  border: 1px solid var(--ob-error-text);
+  border-radius: 0.5rem;
+}
+
+/* Keyboard focus: a blue ring outside the element, so it sits on the page surface (snow, white or navy) and never on
+   teal or mist, where blue has less than 3:1. */
+
+:focus-visible {
+  outline: 3px solid var(--ob-blue);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: no transitions or animations for people who ask for none */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

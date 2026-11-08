@@ -60,6 +60,10 @@ Run these in `frontend/` with the same PATH prefix as above:
 | `node/npm run build` | Type-checks (`tsc -b`) and builds into `dist/` |
 | `node/npm run preview` | Serves the built app from `dist/` |
 
+## Styling
+
+The colour tokens live in `src/styles/tokens.css` and nowhere else.
+
 ## Dependencies
 
 All versions in `package.json` are exact and `package-lock.json` is committed. `.npmrc` makes `npm install` save exact

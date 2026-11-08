@@ -45,3 +45,34 @@ describe('setupTests afterEach hooks', () => {
     vi.mocked(console.warn).mockClear()
   })
 })
+
+// This guard proves that the console trap in setupTests.ts fails a test. Each of the two tests below logs on purpose
+// with the spy silenced, so the trap in afterEach fails it, and fails turns that failure into the expected result. Each
+// test records the error message of its failure. The last test checks that both failures came from the trap, so a
+// removed trap makes the two tests above it pass the wrong way round and this test fails as well.
+describe('setupTests console trap guard', () => {
+  const trapMessages: string[] = []
+
+  it.fails('fails a test that calls console.error', (context) => {
+    context.onTestFailed(({ task }) => {
+      trapMessages.push(...(task.result?.errors ?? []).map((error) => error.message))
+    })
+    vi.mocked(console.error).mockImplementation(() => {})
+    console.error('provoked error')
+  })
+
+  it.fails('fails a test that calls console.warn', (context) => {
+    context.onTestFailed(({ task }) => {
+      trapMessages.push(...(task.result?.errors ?? []).map((error) => error.message))
+    })
+    vi.mocked(console.warn).mockImplementation(() => {})
+    console.warn('provoked warning')
+  })
+
+  it('recorded one failure from the console trap for each console method', () => {
+    expect(trapMessages).toHaveLength(2)
+    for (const message of trapMessages) {
+      expect(message).toContain('console.error or console.warn was called during the test')
+    }
+  })
+})
