@@ -102,6 +102,39 @@ Every non-2xx response is parsed as RFC 9457 `ProblemDetail` and shown by `Probl
 `validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline" and `429` as
 "Too many requests, try again in a minute".
 
+### Visual design (decision D7, Maik 2026-11-08)
+The shop is called **OpenBook**. It looks modern and uses the OpenValue 2026 brand colours (theme `OPENVALUE2026` of
+the OpenValue slides template).
+
+- Name: the header shows the wordmark "OpenBook" (text, "Open" in navy, "Book" in blue, Montserrat bold) and the
+  document title is "OpenBook". No OpenValue logo in the shop. The footer may say "OpenBook, the J-Fall 2026 workshop
+  shop by OpenValue".
+- Colour tokens, as CSS custom properties in one place (`src/styles/tokens.css`):
+
+  | Token | Value | Use |
+  |---|---|---|
+  | `--ob-navy` | `#1D252D` | body text, header background, headings |
+  | `--ob-blue` | `#3D7DC9` | accents: wordmark, focus ring, active nav, highlights, large headings only (4.2:1 on white, so never body-size text) |
+  | `--ob-teal` | `#014046` | primary buttons (white text), links, in-stock badge |
+  | `--ob-sage` | `#809FA2` | decorative only: icons, dividers (never text) |
+  | `--ob-mist` | `#CBD9DA` | borders, out-of-stock badge background (navy text) |
+  | `--ob-snow` | `#F1F5F6` | page background |
+  | `--ob-white` | `#FFFFFF` | cards, inputs |
+
+  Every text and background pair meets WCAG 2.2 AA (4.5:1 for normal text). Errors use the `ProblemDetailAlert` with
+  a red that also meets AA on its background.
+- Typography: Montserrat (the brand font), self-hosted as woff2 files (latin subset, weights 400, 600 and 700) with
+  its SIL Open Font License file committed next to them, loaded with `@font-face` and `font-display: swap`. Fallback
+  stack `Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. No font CDN at runtime: the shop must
+  work on conference wifi. If the font files cannot be obtained at build time, use the fallback stack and say so in
+  the PR.
+- Look: mobile-first and responsive (one column on a phone, a grid of book cards from tablet width), generous
+  whitespace, cards with rounded corners and a soft shadow, a sticky header with the wordmark, navigation and a
+  basket count badge, a prominent search bar on the catalogue page, clear in-stock and out-of-stock badges, visible
+  keyboard focus, and `prefers-reduced-motion` respected for any transition.
+- Plain CSS only (one global stylesheet plus the tokens, or CSS modules, both built into Vite). No UI library, no CSS
+  framework and no new npm dependency: `product/tech-stack.md` pins every frontend package.
+
 ## Requirements
 
 ### Requirement: Storefront is served by the bookstore
@@ -217,6 +250,23 @@ The storefront SHALL provide the chat page for `POST /assistant/chat` with one c
 - **WHEN** the user types more than 1000 characters
 - **THEN** the send button is disabled and a counter shows the limit (the server limit of spec 08)
 
+### Requirement: OpenBook branding
+The storefront SHALL present itself as OpenBook in the OpenValue 2026 colours described under "Visual design".
+
+#### Scenario: Name and title
+- **GIVEN** the storefront is open on any page
+- **THEN** the header shows the "OpenBook" wordmark and the document title is "OpenBook"
+
+#### Scenario: Brand tokens in one place
+- **GIVEN** the frontend source
+- **THEN** `src/styles/tokens.css` defines the seven `--ob-*` colour tokens with the values of the table, and no other
+  stylesheet hard-codes a colour value outside it (a grep for `#` colour literals outside `tokens.css` finds none)
+
+#### Scenario: Readable contrast
+- **GIVEN** the text and background pairs the stylesheets use
+- **THEN** each pair has a contrast ratio of at least 4.5:1 (checked by a small Vitest test over the pairs, computed
+  with the WCAG relative luminance formula)
+
 ### Requirement: Frontend is part of the referee
 `./mvnw clean verify` SHALL install the pinned Node.js locally, run the frontend tests and build the storefront, and SHALL fail when a frontend test fails.
 
@@ -272,6 +322,8 @@ Frontend tasks (follow this spec and `product/tech-stack.md`):
    `docs/spec-pack/orchestrator/progress.md`; manual walk through every page against the running bookstore.
 
 ## Definition of done
+- OpenBook branding: screenshots of the catalogue, book detail, basket, checkout, order, orders and assistant pages
+  (desktop and phone width) are committed in the spec folder's `visuals/` and linked from the spec PR.
 - `./mvnw clean verify` green from the repo root, including the frontend tests and build; time recorded.
 - `GET /` redirects to `/shop/`; every page of this spec works in a browser against the running bookstore.
 - The REST paths of specs 02 to 08 are byte-for-byte unchanged (diff of the `*Commands` and `*Queries` classes is

@@ -106,3 +106,17 @@ Outside the pack, in a separate commit: `.claude/skills/layer-testing/SKILL.md` 
 `agent-os/specs/2026-11-06-2155-01-foundation/shape.md`, `agent-os/specs/2026-11-07-0122-02-catalogue/shape.md`,
 `agent-os/specs/2026-11-07-0957-03-inventory/shape.md`, `agent-os/specs/2026-11-07-1724-04-orders/` (`shape.md`,
 `standards.md`, `references.md`, `plan.md`), `agent-os/specs/2026-11-08-1040-05-distributor/shape.md`.
+
+## D7. The storefront is OpenBook, in OpenValue colours
+
+Maik (2026-11-08): the storefront (spec 12) gets a nice, modern design in OpenValue colours, and the shop is called
+OpenBook. The colours come from the theme `OPENVALUE2026` of the OpenValue slides template (dk1 `#1D252D`, dk2
+`#3D7DC9`, accent4 `#014046`, accent3 `#809FA2`, accent5 `#CBD9DA`, accent2 `#F1F5F6`), the font is Montserrat (the
+template's heading and body font). No design-system package was available to the factory (the DesignSystem folder holds
+only the slides template and a Teams background), so the tokens are written into spec 12 directly. Blue `#3D7DC9`
+has 4.2:1 on white, so it is an accent colour only; teal `#014046` carries buttons and links. Montserrat is
+self-hosted with its licence, no CDN, no new npm dependency.
+
+Files changed: `specs/12-storefront.md` (Visual design notes, requirement "OpenBook branding", definition of done
+screenshots), `orchestrator/decisions.md` (D7), `orchestrator/progress.md` (decision log line).
+
