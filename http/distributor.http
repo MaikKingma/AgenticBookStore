@@ -1,0 +1,81 @@
+# JetBrains HTTP Client format: run the requests top to bottom against a locally running distributor.
+
+# List the first page of the catalogue. The page holds up to 20 titles, and the total counts every title.
+GET http://localhost:8090/api/titles
+
+###
+
+# Search the catalogue for Austen. The match ignores case and looks at the title and at every contributor name.
+GET http://localhost:8090/api/titles?q=austen
+
+###
+
+# List science fiction titles, 5 per page. The subject is a code prefix, so FIC028 finds every FIC028 code, and the total counts all matches.
+GET http://localhost:8090/api/titles?subject=FIC028&size=5
+
+###
+
+# Show the details of Pride and Prejudice by its EAN. It is in stock.
+GET http://localhost:8090/api/titles/9780141439518
+
+###
+
+# Ask for an EAN that is not in the catalogue. The answer is 404 with the error code TITLE_NOT_FOUND.
+GET http://localhost:8090/api/titles/9780000000002
+
+###
+
+# List the subjects with their codes and labels, in code order.
+GET http://localhost:8090/api/subjects
+
+###
+
+# Restock 10 copies of Pride and Prejudice and remember the restock order id. The answer is 201 with the status CONFIRMED and a delivery date 2 working days out.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9780141439518",
+  "quantity": 10,
+  "retailerReference": "workshop-order-1"
+}
+
+> {% client.global.set("restockOrderId", response.body.restockOrderId); %}
+
+###
+
+# Show the restock order that was just placed.
+GET http://localhost:8090/api/restock-orders/{{restockOrderId}}
+
+###
+
+# Restock Bleak House, which is on backorder. The answer is 201 with the status BACKORDERED and a delivery date 14 days out.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9789900010272",
+  "quantity": 5
+}
+
+###
+
+# Restock Rip Van Winkle, which is out of print. The answer is 422 with the error code NOT_ORDERABLE.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9789900010371",
+  "quantity": 5
+}
+
+###
+
+# Restock a quantity of 0. The quantity must be between 1 and 500, so the answer is 400 with the error code INVALID_REQUEST.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9780141439518",
+  "quantity": 0
+}
