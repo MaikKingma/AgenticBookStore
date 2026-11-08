@@ -26,5 +26,9 @@ metadata:
   inside `scripts/**` can only read the `check` script's glob and count registrations (package.json is out of scope).
 - A README provenance line cannot hold a font CDN host when a rule bans those strings in `guide/`: source fonts from the
   upstream GitHub tag (static woff2) and subset with a scratch-venv fonttools, never a CDN or npm package.
+- Checker self-tests that only call rule functions miss the wiring: a dropped `errors` spread or `report(..., [], ...)` in
+  `check.mjs`/`lib/site.mjs` stays green. Pin the pair table by name plus a minimum count, and test each rule through
+  `runChecks` on a temp tree. A node mutation runner (edit, spawn `node --test`, restore, sha check) beats shell loops
+  under the worktree Bash guard; call helper scripts by absolute path, never `~`, `$VAR` args or `$?`.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).

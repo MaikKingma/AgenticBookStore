@@ -54,4 +54,7 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with
   `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
 
+- A script that exports `PATH=<pinned node>:/usr/bin:/bin` loses `lsof` (it lives in `/usr/sbin`): "lsof: command not found" looks like "port free".
+  Run the port check directly in the Bash tool. The Bash guard also refuses `echo`/`git` after `;` and `$VAR` arguments to `find`/`git` as "cannot be shown not to be git"; put such sequences in a script file.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
