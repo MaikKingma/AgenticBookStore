@@ -1,2 +1,3 @@
 - [Boot 4 verification techniques](boot4-verification-techniques.md) — source jars, scratchpad probe project, Docker-down simulation, 4.1.2 traps
 - [ArchUnit probe technique](archunit-probe-technique.md) — javac probe against the 1.5.1 jar to see rule APIs and violation text
+- [gh Actions measurement](gh-actions-measurement-technique.md) — step times, log greps, cache scoping check via gh, bash guard quirks
