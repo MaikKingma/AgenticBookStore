@@ -35,7 +35,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | pending | | | |
+| T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | PASS r1 | (pending) | sdd/11-workshop-guide/T1 | ENDORSE |
 | T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | pending | | | |
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | pending | | | |
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | pending | | | |
@@ -76,8 +76,37 @@ rounds are added commits. Verifiers read runs with `gh` and never push, rerun, c
 
 ## QA feed-forward
 
-(none yet)
+From the T1 meta-review (qa-lead ENDORSE r1; full wording in the QA ledger review log):
+
+- FF-1 (T3 Required Action, see A2): `npm run check` exits non-zero when node:test executes no real test case;
+  must-fail witnesses (a) every `scripts/**/*.test.mjs` deleted, (b) every test file emptied, (c) the `check` glob
+  matching nothing, each in its own run with the guard's message quoted; a self-test pins the guard; the `&&` chain
+  and the C0-6 throwaway probe stay; no dependency added. The T3 verifier runs (a) to (c) plus a guard-disabling mutant.
+- FF-2 (C0-6, verifiers of T3, T4, T5, T11): the node:test total is at least the last gated total (46 after T1) and
+  the earlier test titles are a subset of the current ones unless the task's criteria remove a test (`comm -23`
+  output quoted, empty).
+- FF-3 (C0-1, every verifier and qa-final): evidence files are named `s11-tN-qa-r<k>-*`, the hash file
+  `s11-tN-qa-r<k>-hashes.txt`.
+- FF-4 (C0-5 warning baseline, a higher count is a finding): `npm ci` uuid@8.3.2 deprecation 1 line, install-scripts
+  notice 6 lines, audit summary 1 line; `build` localStorage ExperimentalWarning 2 lines; `build:offline` sitemap
+  disabled 1 line; `check`, `typecheck`, `check:built` 0.
+- FF-5 (C0-8 console): accepted only in WebKit on offline `file://`, counted per page: "Cross origin requests are only
+  supported for HTTP." and the matching "XMLHttpRequest cannot load file:... due to access control checks." page
+  error. Anything else, either message in Chromium or Firefox or on the Pages build, is a finding; dev-mode console
+  stays clean.
+- FF-6 (T4 and every content task): `check:built` flags any literal `:::` in built HTML, code included. A page that
+  needs `:::` in code sends a question and never edits the rule. If T4 narrows the rule, B04b and B05b still fail and
+  X01, X02 become passing self-tests.
+- FF-7 (T6): end `guide/docs/index.md` with a newline. `guide/package.json:21` (two keys on one line) is a follow-up,
+  no later task owns that file.
+- FF-8 (T4, recommended): a `docs/**` file with a NUL byte is an error instead of being skipped (R3).
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
+  generated, not participant content, and contains the transitive package name `postcss-lab-function` of
+  `@docusaurus/preset-classic`, so G-4 read literally cannot pass with the lockfile AC1 requires. The ASCII rule still
+  scans the lockfile; self-tests pin both facts. Consequence: none for pages; cheap and reversible.
+- A2 (2026-11-08, orchestrator, after the T1 meta-review): FF-1 is an added T3 acceptance criterion (zero-test guard
+  for `npm run check`); T3's fileScope already holds `guide/scripts/**`. Consequence: T3 is slightly larger; the
+  gate re-run is self-accepted (an added test criterion inside a task's scope).
