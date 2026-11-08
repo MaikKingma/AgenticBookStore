@@ -304,6 +304,19 @@ class OrderIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void placeTrimsAndLowerCasesASpacePaddedCustomerEmail() {
+        UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
+        receive(a, 5);
+
+        UUID id = placeOrder("  Reader@Example.com ", List.of(line(a, 2)));
+
+        assertThat(history("/orders?customerEmail=reader@example.com")).extracting(view -> view.get("id"))
+                .containsExactly(id.toString());
+        assertThat(jdbcTemplate.queryForList("select customer_email from customer_order where id = ?",
+                String.class, id)).containsExactly("reader@example.com");
+    }
+
+    @Test
     void shippingTurnsReservationsIntoStockReductions() {
         UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
         receive(a, 5);
