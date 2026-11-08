@@ -1,8 +1,8 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over five levels (Level 0 to Level 4).
-Current phase: 3, change request D6 (between spec 05 and spec 06)
-Current spec: 06 next (todo). D6 (workshop levels 0 to 4) is applied first, as Maik asked.
+Current phase: 3, spec 06 (run the cycle)
+Current spec: 06 (in progress). D6 applied on factory (e604bac).
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
 Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 
@@ -13,7 +13,7 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 | 03 | done | spec-03-done | 13 s (Maven 12.513 s); 19 s on the merge commit | PR #20 merged as 9266a56; task PRs #21 to #30; review fix on top; 476 + 3 tests, 0 skipped; ArchitectureTest 21 rules; CI run 42395237141 green on the merge commit; see DoD 03 below |
 | 04 | done | spec-04-done | 21 s (Maven 20.583 s) | PR #31 merged as dc7edc3 (task PRs #32 to #39); review findings fixed through /sdd-bugfix, PR #40 merged as 1bd62fc (task PRs #41, #42); 684 + 3 tests, 0 skipped; ArchitectureTest 21 rules; see DoD 04 below |
 | 05 | done | spec-05-done | 24 s wall clock | PR #43 merged as d35108d (task PRs #44, #45, #50, #52, #53, #58, #59, #60); review findings fixed through /sdd-bugfix, PR #61 merged as c7af854 (task PRs #62 to #64); 684 + 190 tests, 0 skipped; CI run 42516930015 green on c7af854; see DoD 05 below |
-| 06 | todo | | | |
+| 06 | in progress | | | orchestrator agent run on Opus with `merge: true`, started 2026-11-08 after D6 |
 | 07 | todo | | | |
 | 08 | todo | | | |
 | 12 | todo | | | |
