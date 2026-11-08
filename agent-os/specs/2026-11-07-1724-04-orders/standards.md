@@ -23,4 +23,4 @@ The architecture standard for this repository is `docs/spec-pack/product/archite
 - Docs, comments and specs in plain English with no em dashes; product code and config never reference `docs/spec-pack`, `agent-os`, `.claude` or `CLAUDE.md`; no literal non-ASCII characters in the files spec 04 writes (non-ASCII test data is built from code points).
 - Versions only from `docs/spec-pack/product/tech-stack.md`; nothing new pinned in spec 04; no POM change.
 - Time only through the injected `Clock`; never `Instant.now()` or `Clock.system*` in `domain` and `domaininteraction`.
-- Lab 3 is reserved: `grep -ri "cancel" bookstore/src/main/java` returns nothing; no release, no CANCELLED status, no cancel endpoint.
+- Level 3 is reserved: `grep -ri "cancel" bookstore/src/main/java` returns nothing; no release, no CANCELLED status, no cancel endpoint.

@@ -6,7 +6,7 @@ Source of truth: `docs/spec-pack/specs/02-catalogue.md`. These notes restate it,
 
 In scope (the pack spec's "What changes"): the `Book` aggregate with `BookId`, `Isbn`, `Money`, `Title`, `AuthorName`, `Genre`, `BookStatus`; `CatalogueFlow`, the `BookDataService` port, `BookDTO`, `BookDomainMapper` and the four use-case exceptions; the command adapter (add, change price, discontinue), the query adapter (search, get one), the data adapter with `V1__create_catalogue.sql`; the money ArchUnit rule with fixture and self-test entry; `CatalogueIntegrationTest`; `http/catalogue.http`.
 
-Out of scope: discounts of any kind (Lab 1), stock levels (spec 03), authors as an aggregate, images, pagination beyond the 100-result cap, domain events (none in spec 02), mapping a concurrent update to 409, ProblemDetail bodies for malformed JSON or bad UUIDs.
+Out of scope: discounts of any kind (Level 0), stock levels (spec 03), authors as an aggregate, images, pagination beyond the 100-result cap, domain events (none in spec 02), mapping a concurrent update to 409, ProblemDetail bodies for malformed JSON or bad UUIDs.
 
 ## Decisions
 
@@ -74,7 +74,7 @@ Interpretations recorded (contradiction check C1 to C7 found nothing requiring a
 
 - **Visuals:** None.
 - **References:** No earlier slice exists; spec 01's `ArchitectureTest`, `ArchitectureSelfTest`, fixtures, `PostgresTestConfig`, `IntegrationTestBase`, `DatabaseCleaner` are the only code mirrored (see `references.md`).
-- **Product alignment:** mission (a real domain with invariants, test-enforced architecture); roadmap item 02 (Lab 1 and 2 task area, discounts land here later); tech stack (Boot 4.1.2, Java 25, Jackson 3, Jakarta Validation, Flyway, Testcontainers 2.0.5, PostgreSQL 18.6; nothing new pinned).
+- **Product alignment:** mission (a real domain with invariants, test-enforced architecture); roadmap item 02 (Level 0 and 1 task area, discounts land here later); tech stack (Boot 4.1.2, Java 25, Jackson 3, Jakarta Validation, Flyway, Testcontainers 2.0.5, PostgreSQL 18.6; nothing new pinned).
 
 ## Standards Applied
 

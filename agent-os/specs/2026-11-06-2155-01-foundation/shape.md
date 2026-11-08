@@ -31,7 +31,7 @@ Out of scope: any domain model or endpoint (specs 02 to 08); agent configuration
 
 - **Visuals:** None.
 - **References:** No existing code (the repository holds only docs and agent configuration before this spec). Reference material is the research under `.claude/comms/mailboxes/res-1..res-4/outbox/` and the lead strategy under `.claude/comms/mailboxes/lead-1/outbox/strategy-01-foundation.md` (gitignored session state; summarised in `references.md`).
-- **Product alignment:** mission (a brownfield codebase with a test-enforced architecture, `./mvnw verify` green and under 60 seconds), roadmap (spec 01 is the referee every lab relies on), tech stack (pins and Initializr generation).
+- **Product alignment:** mission (a brownfield codebase with a test-enforced architecture, `./mvnw verify` green and under 60 seconds), roadmap (spec 01 is the referee every workshop level relies on), tech stack (pins and Initializr generation).
 
 ## Standards Applied
 
