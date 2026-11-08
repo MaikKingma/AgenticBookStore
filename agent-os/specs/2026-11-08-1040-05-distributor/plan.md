@@ -133,7 +133,12 @@ qaDirective of every task: C0 plus the task's T<n>-1..k section of the QA ledger
 
 ## QA feed-forward
 
-(none yet)
+From the QA lead's T1 r1 review (details in the QA ledger, "Feed-forward issued"):
+
+- FF1 (T2): `TitleCatalog` tests pin that it keeps its own copy of the input lists and returns unmodifiable views.
+- FF2 (T2, fallback T3): decide and pin the behaviour of `TitleCatalog.findByEan(null)` (today a `NullPointerException` from `Map.copyOf`); a missing `ean` must never surface as an unexplained NPE through REST or MCP.
+- FF3 (every verifier): classify survivors against the C0 gate checks; one `Clock.systemUTC()` probe per Clock consumer.
+- FF4 (T8 replay and qa-final): a new release's `releaseDate` equals today's Europe/Amsterdam date minus its `releasedDaysAgo` in a live run.
 
 ## Amendments
 
