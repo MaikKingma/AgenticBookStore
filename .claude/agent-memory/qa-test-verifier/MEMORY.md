@@ -8,3 +8,4 @@
 - [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class and a restore-and-hash runner
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
 - [Seed data probes](seed-data-probes.md) — JSON/text seed mutants with a byte-identity generator, CRLF and at-minimum must-pass probes, author sourcing
+- [MCP tool probes](mcp-tool-probes.md) — @McpTool mutants over unit plus SDK-client class, runtime-enforced required params, output-cap boundary witnesses
