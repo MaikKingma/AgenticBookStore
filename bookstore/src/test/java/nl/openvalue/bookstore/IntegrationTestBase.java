@@ -17,13 +17,14 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * application tables; there is no transaction rollback, so after-commit listeners fire as in production.
  *
  * <p>The shared context also holds the stock event recorder, which records the running-low events delivered after a
- * commit or after a rollback and can fail a transaction just before its commit; it is reset before every test. The
+ * commit or after a rollback and can fail a transaction just before its commit, and the order event recorder, which
+ * does the same for the order placed events; both are reset before every test. The
  * stock item store is a Mockito spy around the real store: it behaves as in production unless a test stubs it, for
  * example to make opening a stock item fail, and Mockito resets it after every test.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
-@Import({PostgresTestConfig.class, StockEventRecorder.class})
+@Import({PostgresTestConfig.class, StockEventRecorder.class, OrderEventRecorder.class})
 public abstract class IntegrationTestBase {
 
     @Autowired
@@ -35,6 +36,9 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected StockEventRecorder stockEvents;
 
+    @Autowired
+    protected OrderEventRecorder orderEvents;
+
     @MockitoSpyBean
     protected StockItemDataService stockItemDataService;
 
@@ -42,5 +46,6 @@ public abstract class IntegrationTestBase {
     void cleanDatabase() {
         new DatabaseCleaner(jdbcTemplate).clean();
         stockEvents.reset();
+        orderEvents.reset();
     }
 }
