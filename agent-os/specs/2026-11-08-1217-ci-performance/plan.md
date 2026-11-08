@@ -39,7 +39,7 @@ done by the orchestrator. The local referee runs once per task to prove the loca
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | triggers, concurrency, SHA pins and timeouts remove duplicate and superseded runs | root | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #47 | sdd/ci-performance/T1 | ENDORSE |
-| T2 | full test report on failure (`-fae`, job summary, report artifact) | root | [T1] | B2 | critical | opus | sonnet | pending | | | |
+| T2 | full test report on failure (`-fae`, annotations, report artifact; summary unverified per A3) | root | [T1] | B2 | critical | opus | sonnet | PASS r3 (A3) | #48 | sdd/ci-performance/T2 | ENDORSE r3 |
 | T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | pending | | | |
 
 Batches are sequential because all three tasks edit `ci.yml`.
@@ -78,25 +78,26 @@ Batches are sequential because all three tasks edit `ci.yml`.
   1. `verify` runs `./mvnw -B -fae verify`; `windows-build` runs `mvnw.cmd -B -fae -DskipTests verify`; nothing else
      in either command changes.
   2. In `verify`, after the build step, a mikepenz/action-junit-report step (SHA-pinned, v6.7.1 or newer stable) with
-     `if: ${{ !cancelled() }}` reads `**/target/surefire-reports/TEST-*.xml` and writes a job summary with per-module
-     totals and every failed test with its message; `annotate_only: true` (no check run, no extra permission; workflow
-     permissions stay `contents: read`). The job conclusion is failure whenever a test fails.
+     `if: ${{ !cancelled() }}` reads `**/target/surefire-reports/TEST-*.xml` and publishes every failed test with its
+     message as an annotation; `annotate_only: true` (no check run, no extra permission; workflow permissions stay
+     `contents: read`). The job conclusion is failure whenever a test fails. (Narrowed by A3: the step may also write
+     a job summary, but its content is not a gated criterion and is reported as unverified by QA.)
   3. After it, an actions/upload-artifact step (SHA-pinned, v7.0.2 or newer stable) with `if: failure()` uploads
      `**/target/surefire-reports/**` of all modules, `retention-days: 14`, artifact name containing the job id and
      `${{ github.run_attempt }}`.
-  4. Green task PR run: the summary's per-module totals equal the Surefire console totals, both module names appear;
-     zero artifacts.
+  4. Green task PR run: both jobs green, the report step ran and succeeded, its per-module log lines name both modules
+     with totals equal to the Surefire console totals; zero artifacts. (Narrowed by A3: no job summary evidence.)
   5. Deliberate-failure proof on throwaway branch `exp/ci-performance-fail-proof` (one failing assertion in a
      bookstore test and one in a distributor test, a draft PR into `sdd/ci-performance/spec`, never merged, closed and
      the branch deleted afterwards): `verify` red; the Maven log shows the bookstore assertion failure, distributor
      tests running after it, a reactor summary with both modules FAILURE and none SKIPPED, BUILD FAILURE; both failing
-     tests with their messages in the summary and in the annotations API; the artifact holds both modules' reports with
+     tests with their messages in the annotations API (A3: not in the summary); the artifact holds both modules' reports with
      `<failure` elements and expires 14 days after creation; the orchestrator reruns the failed jobs once and attempt 2
      uploads an artifact under a different name. Run id recorded.
-  6. Evidence path for summary content: the verifier renders the public run page anonymously with the playwright-cli
-     skill and quotes the snapshot text, cross-checked with
-     `gh api repos/MaikKingma/AgenticBookStore/check-runs/<job_id>/annotations`. If the page cannot be rendered the
-     verifier returns BLOCKED with the diagnosis; no summary content is inferred from the action's inputs.
+  6. Evidence path for "full report on failure" (replaced by A3): `-fae` behaviour in the Maven log (both modules
+     report, none skipped), `gh api repos/MaikKingma/AgenticBookStore/check-runs/<job_id>/annotations` showing every
+     failed test with its message, the uploaded Surefire artifact holding all modules' reports, and the job concluding
+     failure. Job summary content is not evidence for any criterion and is neither rendered nor inferred.
   7. Numbers: on the green run the report step duration and the verify job duration are recorded next to the baseline
      median 58 s (range 52 to 62; build step 50 s, 47 to 55, per the C0-8 script on the five warm baseline runs, see
      Amendment A1); the report step takes at most 10 s.
@@ -131,6 +132,11 @@ Batches are sequential because all three tasks edit `ci.yml`.
   may be added); FF-3 byte-compare every `${{` string in a `python3 -I` script with a negative control; FF-4 save the
   unfiltered `gh run view --json jobs` output as evidence; FF-5 (qa-final) residual: same-sha pushes to two filtered
   branches share one push group.
+- From T2 r2 and r3: FF-6 (T3, qa-final) a green verify job prints exactly 2 plain `No annotations found for JUnit
+  Test Report | <module>` lines; FF-7a (T3, qa-final, replaces FF-7 per A3) quote the report step's per-module log lines
+  equal to the console totals plus the annotations API, never summary evidence, summary stated as UNVERIFIED by QA;
+  FF-8 (qa-final residuals) annotations point at `.class` paths, `github.job` collides across future matrix legs;
+  FF-9 (T3) compare totals with T2 green run 42483525266, byte-compare the report and upload steps against e31cf21.
 
 ## Amendments
 
@@ -138,6 +144,23 @@ Batches are sequential because all three tasks edit `ci.yml`.
   (research prose, a different run set) to 58 s, the same-script median over the five warm baseline runs. No pass rule
   changes (the gate is report step at most 10 s). Gate re-run self-accepted: a measurement reference fix inside the
   spec's authority.
+- A2 2026-11-08T13:28Z, orchestrator (qa-t2 r1 BLOCKED): GitHub hides job summaries from logged-out viewers (positive
+  control on the action's own public run also showed none; `summary_raw` 404). T2 AC6 evidence path extended: the
+  summary may be rendered with the claude-in-chrome skill in the owner's signed-in browser (read-only page views of this
+  repository's run pages only) when anonymous rendering shows no summary; the annotations cross-check stays. If neither
+  works, a human capture remains the fallback. Gate re-run self-accepted: evidence method only, criteria unchanged.
+  WITHDRAWN by A3.
+- A3 2026-11-08, orchestrator decision (made by the main-session orchestrator, to whom the owner delegated all plan and
+  gate approvals; this is not a QA lead endorsement), resolving the T2 needs-decision (option d): T2 is narrowed. The
+  job-summary half of AC2, AC4 and AC5(e), and the summary evidence path of AC6, are dropped as gated criteria,
+  because GitHub exposes job summaries to no API or CLI and no agent can verify them. The gated evidence for "full
+  report on failure" is: `-fae` behaviour (both modules report, none skipped), the annotations API showing every
+  failure, the uploaded Surefire artifact holding all reports, and the job failing red. The report action keeps its
+  summary output (no workflow change, so the r1 and r2 evidence on head e31cf21 and fail-proof 35b8243 carries); the
+  spec PR body describes it as unverified by QA for the owner's end-result review. No `checks: write` (least privilege
+  kept). Amendment A2 (Claude in Chrome route) is withdrawn. qa-final must not require job-summary evidence (QA lead
+  FF-7 and the summary part of qa-final focus 2 are superseded). Consequence: T2 gate re-run as verifier round 3
+  (`mode: resume`, narrowed criteria) plus QA lead meta-review; no implementation rework.
 
 ## Decisions log (orchestrator, self-accepted)
 
