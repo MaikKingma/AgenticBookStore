@@ -46,7 +46,7 @@ Turn the bare `distributor` skeleton into the fictional book wholesaler: an in-m
 | T5 | Chaos knobs on `/api/**` | distributor | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T5`) | PASS (r1) | ENDORSE | 1 | #53 | e4ebe46 |
 | T6 | STDIO profile and its in-process verification | distributor | [T3, T5] | 6 | critical | opus | opus | done (branch `sdd/05-distributor/T6`) | PASS (r1) | ENDORSE | 1 | #58 | 1bb2226 |
 | T7 | finalName `distributor`, README, startup proof | distributor | [T5, T6] | 7 | elevated | sonnet | sonnet | done (branch `sdd/05-distributor/T7`) | PASS (r2) | ENDORSE | 2 | #59 | 9b3169c |
-| T8 | `http/distributor.http`, replayed live | root | [T1, T4] | 8 | standard | sonnet | sonnet | pending | | | | | |
+| T8 | `http/distributor.http`, replayed live | root | [T1, T4] | 8 | standard | sonnet | sonnet | done (branch `sdd/05-distributor/T8`) | PASS (r1) | ENDORSE | 1 | (this PR) | 8fc84f6 |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8 (T8 runs last so its live replay uses the final jar; the lead's batch B5 pairing with T5 only matters for parallel runs, which this cycle does not do). Pack task mapping: pack 1 = T1; pack 2 = T2 + T4 + T5; pack 3 = T3; pack 4 = T6; pack 5 = T7 + T8; pack 6 (manual Claude Code smoke on two machines) = not an implementation task (D-d): orchestrator headless proxy in the final sweep plus the owner's two-machine check.
 
