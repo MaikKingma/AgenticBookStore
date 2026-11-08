@@ -18,7 +18,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 4
     env:
       # Ryuk (the Testcontainers reaper) is switched off here. Safe on ephemeral hosted runners only,
       # because the runner VM is destroyed after the job. Never copy this to a persistent or self-hosted runner.
