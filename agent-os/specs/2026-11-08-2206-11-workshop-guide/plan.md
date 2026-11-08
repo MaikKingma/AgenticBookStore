@@ -37,7 +37,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #71 | sdd/11-workshop-guide/T1 | ENDORSE |
 | T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | PASS r1 | #73 | sdd/11-workshop-guide/T2 | ENDORSE |
-| T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | verifying | #76 | sdd/11-workshop-guide/T3 | |
+| T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | PASS r2 | #76 | sdd/11-workshop-guide/T3 | ENDORSE r2 |
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | pending | | | |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4] | B5 | critical | opus | sonnet | pending | | | |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
@@ -116,6 +116,22 @@ From the T2 meta-review (qa-lead ENDORSE r1):
   `npm run check` against the merged pack itself; the path filter is a Gate 2 residual for the owner.
 - Gate 2 owner notes: O1 the `workshop-2026` tag stays on the first deploy commit, later pushes replace the zip;
   O2 GitHub compares the gate value case-insensitively (`TRUE` opens it too).
+
+From the T3 meta-review (qa-lead ENDORSE r2, after one rework round for unpinned contrast pairs and rule wiring):
+
+- FF-13 (C0-6, verifiers of T4, T5, T11): T3's part of the checker does not regress. (a) `rules/contrast.mjs`,
+  `rules/brand.mjs`, `rules/fonts.mjs`, `rules/colors.mjs`, `rules/zero-tests.mjs`, `lib/site.mjs` keep the T3
+  sha256 baseline in the QA ledger unless the task card names a change (quote `shasum -a 256`); (b)
+  `rules/contrast-pairs.mjs` and `contrast-pairs.test.mjs` only gain lines and `MINIMUM_PAIR_COUNT` is never lowered;
+  (c) an edited T1 or T3 test file only gains lines unless a criterion justifies a deletion; (d) a change to
+  `lib/text.mjs` `withoutBlockComments` re-runs Z-1, Z-2 and the W-d witness; (e) a change to `check.mjs` or
+  `lib/site.mjs` re-runs wiring mutants W-1 to W-13. Implementation directive for T4, T5, T11: every new rule gets at
+  least one test that runs it through `runChecks`.
+- FF-14 (C0-6, every verifier and qa-final): the guard line `ok tests (N test files, M test cases)` is a lower bound;
+  C0-6 and FF-2 use only node:test's `tests N`. A drop in M from `/*` inside test strings is not a finding; a guard
+  failure on a file with real test cases is.
+- C0-12 freeze: the checker freezes at T5's gated baseline (copied into the ledger at the checkpoint after T5), not
+  at T3.
 
 ## Amendments
 
