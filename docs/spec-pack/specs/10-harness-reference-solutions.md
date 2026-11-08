@@ -22,7 +22,7 @@ Each branch adds files on top of the previous one. `./mvnw verify` stays green o
 
 ## Branch `solution/level-1`: context engineering
 
-### `CLAUDE.md` (keep under 60 lines; this is the full reference text)
+### `CLAUDE.md` (at most 60 lines; this is the full reference text)
 ```markdown
 # Agentic Bookstore
 

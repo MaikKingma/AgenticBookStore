@@ -136,10 +136,10 @@ The active feature is stored in `.specify/feature.json`, not taken from the git 
 Gotchas: `/shape-spec` refuses to run outside plan mode. Agent OS needs bash: on Windows use WSL or Git Bash.
 
 ### Level cleared when (all tracks)
-- Spec artefacts committed with the code.
-- `./mvnw verify` green in your terminal, including `ArchitectureTest`.
-- Committed through `/ship`, and the test-gate hook passed.
-- The agent lists which test covers which scenario, and you checked two of them yourself.
+- Spec artefacts committed next to the code.
+- `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+- Commit made through your `/ship` command and passed the test-gate hook.
+- Every acceptance scenario in your spec maps to a test (ask the agent to list the mapping).
 
 ---
 
