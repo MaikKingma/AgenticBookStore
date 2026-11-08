@@ -30,6 +30,8 @@ metadata:
   edit fails "not found". Replace that one line by number with an ASCII-only `perl -i -pe 'if ($. == N) {...}'`,
   verify with `git diff -U0`, and report the Write/Edit-only deviation in the outbox.
 
+- Worktree Bash guard rejects backslash-escaped spaces in a path ("too complex"): double-quote every path containing
+  "OpenValue AI". Run mvnw as `with-budget.sh N "<root>/mvnw" -f "<root>/pom.xml" -pl <mod> ...` with `> log 2>&1`.
 - Outbox `updated` stamps: always take them from `date -u`, never estimate. Estimated stamps once ran ahead of the real
   clock, and QA orders its evidence by time.
 
