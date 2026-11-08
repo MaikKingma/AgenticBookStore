@@ -39,4 +39,6 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - To prove a new log WARN is not new behaviour, run the same guard test with the new class moved aside and grep the line there.
 - Never write a heartbeat stamp from memory: take `date -u` at each bump (a future stamp is the failure mode flagged against impl artifacts).
 
+- Shared `@Primary` fixed-clock test config (RANDOM_PORT): a thread-split probe clock in the production config cannot prove the fixed bean reaches the server, because both sides read the fixed bean. Add a control with the production clock fixed in a far year (must stay green). Dropping `@Primary` still compiles and starts: injection falls back to the bean NAME `clock`, so only a date assertion catches it. Removing the `@Import` from one class of the shared pair adds one `Started` line; count with `grep -c ' : Started '`. Check real-clock coincidences on the run day: a working-day literal can match the real date by chance, so find the assertion that actually bites (drop the import and the date pin) and name it.
+
 Related: [[scaffold-verification-techniques]], [[shell-traps]]
