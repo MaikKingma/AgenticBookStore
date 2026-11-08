@@ -65,8 +65,8 @@ Choices made while applying D6:
 - LSP timing (Maik's decision of 2026-11-08): the setup check installs and checks only the `jdtls` binary
   (`which jdtls` or `Get-Command jdtls`, per-OS install table). The `/plugin install` of `jdtls-lsp` happens in
   Level 2 Part A, so Levels 0 and 1 run without the plugin. This amends Maik's original D6 text "Setup check: add
-  which jdtls and the plugin install". The jdtls risk row no longer asks participants to open the repo at home with
-  the plugin; they check the binary at home instead.
+  which jdtls and the plugin install". Also Maik's decision of 2026-11-08: the jdtls risk row no longer asks
+  participants to open the repo at home with the plugin; they check the binary at home instead.
 - The Level 0 observation card has one row per failure mode with its evidence and debrief column, so it supports the
   "at least three failure modes, each with evidence" check. Spec 11 copies it into `notes/level-0.md`.
 - Rehearsal threshold (Maik's decision of 2026-11-08): spec 09's facilitator rehearsal of Level 0 must show at least
