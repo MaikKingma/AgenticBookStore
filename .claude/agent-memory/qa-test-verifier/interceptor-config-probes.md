@@ -16,6 +16,9 @@ Rule: probe an interceptor feature by family (comparison, order, bounds, path pa
 - Advice content type: a preset `.contentType(...)` skips Accept negotiation, so only a request with `Accept: application/problem+json` kills its removal; also probe the handler written without the shared `envelope(...)` helper.
 - Removing `Thread.sleep(millis)` alone is a compile error (unreachable catch): remove the whole try block or replace the argument.
 - Slice context faults show as `ApplicationContext failure threshold (1) exceeded` on every later test: quote the first cause (`grep -o "No qualifying bean of type ..."`), not the repeated lines.
+- "Exact, no double rounding" claims (BigDecimal request fields): `0.9999` and `500.0000000001` are distinct doubles, so a mutant checking `quantity.doubleValue()` with `q == Math.rint(q)` plus `intValue()` survives them. Only fractions below the double ulp at the bound (`500.00000000000001`, `1.0000000000000001`) kill it (201 with quantity 500 vs 400).
+- A witness method with several lines stops at the first failing line, so a mutant run proves only that line. To prove each line, run the mutant again against a test copy with the earlier lines removed (`grep -v` into scratch, restore both files by hash).
+- Per-draw random wiring: an `isInstanceOf(ThreadLocalRandom)` test cannot tell `ThreadLocalRandom::current` from a once-captured `ThreadLocalRandom.current()`; read the wiring line, and use a `RandomGenerator::getDefault` mutant as the kill witness.
 - Waiting for a background batch: a foreground `bash <script>` with a bounded `until grep -q DONE` loop (under 600 s) works; Monitor tools do not keep a subagent alive.
 
 Related: [[env-switch-mutant-runner]], [[spring-runtime-probes]]
