@@ -40,7 +40,7 @@ done by the orchestrator. The local referee runs once per task to prove the loca
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | triggers, concurrency, SHA pins and timeouts remove duplicate and superseded runs | root | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #47 | sdd/ci-performance/T1 | ENDORSE |
 | T2 | full test report on failure (`-fae`, annotations, report artifact; summary unverified per A3) | root | [T1] | B2 | critical | opus | sonnet | PASS r3 (A3) | #48 | sdd/ci-performance/T2 | ENDORSE r3 |
-| T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | pending | | | |
+| T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | in-review | #51 | sdd/ci-performance/T3 | |
 
 Batches are sequential because all three tasks edit `ci.yml`.
 
