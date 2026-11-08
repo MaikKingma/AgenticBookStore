@@ -38,7 +38,7 @@ done by the orchestrator. The local referee runs once per task to prove the loca
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | status | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | triggers, concurrency, SHA pins and timeouts remove duplicate and superseded runs | root | [] | B1 | elevated | sonnet | sonnet | pending | | | |
+| T1 | triggers, concurrency, SHA pins and timeouts remove duplicate and superseded runs | root | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #47 | sdd/ci-performance/T1 | ENDORSE |
 | T2 | full test report on failure (`-fae`, job summary, report artifact) | root | [T1] | B2 | critical | opus | sonnet | pending | | | |
 | T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | pending | | | |
 
@@ -98,7 +98,8 @@ Batches are sequential because all three tasks edit `ci.yml`.
      `gh api repos/MaikKingma/AgenticBookStore/check-runs/<job_id>/annotations`. If the page cannot be rendered the
      verifier returns BLOCKED with the diagnosis; no summary content is inferred from the action's inputs.
   7. Numbers: on the green run the report step duration and the verify job duration are recorded next to the baseline
-     median 52 s; the report step takes at most 10 s.
+     median 58 s (range 52 to 62; build step 50 s, 47 to 55, per the C0-8 script on the five warm baseline runs, see
+     Amendment A1); the report step takes at most 10 s.
   8. YAML parses, ASCII only, no pom change, nothing about Docker or Ryuk changes.
 
 ### T3: Docker images, Ryuk off and background pre-pull
@@ -125,11 +126,18 @@ Batches are sequential because all three tasks edit `ci.yml`.
 
 ## QA feed-forward
 
-(none yet)
+- From T1 r1 (QA lead ledger, "Feed-forward directives"): FF-1 baseline verify 58 s / build step 50 s, quote own
+  same-script values; FF-2 warning-line inventory against baseline job 128712764531 (T3: only `Ryuk has been disabled`
+  may be added); FF-3 byte-compare every `${{` string in a `python3 -I` script with a negative control; FF-4 save the
+  unfiltered `gh run view --json jobs` output as evidence; FF-5 (qa-final) residual: same-sha pushes to two filtered
+  branches share one push group.
 
 ## Amendments
 
-(none)
+- A1 2026-11-08T13:03Z, orchestrator (QA lead ruling F-B on T1 r1): T2 AC7 baseline reference corrected from 52 s
+  (research prose, a different run set) to 58 s, the same-script median over the five warm baseline runs. No pass rule
+  changes (the gate is report step at most 10 s). Gate re-run self-accepted: a measurement reference fix inside the
+  spec's authority.
 
 ## Decisions log (orchestrator, self-accepted)
 

@@ -1,3 +1,4 @@
 - [Spring tx event traps](spring-tx-event-traps.md) — listener order voids rollback proofs, BEFORE_COMMIT thrower, swallowed after-commit errors, test bean registration
 - [Spring MVC validation traps](spring-mvc-validation-traps.md) — Jackson 3 primitive nulls, class-level @Validated, boolean params, params conditions vs scoped advice
+- [CI Testcontainers research techniques](ci-testcontainers-research-techniques.md) — run-log pull timings, registry digest HEADs, Ryuk env-only, cache branch scoping, mirror no-fallback
 - [JPA/PostgreSQL persistence traps](jpa-postgres-persistence-traps.md) — Instant micro rounding, Limit ignored with join fetch, element collection version bump, unsorted-update deadlocks, statistics probe

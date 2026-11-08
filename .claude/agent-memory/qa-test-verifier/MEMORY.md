@@ -7,4 +7,5 @@
 - [Integration test probes](integration-test-probes.md) — probes for end-to-end integration tests
 - [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class and a restore-and-hash runner
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
+- [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; cancellation annotation; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
