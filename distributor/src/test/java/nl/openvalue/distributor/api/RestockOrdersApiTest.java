@@ -3,6 +3,7 @@ package nl.openvalue.distributor.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -255,6 +256,40 @@ class RestockOrdersApiTest {
         ApiTestFixtures.expectErrorEnvelope(
                 mockMvc.perform(get("/api/restock-orders/00000000-0000-0000-0000-000000000000")), 404,
                 "RESTOCK_ORDER_NOT_FOUND");
+    }
+
+    @Test
+    void wrongMethodIs405WithTheEnvelopeAndTheAllowHeader() throws Exception {
+        ResultActions result = mockMvc.perform(put("/api/restock-orders").contentType(MediaType.APPLICATION_JSON)
+                .content(quantityBody(10)));
+
+        ApiTestFixtures.expectErrorEnvelope(result, 405, "METHOD_NOT_ALLOWED");
+        assertThat(result.andReturn().getResponse().getHeader("Allow")).isEqualTo("POST");
+        assertThat(message(result)).isEqualTo("Method PUT is not allowed here");
+    }
+
+    @Test
+    void wrongMethodAnswersTheEnvelopeAsApplicationJsonEvenWhenProblemJsonIsAccepted() throws Exception {
+        ResultActions result = mockMvc.perform(put("/api/restock-orders").accept("application/problem+json"));
+
+        ApiTestFixtures.expectErrorEnvelope(result, 405, "METHOD_NOT_ALLOWED");
+        assertThat(result.andReturn().getResponse().getContentType()).startsWith("application/json");
+    }
+
+    @Test
+    void nonJsonBodyIs415WithTheEnvelopeAndTheAcceptHeader() throws Exception {
+        ResultActions textBody = mockMvc.perform(post("/api/restock-orders").contentType(MediaType.TEXT_PLAIN)
+                .content(quantityBody(10)));
+        ResultActions noContentType = mockMvc.perform(post("/api/restock-orders").content(quantityBody(10)));
+
+        for (ResultActions result : new ResultActions[] {textBody, noContentType}) {
+            ApiTestFixtures.expectErrorEnvelope(result, 415, "UNSUPPORTED_MEDIA_TYPE");
+            // The supported types of the mapping (JSON, YAML and the +json family) are all kept, not only the first.
+            assertThat(result.andReturn().getResponse().getHeader("Accept"))
+                    .contains("application/json")
+                    .contains("application/yaml");
+            assertThat(message(result)).isEqualTo("The request body must be application/json");
+        }
     }
 
     private static String quantityBody(int quantity) {
