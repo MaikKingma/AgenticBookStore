@@ -81,7 +81,7 @@ the reference §5 directives are the strategy, every task is `qaTier: elevated`.
 
 | id | summary | module | dependsOn | batch | qaTier | implModel | qaModel | closes | pr | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Chaos draws are thread-safe; a fractional restock quantity is 400 `INVALID_REQUEST`, never truncated | distributor | [] | 1 | elevated | opus | opus | findings 1, 2 | | |
+| T1 | Chaos draws are thread-safe; a fractional restock quantity is 400 `INVALID_REQUEST`, never truncated | distributor | [] | 1 | elevated | opus | opus | findings 1, 2 | #62 (branch sdd/fix-05-distributor-review/T1) | ENDORSE (r1, verifier PASS) |
 | T2 | 405 and 415 under `/api/` return the envelope with status and `Allow`/`Accept` kept; README lists them | distributor | [T1] | 2 | elevated | sonnet | sonnet | finding 4 | | |
 | T3 | `checkAvailabilityReportsStockAndDelivery` is deterministic on a shared fixed clock, one context as today | distributor | [T2] | 3 | elevated | sonnet | opus | finding 3 | | |
 
@@ -318,8 +318,10 @@ leadDirective: evidence chain for T3 (test-only fix): regression test `distribut
 
 ## QA feed-forward
 
-(none yet)
+- FF-T1 for T2 (qa-lead, T1 meta-review): (1) warning inventory of the module run (`warn|deprecat|self-attach|\|-ERROR`): baseline BeanPostProcessorChecker 6, Mockito block 1+1+4, ToolInputValidator 1, logback empty-pattern 4, context starts 5; any new line is quoted and classified; `Failure in @ExceptionHandler` must count 0 (it falsifies "rethrows the same exception"; prove that once with a probe that rethrows a new exception of the same type). (2) The 415 test asserts a second `Accept` value (`application/yaml`) or the full list, not only "contains application/json"; keep both `Allow` values (POST, GET) and both methods in the 405 messages (PUT, DELETE). (3) One 405 or 415 request with `Accept: application/problem+json` asserts `application/json` and the envelope. (4) implDirective: never edit a production file to probe, not even temporarily and not even inside the fileScope; mutation probes are the verifier's job (describe the mutant in the outbox). (5) T1 methods in `RestockOrdersApiTest.java` unchanged (diff against the T1 commit insertion-only); README: only the error table and the "Every error is JSON" line change. (6) Scratch files `fix05-t2-<role>-*` and a per-round hash file for every fileScope file.
+- FF-T1 for T3 (qa-lead): (1) the midnight probe cannot prove the fixed clock reaches the server (its server-thread date equals the fixed date); add a control: post-fix test files with `CatalogConfig.clock()` returning `Clock.fixed(Instant.parse("2000-06-15T10:00:00Z"), ZoneId.of("Europe/Amsterdam"))` (SHA'd copy, one run, restored) must PASS; the BACKORDER literal `2026-11-20` is the one that bites on a real-clock run near the fixed date. (2) Context count 5, BeanPostProcessorChecker 6, `Registered tools: 4` twice unchanged; `HealthEndpointTest` has no own `Started` line. (3) `CatalogConfig.java` byte-identical to HEAD after every probe (hash and porcelain per probe, restore by `cp`). (4) Same implDirective sentence as FF-T2 item 4; scratch prefix `fix05-t3-*`, per-round hash file.
 
 ## Amendments
 
-(none yet)
+- A1, 2026-11-08, orchestrator (within authority, sent to qa-t1 as a directive before its r0 run): T1 criterion 5 said every guard test is green before and after the fix. The boundary test's rejected side (`0.9999`, `500.0000000001`) asserts the new D3 message and `500.0000000001` is the truncation defect itself, so it is green only after the fix. `integralValuedQuantitiesAreAccepted`, `blankEanIsReportedBeforeAFractionalQuantity` and the accepted side (1, 500) are green before and after.
+- R1, 2026-11-08, from the qa-t1 r0 FAIL: criterion 5's "exact, no double rounding" was not pinned by its own values (both are distinct doubles; a double-based check mutant survived). T1 gained `fractionsBelowDoubleResolutionAreRejectedNotRoundedToTheBound` (`500.00000000000001`, `1.0000000000000001` -> 400), test only; each line kills the mutant.
