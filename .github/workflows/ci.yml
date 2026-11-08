@@ -34,6 +34,8 @@ jobs:
           java-version: '25'
           cache: maven
       - name: Build and test
+        # Must stay below the job timeout-minutes (15) so a hang ends this step as failed instead of cancelling the job, which lets the report and upload steps run.
+        timeout-minutes: 10
         run: ./mvnw -B -fae verify
       - name: Test report
         if: ${{ !cancelled() }}
