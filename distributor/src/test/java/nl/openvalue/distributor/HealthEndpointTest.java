@@ -29,6 +29,27 @@ class HealthEndpointTest {
     }
 
     @Test
+    void wrongMethodOnActuatorKeepsSpringBootsDefaultBody() {
+        // Outside /api/ the envelope handler rethrows, so Boot answers as before: no errorCode in the body.
+        restTestClient.post().uri("/actuator/health").exchange()
+                .expectStatus().isEqualTo(405)
+                .expectHeader().valueEquals("Allow", "GET")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(405)
+                .jsonPath("$.errorCode").doesNotExist();
+    }
+
+    @Test
+    void unknownApiPathKeepsSpringBootsDefault404Body() {
+        // The accepted known limit of spec 05: an unmapped /api/ path is not an envelope error.
+        restTestClient.get().uri("/api/no-such-resource").exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(404)
+                .jsonPath("$.errorCode").doesNotExist();
+    }
+
+    @Test
     void bindsToTheLoopbackAddressOnly() {
         assertThat(serverAddress).isEqualTo("127.0.0.1");
     }
