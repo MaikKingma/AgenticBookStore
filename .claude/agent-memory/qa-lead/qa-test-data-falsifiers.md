@@ -44,3 +44,14 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      is enforced at runtime and readable from `inputSchema().get("required")`: a falsifier, never inspection
      (spec 05 T3 lost a rework round to both).
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).
+   - HTTP client timeouts (loopback JDK `HttpServer`, port 0): the handler returns a VALID body after its sleep, so a
+     missing timeout gives a success, not an error for another reason; connect and read timeouts differ and connect
+     is longer than the sleep (kills swapped arguments); elapsed has a lower bound (kills a zero or unit-truncated
+     timeout that fails at once) and an upper bound below the sleep; plus a no-sleep positive control through the
+     same public constructor (proves base URL and conversion). Connect timeout itself stays inspection-only.
+   - "A body missing a required key" is one case per key: a single-key test lets every other key's check be dropped
+     (null field in the DTO or an NPE escaping the port). Null and empty lists are two cases.
+   - Year rules "clock year + 1 accepted, + 2 rejected" with a clock fixed in the current year match the real clock;
+     cards keep writing them (spec 06 T4). Rewrite to the past-year clock (2001 accepted, 2002 rejected).
+   - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the
+     local answer (409); a call would have produced the remote's 503 (spec 06 qa-final plan).

@@ -30,6 +30,9 @@ violates two halves hides a dropped half; records count twice (field plus canoni
 their package's suffix so they never double as naming violators. Description pins (`getDescription()` contains the
 packages, "may not be accessed by any layer") catch widenings that a violator list cannot.
 
+Registry trap: `everyArchitectureRuleHasAnExpectedViolator` pins the rule count (`hasSize(N)`); a task adding a rule
+must bump it, and the card should say so, or QA reads the edit as weakening an existing test.
+
 Traps to name in task cards: one fresh `LayeredArchitecture` per rule (an `ignoreDependency` leaks otherwise; only rule 1
 carries the process to `*Event` exception); never `onlyBeAccessed()`; never `DoNotIncludeTests` on the fixture importer;
 fixtures stay a sibling package of `nl.openvalue.bookstore` (Spring scanning) and never match Surefire includes.
