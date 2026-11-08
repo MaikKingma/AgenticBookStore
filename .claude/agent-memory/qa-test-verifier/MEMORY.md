@@ -1,11 +1,16 @@
 - [Scaffold verification techniques](scaffold-verification-techniques.md) — checking scaffolds and rework carry-forward
 - [Shell traps](shell-traps.md) — zsh and git quirks that look like empty results
 - [ArchUnit probes](archunit-probes.md) — mutation probes for ArchUnit rules
-- [Spring runtime probes](spring-runtime-probes.md) — running probes against the Spring app, live smoke replays, validator semantics via javap
+- [Spring runtime probes](spring-runtime-probes.md) — running probes against the Spring app, advice and slice witnesses, live smoke replays, validator semantics via javap
 - [Domain mutation probes](domain-mutation-probes.md) — witnesses and bypass probes for domain invariants and flow translators, plus port-order probes
 - [JPA adapter probes](jpa-adapter-probes.md) — probes for JPA adapters on Hibernate 7
 - [Integration test probes](integration-test-probes.md) — probes for end-to-end integration tests
 - [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class and a restore-and-hash runner
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
+- [Seed data probes](seed-data-probes.md) — JSON/text seed mutants with a byte-identity generator, CRLF and at-minimum must-pass probes, author sourcing
+- [MCP tool probes](mcp-tool-probes.md) — @McpTool mutants over unit plus SDK-client class, runtime-enforced required params, output-cap boundary witnesses
+- [STDIO shared-fork probes](stdio-shared-fork-probes.md) — in-process swapped-stream tests: order runs, green-but-leaking logging probes, stdout noise probes
+- [README and live-jar probes](readme-and-live-jar-probes.md) — README prose fact checks against data, 3-run jar start script, piped real-jar STDIO driver, claude mcp add checks, headless claude -p MCP proxy, 30 s shutdown trap
+- [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and advice content-type probes for an MVC interceptor with a validated properties record
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime

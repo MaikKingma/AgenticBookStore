@@ -3,5 +3,9 @@
 - [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps
 - [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
 - [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data, PER_CLASS hook guards
+- [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
+- [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
 - [Bean validation traps](bean-validation-traps.md) — trimmed-length rule needs a nested custom constraint (regex counts code points), JSON control-char test data, U+2003 is not padding
 - [Mapper test witnesses](mapper-test-witnesses.md) — validating-factory hand-offs need a rejected value; pass-throughs need a second literal; first/middle/last differ
+- [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
+- [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
