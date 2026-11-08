@@ -100,13 +100,13 @@ The `main` branch SHALL contain no agent or SDD configuration, enforced by CI.
 - **THEN** `main` has one commit, none of those paths, `./mvnw verify` is green on it (CI on `ubuntu-latest` with Docker), and tag `level-0-start` points to it
 
 ### Requirement: Level 0 produces observable failures
-The baseline SHALL make the Level 0 task fail visibly for an unconfigured agent in most runs.
+The baseline SHALL make the Level 0 task fail visibly for an unconfigured agent, with at least three failure modes per run.
 
 #### Scenario: Rehearsal (facilitator, manual)
 - **GIVEN** a fresh clone of `level-0-start` and a Claude Code session with no user-level `~/.claude/CLAUDE.md`
 - **WHEN** the Level 0 prompt from the workshop plan is run three times in fresh sessions with `/model sonnet` (what participants use)
-- **THEN** at least two runs show at least one of: ArchUnit failure, failing or missing tests, missing migration, double for money, logic outside domain, unverified "tests pass" claim. Record the outcomes in the facilitator notes.
-- If fewer than two runs fail, use the fallback prompts below and rehearse again.
+- **THEN** every run shows at least three of: ArchUnit failure, failing or missing tests, missing migration, double for money, logic outside domain, unverified "tests pass" claim, each with evidence (the failing test, the ArchUnit output or the wrong file). This is the same bar as "Level cleared when" for Level 0. Record the outcomes and the evidence in the facilitator notes.
+- If any run shows fewer than three failure modes with evidence, use the fallback prompts below and rehearse again.
 
 Fallback Level 0 prompts (more ambiguous, same area):
 1. "Black Friday is coming. Make books cheaper for a weekend and show it in search."

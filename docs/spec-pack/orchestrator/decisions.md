@@ -62,10 +62,16 @@ Choices made while applying D6:
   Lab 3 sync). Level 3 sync (4 min): the hook demo. The review subagent is the Level 3 stretch; the Stop hook stays
   optional in Level 3.
 - Solo minutes: Level 2 Part A LSP 8, Part B MCP 7; Level 3 permissions 4, hooks 11, skill and command 9.
-- The setup check installs the `jdtls` binary and the `jdtls-lsp` plugin at user scope, so nothing lands in the
-  repository before Level 0. Level 2 Part A starts with checking both and installs the plugin if it was skipped.
+- LSP timing (Maik's decision of 2026-11-08): the setup check installs and checks only the `jdtls` binary
+  (`which jdtls` or `Get-Command jdtls`, per-OS install table). The `/plugin install` of `jdtls-lsp` happens in
+  Level 2 Part A, so Levels 0 and 1 run without the plugin. This amends Maik's original D6 text "Setup check: add
+  which jdtls and the plugin install". The jdtls risk row no longer asks participants to open the repo at home with
+  the plugin; they check the binary at home instead.
 - The Level 0 observation card has one row per failure mode with its evidence and debrief column, so it supports the
   "at least three failure modes, each with evidence" check. Spec 11 copies it into `notes/level-0.md`.
+- Rehearsal threshold (Maik's decision of 2026-11-08): spec 09's facilitator rehearsal of Level 0 must show at least
+  three failure modes per run, each with evidence (the failing test, the ArchUnit output or the wrong file), the
+  same bar as "Level cleared when" for Level 0. It replaces "at least two runs show at least one of".
 - Old references to Lab 3 are mapped by content: cancel order, hooks, permissions, skill and command go to Level 3;
   the distributor MCP, the multi-role contributor contract test and `list_new_releases` go to Level 2.
 - The LSP setup note lives in `docs/lsp-setup.md` on `solution/level-2`.
@@ -80,7 +86,7 @@ Choices made while applying D6:
   `LevelProgress` component; no accounts, no backend, no stored progress.
 - `ENABLE_LSP_TOOL` is not used anywhere.
 
-Files changed: `workshop/workshop-plan.md` (format decisions, agenda, setup check with jdtls and plugin install,
+Files changed: `workshop/workshop-plan.md` (format decisions, agenda, setup check with the jdtls binary,
 Levels 0 to 4, Level 2 and Level 3 split, LSP part, "Level cleared when" per level, observation card, wrap-up,
 risks), `workshop/level-4-feature-briefs.md` (renamed from `lab-4-feature-briefs.md` with `git mv`, title),
 `workshop/sdd-framework-guide.md` (Level 4, branch names, briefs file, "Level cleared when"),
@@ -89,7 +95,7 @@ risks), `workshop/level-4-feature-briefs.md` (renamed from `lab-4-feature-briefs
 `specs/01-foundation.md`, `specs/02-catalogue.md`, `specs/03-inventory.md`, `specs/04-orders.md`,
 `specs/05-distributor-service.md`, `specs/06-distributor-acl.md`, `specs/07-restock-process.md`,
 `specs/08-bookstore-assistant.md`, `specs/12-storefront.md` (level references), `specs/09-workshop-baseline.md`
-(tag `level-0-start`, Level 0 traps and rehearsal, level wording), `specs/10-harness-reference-solutions.md`
+(tag `level-0-start`, Level 0 traps, rehearsal threshold of three failure modes per run, level wording), `specs/10-harness-reference-solutions.md`
 (branch names, `solution/level-2` with `.mcp.json`, plugin declaration, LSP setup note, ACL contract test
 reference, LSP requirement and scenarios; `solution/level-3`; rehearsal tasks; definition of done),
 `specs/11-workshop-guide-site.md` (one page per level, progress indicator, "Level cleared when" checklists,

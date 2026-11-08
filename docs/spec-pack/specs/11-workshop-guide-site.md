@@ -25,7 +25,7 @@ and stay online after the workshop as take-home material.
 ```
 guide/docs/
   index.md                                  # Welcome, agenda, the five levels, how to use this guide
-  00-setup-check.md                         # Prerequisites (mirrors the participant email), setup check, per-OS jdtls install, plugin install
+  00-setup-check.md                         # Prerequisites (mirrors the participant email), setup check, per-OS jdtls install
   01-level-0-break-the-agent.mdx            # Level 0: Break the agent
   02-level-1-context-engineering.mdx        # Level 1: Context engineering
   03-level-2-give-your-agent-eyes.mdx       # Level 2: Give your agent eyes (LSP + MCP); Part A LSP, Part B MCP, stretch
@@ -59,8 +59,10 @@ tabs and the feature briefs as a section of the same page.
   the wrong file) and **Column** (didn't know, didn't care, didn't check), at least three rows, plus one line on
   what went right.
 - The setup page lists the `jdtls` install per OS in tabs (macOS: `brew install jdtls`; Arch Linux: `yay -S jdtls`;
-  other Linux: a JDT LS release with a `jdtls` wrapper script on the `PATH`; Windows: through WSL), the check
-  `which jdtls` (PowerShell: `Get-Command jdtls`) and the plugin install `/plugin install jdtls-lsp@claude-plugins-official`.
+  other Linux: a JDT LS release with a `jdtls` wrapper script on the `PATH`; Windows: through WSL) and the check
+  `which jdtls` (PowerShell: `Get-Command jdtls`). It does not install the plugin.
+- The Level 2 page holds the plugin install `/plugin install jdtls-lsp@claude-plugins-official` in Part A; Levels 0
+  and 1 run without the plugin.
 - No em dashes in any page.
 
 ## Requirements

@@ -65,14 +65,8 @@ Installing `jdtls` (the plugin does not ship the binary; it needs JDK 17 or late
 | Other Linux | Extract a JDT LS release and put a `jdtls` wrapper script on the `PATH` |
 | Windows | Use WSL and install as on Linux there. Native Windows is not verified yet. |
 
-Then install the Java code intelligence plugin inside Claude Code:
-
-```text
-/plugin install jdtls-lsp@claude-plugins-official
-```
-
-Choose **Install for you (user scope)**, so nothing is written into the repository before Level 0. If the
-marketplace is missing, add it first: `/plugin marketplace add anthropics/claude-plugins-official`.
+The setup check covers the binary only. The `jdtls-lsp` plugin is installed in Level 2 Part A, so Levels 0 and 1
+run without it.
 
 Then set the workshop key (shown on the screen, never committed):
 
@@ -185,17 +179,19 @@ own MCP server, instead of guessing.
 
 **Start:** your Level 1 result, or `solution/level-1`. Catch-up / compare: `solution/level-2`.
 
-**Sync moment (3 min):** Maik shows the LSP install check (`which jdtls`, the **Installed** tab of `/plugin`), then
-`claude mcp add` for the distributor and one MCP question in the chat.
+**Sync moment (3 min):** Maik shows the LSP install check (`which jdtls`, `/plugin install
+jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+and one MCP question in the chat.
 
 ### Part A: LSP (8 min)
 Claude Code has a built-in, read-only LSP tool. With a code intelligence plugin installed, it gives go to
 definition, find references, type info, document and workspace symbols, implementations and call hierarchy, and
 Claude Code reports diagnostics automatically after every edit.
 1. Check the binary: `which jdtls` (Windows: inside WSL). If it is missing, install it as in the setup check.
-2. Check the plugin: `/plugin`, tab **Installed**, shows `jdtls-lsp`. If you skipped it in the setup check, install
-   it now: `/plugin install jdtls-lsp@claude-plugins-official` (if the marketplace is missing, first
-   `/plugin marketplace add anthropics/claude-plugins-official`).
+2. Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official` (if the marketplace is missing, first
+   `/plugin marketplace add anthropics/claude-plugins-official`). Choose a scope: user scope keeps it out of the
+   repository, project scope writes it to `.claude/settings.json` (as on `solution/level-2`). Confirm it on the
+   **Installed** tab of `/plugin`.
 3. Use it: "Find all references to `Money.of`." The answer comes from the language server, not from a text search,
    and spans several layers (domain, flows and mappers, tests).
 4. Make one deliberate type error: "In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch
@@ -344,7 +340,7 @@ spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes.
 | Pro usage limit reached | `/model sonnet` from the setup check. `/usage` to check. Pair up if someone hits the limit. Facilitator has a spare Max account for demos. |
 | `ANTHROPIC_API_KEY` exported by a participant | Claude Code would switch to that key. We only ever use `BOOKSTORE_AI_API_KEY`. The setup check confirms `/status` shows the subscription. |
 | Workshop key abuse | Console spend limit, key scoped to a workshop workspace, revoked after the session. |
-| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants open the repo once at home with the plugin and run the verify prompt (the deliberate type error of Level 2 Part A). On the day, the facilitator demo is the fallback; continue with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
+| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`which jdtls`). The plugin is installed only in Level 2 Part A, so Levels 0 and 1 run without it. On the day, the facilitator demo is the fallback; continue with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
 | Windows participants | Claude Code runs natively; hooks are bash scripts, so recommend Git for Windows (Git Bash) or WSL2. Provide `.ps1` variants of the hook scripts in `solution/level-3`. Agent OS needs bash (WSL or Git Bash). jdtls via WSL. |
 | MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fallback: STDIO transport (`./mvnw -pl distributor package`, then `claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=stdio`). |
 | Corporate laptops block installs | Email asks for admin rights or a personal laptop. Pairing as fallback. |
