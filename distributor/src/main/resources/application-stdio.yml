@@ -1,0 +1,18 @@
+# STDIO transport for MCP clients that start the jar themselves (--spring.profiles.active=stdio).
+# stdout carries only JSON-RPC lines, so no web server, no banner and no console logging; logs go to the file.
+spring:
+  ai:
+    mcp:
+      server:
+        stdio: true
+  main:
+    web-application-type: none
+    banner-mode: "off"
+
+logging:
+  pattern:
+    console: ""
+  threshold:
+    console: "OFF"            # no log event reaches the console appender
+  file:
+    name: distributor-stdio.log
