@@ -7,6 +7,10 @@ metadata:
 
 - **One module per task.** The orchestrator batches by disjoint modules (root, bookstore, distributor, later frontend).
   Check briefed file scopes for spillover (spec 01: distributor config sat inside a "bookstore" task) and split it.
+  A new Maven module: its own task builds it standalone (`./mvnw -f <module>/pom.xml verify`); adding it to the
+  root module list is a separate root task that depends on it (spec 12).
+- **Mid-shaping spec changes arrive as urgent directives.** Re-read the spec file before finalising the breakdown,
+  even when the brief restated it.
 - **`main` strips agent and pack paths** (spec 09 publish script: `docs/spec-pack/`, `agent-os/`, `.claude/`,
   `CLAUDE.md`). Code, comments, POMs, YAML and CI must never cite them; explanations go inline in plain words.
   Proposed as an `agent-os/standards/` rule in the spec 01 strategy outbox; delete this bullet once it is a standard.
