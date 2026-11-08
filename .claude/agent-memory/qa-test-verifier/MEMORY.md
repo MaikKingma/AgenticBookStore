@@ -14,3 +14,4 @@
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and advice content-type probes for an MVC interceptor with a validated properties record; sub-ulp BigDecimal and random wiring witnesses
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
+- [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls, byte proofs for derived files
