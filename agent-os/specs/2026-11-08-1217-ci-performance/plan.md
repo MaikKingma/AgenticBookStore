@@ -40,7 +40,7 @@ done by the orchestrator. The local referee runs once per task to prove the loca
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | triggers, concurrency, SHA pins and timeouts remove duplicate and superseded runs | root | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #47 | sdd/ci-performance/T1 | ENDORSE |
 | T2 | full test report on failure (`-fae`, annotations, report artifact; summary unverified per A3) | root | [T1] | B2 | critical | opus | sonnet | PASS r3 (A3) | #48 | sdd/ci-performance/T2 | ENDORSE r3 |
-| T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | in-review | #51 | sdd/ci-performance/T3 | |
+| T3 | Docker images: Ryuk off and background pre-pull of `postgres:18.6`, measured | root | [T2] | B3 | elevated | sonnet | sonnet | PASS r1 | #51 | sdd/ci-performance/T3 | ENDORSE |
 
 Batches are sequential because all three tasks edit `ci.yml`.
 
@@ -137,6 +137,9 @@ Batches are sequential because all three tasks edit `ci.yml`.
   equal to the console totals plus the annotations API, never summary evidence, summary stated as UNVERIFIED by QA;
   FF-8 (qa-final residuals) annotations point at `.class` paths, `github.job` collides across future matrix legs;
   FF-9 (T3) compare totals with T2 green run 42483525266, byte-compare the report and upload steps against e31cf21.
+- From T3 r1 (qa-final): FF-10 count pre-pull lines anchored on the Actions timestamp prefix (the step echo gives false
+  hits), digest re-verified; FF-11 baseline runs mixed suites, use T2 green run 42483525266 as the same-suite row and
+  never attribute the whole job-duration drop to this spec; FF-12 exactly one job-level env key (A4).
 
 ## Amendments
 
@@ -161,6 +164,10 @@ Batches are sequential because all three tasks edit `ci.yml`.
   kept). Amendment A2 (Claude in Chrome route) is withdrawn. qa-final must not require job-summary evidence (QA lead
   FF-7 and the summary part of qa-final focus 2 are superseded). Consequence: T2 gate re-run as verifier round 3
   (`mode: resume`, narrowed criteria) plus QA lead meta-review; no implementation rework.
+- A4 2026-11-08T14:12Z, orchestrator (QA lead note at T3 r1): T3 AC1 supersedes T1 AC5's "no job-level env" for the
+  single key `TESTCONTAINERS_RYUK_DISABLED` under `jobs.verify`; any other job-level env stays excluded. Spec 01's
+  sentence on environment settings that do not skip or weaken tests covers it. Gate re-run self-accepted: a
+  clarification of how two approved criteria compose, no behaviour change.
 
 ## Decisions log (orchestrator, self-accepted)
 
