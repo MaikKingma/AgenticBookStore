@@ -110,5 +110,7 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
    into a `python3 -I` script with a one-space negative control. The warning grep for CI logs must include Maven/JVM lines
    (`\[WARNING\]|WARNING: | WARN `) compared by count with a baseline job log, not only `##[warning]` and annotations.
    Ask for `--json jobs` evidence saved unfiltered (steps included), or step durations have no file behind them.
+   Greps for a `run:` step's output must anchor on the Actions timestamp prefix (`Z <text>`): the step header echoes the script source, so a plain count is inflated. A "runs in the background" claim is proven by the step's run-JSON duration (0 s) against the work's own duration, not by reading `&`.
+   Before fixing a baseline run set for a timing gate, check that the runs are the same suite (per-module `Tests run:` totals). In ci-performance, four different suites were mixed: a per-class metric survives that, but job and Maven totals are not like-for-like. Add a same-suite control run (the previous task's green run).
 
 **How to apply:** at strategy time put these into the common directive block. In reviews, CHALLENGE any probe or clean-tree claim that lacks the snapshot or the quoted reason line.

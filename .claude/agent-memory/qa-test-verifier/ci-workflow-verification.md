@@ -20,4 +20,10 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - The annotations API and the rendered page show action-junit-report failures (title `Class.method`, message `expected ... but was ...`); `gh run download -n <name> -D <fresh dir>` plus an ElementTree sum of `tests`/`failures` proves artifact completeness per module.
 - playwright-cli: the Bash guard refuses `playwright-cli eval`; use `run-code --filename=<js in .claude/comms/tmp>` and redirect `--raw` output to the scratchpad. It writes `.playwright-cli/` into the cwd (the worktree); move it to the scratchpad before finishing.
 
+- Log-count traps: a `grep -c` on a string that is also in a `run:` script (for example `postgres pull start`) counts the echoed script source in the "Run" group header; anchor on the Actions timestamp (`Z <string> 20`). Run every mechanism regex on a baseline log first as a positive control (a "0 pulls" claim means nothing if the pattern never matches).
+- Container-start metric: find the class that starts the container as the `Starting <Class> using Java` line before the first `Creating container for image`, then its Surefire `Time elapsed: X s -- in ...<Class>`; compute baseline and candidate with one script and compare per-run ranges, not only medians. Image `Version:` sits on the line after `Image:` in the "Set up job" log (step label can be `UNKNOWN STEP` in old logs).
+- Warning inventory diff: strip the log timestamp and PID before comparing `[WARNING]|WARNING: | WARN ` lines, else every line looks added and removed.
+- `python3 -I` ignores a `#!/usr/bin/env python3 -I` shebang; run `python3 -I script.py`. The Write tool, not a Bash heredoc, for script content.
+- A stamp written into `updated:` ahead of `date -u` is a trap; take the time from `date -u` right before each bump.
+
 Related: [[final-sweep-checks]], [[shell-traps]]

@@ -19,7 +19,14 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # Ryuk (the Testcontainers reaper) is switched off here. Safe on ephemeral hosted runners only,
+      # because the runner VM is destroyed after the job. Never copy this to a persistent or self-hosted runner.
+      TESTCONTAINERS_RYUK_DISABLED: 'true'
     steps:
+      - name: Pre-pull Postgres image in background
+        run: |
+          nohup bash -c 'echo "postgres pull start $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" > "$RUNNER_TEMP/postgres-pull.log"; if docker pull postgres:18.6 >> "$RUNNER_TEMP/postgres-pull.log" 2>&1; then echo "postgres pull end $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" >> "$RUNNER_TEMP/postgres-pull.log"; else echo "postgres pull failed $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" >> "$RUNNER_TEMP/postgres-pull.log"; fi' > /dev/null 2>&1 &
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
@@ -46,6 +53,11 @@ jobs:
           path: '**/target/surefire-reports/**'
           retention-days: 14
           if-no-files-found: warn
+      - name: Show Postgres pre-pull log and image digest
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/postgres-pull.log" || echo "no pre-pull log found"
+          docker image inspect --format '{{index .RepoDigests 0}}' postgres:18.6 || echo "postgres:18.6 not present locally"
 
   windows-build:
     runs-on: windows-latest
