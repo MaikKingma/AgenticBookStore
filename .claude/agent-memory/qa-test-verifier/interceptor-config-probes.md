@@ -20,5 +20,4 @@ Rule: probe an interceptor feature by family (comparison, order, bounds, path pa
 - A witness method with several lines stops at the first failing line, so a mutant run proves only that line. To prove each line, run the mutant again against a test copy with the earlier lines removed (`grep -v` into scratch, restore both files by hash).
 - Per-draw random wiring: an `isInstanceOf(ThreadLocalRandom)` test cannot tell `ThreadLocalRandom::current` from a once-captured `ThreadLocalRandom.current()`; read the wiring line, and use a `RandomGenerator::getDefault` mutant as the kill witness.
 - Waiting for a background batch: a foreground `bash <script>` with a bounded `until grep -q DONE` loop (under 600 s) works; Monitor tools do not keep a subagent alive.
-
 Related: [[env-switch-mutant-runner]], [[spring-runtime-probes]]

@@ -39,6 +39,16 @@ class ArchitectureSelfTest {
     private static final String NESTED_CLASS = FIXTURES + "command.BookCommands$InnerThing";
     private static final String ANNOTATED_PACKAGE_INFO = FIXTURES + "query.package-info";
 
+    // Rule 1 fixtures that keep its one exception narrow, each the only violator of its aspect: process holding a
+    // domain class whose name contains Event without ending with it, process holding a domain exception, and query
+    // holding a domain event (the exception is for process only).
+    private static final String BOOK_EVENT_LOG = FIXTURES + "domain.BookEventLog";
+    private static final String EVENT_LOG_DELEGATE = FIXTURES + "process.EventLogDelegate";
+    private static final String BOOK_REFUSED_EXCEPTION = FIXTURES + "domain.BookRefusedException";
+    private static final String REFUSAL_DELEGATE = FIXTURES + "process.RefusalDelegate";
+    private static final String BOOK_ADDED_EVENT = FIXTURES + "domain.BookAddedEvent";
+    private static final String BOOK_EVENT_QUERIES = FIXTURES + "query.BookEventQueries";
+
     // Money rule fixtures: at least one violator per guarded layer, each with a double or float field or parameter.
     private static final String PRICED_BOOK = FIXTURES + "domain.PricedBook";
     private static final String PRICE_DTO = FIXTURES + "domaininteraction.PriceDTO";
@@ -103,7 +113,10 @@ class ArchitectureSelfTest {
             Map.entry("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION", List.of(
                     FIXTURES + "query.BookQueries",
                     FIXTURES + "process.LeakyDelegate",
-                    FIXTURES + "RootLevelConfig")),
+                    FIXTURES + "RootLevelConfig",
+                    EVENT_LOG_DELEGATE,
+                    REFUSAL_DELEGATE,
+                    BOOK_EVENT_QUERIES)),
             Map.entry("DOMAININTERACTION_IS_ONLY_ACCESSED_BY_ADAPTERS", List.of(FIXTURES + "domain.LeakyAggregate")),
             Map.entry("COMMAND_IS_NOT_ACCESSED_BY_OTHER_LAYERS", List.of(FIXTURES + "query.BookReader")),
             Map.entry("QUERY_IS_NOT_ACCESSED_BY_OTHER_LAYERS", List.of(FIXTURES + "data.BookDataServiceImpl")),
@@ -172,6 +185,50 @@ class ArchitectureSelfTest {
 
         assertThat(detailsOf("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION"))
                 .noneMatch(detail -> detail.contains(EVENT_PROCESSOR));
+    }
+
+    @Test
+    void domainRuleReportsAProcessFieldOfADomainClassWhoseNameOnlyContainsEvent() {
+        assertThat(fixtures.contain(BOOK_EVENT_LOG)).isTrue();
+
+        assertReportsField("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION", EVENT_LOG_DELEGATE + ".log", BOOK_EVENT_LOG);
+    }
+
+    @Test
+    void domainRuleReportsAProcessFieldOfADomainException() {
+        assertThat(fixtures.contain(BOOK_REFUSED_EXCEPTION)).isTrue();
+
+        assertReportsField("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION", REFUSAL_DELEGATE + ".refusal",
+                BOOK_REFUSED_EXCEPTION);
+    }
+
+    @Test
+    void domainRuleReportsAQueryFieldOfADomainEvent() {
+        assertThat(fixtures.contain(BOOK_ADDED_EVENT)).isTrue();
+
+        assertReportsField("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION", BOOK_EVENT_QUERIES + ".event",
+                BOOK_ADDED_EVENT);
+    }
+
+    @Test
+    void eventExceptionFixturesViolateNoOtherRule() {
+        List<String> eventExceptionFixtures = List.of(EVENT_LOG_DELEGATE, REFUSAL_DELEGATE, BOOK_EVENT_QUERIES,
+                BOOK_EVENT_LOG, BOOK_REFUSED_EXCEPTION);
+        assertThat(eventExceptionFixtures)
+                .allSatisfy(name -> assertThat(fixtures.contain(name)).as("fixture %s imported", name).isTrue());
+        Set<String> otherRules = new TreeSet<>(EXPECTED_VIOLATORS.keySet());
+        otherRules.remove("DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION");
+        assertThat(otherRules).hasSize(21);
+
+        for (String ruleField : otherRules) {
+            List<String> details = detailsOf(ruleField);
+            for (String fixture : eventExceptionFixtures) {
+                Pattern asOrigin = Pattern.compile(
+                        "^(Class|Field|Method|Constructor|Static Initializer) <" + Pattern.quote(fixture) + "[.$>].*");
+                assertThat(details).as("%s does not name %s as origin", ruleField, fixture)
+                        .noneMatch(detail -> asOrigin.matcher(detail).matches());
+            }
+        }
     }
 
     @Test

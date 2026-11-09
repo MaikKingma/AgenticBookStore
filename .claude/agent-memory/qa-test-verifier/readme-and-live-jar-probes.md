@@ -11,53 +11,22 @@ commands and paths. Prose overclaims ("do not match real editions", "never") sur
 **Why:** a README stated that no EAN matched a real edition; one seed EAN (the shared Pride and Prejudice ISBN) is a real
 Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a WebFetch of openlibrary `/isbn/<ean>.json`.
 **How to apply:**
-- Start proof: one script in `.claude/comms/tmp/` run through `with-budget.sh 120`: per run preflight `lsof`, a python
-  `time.time()` stamp before `java -jar ... &`, a 50 ms curl poll of `/actuator/health`, the `Started ... (process running for Y)`
-  line, `lsof` LISTEN, `/actuator/info` 200 and `/actuator/env` 404, curl MCP `initialize` with
-  `Accept: application/json, text/event-stream`, `kill`, `wait` (143), teardown `lsof` exit 1. macOS `date` has no `%N`.
+- Start proof: one script in `.claude/comms/tmp/` run through `with-budget.sh 120`: per run preflight `lsof`, a python `time.time()` stamp before `java -jar ... &`, a 50 ms curl poll of `/actuator/health`, the `Started ... (process running for Y)` line, `lsof` LISTEN, `/actuator/info` 200 and `/actuator/env` 404, curl MCP `initialize` with `Accept: application/json, text/event-stream`, `kill`, `wait` (143), teardown `lsof` exit 1. macOS `date` has no `%N`.
 - `spring-boot:run` forks: kill the mvn PID, then re-check the port and kill a leftover java PID only if you started it.
-- Real-jar STDIO: a `python3 -I` driver with a reader thread, stdin held open until both replies arrive, then close stdin
-  (the server exits by itself); stdout and stderr to separate files; use a fresh subdirectory of the scratchpad as cwd so an
-  implementer's older log file cannot pass for yours. Check stdout lines strictly (no empty lines, ids exactly 1 and 2).
-- `claude mcp add` is never run; compare README lines to `claude mcp add --help` (usage and the two example shapes) and prove
-  the URL by curl and the jar arguments by the piped run.
-- Rework re-check with no saved copy of the first-round file (untracked file, only a hash): rebuild it by swapping the reworked
-  lines for the old text (known from the earlier verdict quote, tried over every line-wrap) and compare sha256; a match proves
-  the rest of the file is byte-identical. Save a copy next time (`cp` to the scratchpad) along with the hash.
+- Real-jar STDIO: a `python3 -I` driver with a reader thread, stdin held open until both replies arrive, then close stdin (the server exits by itself); stdout and stderr to separate files; use a fresh subdirectory of the scratchpad as cwd so an implementer's older log file cannot pass for yours. Check stdout lines strictly (no empty lines, ids exactly 1 and 2).
+- `claude mcp add` is never run; compare README lines to `claude mcp add --help` (usage and the two example shapes) and prove the URL by curl and the jar arguments by the piped run.
+- Rework re-check with no saved copy of the first-round file (untracked file, only a hash): rebuild it by swapping the reworked lines for the old text (known from the earlier verdict quote, tried over every line-wrap) and compare sha256; a match proves the rest of the file is byte-identical. Save a copy next time (`cp` to the scratchpad) along with the hash.
 - `localhost` tries `::1` first; a server bound to 127.0.0.1 only answers after curl falls back (`curl -v` shows both Trying lines).
-- A literal grep over a path that does not exist yet (`http/distributor.http` before T8) exits 2 with a warning and prints
-  no matches: say so rather than calling it a clean empty result.
-
-- `.http` request collections: a `python3 -I` driver parses the file's own bytes (split on `###`, comments, request line, headers,
-  body by line range, emulate the `client.global.set(...)` handler), sends with http.client, and oracles every body from the seed
-  JSON plus today's Amsterdam date. Prove it bites with 4-5 mutated COPIES in the scratchpad (swap an EAN against its comment,
-  quantity 0 to 1, drop the handler, change a query); never edit the repo file. A comment-vs-seed rule must only fire when the
-  comment actually names a title (a first run FAILed on a comment that makes no title claim: driver defect, keep both outputs).
-  A mutant with an unresolved `{{var}}` makes Tomcat log "Invalid character found in the request target": attribute it.
-
-- Headless Claude Code proxy (never `claude mcp add`): run `claude -p ... --mcp-config <scratch json> --strict-mcp-config
-  --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` from a script that `cd`s to the scratchpad (the
-  project's CLAUDE.md and settings stay out). Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`),
-  then the `tool_use` and its `tool_result`. A 429 `model_requires_usage_credits` on the default model kills the turn but
-  init still proves the connection; a retry with only `--model <alias>` gets the tool call (report it as a deviation).
-  The server log line `Client initialize request - Protocol: ... name=claude-code, version=...` proves the negotiated version.
-- After a Claude Code HTTP session, SIGTERM on a Boot MCP server hangs 30 s in graceful shutdown (open SSE GETs) while the
-  port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
+- A literal grep over a path that does not exist yet (`http/distributor.http` before T8) exits 2 with a warning and prints no matches: say so rather than calling it a clean empty result.
+- `.http` request collections: a `python3 -I` driver parses the file's own bytes (split on `###`, comments, request line, headers, body by line range, emulate the `client.global.set(...)` handler), sends with http.client, and oracles every body from the seed JSON plus today's Amsterdam date. Prove it bites with 4-5 mutated COPIES in the scratchpad (swap an EAN against its comment, quantity 0 to 1, drop the handler, change a query); never edit the repo file. A comment-vs-seed rule must only fire when the comment actually names a title (a first run FAILed on a comment that makes no title claim: driver defect, keep both outputs). A mutant with an unresolved `{{var}}` makes Tomcat log "Invalid character found in the request target": attribute it.
+- Headless Claude Code proxy (never `claude mcp add`): `claude -p ... --mcp-config <scratch json> --strict-mcp-config --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` from a script that `cd`s to the scratchpad. Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`), then `tool_use` and `tool_result`. A 429 `model_requires_usage_credits` kills the turn but init still proves the connection; retry with `--model <alias>` (a deviation). The server's `Client initialize request - Protocol: ...` log line proves the negotiated version.
+- After a Claude Code HTTP session, SIGTERM on a Boot MCP server hangs 30 s in graceful shutdown (open SSE GETs) while the port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
 - `clean test` order runs delete `target/<app>.jar`: rebuild (`clean verify`) before live runs from the jar.
-
-- Tip-vs-base live comparison: one session script per phase starts both jars (`--server.port`), polls health, runs
-  one driver against each URL, stops by PID and waits for exit, then diffs only the outside-scope requests. For a
-  chaos share, `seq 1 400 | xargs -P 8 -I{} sh -c 'curl -o d/b{} -w %{http_code} ... > d/c{}'` gives one body and
-  code file per request (no interleaving); count codes and check every 503 body afterwards.
-- Thread-safety repro through real wiring: draw from the wired supplier on 8 threads, then count values seen on more
-  than one thread with per-thread sort+dedupe, merge, sort, adjacent-equal (primitive arrays; a HashMap of 1.6M boxed
-  longs is slow and heap-hungry).
-- Multi-phase live run with app restarts (chaos flags, then stopped): one `python3 -I` session script under
-  `with-budget.sh`. It starts each `./mvnw -pl <m> spring-boot:run` with `Popen(start_new_session=True)`, stops it
-  with `os.killpg(pid, SIGTERM)` (that also reaches the forked JVM, mvn exits 143), and then polls `lsof` until the
-  port is free. Pass flags as `-Dspring-boot.run.arguments=--<prop>=<v>`. For every chaos phase, add a witness that
-  hits the dependency directly (a 503 body, a 6 s `time_total`), so the phase proves the flag took effect.
-  Time with curl `-w %{time_total}`, write one CHECK line per expectation, and finish with a DB count via
-  `docker compose exec -T postgres psql -At`.
-
+- Tip-vs-base live comparison: one session script per phase starts both jars (`--server.port`), polls health, runs one driver against each URL, stops by PID and waits for exit, then diffs only the outside-scope requests. For a chaos share, `seq 1 400 | xargs -P 8 -I{} sh -c 'curl -o d/b{} -w %{http_code} ... > d/c{}'` gives one body and code file per request (no interleaving); count codes and check every 503 body afterwards.
+- Thread-safety repro through real wiring: draw from the wired supplier on 8 threads, count values seen on more than one thread via per-thread sort+dedupe, merge, adjacent-equal on primitive arrays (boxed HashMaps are slow).
+- Multi-phase live run with app restarts: one `python3 -I` session script under `with-budget.sh`. It starts each `./mvnw -pl <m> spring-boot:run` with `Popen(start_new_session=True)`, stops it with `os.killpg(pid, SIGTERM)` (reaches the forked JVM, mvn exits 143), then polls `lsof` until the port is free. Pass flags as `-Dspring-boot.run.arguments=--<prop>=<v>`. Every chaos phase needs a witness hitting the dependency directly (a 503 body, a 6 s `time_total`) so the phase proves the flag took effect. One CHECK line per expectation, DB count at the end.
+- Counting calls to a downstream that logs nothing and has no list endpoint: start the app with `-Dspring-boot.run.arguments=--distributor.base-url=http://127.0.0.1:<port>` and host a recording forwarder (python `ThreadingHTTPServer`) in the replay driver; it counts POSTs and keeps bodies (also fields the downstream stores but never echoes). A JDK-client RestClient sends CHUNKED bodies: a Content-Length-only forwarder hangs until the read timeout and looks like a product outage. Decode chunked, drop upgrade/transfer-encoding headers, log forwarder errors.
+- State a view hides: compare `row_to_json(s)` (version included) before and after via `docker compose -f <abs compose> exec -T postgres psql -At`; truncate tables between runs; `compose down -v`, `lsof`, `compose ps -a` prove teardown.
+- A mutant that deletes the capture handler crashes a naive driver (KeyError): turn it into a CHECK FAIL line.
+- Shared Compose project trap: `spring-boot:run` plus `docker compose down -v` removes the `bookstore` project's postgres for every checkout and worktree. When other cycles may run, use your own container (`docker run -d --name <id>-pg ... -p 127.0.0.1:<free port>:5432`), start the jars with `env -u ANTHROPIC_API_KEY java -jar <jar> --spring.docker.compose.enabled=false --spring.datasource.url=...`, reach the DB with `docker exec -i <id>-pg psql`, and quote `docker ps -a` before and after. A forwarder toggle in the driver (forwarder checks become INFO when off) lets one script prove the default-URL path and the counted path.
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]

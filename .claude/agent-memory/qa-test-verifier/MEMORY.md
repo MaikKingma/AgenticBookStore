@@ -1,11 +1,11 @@
 - [Scaffold verification techniques](scaffold-verification-techniques.md) — checking scaffolds and rework carry-forward
-- [Shell traps](shell-traps.md) — zsh and git quirks that look like empty results
+- [Shell traps](shell-traps.md) — zsh, grep, git and Bash-tool quirks that look like empty results
 - [ArchUnit probes](archunit-probes.md) — mutation probes for ArchUnit rules
-- [Spring runtime probes](spring-runtime-probes.md) — probes against the Spring app, advice and slice witnesses, live smoke replays, validator semantics, EPP/offline-switch probes, keyed-referee grep traps
-- [Domain mutation probes](domain-mutation-probes.md) — witnesses and bypass probes for domain invariants and flow translators, port-order probes
+- [Spring runtime probes](spring-runtime-probes.md) — Spring app probes, advice and slice witnesses, live smoke replays, validator semantics, EPP/offline-switch probes, view-controller order witness, keyed-referee grep traps
+- [Domain mutation probes](domain-mutation-probes.md) — witnesses and bypass probes for domain invariants, flow translators, port order
 - [JPA adapter probes](jpa-adapter-probes.md) — probes for JPA adapters on Hibernate 7
 - [Integration test probes](integration-test-probes.md) — probes for end-to-end integration tests
-- [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class and a restore-and-hash runner
+- [Env-switch mutant runner](env-switch-mutant-runner.md) — many probes via one env-selected mutant file per class, restore-and-hash runner
 - [Final sweep checks](final-sweep-checks.md) — qa-final checks and traps
 - [Seed data probes](seed-data-probes.md) — JSON/text seed mutants with a byte-identity generator, CRLF and at-minimum probes
 - [MCP tool probes](mcp-tool-probes.md) — @McpTool mutants, runtime-enforced required params, output-cap boundary witnesses
@@ -14,7 +14,9 @@
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and content-type probes for an MVC interceptor with validated properties
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks, timeout annotations, job-log truncation traps
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
+- [Frontend Vitest probe techniques](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap survivor gap, dev-server script, sort mutants, page-level status probes, tsc type probes
 - [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
-- [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT listener and REQUIRES_NEW delegate probes, IT-equivalent mutants, row-lock hang, log line attribution
-- [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag region guards on JSON views, null-key forms, startsWith vs exact detail, verifying an outline on patched test copies
+- [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT and REQUIRES_NEW delegate probes, row-lock hang
+- [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag guards on JSON views, null-key forms, detail pins
+- [Live UI walk verification](live-ui-walk-verification.md) — re-walking a browser walk with own seed, playwright-cli listeners, favicon/Tab traps, table squeeze, 4xx console line, access-log cache check

@@ -23,22 +23,14 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 - `git worktree add --detach .claude/worktrees/<name> <base>`, then `git -C <wt> checkout <tip> -- <test files>` (only there). Steps: base, then `cp` the other task's production file from the clone, then `cp` your own. Expect red, red, green, and `shasum` the files in every run. Run `clean test` from a script that `cd`s into the worktree.
 - The IT `problem()` helper asserts the status before it reads the body, but RestTestClient prints the response to the log. `grep '"status":400' <log>` gives the field and message for the failure shape.
 - Scratch IT methods: `place(...).expectBody(JSON_OBJECT).returnResult()` with `getStatus()` / `getResponseBody()` records a record-only scenario without asserting it. A `System.out.println("TAG " + problem)` line per method makes the log quotable. Remove the worktree with `--force`.
-
-- Simpler bugfix ladder when the brief allows it: one detached worktree per task AT THE TIP, revert only that task's
-  production files with `git -C <wt> show <base>:<path> > <file>`, run the union of all tasks' regression classes
-  (exact red set = own tests only, other tasks green = cross control), restore with `show HEAD:`, porcelain empty.
-- Surefire `runOrder=reversealphabetical` sorts by fully qualified name, and an upper-case class in the root package
-  (`...distributor.HealthEndpointTest`) sorts BEFORE lower-case subpackages, so reverse runs it last. To prove a
-  shared context starts from a given class, run `-Dtest=A,B -Dsurefire.runOrder=alphabetical` and count `Started`.
-
-- Real-ACL end-to-end when IntegrationTestBase mocks the port: a scratch `@SpringBootTest(RANDOM_PORT)` class NOT
-  extending the base, `@Import(PostgresTestConfig.class)`, a static JDK HttpServer started in a static field and wired
-  by `@DynamicPropertySource`, a volatile body field per scenario and a hit counter asserted per call. Add a
-  record-only method (prints status, row delta, stored row) to run per production state (factory, each fix alone).
-  `ExchangeResult.getResponseBodyContent()` gives raw bytes for byte-identity checks.
-- "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the
-  BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
-- Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a
-  recipe; use a comma between classes.
-
-Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]
+- Simpler bugfix ladder when the brief allows it: one detached worktree per task AT THE TIP, revert only that task's production files with `git -C <wt> show <base>:<path> > <file>`, run the union of all tasks' regression classes (exact red set = own tests only, other tasks green = cross control), restore with `show HEAD:`, porcelain empty.
+- Surefire `runOrder=reversealphabetical` sorts by fully qualified name, and an upper-case class in the root package (`...distributor.HealthEndpointTest`) sorts BEFORE lower-case subpackages, so reverse runs it last. To prove a shared context starts from a given class, run `-Dtest=A,B -Dsurefire.runOrder=alphabetical` and count `Started`.
+- Real-ACL end-to-end when IntegrationTestBase mocks the port: a scratch `@SpringBootTest(RANDOM_PORT)` class NOT extending the base, `@Import(PostgresTestConfig.class)`, a static JDK HttpServer started in a static field and wired by `@DynamicPropertySource`, a volatile body field per scenario and a hit counter asserted per call. Add a record-only method (prints status, row delta, stored row) to run per production state (factory, each fix alone). `ExchangeResult.getResponseBodyContent()` gives raw bytes for byte-identity checks.
+- "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
+- Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a recipe; use a comma between classes.
+- Per-task hash baselines into one integrity check: a python script reads the gate files in task order, keeps only `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>` extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
+- PR body "ASCII only" checks: the prescribed attribution footer carries U+1F916. `rg -n '[^\x00-\x7F]'` on the saved body shows it; report it as the footer, not as prose, and let the lead rule.
+- Jars from `spring-boot:repackage` carry the reproducible 1980 mtime: cite the `Building jar` log line of the run that built them, never `stat`.
+- A directive that says a mutated control "fails at check X" is about order: the driver's first FAIL can be an earlier witness (a log check) for the same cause. Quote the first FAIL and the X lines both.
+- Warning inventory (against a reference referee log, or a base referee in a throwaway worktree): a case-insensitive `warn` grep hits about 130 lines per referee here (app WARN logs that ACL, data and web tests provoke on purpose, Spring AI BeanPostProcessorChecker, npm `install-scripts` printed as `[ERROR]`), far beyond a directive's short "pre-existing" list. Prove ownership instead of arguing: `git reset --hard <base>` in the worktree, run the base referee, grep both logs per module section, classify by category in a python script and `diff` the sorted multisets after normalising timestamps, PIDs, thread names (`[...-exec-N]`), `Time elapsed: X s`, logback `HH:MM:SS,mmm` prefixes and the `.m2` path; "0 added at TIP" closes it. Without the thread and elapsed-time filters every run differs.
+Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[readme-and-live-jar-probes]]

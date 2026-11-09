@@ -98,6 +98,36 @@
   </dependencies>
 
   <build>
+    <!--
+      Declaring resources here replaces the list the Spring Boot parent defines, so the first two entries repeat the
+      parent's entries unchanged: application files are filtered, everything else in src/main/resources is copied
+      as is. The third entry copies the built storefront from the frontend module to static/shop, unfiltered because
+      the built scripts contain the @ character. When frontend/dist does not exist, Maven skips this entry and the
+      bookstore builds without the storefront.
+    -->
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/application*.yml</include>
+          <include>**/application*.yaml</include>
+          <include>**/application*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+        <excludes>
+          <exclude>**/application*.yml</exclude>
+          <exclude>**/application*.yaml</exclude>
+          <exclude>**/application*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/../frontend/dist</directory>
+        <targetPath>static/shop</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
