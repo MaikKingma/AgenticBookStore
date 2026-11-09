@@ -4,7 +4,7 @@ Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boo
 Current phase: 3, spec 07 (run the cycle)
 Current spec: 07 (in progress). Spec 06 done (`spec-06-done` on b6e72c1). D6 applied on factory (e604bac).
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
-Clean `./mvnw clean verify` time: 18 s wall clock after spec 06 and its bugfix (budget 60)
+Clean `./mvnw clean verify` time: 27 s wall clock with the frontend after the spec 12 merge (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
@@ -16,14 +16,14 @@ Clean `./mvnw clean verify` time: 18 s wall clock after spec 06 and its bugfix (
 | 06 | done | spec-06-done | 18 s wall clock (17.59 s) | PR #65 merged as 824af83 (task PRs #67, #69, #75, #78, #80, #82, #84, #86); review finding fixed through /sdd-bugfix, PR #89 merged as b6e72c1 (task PRs #90, #93, #95); 972 + 190 tests, 0 skipped; CI run 42568121094 green on b6e72c1; see DoD 06 below |
 | 07 | in progress | | | orchestrator agent run on Opus with `merge: true`, started 2026-11-09 right after the spec 06 merge (Maik: parallel wherever possible) |
 | 08 | todo | | | |
-| 12 | in progress (parallel) | | | orchestrator agent in its own worktree since 2026-11-08, `merge: false`; the main session merges the spec PR as soon as it is ready (before spec 08, Maik 2026-11-08); `spec-12-done` is tagged only after spec 08 is merged and the assistant page is walked live |
+| 12 | merged, review running | | 27 s wall clock (27.30 s, frontend included) | PR #66 merged as 6c17253 by the main session (task PRs #70, #72, #74, #77, #81, #85, #88, #92, #96, #99, #101); qa-final PASS, QA lead ENDORSE, Gates self-accepted; 977 + 190 Java tests, Vitest 590 (588 pass, 2 deliberate guard tests expected to fail), 0 skipped; CI green on the head a5fc292 (runs 42596561596, 42596570363); 14 screenshots in the spec folder's `visuals/`; `spec-12-done` waits for the review fixes, spec 08's merge and the live assistant walk-through |
 | 09 | todo | | | |
 | 10 | todo | | | |
 | 11 | in progress (parallel) | | | orchestrator agent in its own worktree since 2026-11-08, `merge: false`; branch names are fixed by D6; the spec PR waits for Maik's public-deploy gate and for `spec-10-done` |
 
 ## Open questions
 
-- OQ4 (2026-11-06, Phase 2, D2): the frontend build (Node.js download on the first run, `npm ci`, Vitest, Vite build) will likely push `./mvnw clean verify` past the 60 second budget on later specs. Not a decision yet; recorded so it is no surprise when the measurement after spec 12 lands here.
+- OQ4 closed 2026-11-09 by measurement: with the frontend, `./mvnw clean verify` took 27.3 s on the spec 12 head (main session, clean worktree, Node downloaded on the first run), 22.8 to 23.8 s in the orchestrator's runs. Inside the 60 s budget.
 
 - OQ1 closed 2026-11-07: Maik copied `.claude/settings.json` in; committed on factory as 07cfbba.
 
@@ -41,6 +41,9 @@ Clean `./mvnw clean verify` time: 18 s wall clock after spec 06 and its bugfix (
 - Decide when convenient (spec 06): `bookstore/src/test/resources/contracts/distributor/restock-invalid-request-request.json` is read by no test. Keep it as capture documentation, or have a later spec read it.
 - Decide when convenient (spec 06 R8, dates from spec 02): an unreadable request body gets Boot's 400 JSON, not a ProblemDetail with a `code`.
 - Optional (spec 06): replay `http/catalogue.http` against a running distributor and an empty catalogue.
+- Open (spec 12, after spec 08 merges): walk the assistant page live (round trip, the 429 and 503 shapes, chat styling); `spec-12-done` waits for it.
+- Open (spec 12): judge the 14 screenshots in `agent-os/specs/2026-11-08-2145-12-storefront/visuals/` (the main session looked at the catalogue on desktop and the basket on a phone: on brand, readable).
+- Confirm when convenient (spec 12, shape.md decision 6): the header is white with a navy bottom border instead of navy, because the D7 token table would put the navy "Open" of the wordmark on a navy background.
 
 ## Definition of done evidence
 
@@ -148,3 +151,4 @@ Clean `./mvnw clean verify` time: 18 s wall clock after spec 06 and its bugfix (
 - 2026-11-09 spec 06 done: tagged `spec-06-done` on b6e72c1 and pushed.
 - 2026-11-09 spec 07 interim (orchestrator hand-back, resumed): T1 #94 and T2 #97 merged into the spec branch, T3 in QA; ship gate after T2 1035 + 190 tests, 19 s. Residuals the main session carries: (a) for spec 09's `docs/architecture.md`: the restock listener runs synchronously after commit, so the order response waits for the distributor (up to about 7 s per book that dips below its level) while two pooled connections are held; a restock confirmed at the distributor can be lost in the bookstore if a later commit fails; a non-distributor failure on the event path leaves the low-stock signal set with no pending restock, recovered by the manual command (this widens spec 06 R5); (b) spec text suggestion for Maik: spec 07's rolled-back-order scenario (a 409 order) cannot prove the after-commit behaviour because a 409 never publishes the event, so the plan adds a publish-then-roll-back test through `failBeforeCommit`; rewording the scenario is open; (c) for spec 09's seed: `http/inventory.http` uses ISBN 9789900010029 (Sense and Sensibility), keep it out of the bookstore seed; (d) for the spec 07 review: the restock answer's `ean` is not compared with the request (fix-06 follow-up).
 - 2026-11-09 spec 11 T5 needs-decision, decided by the main session (gates delegated; Maik may overrule): the guide's source checker (a regex model of MDX) still misses 11 build-confirmed cases after four QA rounds, where an invented Windows command could hide in a PowerShell tab. QA lead upheld the FAIL and recommended (b)+(e). Chosen: (b)+(e) with an ordering condition. T5 merges with its round 4 hashes as the freeze baseline and the gap recorded as a temporary risk, plus authoring rules and manual built-page checks. A new task T5b (critical, opus) makes `check:built` check every line in a built PowerShell tab against the pack's command list, so CI enforces the rule on the built HTML. T5b must merge before any content task (T6 to T11) merges, so the final bar is higher than a source-only checker, not lower. Rejected: (a) another regex round (the same family keeps failing); (c) switching to the MDX parser Docusaurus ships (half a day, changes T1's dependency set; kept as a follow-up for Maik); (d) dropping T5 (not viable).
+- 2026-11-09 spec 12: PR #66 merged into factory as 6c17253 by the main session after its own referee run on the head a5fc292 (27.30 s, 977 + 190 Java tests, 0 skipped; Vitest green inside verify) and green CI. Every failed QA round was test data, test text or CI config; the T10 walk-through found two product defects (order table on phones, favicon 404), fixed in T11. Judgment calls: no react-router (an in-house HashRouter), oxlint dropped, `npm test` skipped with `-DskipTests` through the plugin's phase binding, a white header (see manual checks). Follow-ups: R19 `/shop/index.html` is served without `Cache-Control` and with `Last-Modified` 1980, so a returning browser can keep a stale page after a rebuild (recommended fix before the rehearsal: `Cache-Control: no-cache` in `StorefrontConfig`); R15 a 202 that arrives after leaving checkout still empties the basket, and reopening checkout while the request is in flight allows a second order; pack wording: the root redirect's `Location` is absolute on a real server, `frontend/node/npm run dev` needs `frontend/node` on PATH. The read-only review runs in a worktree in parallel with spec 07.
