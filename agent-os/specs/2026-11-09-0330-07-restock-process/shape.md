@@ -24,7 +24,7 @@ Decided by the orchestrator from the pack spec, the architecture standard, the t
 ## Accepted limits (spec-literal, recorded)
 
 - `receive` clears a pending restock on every accepted delivery, also a partial one; if stock stays low, the signal stays set and the manual command is the recovery.
-- A pending restock corrupted by hand-written SQL makes `restore` throw an untranslated domain exception; the application only writes validated values.
+- A pending restock corrupted by hand-written SQL makes `restore` throw an untranslated domain exception; the application only writes validated values. The same holds for a hand-written row with an order id but a null quantity or backordered flag (a `NullPointerException` on read), and a row with a null order id but other pending columns set reads as no pending restock and the next save clears those columns (T2 QA, accepted).
 
 ## Pack task mapping
 
