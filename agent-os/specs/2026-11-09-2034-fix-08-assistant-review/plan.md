@@ -483,3 +483,14 @@ For T5 (orchestrator, from earlier lessons):
   main session's example mechanism: an exported `SPRING_AI_MODEL_CHAT=anthropic` still switches the shared context
   to the Anthropic model (by design, R17); those tests then fail locally against the loopback address instead of
   staying offline, and nothing reaches the API. Consequence: no pre-existing test changes.
+- A5 (2026-11-10, orchestrator, on impl-t5's report before QA; self-accepted, cheap and reversible): (1) T5 criterion 3
+  necessarily changes one pre-existing assertion: `BookstoreToolsTest.toolsCarryTheSpecDescriptions` compared the
+  whole `searchCatalogue` description with `isEqualTo`, which an appended rule cannot satisfy; it becomes `startsWith`
+  the unchanged spec 08 sentence (the other three tools stay `isEqualTo`). To keep the assertion strength, the new
+  test asserts the whole new description and the whole `query` `@ToolParam` description with `isEqualTo` (not only
+  `contains`). This is the single permitted change to a pre-existing test in T5. (2) New T5 criterion 1(d): listing
+  the genres in readable form ("science fiction") invites the model to pass that form as a tool argument, which
+  `Genre.parse` rejects (it accepts case, `-` and `_`, not a space). The prompt therefore says how to pass a genre to
+  a tool (capitals with underscores, for example SCIENCE_FICTION), pinned by a prompt test that also proves the named
+  form is accepted by the tools (`Genre.parse` or the tool's genre path) and the readable form with a space is not.
+  Consequence: one more prompt sentence; T5 goes back to its implementer before QA (not a QA rework round).
