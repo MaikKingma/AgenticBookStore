@@ -65,6 +65,28 @@ tabs and the feature briefs as a section of the same page.
   and 1 run without the plugin.
 - No em dashes in any page.
 
+## Visual design (decision D7, Maik 2026-11-08)
+The guide uses the same OpenValue 2026 brand as the OpenBook storefront (spec 12, "Visual design"), so the shop and
+the guide look like one product.
+
+- Colours: the seven brand values of spec 12 (`#1D252D` navy, `#3D7DC9` blue, `#014046` teal, `#809FA2` sage,
+  `#CBD9DA` mist, `#F1F5F6` snow, `#FFFFFF` white), mapped onto Docusaurus' Infima variables in
+  `guide/src/css/custom.css` and nowhere else:
+  - light mode: `--ifm-color-primary` teal `#014046` (with the six generated shades), text and headings navy, page
+    background white, code blocks and the progress indicator's inactive levels on snow or mist, the current level
+    and the navbar accent in blue (large or bold text only, it is 4.2:1 on white), navbar navy with white text;
+  - dark mode: background navy, primary mist `#CBD9DA` (10.7:1 on navy), text white. If a pair in dark mode cannot
+    meet AA, switch dark mode off (`colorMode.disableSwitch`) instead of using an off-brand colour.
+  Every text and background pair meets WCAG 2.2 AA (4.5:1 for normal text).
+- Typography: Montserrat, self-hosted woff2 (latin, 400, 600, 700) with its SIL Open Font License file, loaded with
+  `@font-face` and `font-display: swap`; `--ifm-font-family-base` is
+  `Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. Code stays in the default monospace stack.
+  No font CDN: the guide must work offline and from the zip.
+- The level progress indicator uses the brand: five steps 0 to 4, the current level filled teal (light) or mist
+  (dark) with a visible label, the others outlined in sage with navy labels.
+- No OpenValue logo is required; the navbar title stays the guide's title. No new dependency beyond the pinned
+  Docusaurus packages.
+
 ## Requirements
 
 ### Requirement: Complete level coverage
@@ -100,6 +122,18 @@ The guide SHALL be readable at half-screen width on a 13-inch laptop.
 - **WHEN** a page is viewed at 720 px width
 - **THEN** there is no horizontal page scroll and code blocks scroll on their own
 
+### Requirement: OpenValue brand
+The guide SHALL use the OpenValue 2026 colours and Montserrat described under "Visual design".
+
+#### Scenario: Brand in one place
+- **GIVEN** the guide source
+- **THEN** `guide/src/css/custom.css` sets the Infima primary colour to `#014046` for light mode and holds every brand
+  colour value; no other stylesheet or component hard-codes a colour value
+
+#### Scenario: Readable contrast
+- **GIVEN** the text and background pairs of both colour modes (or light mode only, when dark mode is switched off)
+- **THEN** each pair has a contrast ratio of at least 4.5:1, checked by a script in `guide/` that the CI build runs
+
 ### Requirement: Deployed automatically
 Pushes to `factory` that touch `guide/**` SHALL build and deploy the site to GitHub Pages; pull requests that touch `guide/**` SHALL build without deploying. Nothing deploys from `main`: it is published by spec 09 before `guide/` exists, and a later republish would only carry `guide/` as a plain folder. Guide fixes never require a republish of `main` (decision of 2026-11-06).
 
@@ -109,8 +143,8 @@ Pushes to `factory` that touch `guide/**` SHALL build and deploy the site to Git
 - **THEN** the build fails (`onBrokenLinks: 'throw'`)
 
 ## Tasks
-1. Scaffold Docusaurus (pinned version, classic, TypeScript config) in `guide/`, docs-only, OpenValue AI colours
-   from the OpenValue design system. Add `guide/.docusaurus/` and `guide/build/` to the root `.gitignore`.
+1. Scaffold Docusaurus (pinned version, classic, TypeScript config) in `guide/`, docs-only, with the OpenValue 2026
+   brand of "Visual design" (Infima variables, Montserrat, dark mode rule). Add `guide/.docusaurus/` and `guide/build/` to the root `.gitignore`.
 2. Write `index.md`, `00-setup-check.md`, `reference/*`, and the `LevelProgress` component.
 3. Write the Level 0 to Level 4 pages and the SDD tracks from the pack.
 4. Tabs for OS-specific commands, admonitions for sync moments and checkpoints.

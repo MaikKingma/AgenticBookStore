@@ -52,5 +52,12 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
 - Thread-safety repro through real wiring: draw from the wired supplier on 8 threads, then count values seen on more
   than one thread with per-thread sort+dedupe, merge, sort, adjacent-equal (primitive arrays; a HashMap of 1.6M boxed
   longs is slow and heap-hungry).
+- Multi-phase live run with app restarts (chaos flags, then stopped): one `python3 -I` session script under
+  `with-budget.sh`. It starts each `./mvnw -pl <m> spring-boot:run` with `Popen(start_new_session=True)`, stops it
+  with `os.killpg(pid, SIGTERM)` (that also reaches the forked JVM, mvn exits 143), and then polls `lsof` until the
+  port is free. Pass flags as `-Dspring-boot.run.arguments=--<prop>=<v>`. For every chaos phase, add a witness that
+  hits the dependency directly (a 503 body, a 6 s `time_total`), so the phase proves the flag took effect.
+  Time with curl `-w %{time_total}`, write one CHECK line per expectation, and finish with a DB count via
+  `docker compose exec -T postgres psql -At`.
 
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]

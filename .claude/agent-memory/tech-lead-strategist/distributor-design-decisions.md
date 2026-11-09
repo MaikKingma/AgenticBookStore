@@ -24,4 +24,14 @@ plan under `agent-os/specs/` before relying on any bullet. The distributor is ou
   easy to keep out.
 - **MCP task ordered before REST.** **Why:** fail fast on the piece an external client (Claude Code) must accept.
 
+Spec 06 ACL (proposed in the spec 06 strategy, lead-1 outbox, 2026-11-08; verify in the spec 06 plan and code):
+- **Every unnamed distributor failure is `DistributorUnavailableException`**, with a final `catch (RestClientException)`
+  and a guarded error-body parse. **Why:** res-3 showed malformed bodies, wrong content types and cut streams are
+  plain `RestClientException`s, and `getResponseBodyAs` itself throws for non-JSON bodies.
+- **Request inputs are validated before the duplicate check and the remote call** (ISBN and price override), the
+  `addBook` rule "an invalid request beats a duplicate". **Why:** no remote call for a request we would reject anyway.
+- **Contract files: real captures, plus `derived-` copies with exactly one change each, listed in a README.** **Why:**
+  the seed has no non-EUR, unmapped-subject, round-price or non-alphabetical multi-author title, and those are the
+  falsifiers. The README ships to `main` and is the Level 2 participants' guide, so it cites no agent paths.
+
 Related: [[strategy-constraints]], [[test-context-cost-model]].

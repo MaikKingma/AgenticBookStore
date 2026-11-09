@@ -1,10 +1,10 @@
 # Factory progress
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over five levels (Level 0 to Level 4).
-Current phase: 3, spec 06 (run the cycle)
-Current spec: 06 (in progress). D6 applied on factory (e604bac).
+Current phase: 3, spec 07 (run the cycle); spec 06 merged, its review runs in parallel
+Current spec: 07 (in progress). Spec 06 merged as 824af83, tag waits for the review and its bugfix. D6 applied on factory (e604bac).
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
-Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
+Clean `./mvnw clean verify` time: 17 s wall clock after spec 06 merge (budget 60)
 
 | Spec | Status | Tag / commit | Verify time | Evidence and notes |
 |---|---|---|---|---|
@@ -13,8 +13,8 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 | 03 | done | spec-03-done | 13 s (Maven 12.513 s); 19 s on the merge commit | PR #20 merged as 9266a56; task PRs #21 to #30; review fix on top; 476 + 3 tests, 0 skipped; ArchitectureTest 21 rules; CI run 42395237141 green on the merge commit; see DoD 03 below |
 | 04 | done | spec-04-done | 21 s (Maven 20.583 s) | PR #31 merged as dc7edc3 (task PRs #32 to #39); review findings fixed through /sdd-bugfix, PR #40 merged as 1bd62fc (task PRs #41, #42); 684 + 3 tests, 0 skipped; ArchitectureTest 21 rules; see DoD 04 below |
 | 05 | done | spec-05-done | 24 s wall clock | PR #43 merged as d35108d (task PRs #44, #45, #50, #52, #53, #58, #59, #60); review findings fixed through /sdd-bugfix, PR #61 merged as c7af854 (task PRs #62 to #64); 684 + 190 tests, 0 skipped; CI run 42516930015 green on c7af854; see DoD 05 below |
-| 06 | in progress | | | orchestrator agent run on Opus with `merge: true`, started 2026-11-08 after D6 |
-| 07 | todo | | | |
+| 06 | merged, review running | | 17 s wall clock (17.48 s) | PR #65 merged as 824af83 (task PRs #67, #69, #75, #78, #80, #82, #84, #86); qa-final PASS, QA lead ENDORSE, Gates self-accepted; 931 + 190 tests, 0 skipped; CI run 42553891345 green on 824af83; read-only review running, `spec-06-done` after its bugfix |
+| 07 | in progress | | | orchestrator agent run on Opus with `merge: true`, started 2026-11-09 right after the spec 06 merge (Maik: parallel wherever possible) |
 | 08 | todo | | | |
 | 12 | in progress (parallel) | | | orchestrator agent in its own worktree since 2026-11-08, `merge: false`; the main session merges the spec PR as soon as it is ready (before spec 08, Maik 2026-11-08); `spec-12-done` is tagged only after spec 08 is merged and the assistant page is walked live |
 | 09 | todo | | | |
@@ -37,6 +37,10 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 - Open (CI): open one CI run page while signed in and check the JUnit job summary. No agent can read job summaries.
 - Decide when convenient (spec 05 F-s05-11): keep the one stderr line "Empty or null pattern" that the spec's empty `logging.pattern.console` causes in STDIO mode, or drop the empty pattern from the spec (README lines 59 to 61 change with it).
 - Decide when convenient (spec 05 F-s05-13): after a Claude Code HTTP session the jar waits 30 s in graceful shutdown before exiting (the port frees at once); `server.shutdown: immediate` would end that.
+- Open (spec 06): skim `bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java`, the workshop's reference ACL: readability, WARN wording, and the AUTHOR filter (the Level 2 exercise).
+- Decide when convenient (spec 06): `bookstore/src/test/resources/contracts/distributor/restock-invalid-request-request.json` is read by no test. Keep it as capture documentation, or have a later spec read it.
+- Decide when convenient (spec 06 R8, dates from spec 02): an unreadable request body gets Boot's 400 JSON, not a ProblemDetail with a `code`.
+- Optional (spec 06): replay `http/catalogue.http` against a running distributor and an empty catalogue.
 
 ## Definition of done evidence
 
@@ -131,3 +135,6 @@ Clean `./mvnw clean verify` time: 24 s wall clock after spec 05 (budget 60)
 - 2026-11-08, Maik: run specs in parallel wherever possible. Dependency chain 06 > 07 > 08 > 12 > 09 > 10 > 11 is strict in the headers, so: spec 12 (frontend, small bookstore surface: `StorefrontConfig`, `bookstore/pom.xml` resource, root pom, CI cache) and spec 11 (`guide/`, branch names settled by D6) start now in their own worktrees with `merge: false`; each spec PR is merged by the main session in build order (12 after `spec-08-done`, 11 after `spec-10-done` and Maik's deploy gate), so tags stay in build order. The per-spec review and its bugfix run in a worktree in parallel with the next spec's orchestrator.
 - 2026-11-08, Maik: spec 12 merges before spec 08 (orchestrator recommendation accepted). The assistant page is built against the spec 08 contract text; `spec-12-done` waits for spec 08's merge and a live walk-through of the assistant page, because spec 12's DoD needs every page working against the running bookstore. Accepted cost: specs 07 and 08 verify the frontend too (budget watched, never trimmed).
 - 2026-11-08, Maik, D7: the storefront is called OpenBook and gets a modern design in the OpenValue 2026 colours (from the slides template theme) with Montserrat; spec 12 updated (Visual design, requirement OpenBook branding, screenshots in the DoD). Handed to the running spec 12 orchestrator during shaping.
+- 2026-11-08, Maik, D7 extended: the guide site (spec 11) uses the same OpenValue 2026 brand and Montserrat (Infima variables, dark mode navy and mist or off). Handed to the running spec 11 orchestrator during shaping.
+- 2026-11-09 spec 06: PR #65 merged into factory as 824af83 by the orchestrator (opus, `merge: true`). Task reworks: T3 two rounds (null contributor element, fractional price and quantity truncated), T4 two rounds and T6 one round (test-only). Judgment calls endorsed by the QA lead: the ACL passes the distributor's `ean` through when it differs from the requested ISBN (spec translation table), `@Autowired` on the two-constructor adapter, no second duplicate check (unique constraint maps to 409), T6 fixtures public (spec says non-private). Residuals R5 (remote call inside the transaction) and R6 (no caller of `requestRestock` yet) handed to the spec 07 orchestrator. Main session referee on 824af83: 931 + 190, 17.48 s. Spec 07 started at once; the spec 06 review runs in a worktree in parallel.
+- 2026-11-09 spec 06 review (fresh read-only subagent on 824af83, verify 17.6 s): one spec violation, S3. The ACL passes the distributor's `ean` through unchecked and `CatalogueFlow.importFromDistributor` ignores `DistributorTitleDTO.isbn`, so an answer for another title would be stored under the requested ISBN with the other title's data; two tests pinned that. Decision by the main session (gates delegated; the ACL's existing unusable-answer rule settles it): an `ean` that differs from the requested ISBN is an unusable answer, 503 `distributor-unavailable`, nothing stored; the flow refuses a mismatching DTO too. Fixed through /sdd-bugfix (`fix-06-distributor-review`, orchestrator agent in its own worktree, `merge: true`), together with two log-hygiene suggestions (keep the cause of `DistributorUnavailableException`; neutralise CR/LF in logged distributor values) and a truthful 503 stub detail. Deferred to Maik: field-level 422 codes for distributor data the domain rejects; Jackson string-to-number coercion untested; the three `distributor.*` properties documented only in Javadoc; `WiringTest` 200 to 1800 ms window on slow CI. All D-a to D-j, A1 to A4 and residuals R1 to R8 checked clean against the spec.

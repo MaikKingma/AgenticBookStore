@@ -39,3 +39,39 @@ Content-Type: application/json
 
 # Discontinue the book.
 POST http://localhost:8080/books/{{bookId}}/commands/discontinue
+
+###
+
+# The requests below import two books from the distributor and show them, so the distributor must be running (default port 8090).
+# Import A Study in Scarlet at the price the distributor recommends and remember the new book id.
+POST http://localhost:8080/books/commands/import-from-distributor
+Content-Type: application/json
+
+{
+  "isbn": "9789900010159"
+}
+
+> {% client.global.set("importedBookId", response.body.id); %}
+
+###
+
+# Show the imported book: title, authors, genre and price all come from the distributor.
+GET http://localhost:8080/books/{{importedBookId}}
+
+###
+
+# Import The Last Man and sell it at 7.50 instead of the recommended price.
+POST http://localhost:8080/books/commands/import-from-distributor
+Content-Type: application/json
+
+{
+  "isbn": "9789900010050",
+  "price": "7.50"
+}
+
+> {% client.global.set("overriddenBookId", response.body.id); %}
+
+###
+
+# Show the book that was imported with its own price.
+GET http://localhost:8080/books/{{overriddenBookId}}

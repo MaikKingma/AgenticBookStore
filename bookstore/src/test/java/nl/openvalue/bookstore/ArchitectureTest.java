@@ -18,6 +18,7 @@ import com.tngtech.archunit.lang.CompositeArchRule;
 import com.tngtech.archunit.lang.syntax.elements.ClassesShouldConjunction;
 import com.tngtech.archunit.library.Architectures.LayeredArchitecture;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Encodes the dependency rules (section 2) and the naming rules (section 3) of the architecture standard, one named
@@ -114,6 +115,13 @@ class ArchitectureTest {
             .should().dependOnClassesThat().resideInAnyPackage("org.springframework.web.client..")
             .allowEmptyShould(true);
 
+    // Distributor model never leaks: the nested classes of an AppServiceImpl (its payload records) stay inside acl.
+    @ArchTest
+    public static final ArchRule APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL = noClasses()
+            .that().resideOutsideOfPackage(ACL)
+            .should().dependOnClassesThat(areNestedInAnAppServiceImpl())
+            .allowEmptyShould(true);
+
     // Rule 7: Spring AI only in assistant.
     @ArchTest
     public static final ArchRule SPRING_AI_ONLY_IN_ASSISTANT = noClasses()
@@ -200,6 +208,24 @@ class ArchitectureTest {
         return DescribedPredicate.describe("include double or float", parameterTypes -> parameterTypes.stream()
                 .anyMatch(type -> type.isEquivalentTo(double.class) || type.isEquivalentTo(float.class)
                         || type.isEquivalentTo(Double.class) || type.isEquivalentTo(Float.class)));
+    }
+
+    /**
+     * True when any enclosing class, at any depth, has a simple name ending with AppServiceImpl. The class's own name
+     * does not count; an AppServiceImpl in acl is itself guarded by the layered acl rule.
+     */
+    private static DescribedPredicate<JavaClass> areNestedInAnAppServiceImpl() {
+        return DescribedPredicate.describe("are nested at any depth in a class with simple name ending with "
+                + "'AppServiceImpl'", javaClass -> {
+                    Optional<JavaClass> enclosing = javaClass.getEnclosingClass();
+                    while (enclosing.isPresent()) {
+                        if (enclosing.get().getSimpleName().endsWith("AppServiceImpl")) {
+                            return true;
+                        }
+                        enclosing = enclosing.get().getEnclosingClass();
+                    }
+                    return false;
+                });
     }
 
     /**

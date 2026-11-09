@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -57,6 +58,9 @@ class CatalogueFlowTest {
     @Mock
     private StockItemDataService stockItems;
 
+    @Mock
+    private DistributorAppService distributor;
+
     @Captor
     private ArgumentCaptor<BookDTO> saved;
 
@@ -67,7 +71,7 @@ class CatalogueFlowTest {
 
     @BeforeEach
     void setUp() {
-        flow = new CatalogueFlow(books, stockItems, CLOCK);
+        flow = new CatalogueFlow(books, stockItems, distributor, CLOCK);
     }
 
     @Test
@@ -373,7 +377,7 @@ class CatalogueFlowTest {
     @Test
     void addChecksThePublicationYearAgainstTheFlowsClock() {
         // In 2000 the latest allowed publication year is 2001; with the real clock 2027 would still be allowed.
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, distributor, CLOCK_IN_2000);
 
         Throwable thrown = catchThrowable(() -> flowIn2000.addBook(ISBN, "Pride and Prejudice",
                 List.of("Jane Austen"), "fiction", new BigDecimal("12.50"), 2027));
@@ -386,7 +390,7 @@ class CatalogueFlowTest {
 
     @Test
     void changePriceRestoresTheStoredBookWithTheFlowsClock() {
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, distributor, CLOCK_IN_2000);
         BookDTO publishedIn2027 = new BookDTO(BOOK_ID, ISBN, "Pride and Prejudice", List.of("Jane Austen"),
                 "FICTION", new BigDecimal("12.50"), "EUR", 2027, "AVAILABLE");
         when(books.findById(BOOK_ID)).thenReturn(publishedIn2027);
@@ -400,7 +404,7 @@ class CatalogueFlowTest {
 
     @Test
     void discontinueRestoresTheStoredBookWithTheFlowsClock() {
-        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, CLOCK_IN_2000);
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, distributor, CLOCK_IN_2000);
         BookDTO publishedIn2027 = new BookDTO(BOOK_ID, ISBN, "Pride and Prejudice", List.of("Jane Austen"),
                 "FICTION", new BigDecimal("12.50"), "EUR", 2027, "AVAILABLE");
         when(books.findById(BOOK_ID)).thenReturn(publishedIn2027);
@@ -452,6 +456,495 @@ class CatalogueFlowTest {
 
         assertUnknownGenre(thrown);
         verify(books, never()).search(any(), any(), any(), any(), anyInt());
+    }
+
+    @Test
+    void importsATitleWithTheRecommendedPriceBuiltFromTheRequestedIsbn() {
+        // The distributor's own isbn differs on purpose: the book is built from the normalised request ISBN only.
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO("9789900010050",
+                "The Last Man", List.of("Mary Shelley", "Jane Austen"), "SCIENCE_FICTION", new BigDecimal("11.99"),
+                "EUR", 1826, true)));
+
+        UUID id = flow.importFromDistributor("978-0-14-143951-8", null);
+
+        assertThat(id).isNotNull();
+        verify(books).findByIsbn(ISBN);
+        verify(distributor).findTitle(ISBN);
+        verify(books).save(saved.capture());
+        BookDTO dto = saved.getValue();
+        assertThat(dto.authors()).containsExactly("Mary Shelley", "Jane Austen");
+        assertThat(dto).isEqualTo(new BookDTO(id, ISBN, "The Last Man", List.of("Mary Shelley", "Jane Austen"),
+                "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826, "AVAILABLE"));
+        verify(stockItems).save(savedStockItem.capture());
+        assertThat(savedStockItem.getValue()).isEqualTo(new StockItemDTO(id, 0, 0, 3, 10, false));
+    }
+
+    @Test
+    void importsATitleWithThePriceOverrideInsteadOfTheRecommendedPrice() {
+        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO(ISBN,
+                "Pride and Prejudice", List.of("Jane Austen"), "FICTION", new BigDecimal("9.99"), "EUR", 1813, true)));
+
+        UUID id = flow.importFromDistributor("9789900010050", new BigDecimal("12.00"));
+
+        assertThat(id).isNotNull();
+        verify(books).findByIsbn("9789900010050");
+        verify(books).save(saved.capture());
+        BookDTO dto = saved.getValue();
+        assertThat(dto.authors()).containsExactly("Jane Austen");
+        assertThat(dto).isEqualTo(new BookDTO(id, "9789900010050", "Pride and Prejudice", List.of("Jane Austen"),
+                "FICTION", new BigDecimal("12.00"), "EUR", 1813, "AVAILABLE"));
+        verify(stockItems).save(savedStockItem.capture());
+        assertThat(savedStockItem.getValue()).isEqualTo(new StockItemDTO(id, 0, 0, 3, 10, false));
+    }
+
+    @Test
+    void savesAWholeNumberOverrideWithTwoDecimals() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, new BigDecimal("12"));
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("12.00"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void anOverrideReplacesARecommendedPriceInAnotherCurrency() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "USD", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, new BigDecimal("12.00"));
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("12.00"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void rejectsAnInvalidIsbnOnImportBeforeAnyLookupOrRemoteCall() {
+        lenient().when(books.findByIsbn(any())).thenReturn(Optional.of(storedBook("AVAILABLE")));
+        String badChecksum = "9780141439519";
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(badChecksum, null));
+
+        assertInvalidField(thrown, "invalid-isbn", "Invalid ISBN", "isbn", domainMessage(() -> new Isbn(badChecksum)));
+        verifyNoInteractions(books, stockItems, distributor);
+    }
+
+    @Test
+    void rejectsAnInvalidIsbnOnImportBeforeAnInvalidOverride() {
+        String badChecksum = "9780141439519";
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(badChecksum, new BigDecimal("-5.00")));
+
+        assertInvalidField(thrown, "invalid-isbn", "Invalid ISBN", "isbn", domainMessage(() -> new Isbn(badChecksum)));
+        verifyNoInteractions(books, stockItems, distributor);
+    }
+
+    @Test
+    void rejectsANegativeOverrideAsPriceOutOfRangeBeforeLookingUpTheIsbn() {
+        lenient().when(books.findByIsbn(any())).thenReturn(Optional.of(storedBook("AVAILABLE")));
+        BigDecimal negative = new BigDecimal("-5.00");
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, negative));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> Money.of(negative)));
+        verify(books, never()).findByIsbn(any());
+        verifyNoInteractions(distributor);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsAnIsbnAlreadyInTheCatalogueWithoutCallingTheDistributor() {
+        // Unstubbed, the distributor would answer "not found", so calling it first would give another exception.
+        when(books.findByIsbn(ISBN)).thenReturn(Optional.of(storedBook("AVAILABLE")));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-0-14-143951-8", null));
+
+        assertThat(thrown).isExactlyInstanceOf(BookDataService.IsbnAlreadyExistsException.class);
+        ConflictException conflict = (ConflictException) thrown;
+        assertThat(conflict.code()).isEqualTo("isbn-already-exists");
+        assertThat(conflict.title()).isEqualTo("ISBN already in catalogue");
+        assertThat(conflict.getMessage()).isEqualTo(new BookDataService.IsbnAlreadyExistsException(ISBN).getMessage());
+        verifyNoInteractions(distributor);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void reportsATitleUnknownAtTheDistributorAsNotFound() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-0-14-143951-8", null));
+
+        assertThat(thrown).isExactlyInstanceOf(DistributorAppService.TitleNotFoundAtDistributorException.class);
+        NotFoundException notFound = (NotFoundException) thrown;
+        assertThat(notFound.code()).isEqualTo("title-not-found-at-distributor");
+        assertThat(notFound.title()).isEqualTo("Title not found at distributor");
+        assertThat(notFound.getMessage()).isEqualTo("The distributor has no title with ISBN 9780141439518");
+        assertThat(notFound.details()).isEmpty();
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsATitleTheDistributorNoLongerSuppliesBeforeBuildingTheBook() {
+        // WESTERN is no bookstore genre, so building the book first would give unknown-genre instead.
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("WESTERN", "11.99", "EUR", 1826, false)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-0-14-143951-8", null));
+
+        assertNotOrderable(thrown);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsATitleTheDistributorNoLongerSuppliesEvenWithAPriceOverride() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                false)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, new BigDecimal("12.00")));
+
+        assertNotOrderable(thrown);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void passesDistributorUnavailableThroughUnchanged() {
+        RuntimeException unavailable = new DistributorAppService.DistributorUnavailableException("Read timed out");
+        when(distributor.findTitle(ISBN)).thenThrow(unavailable);
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertThat(thrown).isSameAs(unavailable);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void passesTitleNotOrderableFromTheDistributorThroughUnchanged() {
+        RuntimeException notOrderable = new DistributorAppService.TitleNotOrderableException("9789900010050");
+        when(distributor.findTitle(ISBN)).thenThrow(notOrderable);
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, new BigDecimal("12.00")));
+
+        assertThat(thrown).isSameAs(notOrderable);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void passesTitleNotFoundFromTheDistributorThroughUnchanged() {
+        RuntimeException notFound = new DistributorAppService.TitleNotFoundAtDistributorException("9789900010050");
+        when(distributor.findTitle(ISBN)).thenThrow(notFound);
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertThat(thrown).isSameAs(notFound);
+        verifyNothingSaved();
+    }
+
+    @Test
+    void aDuplicateIsbnRaceOnSavingTheImportedBookPropagatesAndOpensNoStockItem() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                true)));
+        RuntimeException race = new BookDataService.IsbnAlreadyExistsException(ISBN);
+        doThrow(race).when(books).save(any());
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertThat(thrown).isSameAs(race);
+        verifyNoInteractions(stockItems);
+    }
+
+    @Test
+    void importAcceptsAPublicationYearOneAfterTheYearOfTheFlowsClock() {
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, distributor, CLOCK_IN_2000);
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 2001,
+                true)));
+
+        flowIn2000.importFromDistributor(ISBN, null);
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().publicationYear()).isEqualTo(2001);
+    }
+
+    @Test
+    void importChecksThePublicationYearAgainstTheFlowsClock() {
+        // In 2000 the latest allowed publication year is 2001; with the real clock 2002 would be allowed.
+        CatalogueFlow flowIn2000 = new CatalogueFlow(books, stockItems, distributor, CLOCK_IN_2000);
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 2002,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flowIn2000.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "publication-year-out-of-range", "Publication year out of range",
+                "publicationYear", domainMessage(() -> newBook(List.of("Jane Austen"), new BigDecimal("11.99"), 2002,
+                        CLOCK_IN_2000)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsAGenreFromTheDistributorThatIsNoBookstoreGenre() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("WESTERN", "11.99", "EUR", 1826, true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertUnknownGenre(thrown);
+        assertThat(thrown.getMessage()).isEqualTo(domainMessage(() -> Genre.parse("WESTERN")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsADistributorTitleWithoutAuthors() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "The Last Man",
+                List.of(), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826, true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "author-count-out-of-range", "Number of authors out of range", "authors",
+                domainMessage(() -> newBook(List.of(), new BigDecimal("11.99"), 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsARecommendedPriceInAnotherCurrencyWithoutAnOverride() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "USD", 1826,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> Money.of(new BigDecimal("11.99"), "USD")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsANegativeRecommendedPriceAsPriceOutOfRange() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "-9.99", "EUR", 1826,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> Money.of(new BigDecimal("-9.99"), "EUR")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsADistributorTitleWithABlankTitle() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "   ",
+                List.of("Mary Shelley", "Jane Austen"), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "invalid-title", "Invalid title", "title", domainMessage(() -> new Title("   ")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsADistributorAuthorWithABlankName() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "The Last Man",
+                List.of("Mary Shelley", " "), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826, true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "invalid-author-name", "Invalid author name", "authors",
+                domainMessage(() -> new AuthorName(" ")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void savesAnOverrideWithCentsExactly() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "9.99", "EUR", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, new BigDecimal("12.49"));
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("12.49"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void savesASecondRecommendedPriceExactly() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "8.50", "EUR", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, null);
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("8.50"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void reportsAnotherUnknownTitleWithItsOwnIsbn() {
+        when(distributor.findTitle("9789900010050")).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-99-0001-005-0", null));
+
+        assertThat(thrown).isExactlyInstanceOf(DistributorAppService.TitleNotFoundAtDistributorException.class);
+        assertThat(thrown.getMessage()).isEqualTo("The distributor has no title with ISBN 9789900010050");
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsAnotherTitleNoLongerSuppliedWithItsOwnIsbn() {
+        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO(ISBN,
+                "Pride and Prejudice", List.of("Jane Austen"), "FICTION", new BigDecimal("9.99"), "EUR", 1813, false)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-99-0001-005-0", null));
+
+        assertThat(thrown).isExactlyInstanceOf(DistributorAppService.TitleNotOrderableException.class);
+        assertThat(thrown.getMessage())
+                .isEqualTo("The title with ISBN 9789900010050 cannot be ordered from the distributor");
+        verifyNothingSaved();
+    }
+
+    @Test
+    void savesAnOverrideBelowTheRecommendedPrice() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, new BigDecimal("7.50"));
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("7.50"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void rejectsAZeroOverrideAsPriceOutOfRange() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                true)));
+        BigDecimal zero = new BigDecimal("0.00");
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, zero));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> newBook(List.of("Jane Austen"), zero, 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void anOverrideEqualToTheRecommendedAmountStillReplacesTheRecommendedPrice() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "USD", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, new BigDecimal("11.99"));
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().priceAmount()).isEqualTo(new BigDecimal("11.99"));
+        assertThat(saved.getValue().priceCurrency()).isEqualTo("EUR");
+    }
+
+    @Test
+    void rejectsAnOverrideAboveTheHighestPriceAsPriceOutOfRange() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1826,
+                true)));
+        BigDecimal tooExpensive = new BigDecimal("500.01");
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, tooExpensive));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> newBook(List.of("Jane Austen"), tooExpensive, 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsAZeroRecommendedPriceAsPriceOutOfRange() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "0.00", "EUR", 1826,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> newBook(List.of("Jane Austen"), new BigDecimal("0.00"), 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsARecommendedPriceAboveTheHighestPriceAsPriceOutOfRange() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "500.01", "EUR", 1826,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "price-out-of-range", "Price out of range", "price",
+                domainMessage(() -> newBook(List.of("Jane Austen"), new BigDecimal("500.01"), 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsADistributorTitleWithTooManyAuthors() {
+        List<String> sixAuthors = List.of("Mary Shelley", "Jane Austen", "Fanny Burney", "Maria Edgeworth",
+                "Ann Radcliffe", "Walter Scott");
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "The Last Man",
+                sixAuthors, "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826, true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "author-count-out-of-range", "Number of authors out of range", "authors",
+                domainMessage(() -> newBook(sixAuthors, new BigDecimal("11.99"), 1826, CLOCK)));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void rejectsADistributorTitleWhoseFirstAuthorIsBlank() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "The Last Man",
+                List.of(" ", "Mary Shelley"), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826, true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "invalid-author-name", "Invalid author name", "authors",
+                domainMessage(() -> new AuthorName(" ")));
+        verifyNothingSaved();
+    }
+
+    @Test
+    void keepsTwoEqualDistributorAuthorsAsGiven() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN, "The Last Man",
+                List.of("Mary Shelley", "Mary Shelley"), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826,
+                true)));
+
+        flow.importFromDistributor(ISBN, null);
+
+        verify(books).save(saved.capture());
+        assertThat(saved.getValue().authors()).containsExactly("Mary Shelley", "Mary Shelley");
+    }
+
+    @Test
+    void rejectsADistributorPublicationYearBeforeTheEarliestYear() {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(lastMan("SCIENCE_FICTION", "11.99", "EUR", 1449,
+                true)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor(ISBN, null));
+
+        assertInvalidField(thrown, "publication-year-out-of-range", "Publication year out of range",
+                "publicationYear", domainMessage(() -> newBook(List.of("Jane Austen"), new BigDecimal("11.99"), 1449,
+                        CLOCK)));
+        verifyNothingSaved();
+    }
+
+    private static DistributorTitleDTO lastMan(String genre, String recommendedPrice, String currency,
+            int publicationYear, boolean orderable) {
+        return new DistributorTitleDTO("9789900010050", "The Last Man", List.of("Mary Shelley", "Jane Austen"), genre,
+                new BigDecimal(recommendedPrice), currency, publicationYear, orderable);
+    }
+
+    private void verifyNothingSaved() {
+        verify(books, never()).save(any());
+        verifyNoInteractions(stockItems);
+    }
+
+    private static void assertNotOrderable(Throwable thrown) {
+        assertThat(thrown).isExactlyInstanceOf(DistributorAppService.TitleNotOrderableException.class);
+        InvalidInputException notOrderable = (InvalidInputException) thrown;
+        assertThat(notOrderable.code()).isEqualTo("title-not-orderable");
+        assertThat(notOrderable.title()).isEqualTo("Title not orderable");
+        assertThat(notOrderable.getMessage())
+                .isEqualTo("The title with ISBN 9780141439518 cannot be ordered from the distributor");
+        assertThat(notOrderable.details()).isEmpty();
     }
 
     private void addBook(String isbn, String title, List<String> authors, String genre, BigDecimal price,

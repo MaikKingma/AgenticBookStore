@@ -1,0 +1,17 @@
+# References: Spec 06 Distributor anti-corruption layer
+
+## Research summary (2026-11-08)
+
+- Bookstore anchors: `UnavailableException` and the 404/409/422/503 ProblemDetail mappings in `CommandExceptionHandler` already exist (spec 06 adds tests only). `acl` holds only `package-info`. `CatalogueFlow.addBook` opens the empty stock item in the same transaction and translates domain exceptions in a private helper; publication year is checked against the flow's `Clock`. `Genre.parse` and its 10 constants match the genre table. `AddBookPayload.price` is a String with pattern `-?\d+(\.\d+)?`. `IntegrationTestBase` forbids subclass context configuration. `ArchitectureSelfTest` keeps a closed `EXPECTED_VIOLATORS` registry keyed by rule field; fixtures live in `nl.openvalue.archfixtures.<layer>`; `REST_CLIENT_ONLY_IN_ACL` exists. Baseline: bookstore 684 tests, distributor 190, 10 Started lines.
+- Distributor wire contract (spec 05): `GET /api/titles/{ean}` returns 10 keys (`ean`, `titleName`, `contributors[{name, role}]`, `subjectCodes`, `format`, `listPriceCents` int, `currency`, `availability`, `warehouseQuantity`, `releaseDate` yyyy-MM-dd); every seed title is EUR. `POST /api/restock-orders` returns 201 with `restockOrderId` (random UUID), `ean`, `quantity`, `status`, `expectedDeliveryDate`; the status depends on availability only (IN_STOCK CONFIRMED in 2 working days, BACKORDER BACKORDERED in 14 days, OUT_OF_PRINT 422 `NOT_ORDERABLE`). Errors are `{errorCode, message}` JSON, including the chaos 503; an unknown path gets Spring's default 404 body.
+- RestClient on Boot 4.1.2: `spring-boot-starter-restclient` provides the `RestClient.Builder` bean. Timeouts via `ClientHttpRequestFactoryBuilder.detect().build(HttpClientSettings.defaults().withTimeouts(connect, read))` (JDK HttpClient). A later `requestFactory(...)` replaces a bound `MockRestServiceServer`, hence the spec's package-private `RestClient` constructor. Failures: 404 `HttpClientErrorException.NotFound`, 422 `UnprocessableContent`, 5xx `HttpServerErrorException`, I/O and `withException(SocketTimeoutException)` `ResourceAccessException`, malformed JSON a plain `RestClientException`, wrong content type `UnknownContentTypeException`; `getResponseBodyAs` throws for non-JSON bodies. Jackson 3 ignores unknown properties and reads private nested records.
+
+Full reports (cycle comms, not committed): `.claude/comms/mailboxes/res-1/outbox/research-bookstore-anchors.md`, `.claude/comms/mailboxes/res-2/outbox/research-distributor-contract.md`, `.claude/comms/mailboxes/res-3/outbox/research-restclient-boot4.md`; strategy `.claude/comms/mailboxes/lead-1/outbox/strategy-06-distributor-acl.md`; QA strategy `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-06-distributor-acl.md`.
+
+## Reference code
+
+- `bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/BookDataService.java`: nested port exception style.
+- `bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlow.java`: `addBook`, the path the import reuses.
+- `bookstore/src/main/java/nl/openvalue/bookstore/command/AddBookPayload.java` and `BookCommands.java`: payload and endpoint style.
+- `bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java` and `ArchitectureSelfTest.java`: rule and fixture registry.
+- `distributor/src/main/java/nl/openvalue/distributor/api/`: the wire format the ACL consumes; `http/distributor.http` for the capture.
