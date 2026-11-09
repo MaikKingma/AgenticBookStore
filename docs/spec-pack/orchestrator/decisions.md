@@ -181,4 +181,12 @@ AVAILABLE books per genre. The 20 books shared with the distributor stay exactly
 bookstore-only, invented, with ISBNs from the bookstore-only range, stocked above their reorder level, with no
 pending restock. The stock, order and reserved rules of spec 09 are unchanged.
 
-Changed file: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario).
+Spec 02 capped `GET /books` at 100 results without paging, so 100 seeded books plus one added in a demo would push a
+book off the unfiltered list. Maik chose to raise the cap to 200 results (still sorted by title, no paging). The
+assistant tools keep their own smaller limits.
+
+Both changes are built by the spec 09 orchestrator in its normal SDD cycle (default model policy, QA and QA lead),
+not by a separate agent.
+
+Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
+cap).

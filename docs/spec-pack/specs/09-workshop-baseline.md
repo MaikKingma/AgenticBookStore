@@ -81,7 +81,7 @@ The application SHALL load the demo data when run locally and SHALL never load i
 
 #### Scenario: Local run
 - **WHEN** the bookstore starts with the default profile (PostgreSQL through Docker Compose support) and `GET /books` is called
-- **THEN** 100 books are returned, at least 10 AVAILABLE per genre,, and the storefront at `/shop/` lists them
+- **THEN** 100 books are returned, at least 10 AVAILABLE per genre, and the storefront at `/shop/` lists them
 
 #### Scenario: Tests are unaffected
 - **WHEN** the test suite runs

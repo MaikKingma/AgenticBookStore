@@ -46,7 +46,7 @@ a discontinued book cannot change price (`BookDiscontinuedException`); discontin
 `BookDetailView` adds `authors` as an array and `publicationYear`.
 Search: `q` is free text matching title OR any author name; `title` and `author` match only that field; all matches
 are case-insensitive "contains"; `genre` is an exact match; the given criteria are combined with AND; sorted by title,
-at most 100 results. The query adapter passes `genre` as a string; the flow parses it (unknown genre: 
+at most 200 results (decision D12). The query adapter passes `genre` as a string; the flow parses it (unknown genre: 
 `InvalidInputException`, code `unknown-genre`, `details` listing the valid genres). The same rule applies to the genre
 in `AddBookPayload`. Discontinued books are included and marked by status.
 Prices are serialised as strings to avoid floating-point surprises in clients.
