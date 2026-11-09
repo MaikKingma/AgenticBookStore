@@ -1,6 +1,12 @@
 # JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+# The bookstore starts with demo data: 40 books, their stock and 6 orders. Every ISBN used in this folder is one that the demo data leaves out.
+# Run the files of this folder in this order on one database: catalogue.http, inventory.http, orders.http, distributor.http, demo-flow.http.
+# Every file also runs alone on a freshly seeded database. Run each file once per database, because a second run is refused with 409: its ISBNs are in the catalogue by then.
+# Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
+# This file works with or without a distributor. Placing the order below asks the distributor for a restock right after the commit when the stock dips to the reorder level: the distributor does not list these ISBNs, so it refuses or is unreachable, the bookstore logs a warning and the answer to the order stays 202.
 
-# Add A Tale of Two Cities and remember the new book id as bookA.
+# Add A Tale of Two Cities and remember the new book id as bookA. The body of the answer holds the id of the new book.
+# Expected status: 202.
 POST http://localhost:8080/books/commands/add
 Content-Type: application/json
 
@@ -17,7 +23,8 @@ Content-Type: application/json
 
 ###
 
-# Add Wuthering Heights and remember the new book id as bookB.
+# Add Wuthering Heights and remember the new book id as bookB. The demo data already holds a Wuthering Heights under another ISBN (9789900010302), so this one is a second, separate book.
+# Expected status: 202.
 POST http://localhost:8080/books/commands/add
 Content-Type: application/json
 
@@ -35,6 +42,7 @@ Content-Type: application/json
 ###
 
 # Receive a delivery of 5 copies of A Tale of Two Cities.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{bookA}}/commands/receive
 Content-Type: application/json
 
@@ -45,6 +53,7 @@ Content-Type: application/json
 ###
 
 # Receive a delivery of 2 copies of Wuthering Heights.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{bookB}}/commands/receive
 Content-Type: application/json
 
@@ -54,7 +63,8 @@ Content-Type: application/json
 
 ###
 
-# Place an order for 2 copies of A Tale of Two Cities and 1 copy of Wuthering Heights, then remember the order id.
+# Place an order for 2 copies of A Tale of Two Cities and 1 copy of Wuthering Heights, then remember the order id. The address is stored in lower case.
+# Expected status: 202.
 POST http://localhost:8080/orders/commands/place
 Content-Type: application/json
 
@@ -71,24 +81,29 @@ Content-Type: application/json
 ###
 
 # Show the order. The price of each line is the price at the moment of ordering, and the total is 33.00.
+# Expected status: 200.
 GET http://localhost:8080/orders/{{orderId}}
 
 ###
 
-# List the orders of the customer, newest first. The lookup ignores case, so the lower-case address finds the order.
+# List the orders of the customer, newest first. The lookup ignores case, so the lower-case address finds the order. The demo data already holds 2 orders for this address, so on a freshly seeded database the list has 3 orders, the new one among them.
+# Expected status: 200.
 GET http://localhost:8080/orders?customerEmail=reader@example.com
 
 ###
 
 # Ship the order. The reserved copies leave the stock.
+# Expected status: 202.
 POST http://localhost:8080/orders/{{orderId}}/commands/ship
 
 ###
 
 # Show the order again. It is now shipped and has a shipping time.
+# Expected status: 200.
 GET http://localhost:8080/orders/{{orderId}}
 
 ###
 
 # Show the stock of A Tale of Two Cities. Of the 5 copies received, 3 remain on hand and none are reserved.
+# Expected status: 200.
 GET http://localhost:8080/inventory/{{bookA}}

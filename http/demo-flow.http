@@ -1,0 +1,111 @@
+# JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore and distributor.
+# This is a guided walk through one story: a visitor finds a book and orders it, the stock runs low, the bookstore asks the distributor for more, and the delivery is received.
+# It uses the demo data and needs the distributor running (default port 8090). Run it on a freshly seeded database and run it once: the story changes the stock of Treasure Island.
+# A second run on the same database does not make the book run low again: no restock becomes pending, and the checks of steps 4 and 6 fail. The answers keep their statuses.
+# Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
+# Ids are captured from the answers, so nothing in this file depends on a fixed id.
+
+# Step 1. Search the catalogue for Treasure Island. Only one book of the demo data matches. The handler picks the book by its ISBN and remembers its id.
+# Expected status: 200.
+GET http://localhost:8080/books?q=treasure
+
+> {%
+    const book = response.body.find(function (b) { return b.isbn === "9789900010715"; });
+    client.test("the search finds Treasure Island by its ISBN", function () {
+        client.assert(book !== undefined, "Treasure Island is not in the search result");
+    });
+    client.global.set("bookId", book.id);
+%}
+
+###
+
+# Step 2. Look at the stock before the order. 8 copies are on hand, none reserved, and the reorder level is 3, so the book is not low on stock and nothing is pending.
+# Expected status: 200.
+GET http://localhost:8080/inventory/{{bookId}}
+
+###
+
+# Step 3. Place an order for 6 copies. This leaves 2 copies available, below the reorder level of 3, so the bookstore asks the distributor for a restock right after the order is committed.
+# The call to the distributor is part of this request, so the answer arrives a moment later than usual. With the distributor stopped, the order still answers 202 but no restock is requested.
+# Expected status: 202.
+POST http://localhost:8080/orders/commands/place
+Content-Type: application/json
+
+{
+  "customerEmail": "demo.visitor@example.com",
+  "lines": [
+    { "bookId": "{{bookId}}", "quantity": 6 }
+  ]
+}
+
+> {% client.global.set("orderId", response.body.id); %}
+
+###
+
+# Step 3b. Show the order. It is placed, the price of the line is the price at the moment of ordering, and the total is 47.94.
+# Expected status: 200.
+GET http://localhost:8080/orders/{{orderId}}
+
+###
+
+# Step 4. List the books that are low on stock. Treasure Island is in the list now, next to the books of the demo data that were already low. The handler looks for the book by its id.
+# Expected status: 200.
+GET http://localhost:8080/inventory?lowStock=true
+
+> {%
+    client.test("Treasure Island is in the low-stock list", function () {
+        const found = response.body.some(function (item) { return item.bookId === client.global.get("bookId"); });
+        client.assert(found, "Treasure Island is not in the low-stock list");
+    });
+%}
+
+###
+
+# Step 5. Show the stock of Treasure Island again. 8 copies are on hand and 6 are reserved, so 2 are available, and the book is low on stock.
+# Step 6. The same answer shows the pending restock: pendingRestock holds the restockOrderId from the distributor, a quantity of 10 (the reorder quantity), the expected delivery date and backordered false.
+# With the distributor stopped, pendingRestock is null here and the check below fails. Request a restock with POST /inventory/{id}/commands/request-restock once the distributor runs again.
+# Expected status: 200.
+GET http://localhost:8080/inventory/{{bookId}}
+
+> {%
+    client.test("a restock is pending for Treasure Island", function () {
+        client.assert(response.body.pendingRestock !== null, "pendingRestock is null");
+        client.assert(response.body.pendingRestock.quantity === 10, "the pending restock is not for 10 copies");
+    });
+%}
+
+###
+
+# Step 7. The delivery arrives: receive 10 copies. Receiving stock clears the pending restock.
+# Expected status: 202.
+POST http://localhost:8080/inventory/{{bookId}}/commands/receive
+Content-Type: application/json
+
+{
+  "quantity": 10
+}
+
+###
+
+# Step 8. Show the stock one last time. 18 copies are on hand, 6 are reserved for the order and 12 are available. The book is no longer low on stock and pendingRestock is null.
+# Expected status: 200.
+GET http://localhost:8080/inventory/{{bookId}}
+
+> {%
+    client.test("no restock is pending for Treasure Island", function () {
+        client.assert(response.body.pendingRestock === null, "pendingRestock is not null");
+    });
+%}
+
+###
+
+# Step 9. List the low-stock books once more. Treasure Island is gone from the list. The handler looks for the book by its id.
+# Expected status: 200.
+GET http://localhost:8080/inventory?lowStock=true
+
+> {%
+    client.test("Treasure Island is not in the low-stock list", function () {
+        const found = response.body.some(function (item) { return item.bookId === client.global.get("bookId"); });
+        client.assert(!found, "Treasure Island is still in the low-stock list");
+    });
+%}
