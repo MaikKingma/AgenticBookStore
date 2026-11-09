@@ -1,7 +1,9 @@
 # Verification record: 12-storefront (OpenBook), task T10
 
-Written by the T10 implementation agent (impl-t10). This record holds measurements and observations only. No product file
-was changed. Plain English, ASCII, no em dashes.
+Written by the T10 implementation agent (impl-t10) and updated by the T11 implementation agent (impl-t11). This record
+holds measurements and observations. T10 changed no product file. T11 fixed findings F1 and F2 (section 13) and retook the
+14 screenshots; the lines that the fix made stale are updated in place and say "after T11". Plain English, ASCII, no em
+dashes.
 
 - Branch: `sdd/12-storefront/T10`, HEAD `eba9b1d2a110b4485be105942e30e0c0897bfaa4` (merge of origin/factory into the spec
   branch, so spec 06 is included). `origin/factory` is `deedc6c5000bf4aeaceba57ed5997d24d14ea2d6`.
@@ -64,9 +66,10 @@ Counts (final referee log, the same numbers in the cold and warm logs):
 | Warning inventory (`warn\|deprecat\|self-attach`) | 102 lines | 34 at FF-T3 |
 | Error-pattern inventory (`ERROR \|\[ERROR\]\|npm notice\|(!)\|stderr \|`) | 9 lines | 9 at FF-T3 |
 
-The warning inventory grew from 34 to 102 lines. The cause is the factory merge: about 69 of the lines are `WARN` log
-lines of `DistributorAppServiceImpl` printed by the spec 06 acl tests (for example "Distributor answered status 503 for EAN
-..."). The frontend part is unchanged: exactly four `[ERROR] npm warn install-scripts ... fsevents@2.3.3` lines (OQ-8,
+The warning inventory grew from 34 to 102 lines. The cause is the factory merge: 67 of the lines are `WARN` log lines of
+`DistributorAppServiceImpl` printed by the spec 06 acl tests (for example "Distributor answered status 503 for EAN ..."),
+and 1 is a `WARN` of `DefaultHandlerExceptionResolver` printed by `BookCommandsTest` (a JSON parse error resolved to a 400),
+68 in total at `eba9b1d`, which is the growth of 68 lines (34 to 102). The frontend part is unchanged: exactly four `[ERROR] npm warn install-scripts ... fsevents@2.3.3` lines (OQ-8,
 accepted). The error-pattern count is 9 as in FF-T3. No Vitest `stderr |` block, no React `Warning:` line.
 
 Red-test probe (criterion 2). Uncommitted file `frontend/src/s12t10Probe.test.ts` with
@@ -94,8 +97,8 @@ the bookstore was built, and bookstore and distributor are SKIPPED. The probe fi
 `-DskipTests verify` probe (script `s12-t10-impl-mvn.sh probe-skiptests -DskipTests verify`, run after
 `rm -rf bookstore/target/classes/static/shop` so the result is fresh). Evidence `SP/s12-t10-impl-probe-skiptests.log`:
 `[INFO] --- frontend:2.0.2:npm (npm test) @ frontend ---` followed by `[INFO] Skipping execution.`; the count of `RUN  v`
-lines is 0; `BUILD SUCCESS` in 3.656 s; `bookstore/target/classes/static/shop/index.html` exists again, 403 bytes, modified
-06:32 (after the removal at 06:32 and after the preceding red probe).
+lines is 0; `BUILD SUCCESS` in 3.656 s; `bookstore/target/classes/static/shop/index.html` exists again, 403 bytes at T10 (441 bytes after T11, which added the icon
+link), modified 06:32 (after the removal at 06:32 and after the preceding red probe).
 
 Snapshot equality (GQ5). `SP/s12-t10-impl-snap-before.txt` (taken before the first probe) holds `git status --porcelain
 --untracked-files=all` (empty) and `shasum -a 256` of the 358 tracked files under `frontend bookstore distributor pom.xml
@@ -145,9 +148,9 @@ checkout's own throwaway instance):
 | Request | Status and header lines |
 |---|---|
 | `curl -i /` | `HTTP/1.1 302` and the literal `Location: http://127.0.0.1:8080/shop/` (absolute, resolves to `/shop/` on the same origin; GQ10) |
-| `curl -i /shop/` | `HTTP/1.1 200`, `Content-Type: text/html;charset=UTF-8`, `Content-Length: 403`; body holds `<title>OpenBook</title>` and `<div id="root"></div>` |
+| `curl -i /shop/` | `HTTP/1.1 200`, `Content-Type: text/html;charset=UTF-8`, `Content-Length: 441` after T11 (403 at T10, before the icon link was added); body holds `<title>OpenBook</title>`, `<link rel="icon" href="data:," />` and `<div id="root"></div>` |
 | `curl -i /shop` | `HTTP/1.1 200`, `Content-Type: text/html;charset=UTF-8` |
-| `/shop/assets/index-BWOTWKFB.js` | `HTTP/1.1 200`, `Content-Type: text/javascript`, `Content-Length: 242127` |
+| `/shop/assets/index-CgCUFTxD.js` (after T11; `index-BWOTWKFB.js` at T10) | `HTTP/1.1 200`, `Content-Type: text/javascript`, `Content-Length: 242127` at T10 (the file in `frontend/dist/assets` after T11 is also 242127 bytes) |
 | `/shop/assets/montserrat-latin-400-normal-BLhwKU8k.woff2` | `HTTP/1.1 200`, `Content-Type: font/woff2`, `Content-Length: 18780` |
 | `/shop/missing.js` | `HTTP/1.1 404`, `Content-Type: application/json`, body is the Boot error JSON |
 | `/books` | `HTTP/1.1 200`, `Content-Type: application/json` (`[]` on the empty database; later the five books) |
@@ -168,7 +171,8 @@ After the live session: `rm -rf frontend/dist`, then (script `s12-t10-impl-mvn.s
 -DskipTests clean package`, exit 0). `jar tf bookstore/target/bookstore-0.0.1-SNAPSHOT.jar` written to
 `SP/s12-t10-impl-nodist-jar-list.txt`: `grep -c "static/shop"` prints `0` and `grep -n "static/"` prints nothing. For
 comparison the full referee jar lists `BOOT-INF/classes/static/shop/`, `BOOT-INF/classes/static/shop/index.html` and the
-assets (`index-BWOTWKFB.js`, `index-BK3v9Bi3.css`, three `montserrat-latin-*-normal-*.woff2`). A short run of the no-dist jar
+assets (after T11: `index-CgCUFTxD.js` and `index-Dn8vvogM.css`, three `montserrat-latin-*-normal-*.woff2`; at T10 the names
+were `index-BWOTWKFB.js` and `index-BK3v9Bi3.css`, the CSS hash changes because `global.css` changed). A short run of the no-dist jar
 (same isolation rules, `SP/s12-t10-impl-curl-nodist.txt`): `/shop/` `HTTP/1.1 404` with the Boot error JSON `{"timestamp":
 ...,"status":404,"error":"Not Found","path":"/shop/"}`; `/books` `HTTP/1.1 200` with the five books; `/actuator/health`
 `HTTP/1.1 200`; `/` still answers `302` with `Location: http://127.0.0.1:8080/shop/` (so a build without the frontend
@@ -195,7 +199,7 @@ Browser walk-through at 1280 x 800 unless stated. Evidence files are `SP/s12-t10
 | 12 | Order page equals `GET /orders/<id>` (FF-T8 item 6) | page: Status PLACED, Placed "2026-11-09 05:26:15 UTC", Shipped "Not shipped yet", E-mail reader@example.com, Total 45.50 EUR, lines "A Tale of Two Cities 9780141439600 3 12.50 EUR 37.50 EUR" and "Wuthering Heights 9780141439563 1 8.00 EUR 8.00 EUR". API (fetched by the browser): `placedAt` "2026-11-09T05:26:15.609332Z" (cut to `YYYY-MM-DD HH:MM:SS UTC` equals the page), `total` "45.50", line totals "37.50" and "8.00" | pass |
 | 13 | Orders history | e-mail `reader@example.com`, request `/orders?customerEmail=reader%40example.com` answered 200; three rows in this order: 18ab61d7-... (3 items, 108.89 EUR, 05:26:32 UTC), 1929ad29-... (4 items, 45.50 EUR, 05:26:15 UTC), b65170a0-... (2 items, 21.49 EUR, 05:22:54 UTC); the list of link ids equals the id order of the API answer (`sameOrderAsApi` true); each row links to its order page | pass |
 | 14 | Sticky header (FF-T6 item 9), phone catalogue | `SP/s12-t10-impl-sticky-390.json`: before scrolling `getBoundingClientRect().top` 0; after `scrollY` 600 the header `top` is 0 and `getComputedStyle(header).position` is `sticky` (document height 1954 px at 390 wide) | pass |
-| 15 | Browser console and HTTP errors per page | script `s12-t10-impl-pw-sweep.js`, evidence `SP/s12-t10-impl-sweep-1280.json` and `...-390.json`: for all seven routes at both widths zero console errors, zero warnings, zero page errors, zero HTTP answers of 400 or more. Separately: the very first page load of the browser session logged one `404` for `/favicon.ico` (see finding F2). The deliberate error paths logged one console error each: the `409` of row 10 and the `404` of `POST /assistant/chat` (rows 16 and 17) | pass with F2 |
+| 15 | Browser console and HTTP errors per page | script `s12-t10-impl-pw-sweep.js`, evidence `SP/s12-t10-impl-sweep-1280.json` and `...-390.json`: for all seven routes at both widths zero console errors, zero warnings, zero page errors, zero HTTP answers of 400 or more. Separately, at T10: the very first page load of the browser session logged one `404` for `/favicon.ico` (finding F2, fixed by T11: a brand-new browser session after T11 logs 0 console errors and sends no `/favicon.ico` request, section 13; the same sweep after T11 is in section 13 too). The deliberate error paths logged one console error each: the `409` of row 10 and the `404` of `POST /assistant/chat` (rows 16 and 17) | pass (F2 fixed by T11) |
 | 16 | Assistant page, spec 08 absent (FF-T9) | h1 "Assistant", text "Ask about books, authors and what is in stock.", empty `Conversation` list, "0 / 1000 characters", Send disabled; 1001 characters (`fill`): "1001 / 1000 characters, too long" and Send disabled; 1000 characters: "1000 / 1000 characters" and Send enabled | pass |
 | 17 | One send with spec 08 absent (GQ9, FF-T9) | message "Do you have anything by Austen?"; `POST /assistant/chat` request body `{"conversationId":"b7bc3fd0-4054-4eb7-b272-6bc71c1baa8d","message":"Do you have anything by Austen?"}`; status `404`, `Content-Type: application/json`, body `{"timestamp":"2026-11-09T05:27:23.119Z","status":404,"error":"Not Found","path":"/assistant/chat"}`; alert text exactly `Not Found`; the field keeps its text (31 characters), Send enabled again; no text names an API key variable | recorded (round trip pending, section 10) |
 | 18 | Conversation id | `openbook.conversationId` = `b7bc3fd0-4054-4eb7-b272-6bc71c1baa8d`, matches `^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` (lower-case v4) and equals the request body id; after `page.reload()` a second send ("Second message after reload") posted the same `conversationId`; session keys at the end: `openbook.conversationId`, `openbook.lastSearch` | pass |
@@ -222,31 +226,37 @@ Script `s12-t10-impl-pw-gq8.js` (reloads the page, then measures; one file per p
 Every focusable element reached by the following Tab presses on every page also reported an outline that is not `none`
 (the next eight stops are listed in each json file; the only `none` is the Tab that wraps to the document body).
 
-Order page at 390 (`SP/s12-t10-impl-tablescroll-390.json`): document `scrollWidth` 390; the `.table-scroll` wrapper has
-`overflow-x: auto`, `clientWidth` 316 and `scrollWidth` 316, so it does NOT scroll (see finding F1).
+Order page at 390 at T10 (`SP/s12-t10-impl-tablescroll-390.json`): document `scrollWidth` 390; the `.table-scroll` wrapper has
+`overflow-x: auto`, `clientWidth` 316 and `scrollWidth` 316, so it did NOT scroll (finding F1). After T11 the same wrapper
+has `clientWidth` 316 and `scrollWidth` 561, so it scrolls, and the document `scrollWidth` is still 390 (finding F1 is
+fixed by T11, section 13).
 
 ## 7. Screenshots (criterion 5, Definition of done)
 
-Files in `agent-os/specs/2026-11-08-2145-12-storefront/visuals/`, exactly 14, taken with `playwright-cli screenshot` at
-device pixel ratio 1 (viewport only). `sips -g pixelWidth -g pixelHeight`: every `*-desktop.png` is 1280 x 800 and every
-`*-phone.png` is 390 x 844. Modified times 06:24 to 06:30 local, after the newest frontend source change (the branch tip).
-I opened every file. Descriptions:
+Files in `agent-os/specs/2026-11-08-2145-12-storefront/visuals/`, exactly 14. All 14 were retaken by T11 (section 13)
+after the fix, so the descriptions below are the T11 versions. Taken with Playwright `page.screenshot` through
+`playwright-cli run-code` (script `s12-t11-impl-pw-shots.js`) at device pixel ratio 1 (viewport only), on a fresh build of
+the T11 tip with the T10 seed data (new ids, same books and prices) and the order of 3 x A Tale of Two Cities (12.50) and
+1 x Wuthering Heights (8.00). `sips -g pixelWidth -g pixelHeight` (script `s12-t11-impl-sips.sh`, `SP/s12-t11-impl-sips.txt`):
+every `*-desktop.png` is 1280 x 800 and every `*-phone.png` is 390 x 844, and `ls` prints 14 files. The files were written
+at 09:2x local on 2026-11-09, after the last change of `frontend/src` and `frontend/index.html` (the CSS comment edited
+afterwards does not reach the built CSS). I opened every file. Descriptions:
 
 | File | What it shows |
 |---|---|
-| `catalogue-desktop.png` | white sticky header with "Open" in navy and "Book" in blue, nav Catalogue (underlined blue), Basket with badge 0, Orders, Assistant; snow background, "Catalogue" heading, a white rounded search card (Search, Title, Author, Genre, teal "Search" button), then a three column grid of white cards with soft shadow: A Tale of Two Cities, Deep Learning, Frankenstein (each with author, genre, bold price, teal "In stock" badge), the second row starts with Pride and Prejudice and Wuthering Heights (cut off by the viewport) |
-| `catalogue-phone.png` | same content in one column; the header wraps to three rows (wordmark, three nav items, "Assistant" on a second nav row), search card with stacked fields, first book card starting at the bottom edge |
-| `book-detail-desktop.png` | "A Tale of Two Cities" heading, "Back to the catalogue" link, white card with ISBN, Authors (bullet list), Genre, Published, Price 12.50 EUR, Availability "In stock" badge plus "4 available", teal "Add to basket" button; dark navy footer with the OpenBook text, snow band below the footer |
-| `book-detail-phone.png` | same card in one column; Availability shows "In stock", "1 available" and "Low stock" (stock had dropped to 1 by then) |
-| `basket-desktop.png` | "Basket" with two white line cards (Tale 12.50 EUR each, quantity 3, line total 37.50 EUR; Wuthering Heights 8.00 EUR each, quantity 3, 24.00 EUR), outlined "Remove" buttons, "Estimated total: 61.50 EUR" and the estimate sentence; Basket nav item active with badge 6 |
-| `basket-phone.png` | Deep Learning x2 (99.90 EUR) and Frankenstein x1 (8.99 EUR) cards in one column, "Estimated total: 108.89 EUR" at the bottom edge, badge 3 |
-| `checkout-desktop.png` | "Checkout", back link, plain lines "A Tale of Two Cities, 3 x 12.50 EUR: 37.50 EUR" and the Wuthering line, "Estimated total: 61.50 EUR", a narrow white form card with the e-mail "reader@example.com" and a teal "Confirm order" button; footer visible |
-| `checkout-phone.png` | the same page in one column with Deep Learning and Frankenstein lines, estimated total 108.89 EUR, the form card at full width, footer text wrapped to two lines |
-| `order-desktop.png` | "Order" with a white card: Order number 1929ad29-d61f-4c20-9030-57675ee8aba3, Status PLACED, Placed "2026-11-09 05:26:15 UTC", Shipped "Not shipped yet", E-mail, Total 45.50 EUR, then an Items table with five readable columns and two lines; Orders nav item active, badge 0 |
-| `order-phone.png` | the same card in one column; the viewport ends inside the Items table where the column headings "Quantity", "Unit price" and "Line total" are already broken into short pieces (see finding F1; a full page capture is `SP/s12-t10-impl-shot-order-fullpage-390.png`) |
-| `orders-desktop.png` | "Orders", form card with "reader@example.com" and a dark navy "Show orders" button (hover state, the pointer rests on it), then three white cards, each a link "Order <id>" followed by "PLACED | date UTC | Items: n | total EUR", newest first |
-| `orders-phone.png` | the same three cards in one column, text wrapped across two lines each, no horizontal overflow |
-| `assistant-desktop.png` | empty state: "Assistant", "Ask about books, authors and what is in stock.", a white card with the label "Your message", an empty textarea, "0 / 1000 characters" and a faded teal disabled "Send" button; no conversation messages |
+| `catalogue-desktop.png` | white sticky header with "Open" in navy and "Book" in blue, nav Catalogue (underlined blue), Basket with badge 4, Orders, Assistant; snow background, "Catalogue" heading, a white rounded search card (Search, Title, Author, Genre with "Any genre", teal "Search" button), then a three column grid of white cards with soft shadow: A Tale of Two Cities (Charles Dickens, FICTION, 12.50 EUR), Deep Learning (three authors, TECHNOLOGY, 49.95 EUR), Frankenstein (Mary Shelley, SCIENCE_FICTION, 8.99 EUR), each with a teal "In stock" badge; the second row starts with Pride and Prejudice and Wuthering Heights (cut off by the viewport) |
+| `catalogue-phone.png` | same content in one column; the header wraps to three rows (wordmark; Catalogue, Basket with badge 4 and Orders; "Assistant" on its own row), search card with stacked fields, the first book card (A Tale of Two Cities) starting at the bottom edge |
+| `book-detail-desktop.png` | "A Tale of Two Cities" heading, "Back to the catalogue" link, white card with ISBN, Authors (bullet list), Genre, Published 1859, Price 12.50 EUR, Availability "In stock" badge plus "1 available" and "Low stock" (the order of the task took the other copies), teal "Add to basket" button; dark navy footer with the OpenBook text, snow band below the footer |
+| `book-detail-phone.png` | same card in one column, Availability "In stock", "1 available" and "Low stock"; the footer starts at the bottom edge |
+| `basket-desktop.png` | "Basket" with two white line cards (A Tale of Two Cities 12.50 EUR each, quantity 3, line total 37.50 EUR; Wuthering Heights 8.00 EUR each, quantity 1, line total 8.00 EUR), outlined "Remove" buttons, "Estimated total: 45.50 EUR" and the estimate sentence; Basket nav item active with badge 4 |
+| `basket-phone.png` | the same two line cards in one column, "Estimated total: 45.50 EUR" at the bottom edge, badge 4 |
+| `checkout-desktop.png` | "Checkout", back link, plain lines "A Tale of Two Cities, 3 x 12.50 EUR: 37.50 EUR" and "Wuthering Heights, 1 x 8.00 EUR: 8.00 EUR", "Estimated total: 45.50 EUR", a narrow white form card with the e-mail "reader@example.com" (focus ring visible) and a teal "Confirm order" button; footer visible |
+| `checkout-phone.png` | the same page in one column, the form card at full width, footer text wrapped to two lines |
+| `order-desktop.png` | "Order" with a white card: Order number 57c4e1b6-5c4a-49b4-9668-65060cc6975d, Status PLACED, Placed "2026-11-09 08:21:28 UTC", Shipped "Not shipped yet", E-mail, Total 45.50 EUR, then an Items table with five readable columns (Title, ISBN, Quantity, Unit price, Line total) and two lines; Orders nav item active, badge 4 |
+| `order-phone.png` | the order card in one column, scrolled down so that the Items table is in the viewport, and the table wrapper scrolled sideways to its right end (it is 561 px wide in a 316 px wrapper): the column headings "Quantity", "Unit price" and "Line total" are whole words on one line, and the rows read "3 | 12.50 EUR | 37.50 EUR" and "1 | 8.00 EUR | 8.00 EUR" (finding F1 is fixed); the Title and ISBN columns are to the left of the visible part; the footer is below the card |
+| `orders-desktop.png` | "Orders", form card with "reader@example.com" and a dark navy "Show orders" button (hover state, the pointer rests on it), then two white cards, each a link "Order <id>" followed by "PLACED | date UTC | Items: n | total EUR", newest first (45.50 EUR, 4 items; 21.49 EUR, 2 items) |
+| `orders-phone.png` | the same two cards in one column, text wrapped across lines, no horizontal overflow |
+| `assistant-desktop.png` | empty state: "Assistant", "Ask about books, authors and what is in stock.", a white card with the label "Your message", an empty textarea, "0 / 1000 characters" and a faded teal disabled "Send" button; no conversation messages (spec 08 is absent) |
 | `assistant-phone.png` | the same empty state in one column; footer wrapped to two lines |
 
 Every file shows the "OpenBook" wordmark in the header, live data (except the assistant, which has no data by design) and no
@@ -323,14 +333,17 @@ gives `rg -c "[^\x00-\x7F]"` `1`. `rg` skips binaries (woff2, png). This record 
 ## 11. Findings and open questions for the orchestrator
 
 - OQ4 (budget): closed, warm referee 21.101 s against the 60 s budget (cold 25.133 s).
-- F1 (visual defect, product code, not fixed here): on the order page at 390 px width the Items table does not scroll
+- F1 (visual defect, product code): FIXED BY T11 (CSS addition in `global.css`, evidence in section 13: at 390 px the
+  wrapper scrolls, `clientWidth` 316 and `scrollWidth` 561, every word has one client rect, every table heading is 40.5 px
+  tall as at 1280). T10 observation as it was: on the order page at 390 px width the Items table does not scroll
   inside `.table-scroll`; it squeezes to the 316 px container (`overflow-wrap: anywhere` on `th` and `td`, `table-layout:
   auto`), so headings and numbers break inside words ("Qu / ant / ity", "12.5 / 0 / EUR", "Wuthe / ring / Height / s").
   The document does not overflow (`scrollWidth` 390), so the GQ8 overflow check passes, but FF-T8's expectation "while
   `.table-scroll` scrolls" does not hold (`scrollWidth` 316 equals `clientWidth` 316). Evidence:
-  `SP/s12-t10-impl-tablescroll-390.json`, `SP/s12-t10-impl-shot-order-fullpage-390.png`. Needs a follow-up bugfix
-  (for example a minimum table width or `overflow-wrap: normal` on the cells); T10 changes no product file.
-- F2 (informational): the first page load of a fresh browser session logs `Failed to load resource: the server responded
+  `SP/s12-t10-impl-tablescroll-390.json`, `SP/s12-t10-impl-shot-order-fullpage-390.png`. T10 changed no product file.
+- F2 (informational): FIXED BY T11 (`<link rel="icon" href="data:," />` in `frontend/index.html`, evidence in section 13:
+  a brand-new browser session, first load of `/shop/`, sends no `/favicon.ico` request and logs 0 console errors). T10
+  observation as it was: the first page load of a fresh browser session logs `Failed to load resource: the server responded
   with a status of 404 () @ http://127.0.0.1:8080/favicon.ico`; `frontend/index.html` has no favicon link and the bookstore
   has no `/favicon.ico`. Later loads did not log it again.
 - F3 (judgment): on the short pages (book detail, checkout, order, orders, assistant) the dark footer ends above the
@@ -346,8 +359,108 @@ gives `rg -c "[^\x00-\x7F]"` `1`. `rg` skips binaries (woff2, png). This record 
 
 ## 12. Scope
 
-Only `agent-os/specs/2026-11-08-2145-12-storefront/verification-record.md` and the 14 files
+T10 (as it was): only `agent-os/specs/2026-11-08-2145-12-storefront/verification-record.md` and the 14 files
 `agent-os/specs/2026-11-08-2145-12-storefront/visuals/*.png` were created. `git status --porcelain --untracked-files=all`
 lists exactly those 15 paths. Nothing is running: the bookstore jar, the dev server and the browser session are stopped,
 the Postgres container is removed, ports 8080, 5173 and 55432 are free. Scratch output of the browser tool
 (`.playwright-cli/`) was removed. The `target/` directories and `frontend/dist` hold the output of the final referee run.
+
+T11: the product diff is `frontend/src/styles/global.css` (16 added lines, no removed line, `git diff -U0` shows only `+`
+lines), `frontend/index.html` (1 added line) and `frontend/src/indexHtml.test.ts` (one inserted test); new file
+`frontend/src/styles/orderTable.test.ts`; this record and the 14 PNG files. `OrderPage.tsx`, `.card` and every other
+existing line of `global.css` are unchanged. Nothing is running after T11: the bookstore jars, the browser sessions and the
+throwaway Postgres container are stopped and removed, scratch output of the browser tool (`.playwright-cli/`) was removed.
+
+## 13. T11 fix: order table at 390 px and the favicon (findings F1 and F2)
+
+Written by impl-t11 on 2026-11-09 (branch `sdd/12-storefront/T11`, base `fa6ea90`, the tip of `origin/sdd/12-storefront/spec`).
+SP is the session scratchpad; evidence files are `SP/s12-t11-impl-*`, scripts `.claude/comms/tmp/s12-t11-impl-*`.
+
+Root cause of F1. The order cells (`th`, `td` of `.order-lines`) inherit `overflow-wrap: anywhere` from `.card`
+(`global.css`, the `.card` rule). That value lowers the minimum content width of every cell to one character, so the
+`width: 100%` auto-layout table fits the 316 px wrapper by breaking words in the middle, and `.table-scroll` (which keeps
+`overflow-x: auto`) never has anything to scroll.
+
+Fix, both as additions after the `.order-lines th` rule (nothing removed, `.card` untouched):
+
+1. `.order-lines th, .order-lines td { overflow-wrap: normal; }` stops the mid-word breaks.
+2. `.order-lines th, .order-lines td:not(:first-child) { white-space: nowrap; }`. The first live measurement with the first
+   rule alone showed the table at 482 px (the wrapper scrolled, no word was broken) but "Unit price" and "Line total" wrapped
+   at their spaces, so every heading was 64.5 px tall against 40.5 px at 1280. The task asks for the same heading height on
+   the phone, so the headings and the short value cells (ISBN, quantity, prices) stay on one line; the title column still
+   wraps at its spaces. This second rule is an addition beyond the one the task named; it is covered by its own test.
+
+Fix of F2: one `<link rel="icon" href="data:," />` in `frontend/index.html` (no URL, no colour literal). The built
+`frontend/dist/index.html` and the live `/shop/` body carry it (`Content-Length: 441`, was 403).
+
+Tests (jsdom has no layout, so the text is pinned):
+
+- New `frontend/src/styles/orderTable.test.ts`, 8 tests: the effective `overflow-wrap` of the rule whose selector list is
+  exactly `.order-lines th, .order-lines td` is `normal`; the effective `white-space` of the rule `.order-lines th,
+  .order-lines td:not(:first-child)` is `nowrap`; `.table-scroll` keeps `overflow-x: auto`; the `.card` rule still has
+  `overflow-wrap: anywhere`; four tests of the small stylesheet reader (selector list normalised, a narrower or longer list
+  does not match, rules in a media query and comments are skipped, last declaration wins).
+- `frontend/src/indexHtml.test.ts`: one inserted test, the icon link appears exactly once and is exactly `<link rel="icon"
+  href="data:," />`; "loads nothing from another host" is untouched and green.
+- Vitest: 22 files, 590 tests (588 passed + 2 expected fail) = 581 + 9 added (8 + 1). Only the 2 expected fails.
+- Must-fail probes, script `s12-t11-impl-probes.py` (each probe edits one thing, runs both files, restores from a copy and
+  compares sha256; every probe failed exactly the named test and every restore matched): `overflow-wrap` declaration
+  removed, value `anywhere`, value `break-word`, selector narrowed to `th`, selector narrowed to `td`; `white-space`
+  declaration removed, value `normal`, selector narrowed to `th`; `.table-scroll` `overflow-x` set to `visible`; `.card`
+  `overflow-wrap` set to `normal`; icon link removed, href `/favicon.ico`, link twice, `rel="shortcut icon"`. Console probes
+  (`console.error('probe')` and `console.warn('probe')` inside one test of each of the two files) each failed with
+  "console.error or console.warn was called during the test". The style contract and contrast tests stayed green.
+
+Live checks. Isolation (GQ1): no `docker compose`; throwaway `docker run --name s12-t11-impl-pg ... postgres:18.6` on
+`127.0.0.1:55433`, removed at the end; `java -jar` with `--spring.docker.compose.enabled=false` and an explicit datasource;
+port 8080 was free before and after. Seed: the T10 data through the REST command endpoints (script `s12-t11-impl-seed.sh`);
+the order of the task was placed through the page (3 x A Tale of Two Cities 12.50, 1 x Wuthering Heights 8.00; answer `202`,
+Total 45.50 EUR). Each browser run used a new in-memory Playwright session (`playwright-cli -s=...`), because the server
+sends `Last-Modified: Fri, 01 Feb 1980` for `index.html`, so a browser that has seen `/shop/` once can keep using the old
+`index.html` (and so the old CSS name) after a rebuild; my first re-measurement in a reused session showed the old numbers
+for that reason (observation only, nothing changed for it).
+
+Order page, script `s12-t11-impl-pw-table.js`, evidence `SP/s12-t11-impl-table-tip.json` (T11 tip) and
+`SP/s12-t11-impl-table-base.json` (negative control: `git archive origin/sdd/12-storefront/spec` extracted into
+`SP/s12-t11-impl-base`, built with `./mvnw -DskipTests package`, run with the same script and seed):
+
+| Measure | T11 tip, 390 x 844 | PR base `fa6ea90`, 390 x 844 | T11 tip, 1280 x 800 |
+|---|---|---|---|
+| document `scrollWidth` | 390 | 390 | 1280 |
+| `.table-scroll` `clientWidth` / `scrollWidth` | 316 / 561 (scrolls) | 316 / 316 (never scrolls) | 1078 / 1078 (fits) |
+| table width | 560.97 | 316 | 1078 |
+| computed `overflow-wrap` of a cell | normal | anywhere | normal |
+| words with a DOM Range of more than one client rect (of 26) | 0 | 17 ("Quantity" 3 rects, "12.50" 2, "9780141439600" 3, "Wuthering" 2, ...) | 0 |
+| height of each of the 5 headings | 40.5 px | 112.5 px | 40.5 px |
+
+So at 390 the words are whole, the wrapper scrolls, the document does not overflow and each heading is as tall as at 1280.
+The base shows the defect: broken words, `scrollWidth` equal to `clientWidth`.
+
+Favicon, script `s12-t11-impl-pw-favicon.js` (listeners registered, then the first load of `/shop/` in a brand-new session,
+network idle plus 1.5 s), evidence `SP/s12-t11-impl-favicon-tip.json` and `SP/s12-t11-impl-favicon-base.json`:
+
+| Build | `/favicon.ico` requests | Console errors | HTTP answers of 400 or more | Icon links in the DOM |
+|---|---|---|---|---|
+| T11 tip | none | 0 | none | `<link rel="icon" href="data:,">` |
+| PR base | the browser's own request answered 404 (console error `Failed to load resource: the server responded with a status of 404 ()`, location `http://127.0.0.1:8080/favicon.ico`) | 1 | the 404 above | none |
+
+(The browser's built-in favicon fetch is not listed by the page's `request` event, so the base run shows it only as the
+console error with its location; the tip run shows neither.)
+
+Regression sweep (GQ8), script `s12-t11-impl-pw-sweep.js`, evidence `SP/s12-t11-impl-sweep-tip.json`; all seven routes
+(catalogue, book detail, basket, checkout, order, orders, assistant), each at 390 x 844 and 1280 x 800, a filled basket in
+`sessionStorage` for the basket and checkout routes: document `scrollWidth` equals `innerWidth` on all 14 combinations;
+catalogue grid 1 track at 390 and 3 tracks at 1280; the first Tab stop has `outline` solid 3px on all 14; transitions exist on
+every page except the order page (1 element, 3 on the basket) and all report `0s` with `prefers-reduced-motion: reduce`
+emulated; console warnings, console errors, page errors and HTTP answers of 400 or more: none on all 14 (the deliberate
+error paths of rows 10, 16 and 17 were not repeated).
+
+Referee after T11 (`./mvnw clean verify` with the Node-free PATH, script `s12-t11-impl-referee.sh`): `Total time:
+24.278 s` (final run; two earlier runs of the same tree took 29.510 s and 31.491 s), BUILD SUCCESS, budget 60 s. Counts: Vitest 22 files, 590 tests (588 passed + 2 expected fail);
+bookstore `Tests run: 936, Failures: 0, Errors: 0, Skipped: 0`; distributor `190`; Spring `Started` lines 15; one
+`Creating container for image: postgres:18.6`; warning inventory 102 lines (the same as at T10, so T11 adds none).
+
+Hygiene: the literal C0-6 grep set (6a to 6j, script `s12-t11-impl-greps.sh`, output `SP/s12-t11-impl-greps.txt`) prints the
+same hits as at T10 and none from the T11 files (the first run of it flagged the word "ISBN" in a new CSS comment; the
+comment was reworded). The skip/only/todo/fails grep prints only the two accepted `it.fails` lines. This record has no
+non-ASCII byte and no em dash.

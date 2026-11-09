@@ -501,6 +501,22 @@ textarea {
   font-weight: 600;
 }
 
+/* The card around the table lets a word break anywhere, which would let the table shrink into the wrapper and cut words
+   in the middle. The cells keep whole words, so the table keeps the width its words need and the wrapper scrolls. */
+
+.order-lines th,
+.order-lines td {
+  overflow-wrap: normal;
+}
+
+/* The headers and the short values (the code, the quantity and the prices) stay on one line, so every header is as tall
+   on a phone as on a desktop. Only the title column wraps, at its spaces. */
+
+.order-lines th,
+.order-lines td:not(:first-child) {
+  white-space: nowrap;
+}
+
 /* Assistant chat: a card per message (the visitor's on mist, the assistant's on white), the form a card of its own. The
    text keeps its line breaks and its edge spaces, because it is shown as it was written. */
 
