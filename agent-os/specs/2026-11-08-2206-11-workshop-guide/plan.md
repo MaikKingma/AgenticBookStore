@@ -42,7 +42,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | PASS r1 | #83 | sdd/11-workshop-guide/T4a | ENDORSE |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | FAIL r4, human override (A7) | #87 | sdd/11-workshop-guide/T5 | AMEND r4, override: human |
 | T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
-| T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | pending | | | |
+| T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | implemented, waiting for T5c | | sdd/11-workshop-guide/T6 | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
@@ -276,10 +276,12 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   metadata goes after a space: ```` ```powershell {1} ```` or ```` ```powershell title="x" ````, never
   `powershell{1}`. (d) No hand-written `class` or `className` on `pre`, `code` or `span`; a command in prose is a
   backtick span, never a `<code>` element. (e) A checker false positive is a `question`, never a checker edit.
-- FF-32 (T6 to T11 verifiers and qa-final, from the T5b merge): (a) `shasum -a 256 -c
-  agent-os/specs/2026-11-08-2206-11-workshop-guide/t5b-freeze-baseline-hashes.txt` prints 75 OK and
-  `git ls-files guide/scripts | wc -l` prints 75; this file replaces the T5 file as the C0-12 baseline; any FAILED
-  entry or extra file is a FAIL. (b) Quote both `check:built` lines (`ok   built: N html files, no literal ":::", C
+- FF-32 (T6 to T11 verifiers and qa-final): (a) from the T5c merge: `shasum -a 256 -c
+  agent-os/specs/2026-11-08-2206-11-workshop-guide/t5c-freeze-baseline-hashes.txt` prints 89 OK and
+  `git ls-files guide/scripts | wc -l` prints 89; this file replaces `t5b-freeze-baseline-hashes.txt` (75 files, valid
+  from the T5b merge to the T5c merge) as the C0-12 baseline (T11: its diff against this file is limited per FF-34);
+  any FAILED entry or extra file is a FAIL. FF-2 floor: node:test total at least 496 and every T5c title present
+  (`comm -23` against the T5c title list empty). T6 to T10 are verified only on a tree that contains the T5c merge. (b) Quote both `check:built` lines (`ok   built: N html files, no literal ":::", C
   checkboxes, all named` and `ok   built: M Windows PowerShell lines in tab panels and PowerShell code blocks, all
   pack command lines`); M equals the verifier's own FF-25 (b) count plus the lines of `powershell` blocks outside
   PowerShell tabs; M > 0 from T6 on and never drops below the previous task's M without a stated removal. (c) The
@@ -290,6 +292,20 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   prints nothing. Run each grep against a control that must match on a scratch copy, never on the task tree; keep
   the patterns in single quotes. (f) Read the task's pages: every Windows command sits in a PowerShell tab or a
   `powershell` fence.
+- FF-34 (T11 card amendment, from the T5c meta-review): the marker ban (a) reads only `<root>/docs/**` through the
+  same predicate as the skeleton exemption (`SKELETON_MARKER`, `rules/structure.mjs`), never a file-tree or repo grep
+  (`guide/scripts/**` holds 17 marker mentions by design); (b) `guide/scripts/fixtures/skeleton-docs/**` keeps its 11
+  markers and stays hash-equal to the T5c baseline (editing it is a FAIL); (c) the ban is a `runChecks` option that the
+  CLI turns on for its default root (the T4 `structure` opt-in pattern), so every `runChecks`-level snapshot test keeps
+  its asserting lines verbatim; the only asserting lines T11 may change are in the two CLI copy tests
+  (`check-content.test.mjs` about 267-279, `structure-check.test.mjs` about 152-162), which change to the ban's exact
+  outcome from all three cwds (exit 1, ban errors naming the sorted list of the 11 `docs/...` files, no other error);
+  plus one new test that the finished live guide passes every rule from the three cwds (exit 0, the ok lines, 0
+  pending); (d) the two live variants stay verbatim and green (a design that needs them edited is a question first);
+  (e) no escape hatch flag, the `check` script pin stays; (f) the verifier shows a marker reinserted on one live page
+  makes `npm run check` exit 1 naming that page, the ban and the exemption treat `{/*guide-skeleton*/}` alike, the real
+  guide exits 0 with the 11 fixture markers present, and the diff against the T5c baseline is limited to the ban's rule
+  and wiring files, the two copy tests and new tests.
 - FF-33 (T6 to T11 verifiers and qa-final; orchestrator, for the T5 r4 case OA1b-f, a raw `<img>` hidden from source
   rule (f) behind an unclosed comment opener): the built article HTML of every page of the task holds no `<img`
   element (no images are expected, ground rule G4); quote the count (0).

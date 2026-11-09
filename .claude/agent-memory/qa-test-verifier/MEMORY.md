@@ -14,4 +14,4 @@
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and advice content-type probes for an MVC interceptor with a validated properties record; sub-ulp BigDecimal and random wiring witnesses
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
-- [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe and mutant runner, scanner witnesses, MDX variants, offline traps, built-HTML tab reader probes
+- [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe and mutant runner, scanner witnesses, MDX variants, offline traps, built-HTML tab reader probes, self-test moves to a snapshot

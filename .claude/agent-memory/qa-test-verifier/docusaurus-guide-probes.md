@@ -100,4 +100,12 @@ Rule: for a built-HTML tab reader (tab label -> panel lines), probe the Tabs pro
 - Language-class detection on `pre`: probe `<pre><code className="language-powershell">` (class on code only, raw JSX keeps it there), a fence info string without a space (`powershell{1}` gives class `language-powershell{1}`), class order and extra classes in raw JSX, `<CodeBlock language=...>`, upper-case fences (Docusaurus writes the lower-case class on the pre).
 - Tests that filter errors through a message-shape helper (`offending(errors)`) without an `errors.length` check silently ignore errors of another shape; a reverted test line can stay green for the wrong reason. Run the reverted line under the new code to see it.
 
+Rule: when self-tests move from a live tree to a committed snapshot, derive the moved set empirically and run every probe in scratch copies.
+
+**Why:** a static list of "tests that read the tree" is a guess; a snapshot probe (strip the markers from the fixture) and the base red probe (base scripts, live markers stripped) give the dependent set by name, and they should be identical. A kill matrix over that set then shows each moved test still guards.
+**How to apply:**
+- Scratch copy = `rsync -a --exclude node_modules --exclude build* guide <dir>/`, symlink `node_modules`, `rsync` `docs/spec-pack` next to it (the checker finds the pack relative to itself); `diff -rq` the copy's scripts against the worktree first. Mutants, docs-state probes (one marker removed at a time, all removed, the next task's pages via `git show <sha>:<path>`) and throwaway tests all run there, so the worktree is never edited.
+- CLI-vs-runChecks consistency tests are state-dependent: exit-code and stderr mutants only show when the live tree has errors, so run the CLI mutant set in a clean and an error state; a mutant of a constant both sides share (the pack path) is equivalent for them by construction and must be killed elsewhere.
+- Probe a rule-violating body on a live page too: it must reach only `check.mjs`, never a self-test.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
