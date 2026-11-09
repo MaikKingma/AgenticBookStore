@@ -1,0 +1,271 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join, dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {scanBuilt} from './rules/built.mjs';
+import {packCommandLines} from './rules/content.mjs';
+import {SOURCE_FILES} from './coverage.mjs';
+
+// Rule (c) on the built pages (check:built). The fixtures in fixtures/built-powershell/ are
+// captured from a Docusaurus 3.10.2 Pages build (minified, unquoted attributes, no </li> after a
+// tab, hidden panels); fixtures/built-powershell/README.md lists the MDX source of each.
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACK = join(HERE, '..', '..', 'docs', 'spec-pack');
+const CLI = join(HERE, 'check-built.mjs');
+const FIXTURES = join(HERE, 'fixtures', 'built-powershell');
+const fixture = (name) => readFileSync(join(FIXTURES, `${name}.html`), 'utf8');
+const page = (body) => `<!doctype html><html lang=en><body><main><div class=container>${body}</div></main></body></html>\n`;
+const INV = 'Remove-Item -Recurse inventedfolder';
+const NBSP = String.fromCharCode(0xa0);
+
+// Hand-made pieces in the shape of the captured fixtures: a tabs container with the tab labels
+// and panel bodies given, the first panel shown, the others hidden, no </li> after a tab; a
+// highlighted code block with one .token-line per line.
+const tabs = (items) =>
+  `<div class="theme-tabs-container tabs-container tabList_vrMO"><ul role=tablist aria-orientation=horizontal class=tabs>${items
+    .map(([label], i) => `<li role=tab tabindex=${i === 0 ? 0 : -1} aria-selected=${i === 0} class="tabs__item tabItem_LRm4${i === 0 ? ' tabs__item--active' : ''}">${label}`)
+    .join('')}</ul><div class=margin-top--md>${items
+    .map(([, body], i) => `<div role=tabpanel class=tabItem_e6wi${i === 0 ? '' : ' hidden'}>${body}</div>`)
+    .join('')}</div></div>`;
+const codeBlock = (...tokenLines) =>
+  `<div class="language-powershell codeBlockContainer_sQUW theme-code-block"><div class=codeBlockContent_lXeI><pre tabindex=0 class="prism-code language-powershell codeBlock_ItfM thin-scrollbar"><code class=codeBlockLines_H9lz>${tokenLines
+    .map((line) => `<div class=token-line><span class="token plain">${line}</span><br/></div>`)
+    .join('')}</code></pre></div></div>`;
+const windows = (body) => tabs([['macOS/Linux', '<p>Nothing.'], ['Windows PowerShell', body]]);
+
+function withBuild(files, fn) {
+  const root = mkdtempSync(join(tmpdir(), 'guide-built-powershell-test-'));
+  const buildDir = join(root, 'build');
+  mkdirSync(buildDir);
+  for (const [rel, content] of Object.entries(files)) {
+    const abs = join(buildDir, rel);
+    mkdirSync(dirname(abs), {recursive: true});
+    writeFileSync(abs, content);
+  }
+  try {
+    return fn(buildDir, root);
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+}
+
+const scanPage = (body) => withBuild({'probe.html': page(body)}, (dir) => scanBuilt(dir));
+// The offending lines named by the PowerShell errors, in order.
+const offending = (errors) =>
+  errors.map((e) => /the line "(.*)" in the "[^"]*" tab is not a command line/s.exec(e)?.[1]).filter((line) => line !== undefined);
+
+test('built powershell: OA1c as built, the invented line in the Windows PowerShell panel fails with file, tab and line', () => {
+  const {errors} = scanPage(fixture('oa1c'));
+  assert.ok(
+    errors.some((e) => /^built: probe\.html:\d+ /.test(e) && e.includes('"Windows PowerShell"') && e.includes(`"${INV}"`)),
+    errors.join('\n'),
+  );
+});
+
+// The 11 T5 r4 cases the source checker misses (A7), as built. Each fixture is the <article> of a
+// probe page whose MDX is the qa-t5 r4 probe source (probes4, probes6) with the probes' Windows
+// group: the Windows PowerShell item holds the case text and a bash fence with the invented line.
+// OA1b-f (a rule f case) gets that group after its source. The inline code that lands in the
+// panel is read too, decoded.
+const R4_CASES = {
+  OA1c: ['x 2. </TabItem> y', INV],
+  OA8c: ['x * more </TabItem> y', INV],
+  OA3c: ['x <b>y</b> </TabItem> z', INV],
+  OA5c: ['x more </TabItem> y', INV],
+  OA4c: ["x {'y'} </TabItem> z", INV],
+  OA6c: ['a | </TabItem>', INV],
+  OA6b: [INV],
+  OA7c: ['x more </TabItem> y', INV],
+  OA1b: [INV],
+  OA1b2: [INV],
+  'OA1b-f': [INV],
+};
+
+for (const [id, expected] of Object.entries(R4_CASES)) {
+  test(`built powershell: T5 r4 case ${id} as built fails on exactly its Windows lines`, () => {
+    const {errors, windowsLines} = scanPage(fixture(id.toLowerCase()));
+    assert.deepEqual(offending(errors), expected);
+    assert.equal(errors.length, expected.length);
+    assert.equal(windowsLines, expected.length);
+    for (const error of errors) assert.ok(error.includes('in the "Windows PowerShell" tab'), error);
+  });
+}
+
+test('built powershell: every token line and every inline code element of the panel is one line, an empty token line is skipped', () => {
+  // invented: a fence with Get-Command jdtls, an empty line and Invoke-Invented -Now, then inline `Invented-Inline`.
+  const {errors, windowsLines} = scanPage(fixture('invented'));
+  assert.deepEqual(offending(errors), ['Invoke-Invented -Now', 'Invented-Inline']);
+  assert.equal(errors.length, 2);
+  assert.equal(windowsLines, 3);
+});
+
+test('built powershell: a pre holding a pack line passes, as a code block, a raw pre and inline code; the macOS panel is not read', () => {
+  // plain: macOS/Linux panel with brew install inventedthing; Windows PowerShell panel with
+  // Get-Command jdtls as a fence, as <pre> and as inline code.
+  const {errors, windowsLines} = scanPage(fixture('plain'));
+  assert.deepEqual(errors, []);
+  assert.equal(windowsLines, 3);
+});
+
+test('built powershell: a raw pre is read line by line, each newline-split line checked, empty lines skipped', () => {
+  // rawpre: <pre> over two source lines renders <pre><p>Get-Command jdtls\nRemove-Item ...</pre>.
+  const raw = scanPage(fixture('rawpre'));
+  assert.deepEqual(offending(raw.errors), [INV]);
+  assert.equal(raw.windowsLines, 2);
+  // rawpre-expr: <pre>{`...`}</pre> keeps the newlines and the empty line of the template literal.
+  const expr = scanPage(fixture('rawpre-expr'));
+  assert.deepEqual(offending(expr.errors), [INV]);
+  assert.equal(expr.windowsLines, 2);
+  // rawpre-blank: a blank line inside <pre> makes MDX paragraphs, <pre><p>a<p>b</pre>; the text
+  // content has no newline between them, so the joined line fails (fail-closed).
+  const blank = scanPage(fixture('rawpre-blank'));
+  assert.deepEqual(offending(blank.errors), [`Get-Command jdtls${INV}`]);
+  assert.equal(blank.windowsLines, 1);
+});
+
+test('built powershell: a raw pre with a code element inside is read once, as the pre', () => {
+  const precode = windows('<pre><code>Get-Command jdtls\nInvented-In-Code</code></pre>');
+  const {errors, windowsLines} = scanPage(precode);
+  assert.deepEqual(offending(errors), ['Invented-In-Code']);
+  assert.equal(windowsLines, 2);
+});
+
+test('built powershell: a tab label containing PowerShell is read, other labels are not', () => {
+  // labels: a jdtls group (macOS, Windows (WSL)) with invented lines in both, a group with the
+  // label "PowerShell" and one with "Windows PowerShell", each holding an invented line.
+  const {errors, windowsLines} = scanPage(fixture('labels'));
+  assert.deepEqual(offending(errors), ['Invented-Short-Label', 'Invented-Long-Label']);
+  assert.match(errors[0], /in the "PowerShell" tab/);
+  assert.match(errors[1], /in the "Windows PowerShell" tab/);
+  assert.equal(windowsLines, 2);
+  const lower = tabs([['macOS/Linux', codeBlock('Invented-Mac')], ['powershell 7', codeBlock('Invented-Lower')]]);
+  assert.deepEqual(offending(scanPage(lower).errors), ['Invented-Lower']);
+});
+
+test('built powershell: nested tabs, the n-th panel belongs to the n-th tab of its own container, any PowerShell panel around a line counts', () => {
+  // nested: outer macOS/Linux panel holds tabs [macOS: brew install innerok, Windows PowerShell:
+  // Inner-Invented-One]; outer Windows PowerShell panel holds tabs [Arch Linux: Inner-Invented-Two,
+  // Other Linux: Get-Command jdtls].
+  const {errors, windowsLines} = scanPage(fixture('nested'));
+  assert.deepEqual(offending(errors), ['Inner-Invented-One', 'Inner-Invented-Two']);
+  for (const error of errors) assert.match(error, /in the "Windows PowerShell" tab/);
+  assert.equal(windowsLines, 3);
+});
+
+test('built powershell: tabs inside a list item keep their container (an inner <li> does not close the outer <li>)', () => {
+  // inlist: "1. Install the tool:" with the os group indented under it, then "2. Next step."
+  const {errors, windowsLines} = scanPage(fixture('inlist'));
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.deepEqual(offending(errors), ['Invented-In-List']);
+  assert.equal(windowsLines, 2);
+  // inlist-ol: "- Install the tool:" with the os group under it, the Windows PowerShell panel an
+  // ordered list; its first <li> does not close the outer bullet item (and the panel with it)
+  const ordered = scanPage(fixture('inlist-ol'));
+  assert.equal(ordered.errors.length, 1, ordered.errors.join('\n'));
+  assert.deepEqual(offending(ordered.errors), ['Invented-In-Ordered-Item']);
+  assert.equal(ordered.windowsLines, 2);
+});
+
+test('built powershell: a hidden panel is read like a shown one', () => {
+  // every captured Windows PowerShell panel is the hidden second panel
+  for (const name of ['oa1c', 'plain', 'invented']) {
+    assert.match(fixture(name), /<div role=tabpanel class=tabItem_e6wi hidden><(?:p|div)/, name);
+  }
+  const shownFirst = tabs([['Windows PowerShell', codeBlock('Invented-Shown')], ['macOS/Linux', codeBlock('Invented-Mac')]]);
+  assert.deepEqual(offending(scanPage(shownFirst).errors), ['Invented-Shown']);
+  assert.deepEqual(offending(scanPage(windows(codeBlock('Invented-Hidden'))).errors), ['Invented-Hidden']);
+});
+
+test('built powershell: a panel whose tab cannot be found fails closed', () => {
+  // one panel more than tabs: the third panel has no tab
+  const extra = tabs([['macOS/Linux', '<p>a'], ['Windows PowerShell', '<p>b']]).replace(
+    '</div></div></div>',
+    `</div><div role=tabpanel class=tabItem_e6wi hidden>${codeBlock('Get-Command jdtls')}</div></div></div>`,
+  );
+  const missing = scanPage(extra).errors;
+  assert.equal(missing.length, 1, missing.join('\n'));
+  assert.match(missing[0], /^built: probe\.html:\d+ a tabs container with 2 tabs and 3 panels; /);
+  // a panel outside any tabs container
+  const loose = scanPage(`<div role=tabpanel>${codeBlock('Get-Command jdtls')}</div>`).errors;
+  assert.equal(loose.length, 1, loose.join('\n'));
+  assert.match(loose[0], /^built: probe\.html:\d+ a tab panel outside a tabs container; /);
+});
+
+test('built powershell: a stray end tag inside a panel does not end the panel', () => {
+  const stray = windows(`<p>Text</section></span>${codeBlock('Invented-After-Stray')}`);
+  assert.deepEqual(offending(scanPage(stray).errors), ['Invented-After-Stray']);
+});
+
+test('built powershell: entity-encoded text is decoded before the compare, as built', () => {
+  // entities: $env:BOOKSTORE_AI_API_KEY="&lt;key on screen>", inline `git clone ... && cd ...` and
+  // `/compact focus on &lt;topic>` (pack lines), then the invented Write-Host "a&lt;b" & 'c'.
+  const {errors, windowsLines} = scanPage(fixture('entities'));
+  assert.deepEqual(offending(errors), [`Write-Host "a<b" & 'c'`]);
+  assert.equal(windowsLines, 4);
+});
+
+test('built powershell: named and numeric character references are decoded, an unknown one stays as written', () => {
+  const pass = codeBlock('$env:BOOKSTORE_AI_API_KEY=&quot;&lt;key on screen&gt;&quot;', '$env:BOOKSTORE_AI_API_KEY=&#34;&#x3C;key on screen&#X3e;&#34;');
+  assert.deepEqual(scanPage(windows(pass)).errors, []);
+  assert.deepEqual(scanPage(windows('<p><code>git restore . &amp;&amp; git clean -fd</code>')).errors, []);
+  // a no-break space is not a space: the line differs from the pack line Get-Command jdtls
+  assert.deepEqual(offending(scanPage(windows(codeBlock('Get-Command&nbsp;jdtls'))).errors), [`Get-Command${NBSP}jdtls`]);
+  assert.deepEqual(offending(scanPage(windows(codeBlock('Write-Host &#39;x&#x27; &apos;y&apos; &bogus; &#xZZ; &#0; &#x110000;'))).errors), [
+    "Write-Host 'x' 'y' &bogus; &#xZZ; &#0; &#x110000;",
+  ]);
+});
+
+test('built powershell: the allow-list is the pack command lines of all five pack files, compared as whole lines', () => {
+  const texts = Object.fromEntries(Object.entries(SOURCE_FILES).map(([key, rel]) => [key, readFileSync(join(PACK, rel), 'utf8')]));
+  const own = {};
+  for (const key of Object.keys(texts)) {
+    const others = packCommandLines(Object.entries(texts).filter(([other]) => other !== key).map(([, text]) => text));
+    // a line only this pack file states, without markup characters
+    own[key] = [...packCommandLines([texts[key]])].find((line) => !others.has(line) && /^[\w./:@ -]+$/.test(line) && line.length > 3);
+    assert.ok(own[key], `no line of its own in the pack file ${key}`);
+  }
+  const {errors, windowsLines} = scanPage(windows(codeBlock(...Object.values(own))));
+  assert.deepEqual(errors, [], Object.values(own).join(' | '));
+  assert.equal(windowsLines, 5);
+  // a part of a pack line, or a pack line with more after it, is no pack line
+  assert.deepEqual(offending(scanPage(windows(codeBlock('Get-Command', 'Get-Command jdtls -All'))).errors), ['Get-Command', 'Get-Command jdtls -All']);
+  // whitespace around a line is trimmed
+  assert.deepEqual(scanPage(windows(codeBlock('   Get-Command jdtls   '))).errors, []);
+});
+
+test('built powershell: a real fragment of guide/build is read the same way: outside a tab nothing is checked, inside a PowerShell panel each line is', () => {
+  // real-level-0-at-a-glance: the at a glance box of the real Level 0 page (npm run build of the
+  // guide at T5), with inline code main and level-0-start and a code block git stash -u && git switch main.
+  const real = fixture('real-level-0-at-a-glance');
+  assert.match(real, /<div class=token-line><span class="token function">git<\/span>/);
+  const outside = scanPage(real);
+  assert.deepEqual(outside.errors, []);
+  assert.equal(outside.windowsLines, 0);
+  const inside = scanPage(windows(real));
+  // main and level-0-start are inline code spans of the pack; the catch-up line is not a pack line
+  assert.deepEqual(offending(inside.errors), ['git stash -u && git switch main']);
+  assert.equal(inside.windowsLines, 3);
+});
+
+test('built powershell: check:built exits 1 on an invented Windows line and 0 on pack lines, and prints the Windows line count', () => {
+  withBuild({'index.html': page('<p>Hello.'), 'setup-check.html': page(fixture('oa6b'))}, (dir) => {
+    const result = spawnSync(process.execPath, [CLI, dir], {encoding: 'utf8'});
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    // oa6b: the paragraph before the tabs ends with a newline, so the Windows line is on line 2
+    assert.match(result.stderr, /^built: setup-check\.html:2 the line "Remove-Item -Recurse inventedfolder" in the "Windows PowerShell" tab is not a command line or inline code span of the pack/m);
+    assert.match(result.stderr, /check:built failed with 1 error\(s\)/);
+  });
+  const oneLine = windows(codeBlock('$env:BOOKSTORE_AI_API_KEY="&lt;key on screen>"'));
+  withBuild({'index.html': page('<p>Hello.'), 'setup-check.html': page(fixture('plain')), 'reference/x.html': page(oneLine)}, (dir) => {
+    const result = spawnSync(process.execPath, [CLI, dir], {encoding: 'utf8'});
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(
+      result.stdout,
+      'ok   built: 3 html files, no literal ":::", 0 checkboxes, all named\nok   built: 4 Windows PowerShell lines in tab panels, all pack command lines\n',
+    );
+  });
+});
