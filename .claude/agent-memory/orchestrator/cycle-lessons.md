@@ -33,8 +33,14 @@ metadata:
   field untouched needs that field asserted. Leaving these to the verifier cost two rework rounds per task.
 - **Before planning a defence-in-depth check, grep every fixture that feeds it** (fix-06 D3): one helper with a foreign
   isbn fed about twenty flow tests; aligning stub literals without touching assertions is within authority, log it.
-- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06); every rework was test-only.
-  The main session's model rule (opus only for qa-lead, qa-final, critical tasks) overrides "rework >= 2 -> opus".
+- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06) and for web config and
+  frontend state (fix-12); every rework was test-only. The main session's model rule (opus only for qa-lead,
+  qa-final, critical tasks) overrides "rework >= 2 -> opus". Shared in-flight state: name "every reset branch has a
+  test that sends again" in round 0 (fix-12 T2 r0 survivor). Bugfix criteria for new UI elements: "red set = the named
+  tests plus any test of a new element; no pre-existing test red" up front (fix-12 plan.md A1).
+- **Spring static entry document (fix-12 T1):** `no-cache` alone is not enough, the jar fixes `Last-Modified` at
+  1980-02-01, so a revalidation still answers 304; a literal resource-handler pattern for one file gives an empty
+  resource path (404), use a capture variable. qa-final warning allow-lists must be judged base vs tip, not by a list.
 - **Multi-class surefire selectors use a comma between classes** (`A#m1,B#m2`); `A#m1+B#m2` runs only one class.
 - **Implementers must not mutate production files outside their fileScope to self-probe** (spec 06 T7): say in the implDirective "describe each mutant in the outbox; the verifier runs it".
 - **When a QA lead Required Action literal fails the lead's own rule** (spec 04 T4: a fixed isbn made another asserted order monotone), the implementer should block and ask; choosing a stronger literal within the rule is within authority and the lead endorsed it.

@@ -1,11 +1,18 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { placeOrder } from '../api/orders'
+import type { Problem } from '../api/types'
 import { MAX_BASKET_LINES, MAX_QUANTITY_PER_LINE, MIN_QUANTITY_PER_LINE } from '../limits'
+import { problemOf } from '../pages/problem'
+import { navigate } from '../router'
 import { isMoney } from './estimate'
 
 // The basket of the visitor: one line per book, in the order the books were first added. It lives in the browser and is
 // kept in sessionStorage, so it survives a reload of the page and goes away with the tab. The prices in the lines are
 // what the bookstore showed when the book was added; the bookstore prices the order itself.
+//
+// The order that is being placed lives here too, not in the checkout page: the request outlives the page that sent it,
+// so every checkout page, also one opened again meanwhile, sees the same state and cannot send a second order.
 
 export interface BasketLine {
   bookId: string
@@ -32,6 +39,14 @@ export interface Basket {
   setQuantity: (bookId: string, quantity: number) => string | undefined
   remove: (bookId: string) => void
   clear: () => void
+  // True from the moment an order is sent until the bookstore has answered.
+  placing: boolean
+  // The error answer to the last order, until the next order is sent.
+  orderProblem: Problem | undefined
+  // Sends the lines of the basket as one order, unless an order is being placed already. The text is sent as typed.
+  // On 202 the lines of the submitted books are removed, whatever their quantity is by then and wherever the visitor is,
+  // and the order page of the answer is shown. Any other answer leaves the basket as it is.
+  placeOrder: (customerEmail: string) => void
 }
 
 // The lines are stored as a JSON list. An empty basket has no entry.
@@ -41,6 +56,7 @@ type Action =
   | { type: 'add'; book: BasketBook }
   | { type: 'setQuantity'; bookId: string; quantity: number }
   | { type: 'remove'; bookId: string }
+  | { type: 'removeBooks'; bookIds: readonly string[] }
   | { type: 'clear' }
 
 type Decision = { lines: readonly BasketLine[] } | { refused: string }
@@ -72,6 +88,10 @@ function decide(lines: readonly BasketLine[], action: Action): Decision {
     }
     case 'remove': {
       const remaining = lines.filter((line) => line.bookId !== action.bookId)
+      return { lines: remaining.length === lines.length ? lines : remaining }
+    }
+    case 'removeBooks': {
+      const remaining = lines.filter((line) => !action.bookIds.includes(line.bookId))
       return { lines: remaining.length === lines.length ? lines : remaining }
     }
     case 'clear':
@@ -142,6 +162,10 @@ const BasketContext = createContext<Basket | undefined>(undefined)
 export function BasketProvider({ children }: { children: ReactNode }) {
   // The reducer starts from the stored basket (the init function), so the first render already shows it.
   const [lines, dispatch] = useReducer(reduce, undefined, readStoredLines)
+  const [placing, setPlacing] = useState(false)
+  const [orderProblem, setOrderProblem] = useState<Problem | undefined>(undefined)
+  // Set at once when an order is sent, so two submits in the same tick cannot both get through before a render.
+  const sending = useRef(false)
 
   useEffect(() => {
     writeStoredLines(lines)
@@ -154,6 +178,26 @@ export function BasketProvider({ children }: { children: ReactNode }) {
       dispatch(action)
       return undefined
     }
+    function place(customerEmail: string): void {
+      if (sending.current) return
+      sending.current = true
+      setPlacing(true)
+      setOrderProblem(undefined)
+      const submitted = lines.map(({ bookId, quantity }) => ({ bookId, quantity }))
+      placeOrder({ customerEmail, lines: submitted }).then(
+        (placed) => {
+          sending.current = false
+          setPlacing(false)
+          dispatch({ type: 'removeBooks', bookIds: submitted.map((line) => line.bookId) })
+          navigate('/orders/' + encodeURIComponent(placed.id))
+        },
+        (error: unknown) => {
+          sending.current = false
+          setPlacing(false)
+          setOrderProblem(problemOf(error))
+        },
+      )
+    }
     return {
       lines,
       itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
@@ -165,8 +209,11 @@ export function BasketProvider({ children }: { children: ReactNode }) {
       clear: () => {
         dispatch({ type: 'clear' })
       },
+      placing,
+      orderProblem,
+      placeOrder: place,
     }
-  }, [lines])
+  }, [lines, placing, orderProblem])
 
   return <BasketContext value={basket}>{children}</BasketContext>
 }

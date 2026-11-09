@@ -55,7 +55,7 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      assertion, not only fixtures whose test title claims an order (spec 12 T5 lost two rework rounds to that).
      Name more witnesses at strategy time (spec 12 T6 lost a round): a displayed enum needs a value with an underscore
      (`SCIENCE_FICTION`) or humanising survives; an unknown route needs a valid id after an unknown first segment
-     (`#/basket/x`); a decode needs a double-escape (`%2541`); a stale-answer guard needs a late success AND a late failure.
+     (`#/basket/x`); a decode needs a double-escape (`%2541`); a stale-answer guard needs a late success AND a late failure; a single-flight ref guard needs a next send after EACH answer kind, or a reset dropped from one branch survives (fix-12 T2 lost a round).
      Heterogeneous objects (unknown-shape details) are swept by flat value, reverse and entry order; a per-key sort over
      objects lacking the key is no order mutant.
      A trailing-zero money witness ("12.50", "10.00") goes on EVERY site a price string passes through (display and the
@@ -77,8 +77,8 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      "no absolute URL in index.html" test; `data:,` avoids the request with no URL and no colour literal.
      A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule
      survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11).
-     The Boot jar serves `/shop/index.html` with `Last-Modified` 1980 and no `Cache-Control`, so a reused browser
-     keeps the old page after a rebuild: every live check of a new build runs in a brand-new browser context.
+     HTTP cache-policy criteria (fix-12 T1 held in one round): directive token parse (kills noStore, max-age=0), a GET with `If-Modified-Since` = now (classpath mtime is never newer, so a kept validator gives 304), an asset
+     guard, a mutant per chained setter. Tests serve test-classes, not the jar (1980 dates): add a live `java -jar` header check, and run live checks of a new build in a brand-new browser context.
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).
    - HTTP client timeouts (loopback JDK `HttpServer`, port 0): the handler returns a VALID body after its sleep, so a
      missing timeout gives a success, not an error for another reason; connect and read timeouts differ and connect
