@@ -38,7 +38,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #71 | sdd/11-workshop-guide/T1 | ENDORSE |
 | T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | PASS r1 | #73 | sdd/11-workshop-guide/T2 | ENDORSE |
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | PASS r2 | #76 | sdd/11-workshop-guide/T3 | ENDORSE r2 |
-| T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | pending | | | |
+| T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | verifying | #79 | sdd/11-workshop-guide/T4 | |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4] | B5 | critical | opus | sonnet | pending | | | |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
@@ -142,3 +142,10 @@ From the T3 meta-review (qa-lead ENDORSE r2, after one rework round for unpinned
 - A2 (2026-11-08, orchestrator, after the T1 meta-review): FF-1 is an added T3 acceptance criterion (zero-test guard
   for `npm run check`); T3's fileScope already holds `guide/scripts/**`. Consequence: T3 is slightly larger; the
   gate re-run is self-accepted (an added test criterion inside a task's scope).
+- A3 (2026-11-09, orchestrator, during T4): the page grammar's contractual heading anchors use the MDX comment form
+  `## Heading {/* #id */}` instead of `{#id}`, which does not compile under the template's `future.v4` (MDX acorn
+  error, build exit 1). The ids are unchanged; the checker accepts only the working form and a test pins that `{#id}`
+  fails. Consequence: T6 to T11 write anchors in the comment form; strategy.md's page grammar reads accordingly.
+- Known issue raised by T4 (for the QA lead to route): axe reports a WCAG `label` violation on every task-list
+  checkbox, because Docusaurus renders `- [ ]` as a bare disabled input. A fix needs a swizzle or a local remark
+  plugin, outside T4's scope.
