@@ -30,6 +30,13 @@ Composite and parameter-predicate rules (money rule style):
 - A rule on `haveRawType(double.class)` does not cover boxed `Double`; the C0-5b grep is the only guard for wrappers.
 - Surefire `-Dtest` joins classes with a comma; `A+B` matches nothing and fails the build with "No tests matching pattern".
 
+Enclosing-class walk predicates ("nested at any depth in a class named *X"):
+- Sweep EVERY walk position, not just both ends: suffix on direct-only, middle-only, top-only. Mutants: direct-only, top-only, direct-or-top (killed only by a middle-only fixture), skip-top, depth cap N (a cap at or above the deepest fixture is an inherent survivor, informational), start-at-self, `contains`. Fixtures that put the suffix only on the top-level class let top-only survive; the killer is a nested `...X` inside a top-level class without the suffix, with a member-anchored witness.
+- Suffix predicates: letter-variant controls (prefix only, other suffix, suffix plus more) do not cover a case-insensitive mutant (add `...Appserviceimpl`), nor a "needs a prefix" mutant (`matches(".+X")`; add a class named exactly `X`). Also probe "target must be in package P" when every positive fixture's target sits in P.
+- Each control/witness fixture gets a vacuity probe: retype its field to `Object`; only its own test must fail.
+- Prove a proposed kill before you write the Required Action: generator probes that add the fixture (real predicate green) and fixture plus mutant (red), with a temporary `QaT6Probe*Test` in the test package, deleted afterwards and covered by the snap diff.
+- A rule-dump temp test that evaluates every `@ArchTest` field on the fixture import, filtered origin-anchored to the new fixtures, answers "which rules does each fixture trip" in one run. Calling the private predicate by reflection on the production import shows the should-set is non-empty.
+
 Grep traps:
 - The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
 - The impl verifier and the QA verifier share the session scratchpad and the W7 prefix. Check `ls` first and use a role infix (`t4-qa-*`) so you never overwrite the impl's evidence.
