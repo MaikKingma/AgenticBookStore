@@ -47,6 +47,10 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      same mapper, rule 7 of [[review-calibration]]). Annotation-declared requiredness (Spring AI `@McpToolParam`)
      is enforced at runtime and readable from `inputSchema().get("required")`: a falsifier, never inspection
      (spec 05 T3 lost a rework round to both).
+   - Profile-split config (seed locations per profile, spec 09): `Environment.getProperty` of a YAML list key returns
+     null (only `[0]`, `[1]` exist), so assert the resolved bean (`flyway.getConfiguration().getLocations()`). A census
+     test that runs plain Flyway with hard-coded locations leaves the DEFAULT profile's value unfalsified: read it from
+     the main yml with `YamlPropertySourceLoader`. "Re-run changes no row count" misses DO UPDATE: compare contents.
    - Frontend witnesses (React, Vitest, RTL), contrast and style-guard tests, CSS layout and live-browser checks moved to [[qa-frontend-falsifiers]].
    - HTTP cache-policy criteria (fix-12 T1 held in one round): directive token parse (kills noStore, max-age=0), a GET with `If-Modified-Since` = now (classpath mtime is never newer, so a kept validator gives 304), an asset guard, a mutant per chained setter. Tests serve test-classes, not the jar (1980 dates): add a live `java -jar` header check, and run live checks of a new build in a brand-new browser context (see [[qa-frontend-falsifiers]]).
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).

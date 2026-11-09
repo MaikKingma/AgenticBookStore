@@ -2,4 +2,5 @@
 - [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, timeouts, log escapes; read before a falsifier list
 - [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout and live-browser witnesses; read before a UI task falsifier list
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, caches; read before a CI spec strategy
+- [Git-script specs](qa-git-script-specs.md) — bash scripts that rewrite or push git refs: commit-tree determinism, atomic and lease witnesses, refusal shapes, scratch-repo recipe; read before such a strategy
 - [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review
