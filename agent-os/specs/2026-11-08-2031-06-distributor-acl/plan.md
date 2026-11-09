@@ -44,8 +44,8 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 | T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T4`) | PASS (r2) | ENDORSE | 2 | #78 | ab52051 |
 | T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T5`) | PASS (r0) | ENDORSE | 0 | #80 | d6cd48a |
 | T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T6`) | PASS (r1) | ENDORSE | 1 | #82 | 3bd96d2 |
-| T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | pending | | | | | |
-| T8 | Test-only follow-ups FU-T3-1 to 3 in `DistributorAppServiceImplTest` and FU-T5-1 to 3 in `BookCommandsTest` (Amendments A1, A2) | bookstore | [T3, T5] | 8 | elevated | sonnet | sonnet | pending | | | | | |
+| T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T7`) | PASS (r0) | ENDORSE | 0 | #84 | 1dd327f |
+| T8 | Test-only follow-ups FU-T3-1 to 3 in `DistributorAppServiceImplTest` and FU-T5-1 to 3 in `BookCommandsTest` plus one comment fix in `http/catalogue.http` (Amendments A1, A2, A4) | bookstore | [T3, T5, T7] | 8 | elevated | sonnet | sonnet | pending | | | | | |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
 
@@ -136,7 +136,7 @@ qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plu
 ### T8: Test-only follow-ups to T3 (Amendment A1)
 
 - module: bookstore; dependsOn: [T3]; implModel sonnet; qaTier elevated (sonnet).
-- fileScope: `T/acl/DistributorAppServiceImplTest.java` and `T/command/BookCommandsTest.java` (A2). No production change.
+- fileScope: `T/acl/DistributorAppServiceImplTest.java`, `T/command/BookCommandsTest.java` (A2) and `http/catalogue.http` (A4, one comment line only). No production change.
 - Acceptance criteria (the QA lead's FU-T3-1 to FU-T3-3, ledger review "T3 r2"):
   1. FU-T3-1: a title body without `availability` (variant of a committed file) gives `orderable` true and no exception; the mutant `!title.availability().equals("OUT_OF_PRINT")` fails it.
   2. FU-T3-2: `subjectCodes: [null, "FIC028000"]` gives FICTION and exactly one WARN `No bookstore genre for subject code null of EAN 9789900010050, using FICTION`; the mutant `filter(Objects::nonNull).findFirst()` fails it.
@@ -144,7 +144,8 @@ qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plu
   4. FU-T5-1 (A2): new parameterized test posting price `"+5"`, `"12.00 "` and `"5 "`, plus a test whose price is `Character.toString(0x0661) + Character.toString(0x0662)` (the file stays ASCII); each gives `expectProblem(result, 400, "validation-failed", "Validation failed")`, `$.details.length()` 1, `$.details[0].field` `"price"` and `verifyNoInteractions(flow)`. Must-fail probes R4, R5, R12.
   5. FU-T5-2 (A2): captor rows `"12.345"` gives `new BigDecimal("12.345")` and `"123456.789"` gives `new BigDecimal("123456.789")`, each 202 and `isEqualTo`. Must-fail probes R7, R8, C5d.
   6. FU-T5-3 (A2): isbn pass-through rows `"ABC"` and `"978014143951X"` reach the flow unchanged (`isEqualTo(isbn)`). Must-fail probe C9c.
-  7. Existing tests unchanged (insertion only, new methods); production hashes unchanged; FF-4e and the referee green; the new totals and ACL WARN count stated exactly.
+  7. A4: the comment above the appended import requests in `http/catalogue.http` ("The next two requests import a book", but the second one is a GET) says what the requests do; no request line changes.
+  8. Existing tests unchanged (insertion only, new methods); production hashes unchanged; FF-4e and the referee green; the new totals and ACL WARN count stated exactly.
 
 ## QA feed-forward
 
@@ -181,8 +182,15 @@ From the QA lead's T6 r1 review (full text in the QA ledger, FF-14, FF-15):
 - FF-14 (T7, T8 C0 baselines and qa-final): bookstore total after T6 is 893; ArchitectureTest 22/0/0/0 and ArchitectureSelfTest 58/0/0/0 at every later gate; `ArchitectureTest.java`, `ArchitectureSelfTest.java` and `archfixtures/` have empty diffs against each later PR base; every later gate also runs `shasum -a 256 -c` on the scratchpad file `s06-T6-qa-r1-hashes.txt` (5 of 5 OK).
 - FF-15 (qa-final): T6 hash integrity; on the tip, the production leak probe P-prod (public `ErrorPayload` plus a field of its type in a command class fails the new rule with the field quoted; restore hash-checked) and the green control; the R4T and XCASE mutants still fail ArchitectureSelfTest.
 
+From the QA lead's T7 r0 review (full text in the QA ledger, FF-16 to FF-18):
+
+- FF-16 (T8 C0 baselines and qa-final): bookstore total after T7 is 920 (DistributorImportIntegrationTest 27); Started 10; ACL WARN 66; 1 DefaultHandlerExceptionResolver WARN in the bookstore section (T8 names any WARN its rows provoke on purpose and states the new count); `DistributorImportIntegrationTest.java` has an empty diff in T8; every later gate also runs `shasum -a 256 -c` on the scratchpad file `s06-T7-qa-hashes.txt` (T8 replaces the `http/catalogue.http` line, and the T3 and T5 test-file lines, with its own baseline).
+- FF-17 (T8 implDirective): never edit a file outside the fileScope, not even temporarily; mutation probes on production code are the verifier's job; describe each mutant in the outbox instead.
+- FF-18 (qa-final): T7 hash integrity; T7 survivors O4 and V6 are T4's F7 and F5 (re-run only if CatalogueFlow or CatalogueFlowTest changed); the `.http` replay needs an empty catalogue; a Testcontainers "Could not connect to Ryuk" start error is BLOCKED-with-diagnosis and one re-run.
+
 ## Amendments
 
 - A1 (2026-11-08T22:46Z, orchestrator, self-accepted): new task T8, test-only, inside T3's test file, carrying the QA lead's follow-ups FU-T3-1 to FU-T3-3 from the T3 r2 ENDORSE. Consequence: one more task PR before qa-final; no production change, no requirement change. Within authority (tests only, cheap and reversible).
 - A2 (2026-11-09T00:23Z, orchestrator, self-accepted): T8 also carries the QA lead's test-only follow-ups FU-T5-1 to FU-T5-3 from the T5 r0 ENDORSE; its fileScope gains `T/command/BookCommandsTest.java` and it now depends on T5. Consequence: none on requirements or production code. Within authority (tests only).
 - A3 (2026-11-09T01:29Z, orchestrator, self-accepted, QA lead endorsed): T6 criterion 2 said "package-private nested record", which cannot compile with the `TitleImportCommands` clause (another package); the pack spec says "non-private" and wins. Wording corrected; the fixture records are public. No change to the bar (the guard does not depend on visibility).
+- A4 (2026-11-09T02:03Z, orchestrator, self-accepted): T8 also fixes the comment wording above the appended import requests in `http/catalogue.http` (QA lead T7 r0 note: the comment says both requests import, the second is a GET); spec 09 publishes the file. Comment only; T8 now depends on T7.
