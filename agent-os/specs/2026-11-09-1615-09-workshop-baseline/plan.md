@@ -61,7 +61,7 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | done | PASS (r0 BLOCKED by orchestrator, r1, r2) | ENDORSE | 2 | (see PR list) | sdd/09-workshop-baseline/T3 | d604307 |
 | T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | todo | | | | | | |
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
-| T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | todo | | | | | | |
+| T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
 | T8 | Seed grows to 100 books, at least 10 AVAILABLE per genre (D12), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | needs-decision (Q1) | | | | | | |
 | T9 | Count updates "40" to the new seed count in README.md, http/demo-flow.http and docs (D12) | root | [T8] | 7 | (QA strategy) | | | todo | | | | | | |
 
@@ -349,3 +349,8 @@ counts, and the T6 criteria fold in.
   baselines after the spec 08 merge come from a base run on the PR base, not the pre-merge 142. qa-final adds the T3
   hashes at the tip, the endpoint and architecture scripts on the tip with controls, and the README data claims against
   the seed after T8 and T9.
+- FF-10 (T7, for T8 and qa-final): the test profile keeps an empty catalogue (lines 29 and 41 of
+  `EmptyCatalogueAtStartIntegrationTest` unchanged); T8's live `GET /books` returns the full seed count, under the 200
+  cap; asserting line numbers are copied from `grep -n`. qa-final: T7 file hashes equal the T7 baseline, `git grep -w
+  100` on `CatalogueFlow.java` exits 1 and `-w 200` matches only line 37, the cap test green in the tip referee.
+  Residual R13: the assistant's `recommendByGenre` candidate set follows the 200 cap, untested (intended by D12).

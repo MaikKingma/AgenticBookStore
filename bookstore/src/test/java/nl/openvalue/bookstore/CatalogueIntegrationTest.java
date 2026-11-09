@@ -2,9 +2,11 @@ package nl.openvalue.bookstore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 import nl.openvalue.bookstore.command.CommandResult;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
@@ -182,6 +184,31 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void searchReturnsTheFirst200BooksByTitleAndCutsOffTheRest() {
+        // Phase 1: exactly 200 books, inserted out of title order, all come back in title order.
+        List<Integer> phaseOneNumbers = IntStream.rangeClosed(1, 200).boxed().toList();
+        assertIsbnOrderFollowsTitleOrderInNeitherDirection(phaseOneNumbers);
+        for (int step = 0; step < 200; step++) {
+            addCapBook(((step * 73) % 200) + 1);
+        }
+        assertThat(jdbcTemplate.queryForObject("select count(*) from stock_item", Integer.class)).isEqualTo(200);
+
+        List<String> phaseOneTitles = phaseOneNumbers.stream().map(CatalogueIntegrationTest::capTitle).toList();
+        assertThat(titles(search("/books"))).containsExactlyElementsOf(phaseOneTitles);
+
+        // Phase 2: one more book whose title sorts before all others, inserted last. The old last title drops out.
+        List<Integer> phaseTwoNumbers = IntStream.rangeClosed(0, 199).boxed().toList();
+        assertIsbnOrderFollowsTitleOrderInNeitherDirection(IntStream.rangeClosed(0, 200).boxed().toList());
+        addCapBook(0);
+
+        List<String> found = titles(search("/books"));
+        assertThat(found).containsExactlyElementsOf(
+                phaseTwoNumbers.stream().map(CatalogueIntegrationTest::capTitle).toList());
+        assertThat(found).first().isEqualTo(capTitle(0));
+        assertThat(found).doesNotContain(capTitle(200));
+    }
+
+    @Test
     void unknownBookIsNotFoundOnGet() {
         Map<String, Object> problem = problem(restTestClient.get().uri("/books/{id}", UNKNOWN_ID).exchange(), 404);
 
@@ -324,6 +351,39 @@ class CatalogueIntegrationTest extends IntegrationTestBase {
         assertThat(problem.get("title")).isEqualTo("Book not found");
         assertThat(problem.get("detail")).asString().isNotBlank();
         assertThat(problem.get("details")).isEqualTo(List.of());
+    }
+
+    /** The title of cap book number n: one prefix plus a zero-padded number, so title order is number order. */
+    private static String capTitle(int number) {
+        return String.format("Search Cap Volume %03d", number);
+    }
+
+    /**
+     * The checksum-valid ISBN-13 of cap book number n. The multiplier 137 is coprime to the prime 997, so the 9-digit
+     * bodies are distinct for numbers below 997, and their order is a permutation of the number order.
+     */
+    private static String isbnOf(int number) {
+        String twelve = "978" + String.format("%09d", 900_000_000 + (number * 137) % 997);
+        int sum = 0;
+        for (int position = 0; position < twelve.length(); position++) {
+            sum += (twelve.charAt(position) - '0') * (position % 2 == 0 ? 1 : 3);
+        }
+        return twelve + (10 - sum % 10) % 10;
+    }
+
+    private void addCapBook(int number) {
+        addBook(isbnOf(number), capTitle(number), List.of("Jane Austen"), "fiction", "9.99", 1813);
+    }
+
+    /** Guards the test data: a title-ordered list of ISBNs that is sorted either way would let an ISBN sort pass. */
+    private static void assertIsbnOrderFollowsTitleOrderInNeitherDirection(List<Integer> numbersInTitleOrder) {
+        List<String> isbns = numbersInTitleOrder.stream().map(CatalogueIntegrationTest::isbnOf).toList();
+        assertThat(isbns).isNotEqualTo(isbns.stream().sorted().toList());
+        assertThat(isbns).isNotEqualTo(isbns.stream().sorted(Comparator.reverseOrder()).toList());
+    }
+
+    private static List<String> titles(List<Map<String, Object>> books) {
+        return books.stream().map(view -> (String) view.get("title")).toList();
     }
 
     private UUID addBook(String isbn, String title, List<String> authors, String genre, String price,
