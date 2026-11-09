@@ -2,7 +2,7 @@
 bug: fix-12-genre-labels-footer
 severity: S4
 path: lite
-status: open
+status: fixed
 closes: [D11 genre labels, D11 footer at the bottom of the window]
 ---
 # Bug: the storefront shows raw genre enum names, and the footer floats under short content

@@ -1,12 +1,13 @@
 ---
 spec: fix-12-genre-labels-footer
 source: docs/spec-pack/specs/12-storefront.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-09T20:44:09Z
 origin: Maik's live walk of the storefront at /shop/ on 2026-11-09 (screenshot), decision D11 at e16a69b
 gate1: 2026-11-09T20:47:20Z
 qa-lead: on
+gate2: 2026-11-09T22:13:32Z
 base: factory
 branch: sdd/fix-12-genre-labels-footer/spec
 module-vocabulary: [root, bookstore, distributor, frontend, guide]
@@ -216,3 +217,25 @@ T2 depends on T1 only for ordering (same module, one task at a time).
   reader does not see an override inside a media query or a later same-specificity `main.page` rule; Q3 and Q4 cover
   the merged code; optional test-only follow-up: an allow-list of the rules that may set layout on the shell, main or
   `.page`. R4 `.page { width: 100% }` keeps the main full width in the flex column and is pinned only by the Q3 hash.
+
+## Final QA and Gate 2
+
+- Base move: origin/factory moved docs-only (D12, D13, progress; 3b7e4f3) after T2 and was merged into the spec branch
+  as 91924fc before the sweep. It moved again after the verdict (c35037f, D14: `decisions.md` and
+  `specs/10-harness-reference-solutions.md` only, no file shared with this cycle); the spec PR merges with a merge
+  commit, so no re-sweep.
+- qa-final (opus, run 1, tip 91924fc): PASS. Referee `./mvnw clean verify` 24.585 s; Vitest 23 files, 682 passed + 2
+  expected fail (base 598 + 2); bookstore 1314; distributor 190; 0 warnings added (149 vs 149). Branch-level negative
+  controls at origin/factory: T1 9 failed / 50 passed with the named shapes, identical with T2's fix added, 67 passed
+  with its own; T2 3 failed / 179 passed, identical with T1's fix added, 182 passed with its own. Live jar on an own
+  throwaway Postgres: labels in the select, on the cards and on the detail page, `GET /books?genre=SCIENCE_FICTION`,
+  footer bottom equal to the window height on the empty basket page at 1280x800 and 390x844, header sticky, 37 of 37
+  checks, console clean. Verdict: `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`.
+- qa-lead final review: ENDORSE, Gate 2 QA confidence high, every criterion traced (ledger
+  `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-12-genre-labels-footer.md`).
+- Gate 2 self-accepted by the orchestrator 2026-11-09T22:13:32Z: both task PRs merged (#133, #137), no stragglers, the
+  cycle diff is confined to the two file scopes, the spec folder and agent memory.
+- Residual risks and follow-ups for Maik: R1 to R4 above; R5 one `genres.test.ts` row compares the helper with the map
+  it reads (nit); R6 no browser test in CI covers the real layout. Standards proposals from the QA lead (ledger S1 to
+  S3): enum labels through one typed map and helper; layout pinned by a CSS source test plus a live measurement; a
+  per-task negative control with a cross run for multi-task bugfixes.

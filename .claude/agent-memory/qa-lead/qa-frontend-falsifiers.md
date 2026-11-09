@@ -43,3 +43,7 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
 - Layout claims in CSS (a scroll wrapper, wrapping, sticky) have no falsifier in jsdom: put a short live-browser measurement with realistic data at 390 px into the task that writes the rule, not only into the final walk. An `overflow-x: auto` wrapper needs `scrollWidth > clientWidth` on it and one client rect per word of every cell; an inherited `overflow-wrap: anywhere` (from a card) shrinks a table's min-content, so the wrapper never scrolls and headings break mid-word (spec 12, found only at T10).
 - A data-URI favicon with an SVG `xmlns` URL trips any "no absolute URL in index.html" test; `data:,` avoids the request with no URL and no colour literal.
 - The Boot jar serves `/shop/index.html` with `Last-Modified` 1980 and no `Cache-Control`, so a reused browser keeps the old page after a rebuild: every live check of a new build runs in a brand-new browser context.
+
+## Frontend negative control in a throwaway worktree
+
+- A fresh worktree has no `frontend/node` or `node_modules`. `./mvnw -q -pl frontend generate-resources` from its root installs both (the frontend-maven-plugin binds install-node-and-npm and `npm ci` to that phase, tests not run). Do not point Vitest at another tree's `node_modules`: imports resolve from the test file's directory, so trees mix. A test that imports a new export of the fix is green-after-only: leave it out of the red run and name the red set from the tests that exercise unchanged exports (fix-12g).
