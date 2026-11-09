@@ -63,7 +63,7 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
 | T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
 | T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | elevated | sonnet | sonnet | done | PASS (r1) | ENDORSE (r0 REJECT) | 1 | (see PR list) | sdd/09-workshop-baseline/T8 | (see PR list) |
-| T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | standard | sonnet | sonnet | todo | | | | | | |
+| T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T9 | (see PR list) |
 
 Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
 
@@ -427,3 +427,6 @@ Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
   anchored gate greps (`^INSERT` 5, `^ON CONFLICT DO NOTHING` 5, `DO UPDATE` 0), and the G28 word grep skips the order
   timestamp at SQL:351. FU-T8-1 (exact content check of the seven-ISBN constant) declined by the orchestrator: the
   content is correct and pinned by the census hash baseline; listed as a residual.
+- FF-13 (T9, qa-final): README, catalogue.http, inventory.http and orders.http equal the T9 hashes (ledger); the README
+  census script re-runs on the tip against the tip SQL with a neighbour control; the guide link must answer 200 before
+  pack task 4 (R16); `.gitignore` lines 15 to 17 name `guide/` and ship to main (R18, reported, owner decides).
