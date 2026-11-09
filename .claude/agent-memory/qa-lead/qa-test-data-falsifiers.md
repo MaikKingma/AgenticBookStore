@@ -1,6 +1,6 @@
 ---
 name: qa-test-data-falsifiers
-description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs); read before writing the falsifier list of a qaDirective
+description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs, log-escape sets); read before writing the falsifier list of a qaDirective
 metadata:
   type: feedback
 ---
@@ -79,3 +79,9 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      when the expected value is digits only. Stated to the verifier as "a.op(b) and b.op(a) for every op", it was
      followed in full and left no survivor in one round. Line-count assertions over captured logs: `String.lines()` skips U+2028/U+2029/U+0085, so a log
      test with those characters must split with `\R`.
+   - Log-escape sets named by a JDK predicate ("every `Character.isISOControl` char plus U+2028/U+2029"): list the
+     witnesses at strategy time, or hand-rolled ranges survive as inspection items. That means every `\R` member (LF, VT,
+     FF, CR, U+0085, U+2028, U+2029) and the predicate's edges: NUL, U+001F, U+007F, U+0080, U+009F. Add one hex digit
+     that is a letter (lowercase-hex probe) and one leading-zero code (width probe). A new exception constructor that
+     must leave a pass-through untouched (`details` empty, so the problem body is unchanged) needs that field asserted
+     in the new test. Otherwise "details filled from the cause" survives (fix-06 T3).

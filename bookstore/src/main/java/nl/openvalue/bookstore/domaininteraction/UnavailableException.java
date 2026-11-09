@@ -17,6 +17,14 @@ public class UnavailableException extends RuntimeException {
         this(code, title, detail, List.of());
     }
 
+    /** Keeps the failure that made the system unavailable as the cause; there is nothing to list. */
+    public UnavailableException(String code, String title, String detail, Throwable cause) {
+        super(detail, cause);
+        this.code = code;
+        this.title = title;
+        this.details = List.of();
+    }
+
     public UnavailableException(String code, String title, String detail, List<Map<String, String>> details) {
         super(detail);
         this.code = code;

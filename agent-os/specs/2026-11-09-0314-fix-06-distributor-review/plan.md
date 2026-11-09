@@ -93,7 +93,7 @@ skipped; the reference §5 directives are the strategy, every task is `qaTier: e
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | The ACL treats a title answer whose `ean` is not the requested ISBN as unusable (503, one WARN) | bookstore | [] | 1 | elevated | sonnet | sonnet | ean finding (acl) | #90 (branch sdd/fix-06-distributor-review/T1) | ENDORSE (r1, verifier PASS; r0 REJECT) |
 | T2 | The import flow refuses a distributor title for another ISBN; fixtures aligned; e2e 503 with nothing stored | bookstore | [T1] | 2 | elevated | sonnet | sonnet | ean finding (flow, e2e) | #93 (branch sdd/fix-06-distributor-review/T2) | ENDORSE (r2, verifier PASS; r0 verifier FAIL, r1 REJECT) |
-| T3 | ACL keeps the caught exception as the cause and neutralises line breaks in logged distributor values | bookstore | [T2] | 3 | elevated | sonnet | sonnet | cause and CR/LF findings | | |
+| T3 | ACL keeps the caught exception as the cause and neutralises line breaks in logged distributor values | bookstore | [T2] | 3 | elevated | sonnet | sonnet | cause and CR/LF findings | #95 (branch sdd/fix-06-distributor-review/T3) | ENDORSE (r0, verifier PASS) |
 
 All three tasks are in the one `bookstore` module and T1/T3 share a file, so they run one at a time in this order.
 
@@ -360,6 +360,12 @@ pre-existing test line deleted.
   the mutant set includes `a.op(b)` and `b.op(a)` for op in startsWith/endsWith/contains, plus strip, stripLeading and
   stripTrailing. Late finding on T1 (merged): no T1 case is a proper prefix or suffix of the requested EAN, so
   `isbn.startsWith(title.ean())` and `isbn.endsWith(title.ean())` would survive; closed in T3 by amendment A1.
+- FF5 (QA lead, T3 r0, for qa-final): advisories A-1 (no test rows for the ISO-control boundaries U+000C, U+007F,
+  U+009F, U+001F, NUL; production uses the decided `Character.isISOControl` form) and A-2 (no assertion that
+  `details()` of a caused exception stays empty) were accepted by inspection; qa-final runs them as known survivors,
+  re-runs the 503 handler body probe for an exception with a cause on the final tip, runs the four regression tests
+  together, and drives one end-to-end 503 import whose ACL failure carries a cause. Orchestrator ruling: no tail task
+  (lite path caps tasks at three); the items go to the qa-final brief and, if not raised there, to the follow-ups.
 
 ## Amendments
 

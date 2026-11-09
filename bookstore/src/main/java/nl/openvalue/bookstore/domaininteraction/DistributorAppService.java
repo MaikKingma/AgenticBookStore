@@ -52,5 +52,10 @@ public interface DistributorAppService {
         public DistributorUnavailableException(String detail) {
             super("distributor-unavailable", "Distributor unavailable", detail);
         }
+
+        /** Keeps the failure that made the distributor unusable as the cause; the detail stays free of it. */
+        public DistributorUnavailableException(String detail, Throwable cause) {
+            super("distributor-unavailable", "Distributor unavailable", detail, cause);
+        }
     }
 }

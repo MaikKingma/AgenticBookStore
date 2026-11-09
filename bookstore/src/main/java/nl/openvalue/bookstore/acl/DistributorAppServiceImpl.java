@@ -29,7 +29,12 @@ import org.springframework.web.client.RestClientResponseException;
  * three port exceptions or an empty result leave a public method: every failure the translation does not name
  * (another status or error code, an unreadable or incomplete body, an answer about another EAN than the requested
  * one, a timeout, a refused connection) becomes
- * {@link DistributorUnavailableException} with one warning that names the status or the exception class.
+ * {@link DistributorUnavailableException} with one warning that names the status or the exception class. The
+ * exception that made the answer unusable (the failed call, the unparseable date, the fractional number) stays as the
+ * cause of that exception; the detail text and the problem response never carry it. Distributor-supplied text that
+ * reaches a warning (an unknown status, a date, a subject code, an answered EAN) is escaped first: a carriage return,
+ * a line feed, any other control character and the Unicode line and paragraph separators are written as visible
+ * escape sequences, so a distributor cannot start a line of its own in the log.
  */
 @Component
 @EnableConfigurationProperties(DistributorProperties.class)
@@ -57,6 +62,8 @@ public class DistributorAppServiceImpl implements DistributorAppService {
     private static final String EUR = "EUR";
     private static final String TITLE_NOT_FOUND = "TITLE_NOT_FOUND";
     private static final String NOT_ORDERABLE = "NOT_ORDERABLE";
+    private static final char LINE_SEPARATOR = 0x2028;
+    private static final char PARAGRAPH_SEPARATOR = 0x2029;
 
     private static final Logger LOG = LoggerFactory.getLogger(DistributorAppServiceImpl.class);
 
@@ -123,7 +130,7 @@ public class DistributorAppServiceImpl implements DistributorAppService {
         }
         require(isbn, title.ean(), "ean");
         if (!title.ean().equals(isbn)) {
-            throw unusable(isbn, "ean " + title.ean() + " is not the requested EAN");
+            throw unusable(isbn, "ean " + escaped(title.ean()) + " is not the requested EAN");
         }
         require(isbn, title.titleName(), "titleName");
         require(isbn, title.contributors(), "contributors");
@@ -160,7 +167,7 @@ public class DistributorAppServiceImpl implements DistributorAppService {
         boolean backordered = switch (restock.status()) {
             case "CONFIRMED" -> false;
             case "BACKORDERED" -> true;
-            default -> throw unusable(isbn, "unknown status " + restock.status());
+            default -> throw unusable(isbn, "unknown status " + escaped(restock.status()));
         };
         return new RestockConfirmationDTO(restock.restockOrderId(), quantityOf(isbn, restock.quantity()),
                 dateOf(isbn, "expectedDeliveryDate", restock.expectedDeliveryDate()), backordered);
@@ -173,7 +180,8 @@ public class DistributorAppServiceImpl implements DistributorAppService {
                 .filter(code::startsWith)
                 .max(Comparator.comparingInt(String::length));
         if (prefix.isEmpty()) {
-            LOG.warn("No bookstore genre for subject code {} of EAN {}, using {}", code, ean, FALLBACK_GENRE);
+            LOG.warn("No bookstore genre for subject code {} of EAN {}, using {}", escaped(code), ean,
+                    FALLBACK_GENRE);
             return FALLBACK_GENRE;
         }
         return GENRES_BY_SUBJECT_PREFIX.get(prefix.get());
@@ -184,7 +192,7 @@ public class DistributorAppServiceImpl implements DistributorAppService {
         try {
             return new BigDecimal(cents.toBigIntegerExact(), 2);
         } catch (ArithmeticException e) {
-            throw unusable(isbn, "listPriceCents " + cents.toPlainString() + " is not a whole number");
+            throw unusable(isbn, "listPriceCents " + cents.toPlainString() + " is not a whole number", e);
         }
     }
 
@@ -193,7 +201,7 @@ public class DistributorAppServiceImpl implements DistributorAppService {
         try {
             return quantity.intValueExact();
         } catch (ArithmeticException e) {
-            throw unusable(isbn, "quantity " + quantity.toPlainString() + " is not a whole number");
+            throw unusable(isbn, "quantity " + quantity.toPlainString() + " is not a whole number", e);
         }
     }
 
@@ -201,7 +209,7 @@ public class DistributorAppServiceImpl implements DistributorAppService {
         try {
             return LocalDate.parse(value);
         } catch (DateTimeParseException e) {
-            throw unusable(isbn, key + " " + value + " is not a date");
+            throw unusable(isbn, key + " " + escaped(value) + " is not a date", e);
         }
     }
 
@@ -232,21 +240,52 @@ public class DistributorAppServiceImpl implements DistributorAppService {
             return new TitleNotOrderableException(isbn);
         }
         LOG.warn("Distributor answered status {} for EAN {}", e.getStatusCode().value(), isbn);
-        return unavailable(isbn);
+        return unavailable(isbn, e);
     }
 
     private static DistributorUnavailableException failed(String isbn, RestClientException e) {
         LOG.warn("Distributor call for EAN {} failed with {}", isbn, e.getClass().getSimpleName());
-        return unavailable(isbn);
+        return unavailable(isbn, e);
     }
 
+    /** An unusable answer with nothing caught behind it: the reason is the whole story. */
     private static DistributorUnavailableException unusable(String isbn, String reason) {
-        LOG.warn("Distributor answer for EAN {} is unusable: {}", isbn, reason);
-        return unavailable(isbn);
+        return unusable(isbn, reason, null);
     }
 
-    private static DistributorUnavailableException unavailable(String isbn) {
-        return new DistributorUnavailableException("The distributor gave no usable answer for ISBN " + isbn);
+    /** An unusable answer whose reason was found by catching {@code cause}, which is kept (null when none). */
+    private static DistributorUnavailableException unusable(String isbn, String reason, Throwable cause) {
+        LOG.warn("Distributor answer for EAN {} is unusable: {}", isbn, reason);
+        return unavailable(isbn, cause);
+    }
+
+    private static DistributorUnavailableException unavailable(String isbn, Throwable cause) {
+        return new DistributorUnavailableException("The distributor gave no usable answer for ISBN " + isbn, cause);
+    }
+
+    /**
+     * The value as it may appear in a log line: a carriage return is written as backslash r, a line feed as backslash
+     * n, every other ISO control character and the Unicode line and paragraph separators as backslash u and four
+     * uppercase hex digits. Null stays null.
+     */
+    private static String escaped(String value) {
+        if (value == null) {
+            return null;
+        }
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\r') {
+                escaped.append("\\r");
+            } else if (c == '\n') {
+                escaped.append("\\n");
+            } else if (Character.isISOControl(c) || c == LINE_SEPARATOR || c == PARAGRAPH_SEPARATOR) {
+                escaped.append(String.format("\\u%04X", (int) c));
+            } else {
+                escaped.append(c);
+            }
+        }
+        return escaped.toString();
     }
 
     private record TitlePayload(String ean, String titleName, List<ContributorPayload> contributors,
