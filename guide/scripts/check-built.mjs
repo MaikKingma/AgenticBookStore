@@ -12,7 +12,7 @@ function main() {
     process.exit(1);
   }
   console.log(`ok   built: ${count} html files, no literal ":::", ${checkboxes} checkboxes, all named`);
-  console.log(`ok   built: ${windowsLines} Windows PowerShell lines in tab panels, all pack command lines`);
+  console.log(`ok   built: ${windowsLines} Windows PowerShell lines in tab panels and PowerShell code blocks, all pack command lines`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

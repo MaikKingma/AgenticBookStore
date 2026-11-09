@@ -35,6 +35,7 @@ const codeBlock = (...tokenLines) =>
   `<div class="language-powershell codeBlockContainer_sQUW theme-code-block"><div class=codeBlockContent_lXeI><pre tabindex=0 class="prism-code language-powershell codeBlock_ItfM thin-scrollbar"><code class=codeBlockLines_H9lz>${tokenLines
     .map((line) => `<div class=token-line><span class="token plain">${line}</span><br/></div>`)
     .join('')}</code></pre></div></div>`;
+const bashBlock = (...tokenLines) => codeBlock(...tokenLines).replaceAll('language-powershell', 'language-bash');
 const windows = (body) => tabs([['macOS/Linux', '<p>Nothing.'], ['Windows PowerShell', body]]);
 
 function withBuild(files, fn) {
@@ -142,7 +143,7 @@ test('built powershell: a tab label containing PowerShell is read, other labels 
   assert.match(errors[0], /in the "PowerShell" tab/);
   assert.match(errors[1], /in the "Windows PowerShell" tab/);
   assert.equal(windowsLines, 2);
-  const lower = tabs([['macOS/Linux', codeBlock('Invented-Mac')], ['powershell 7', codeBlock('Invented-Lower')]]);
+  const lower = tabs([['macOS/Linux', bashBlock('Invented-Mac')], ['powershell 7', codeBlock('Invented-Lower')]]);
   assert.deepEqual(offending(scanPage(lower).errors), ['Invented-Lower']);
 });
 
@@ -175,7 +176,7 @@ test('built powershell: a hidden panel is read like a shown one', () => {
   for (const name of ['oa1c', 'plain', 'invented']) {
     assert.match(fixture(name), /<div role=tabpanel class=tabItem_e6wi hidden><(?:p|div)/, name);
   }
-  const shownFirst = tabs([['Windows PowerShell', codeBlock('Invented-Shown')], ['macOS/Linux', codeBlock('Invented-Mac')]]);
+  const shownFirst = tabs([['Windows PowerShell', codeBlock('Invented-Shown')], ['macOS/Linux', bashBlock('Invented-Mac')]]);
   assert.deepEqual(offending(scanPage(shownFirst).errors), ['Invented-Shown']);
   assert.deepEqual(offending(scanPage(windows(codeBlock('Invented-Hidden'))).errors), ['Invented-Hidden']);
 });
@@ -265,7 +266,136 @@ test('built powershell: check:built exits 1 on an invented Windows line and 0 on
     assert.equal(result.status, 0, result.stdout + result.stderr);
     assert.equal(
       result.stdout,
-      'ok   built: 3 html files, no literal ":::", 0 checkboxes, all named\nok   built: 4 Windows PowerShell lines in tab panels, all pack command lines\n',
+      'ok   built: 3 html files, no literal ":::", 0 checkboxes, all named\nok   built: 4 Windows PowerShell lines in tab panels and PowerShell code blocks, all pack command lines\n',
     );
   });
+});
+
+test('built powershell: check:built counts the lines of PowerShell code blocks outside tabs once, with the panel lines', () => {
+  // a powershell fence outside tabs (2 lines), a powershell fence in a Windows PowerShell panel
+  // (1 line, read once) and a bash fence outside tabs (not read)
+  const files = {
+    'index.html': page(codeBlock('Get-Command jdtls', '$env:BOOKSTORE_AI_API_KEY="&lt;key on screen>"') + bashBlock('Invented-Bash')),
+    'setup-check.html': page(windows(codeBlock('Get-Command jdtls'))),
+  };
+  withBuild(files, (dir) => {
+    const result = spawnSync(process.execPath, [CLI, dir], {encoding: 'utf8'});
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.equal(
+      result.stdout,
+      'ok   built: 2 html files, no literal ":::", 0 checkboxes, all named\nok   built: 3 Windows PowerShell lines in tab panels and PowerShell code blocks, all pack command lines\n',
+    );
+  });
+  withBuild({'index.html': page(codeBlock('Get-Command jdtls', 'Invented-Outside-Tabs'))}, (dir) => {
+    const result = spawnSync(process.execPath, [CLI, dir], {encoding: 'utf8'});
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.match(result.stderr, /^built: index\.html:1 the line "Invented-Outside-Tabs" in a PowerShell code block \(language-powershell\) is not a command line or inline code span of the pack/m);
+    assert.match(result.stderr, /check:built failed with 1 error\(s\)/);
+  });
+});
+
+test('built powershell: a lazy tabs container (only the selected panel rendered) fails closed', () => {
+  // lazy-default: <Tabs groupId="os" lazy>, macOS/Linux "Nothing.", Windows PowerShell marked
+  // default with a bash fence Invoke-Invented -Lazy; lazy renders the selected panel only.
+  const {errors} = scanPage(fixture('lazy-default'));
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], /^built: probe\.html:\d+ a tabs container with 2 tabs and 1 panels; /);
+});
+
+test('built powershell: a pre holding a token-line plus other text is read whole, the text outside the token lines too', () => {
+  // pre-tokenline-extra: <pre><span className="token-line">Get-Command jdtls</span>{'\n'}Invoke-Invented -Extra</pre>
+  const {errors, windowsLines} = scanPage(fixture('pre-tokenline-extra'));
+  assert.deepEqual(offending(errors), ['Invoke-Invented -Extra']);
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.equal(windowsLines, 2);
+  // the text before, between and after token lines: a token line ends a line like a newline, so
+  // "Get-Command " and "jdtls" around a token line do not join into the pack line Get-Command jdtls
+  const around = windows('<pre>Invented-Before<span class=token-line>Get-Command jdtls</span>Invented-Between\n<span class=token-line>Get-Command jdtls</span>Get-Command <span class=token-line>jdtls</span>jdtls</pre>');
+  const mixed = scanPage(around);
+  assert.deepEqual(offending(mixed.errors), ['Invented-Before', 'Invented-Between', 'Get-Command']);
+  assert.equal(mixed.windowsLines, 7);
+});
+
+test('built powershell: a tab label is compared without soft hyphens, zero-width characters and character references', () => {
+  // A label="Windows Power&shy;Shell" builds to a raw U+00AD in the tab (Docusaurus 3.10.2); the
+  // other forms are the same label written with another invisible character or reference.
+  const invisible = [0xad, 0x200b, 0x200c, 0x200d, 0x2060, 0xfeff].map((code) => String.fromCharCode(code));
+  const references = ['&shy;', '&#173;', '&#xAD;', '&ZeroWidthSpace;', '&#x200B;', '&zwj;', '&NoBreak;'];
+  for (const mark of [...invisible, ...references]) {
+    const label = `Windows Power${mark}Shell`;
+    const {errors, windowsLines} = scanPage(tabs([['macOS/Linux', '<p>Nothing.'], [label, '<p><code>Invented-Hidden-Mark</code>']]));
+    assert.deepEqual(offending(errors), ['Invented-Hidden-Mark'], JSON.stringify(label));
+    assert.match(errors[0], /in the "Windows PowerShell" tab/, JSON.stringify(label));
+    assert.equal(windowsLines, 1, JSON.stringify(label));
+  }
+  // every mark in a label goes, not only the first
+  const twice = `Win${invisible[0]}dows Po&shy;wer${invisible[1]}Sh&zwj;ell`;
+  assert.deepEqual(offending(scanPage(tabs([['macOS/Linux', '<p>Nothing.'], [twice, '<p><code>Invented-Twice</code>']])).errors), ['Invented-Twice']);
+  // a visible character between the words still breaks the word
+  assert.deepEqual(scanPage(tabs([['macOS/Linux', '<p>Nothing.'], ['Windows Power-Shell', '<p><code>Invented-Dash</code>']])).errors, []);
+});
+
+// The PowerShell code block errors as [line, language class], in order.
+const offendingBlocks = (errors) =>
+  errors.map((e) => /the line "(.*)" in a PowerShell code block \((language-[\w-]+)\) is not a command line/s.exec(e)).filter(Boolean).map((m) => [m[1], m[2]]);
+
+test('built powershell: a PowerShell-language code block outside any tab is read line by line', () => {
+  // pslang: fences powershell (Get-Command jdtls, Invented-Powershell), pwsh, ps1, ps, cmd, bat,
+  // PowerShell (the build writes language-powershell on the pre), bash and no language (language-text).
+  const {errors, windowsLines} = scanPage(fixture('pslang'));
+  assert.deepEqual(offendingBlocks(errors), [
+    ['Invented-Powershell', 'language-powershell'],
+    ['Invented-Pwsh', 'language-pwsh'],
+    ['Invented-Ps1', 'language-ps1'],
+    ['Invented-Ps', 'language-ps'],
+    ['Invented-Cmd', 'language-cmd'],
+    ['Invented-Bat', 'language-bat'],
+    ['Invented-Mixed-Case', 'language-powershell'],
+  ]);
+  assert.equal(errors.length, 7, errors.join('\n'));
+  for (const error of errors) assert.match(error, /^built: probe\.html:\d+ the line /);
+  assert.equal(windowsLines, 8);
+  // pslang-opener: an unclosed {/* inside an inline code span before a powershell fence (the
+  // combo-lang shape the source rule cannot see past)
+  const opener = scanPage(fixture('pslang-opener'));
+  assert.deepEqual(offendingBlocks(opener.errors), [['Invoke-Invented -Opener', 'language-powershell']]);
+  assert.equal(opener.errors.length, 1, opener.errors.join('\n'));
+  // a raw pre and a pre whose language class is upper case count too; a language class on
+  // another element than the pre does not make a pre a PowerShell block
+  const raw = scanPage('<pre class=language-PWSH>Get-Command jdtls\nInvented-Raw</pre><div class=language-powershell><pre>Invented-Div</pre></div>');
+  assert.deepEqual(offendingBlocks(raw.errors), [['Invented-Raw', 'language-PWSH']]);
+  assert.equal(raw.errors.length, 1, raw.errors.join('\n'));
+  assert.equal(raw.windowsLines, 2);
+});
+
+test('built powershell: only the listed language names make a PowerShell code block, as whole class names', () => {
+  // the source rule (c) lists powershell, pwsh, ps1, ps, cmd and bat; a class that only starts or
+  // ends with one of them is another language
+  const near = ['language-batch', 'language-psql', 'language-ps1x', 'xlanguage-ps', 'language-cmdline', 'my-language-bat'];
+  for (const name of near) {
+    const {errors, windowsLines} = scanPage(`<pre class=${name}>Invented-Near</pre>`);
+    assert.deepEqual(errors, [], name);
+    assert.equal(windowsLines, 0, name);
+  }
+});
+
+test('built powershell: a PowerShell-language code block inside a non-PowerShell tab panel is read too, a line counted once', () => {
+  // a powershell fence in the macOS/Linux panel: the invented line fails with the code block
+  // message, the pack line passes; the bash block next to it is not read
+  const mac = scanPage(tabs([['macOS/Linux', codeBlock('Get-Command jdtls', 'Invented-Mac-Ps') + bashBlock('Invented-Mac-Bash')], ['Windows PowerShell', '<p>Nothing.']]));
+  assert.deepEqual(offendingBlocks(mac.errors), [['Invented-Mac-Ps', 'language-powershell']]);
+  assert.equal(mac.errors.length, 1, mac.errors.join('\n'));
+  assert.equal(mac.windowsLines, 2);
+  const pass = scanPage(tabs([['macOS/Linux', codeBlock('Get-Command jdtls')], ['Windows PowerShell', '<p>Nothing.']]));
+  assert.deepEqual(pass.errors, []);
+  assert.equal(pass.windowsLines, 1);
+  // a powershell fence inside a nested macOS tab of the outer macOS/Linux panel is read as well
+  const nested = scanPage(tabs([['macOS/Linux', tabs([['macOS', codeBlock('Invented-Nested-Ps')], ['Arch Linux', '<p>x']])], ['Windows PowerShell', '<p>Nothing.']]));
+  assert.deepEqual(offendingBlocks(nested.errors), [['Invented-Nested-Ps', 'language-powershell']]);
+  // a powershell fence in a PowerShell panel is one line, named by its tab
+  const both = scanPage(windows(codeBlock('Invented-Both')));
+  assert.deepEqual(offending(both.errors), ['Invented-Both']);
+  assert.deepEqual(offendingBlocks(both.errors), []);
+  assert.equal(both.errors.length, 1, both.errors.join('\n'));
+  assert.equal(both.windowsLines, 1);
 });

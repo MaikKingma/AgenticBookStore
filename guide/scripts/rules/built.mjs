@@ -44,7 +44,8 @@ function htmlFiles(dir, relDir, out) {
 
 // Returns {errors, count, checkboxes, windowsLines}: count is the number of html files
 // scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
-// number of lines read in PowerShell tab panels (in the list or not).
+// number of lines read in PowerShell tab panels and PowerShell-language code blocks, a line
+// counted once (in the list or not).
 export function scanBuilt(dir) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {
     return {errors: [`built: ${dir} is missing; run npm run build first`], count: 0};

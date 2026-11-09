@@ -48,3 +48,14 @@ Each is a `Tabs` element with one `TabItem` per row item (value v0, v1, ...), la
 | labels | three groups: groupId jdtls [macOS: bash fence `Invented-Mac`; Windows (WSL): bash fence `Invented-Wsl`]; no groupId [macOS/Linux: `Nothing.`; PowerShell: powershell fence `Invented-Short-Label`]; groupId os [macOS/Linux: `Nothing.`; Windows PowerShell: powershell fence `Invented-Long-Label`] |
 | inlist | `1. Install the tool:`, then the os group [macOS/Linux: bash fence `ls`; Windows PowerShell: powershell fence `Get-Command jdtls` and `Invented-In-List`] indented by three spaces, then `2. Next step.` |
 | inlist-ol | `- Install the tool:`, then the os group [macOS/Linux: bash fence `ls`; Windows PowerShell: `1. Run BGet-Command jdtlsB first.` and `2. Then BInvented-In-Ordered-ItemB.`] indented by two spaces, then `- Next step.` |
+
+## The rework cases
+
+The same page shape, every tag alone on its line with empty lines around the bodies.
+
+| fixture | body |
+|---|---|
+| lazy-default | `<Tabs groupId="os" lazy>` with `<TabItem value="mac" label="macOS/Linux">` (`Nothing.`) and `<TabItem value="win" label="Windows PowerShell" default>` (bash fence `Invoke-Invented -Lazy`). Only the selected panel is rendered: 2 tabs, 1 panel. |
+| pre-tokenline-extra | `<Tabs groupId="os">` with `<TabItem value="mac" label="macOS/Linux">` (`Nothing.`) and `<TabItem value="win" label="Windows PowerShell">` holding the one line `<pre><span className="token-line">Get-Command jdtls</span>{'\n'}Invoke-Invented -Extra</pre>` |
+| pslang | no tabs: fences `powershell` (`Get-Command jdtls`, `Invented-Powershell`), `pwsh` (`Invented-Pwsh`), `ps1` (`Invented-Ps1`), `ps` (`Invented-Ps`), `cmd` (`Invented-Cmd`), `bat` (`Invented-Bat`), `PowerShell` (`Invented-Mixed-Case`), `bash` (`Invented-Bash`) and one without a language (`Invented-Plain`), with an empty line between them |
+| pslang-opener | no tabs: `Type Bx`, next line `2. {/* yB to start a comment.`, an empty line, then a powershell fence `Invoke-Invented -Opener` |
