@@ -41,5 +41,11 @@ metadata:
   `isString()`. `ChatClient.Builder.defaultOptions(..)` takes the options BUILDER (`.build()` does not compile) and merges
   with the model's own defaults. Use `SoftAssertions` so one red run shows every broken fact; do not assert on a whole
   request body string (the failure output floods).
+- Prompt and tool-description tests: `@Tool` description = `getToolDefinition().description()`; a `@ToolParam(description=..)`
+  shows under `inputSchema()` JSON `properties.<name>.description` (check both when a rule must live in both).
+  `Genre.parse` accepts `-`/`_` but not a space, so a readable "science fiction" in a search genre arg is rejected
+  (the error lists the valid constants). `ScriptedChatModel` tool args are fixed JSON strings; `toolContentOf` in
+  `AssistantIntegrationTest` needs exactly one tool message, so two tool rounds in one turn need a custom lookup.
+- Worktree Bash guard refuses redirects and `cd` in one command: put the mvnw run in a script under `.claude/comms/tmp/`.
 - `AssistantCommandsTest.useCaseExceptionsMapToTheirStatus` throws the four use-case exceptions out of the chat call:
   a catch-all around that call must let them through or that pre-existing test goes red.
