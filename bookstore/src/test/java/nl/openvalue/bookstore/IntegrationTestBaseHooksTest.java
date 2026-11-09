@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +30,8 @@ import org.springframework.http.MediaType;
  * the base hooks run, must be gone when the test starts. Removing the database cleaning, the recorder reset or the
  * reset of the failure toggle from the base makes this test fail.
  * The same holds for the order recorder and its failure toggle, and for a leftover row in the order table. The
- * default answer of the distributor mock, which the base sets up before every test, is guarded here too.
+ * default answer of the distributor mock, which the base sets up before every test, is guarded here too, and so is
+ * the helper that shows that answer as the pending restock of a stock view.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IntegrationTestBaseHooksTest extends IntegrationTestBase {
@@ -134,5 +136,20 @@ class IntegrationTestBaseHooksTest extends IntegrationTestBase {
         Throwable thrown = catchThrowable(() -> distributorAppService.requestRestock("9789900010029", 7, "first/1"));
 
         assertThat(thrown).isSameAs(unavailable);
+    }
+
+    @Test
+    void theDefaultPendingRestockHelperShowsTheDefaultAnswerForTheGivenQuantity() {
+        Map<String, Object> view = new LinkedHashMap<>(Map.of("bookId", "b-1", "onHand", 4));
+        view.put("pendingRestock", null);
+
+        Map<String, Object> expected = withDefaultPendingRestock(view, 7);
+
+        assertThat(expected).isEqualTo(Map.of("bookId", "b-1", "onHand", 4, "pendingRestock", Map.of(
+                "restockOrderId", "c4f1a7e2-3b9d-4e8a-b6f5-2d1e0a9c8b7f",
+                "quantity", 7,
+                "expectedDeliveryDate", defaultExpectedDeliveryDate.toString(),
+                "backordered", false)));
+        assertThat(view).containsEntry("pendingRestock", null).hasSize(3);
     }
 }

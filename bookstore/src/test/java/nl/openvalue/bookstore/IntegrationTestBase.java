@@ -6,6 +6,8 @@ import static org.mockito.Mockito.doAnswer;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import nl.openvalue.bookstore.domaininteraction.DistributorAppService;
 import nl.openvalue.bookstore.domaininteraction.RestockConfirmationDTO;
 import nl.openvalue.bookstore.domaininteraction.StockItemDataService;
@@ -34,6 +36,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * test it confirms each restock request by default: the order {@link #DEFAULT_RESTOCK_ORDER_ID} for the requested
  * quantity, not backordered, for delivery in two days by the application clock ({@link #defaultExpectedDeliveryDate},
  * taken once per test). A test replaces that answer with {@code doThrow(...)} or {@code doAnswer(...)} on the mock.
+ * Because every committed dip of a book's stock asks the distributor for a restock, a stock view taken after such a
+ * dip shows the pending restock of that answer; {@link #withDefaultPendingRestock} builds the expected view.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient
@@ -77,5 +81,20 @@ public abstract class IntegrationTestBase {
         doAnswer(invocation -> new RestockConfirmationDTO(DEFAULT_RESTOCK_ORDER_ID, invocation.getArgument(1),
                 defaultExpectedDeliveryDate, false))
                 .when(distributorAppService).requestRestock(any(), anyInt(), any());
+    }
+
+    /**
+     * A copy of a stock view as JSON gives it, with the pending restock that the default distributor answer leaves for
+     * the given quantity: the default order id, that quantity, the default delivery date as a string, not backordered.
+     * Any pending restock in the given view is replaced.
+     */
+    protected Map<String, Object> withDefaultPendingRestock(Map<String, Object> view, int quantity) {
+        Map<String, Object> expected = new LinkedHashMap<>(view);
+        expected.put("pendingRestock", Map.of(
+                "restockOrderId", DEFAULT_RESTOCK_ORDER_ID,
+                "quantity", quantity,
+                "expectedDeliveryDate", defaultExpectedDeliveryDate.toString(),
+                "backordered", false));
+        return expected;
     }
 }
