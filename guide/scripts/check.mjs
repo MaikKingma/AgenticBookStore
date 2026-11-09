@@ -9,6 +9,7 @@ import {testGlobs, countTestCases, zeroTestErrors} from './rules/zero-tests.mjs'
 import {cssColorErrors, styleColorErrors} from './rules/colors.mjs';
 import {siteRules} from './lib/site.mjs';
 import {structureRules} from './lib/structure.mjs';
+import {contentRules} from './lib/content.mjs';
 import {SKELETON_MARKER} from './rules/structure.mjs';
 
 // The pack folder that holds the workshop plan and the SDD framework guide, found
@@ -59,7 +60,10 @@ function zeroTestRule(root) {
 // the flat error list; the caller decides the exit code. The structure rules (the eleven
 // pages, the level page grammar, the checklists against the workshop plan) describe the
 // real guide, so they run only when options.structure is set; the command line sets it
-// for the default root. options.workshopDir overrides the pack folder (self-tests).
+// for the default root. The coverage and content rules (the manifest anchored in the pack,
+// the deny-list, tabs, PowerShell lines) also describe the real guide and its pack, so they
+// run only when options.content is set, the same way. options.workshopDir overrides the
+// pack folder and options.manifest the manifest (self-tests).
 export function runChecks(root, options = {}) {
   const files = collectTextFiles(root);
   const lines = [];
@@ -118,24 +122,34 @@ export function runChecks(root, options = {}) {
     report('structure', structure.errors, 0, structure.summary);
   }
 
+  const pendingLines = [];
+  if (options.content) {
+    const content = contentRules(root, options.workshopDir ?? WORKSHOP_DIR, options.manifest);
+    report('coverage', content.coverage.errors, 0, content.coverage.summary);
+    report('content', content.content.errors, 0, content.content.summary);
+    pendingLines.push(...content.coverage.lines);
+  }
+
   const pending = files
     .filter(({file, text}) => file.startsWith('docs/') && text.includes(SKELETON_MARKER))
     .map(({file}) => file);
   lines.push(`pending skeleton pages: ${pending.length}`);
   for (const file of pending) lines.push(`  pending ${file}`);
+  lines.push(...pendingLines);
 
   return {lines, errors};
 }
 
-// Usage: node scripts/check.mjs [guide-root] [--structure]. Without a root the real guide
-// is checked, structure rules included. With a root (the self-tests build scratch trees),
-// the structure rules run only when --structure is given.
+// Usage: node scripts/check.mjs [guide-root] [--structure] [--content]. Without a root the
+// real guide is checked, structure and content rules included. With a root (the self-tests
+// build scratch trees), those rules run only when --structure and --content are given.
 function main() {
   const args = process.argv.slice(2);
   const positional = args.filter((arg) => !arg.startsWith('--'));
   const root = positional[0] ?? fileURLToPath(new URL('..', import.meta.url));
   const structure = positional.length === 0 || args.includes('--structure');
-  const {lines, errors} = runChecks(root, {structure});
+  const content = positional.length === 0 || args.includes('--content');
+  const {lines, errors} = runChecks(root, {structure, content});
   for (const line of lines) console.log(line);
   for (const error of errors) console.error(error);
   if (errors.length > 0) {
