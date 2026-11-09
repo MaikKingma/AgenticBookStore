@@ -79,7 +79,7 @@ Bundled owner decisions: none. Open question the code does not settle in minutes
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | `/shop`, `/shop/` and `/shop/index.html` are revalidated on every load; assets unchanged | bookstore | [] | 1 | elevated | sonnet | pending | | | | |
+| T1 | `/shop`, `/shop/` and `/shop/index.html` are revalidated on every load; assets unchanged | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #105 | sdd/fix-12-storefront-review/T1 |
 | T2 | the in-flight order lives in the basket context: one order per submit, back link held, late 202 removes only submitted lines | frontend | [] | 2 | elevated | sonnet | pending | | | | |
 | T3 | `limits.ts` names `OrderLine` (spec 04 domain) as the enforcer of the 1 to 10 rule | frontend | [T2] | 3 | elevated | sonnet | pending | | | | |
 
@@ -179,7 +179,20 @@ T3 depends on T2 only for ordering (same module, one task at a time).
 
 ## QA feed-forward
 
-(none yet)
+- FF-T1 (qa-lead, T1 r0; applies to T2): scratch names `f12-t2-qa-*` by absolute path, `.orig` copies of every
+  fileScope file at snap-before, repo-relative `shasum -a 256` lines per round; the negative control restores
+  `basket.tsx` and `CheckoutPage.tsx` (and `global.css` if touched) from `git show <pr-base>:<file>`, red set exactly
+  the criterion 1 and 2 tests; console trap green plus a grep of a stdout+stderr log for `Not implemented|act\(|Warning:`;
+  must-fail probes one at a time: (a) position-based removal, (b) removal by exact submitted quantity, (c)
+  `basket.clear()` on 202, (d) flag in page state or page ref, (e) flag not reset on error, (f) back link hidden
+  without `role="status"` text, or status text with the button enabled; every absence assertion after an awaited
+  presence assertion; sessionStorage read right after the 202 without unmounting; criterion 4 byte for byte; cover a
+  late success and a late failure on a remounted checkout page.
+- FF-T1 (applies to T3): quote `git diff <pr-base> -- frontend/src/limits.ts`; check the named owner against
+  `OrderLine.java` (constants and `quantityOf`); Vitest totals equal T2's after-state; T2's gated files unchanged.
+- FF-T1 (applies to qa-final): a live `java -jar` check on a throwaway database: `curl -sI` on `/shop`, `/shop/`,
+  `/shop/index.html` shows `Cache-Control: no-cache` and no `Last-Modified`; `If-Modified-Since` now and 1980-02-01
+  both answer 200 with the body; one hashed asset has no `no-cache`.
 
 ## Amendments
 
