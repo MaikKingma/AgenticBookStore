@@ -25,17 +25,185 @@ git stash -u && git switch solution/level-2
 
 :::
 
-{/* guide-skeleton */}
+Start from your Level 2 result, or from `solution/level-2`. In this level you add permissions, a hook that blocks red commits, a skill and a command.
+
+:::info[Sync moment]
+
+Look up, Maik demos this now. Maik shows one hook blocking a commit: red tests, exit code 2, and the agent reads the stderr and fixes the test. (4 minutes)
+
+:::
 
 ## Part A: Permissions {/* #part-a-permissions */}
 
+About 4 minutes.
+
+Create `.claude/settings.json` (shared, committed), or add the `permissions` block if the file already exists. The block below is the part you add. If the file already exists, keep what is in it.
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(./mvnw *)", "Bash(git status *)", "Bash(git diff *)", "Bash(git add *)", "Bash(git commit *)"],
+    "deny":  ["Read(./.env)", "Read(./.env.*)", "Bash(git push)", "Bash(git push *)", "Bash(* --no-verify*)", "Bash(git commit -n *)"]
+  }
+}
+```
+
+Rules are evaluated deny, then ask, then allow. Try `Shift+Tab` to cycle modes (from auto: default, acceptEdits, plan) and `/plan` for read-only planning.
+
+### Check the deny rules
+
+Two deny rules guard the escape hatches. Check both through Claude.
+
+First, the commit flag. Ask Claude to run this command. Do not run it in your own terminal: there `--no-verify` skips the git hook and no deny rule applies.
+
+:::tip[Checkpoint]
+
+```bash
+git commit --no-verify -m "x"
+```
+
+Expected: the permission system denies the command.
+
+:::
+
+`git commit -n -m "x"` and `git push` are denied the same way.
+
+Second, the secrets. This check needs a `.env` file in the repository root. Ask Claude to read it:
+
+:::tip[Checkpoint]
+
+```text
+Read the .env file in the repository root.
+```
+
+Expected: the read is denied.
+
+:::
+
 ## Part B: Hooks {/* #part-b-hooks */}
+
+About 11 minutes. The goal: no green tests, no commit.
+
+### 1. Add the hook to the settings
+
+Add a PreToolUse hook to `.claude/settings.json` that runs before Bash commands that are git commits. It is a fragment: add the `hooks` key to the same object as the `permissions` key from Part A.
+
+```json
+"hooks": {
+  "PreToolUse": [
+    { "matcher": "Bash",
+      "hooks": [ { "type": "command", "if": "Bash(git commit *)", "timeout": 180,
+                   "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tests-before-commit.sh" } ] }
+  ]
+}
+```
+
+### 2. Write the script
+
+Create `.claude/hooks/tests-before-commit.sh` (make it executable with `chmod +x`, and save it with LF line endings). It runs `./mvnw -q verify`; on failure it prints the last 40 lines to **stderr** and exits **2**, which blocks the commit and feeds the reason back to Claude. Any other non-zero exit code would NOT block.
+
+Write it yourself first, then compare with this reference script from `solution/level-3`:
+
+```bash
+#!/usr/bin/env bash
+# PreToolUse hook: block `git commit` unless the full build is green.
+# Exit code 2 blocks the tool call and feeds stderr back to Claude. Any other non-zero code does NOT block.
+input="$(cat)"
+# The "if" filter in settings.json is best-effort, so check the command ourselves too.
+if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+  exit 0
+fi
+cd "${CLAUDE_PROJECT_DIR:-.}" || exit 1
+log="$(mktemp)"
+if ./mvnw -q verify >"$log" 2>&1; then
+  rm -f "$log"
+  exit 0
+fi
+{
+  echo "Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again."
+  tail -n 40 "$log"
+} >&2
+rm -f "$log"
+exit 2
+```
+
+On Windows, `solution/level-3` also holds a PowerShell variant of the hook with the same behaviour, `tests-before-commit.ps1`. How Windows participants point the hook command at it is not verified yet.
+
+### 3. Install the git hook
+
+Also install the classic git hook so humans are held to the same rule. Run this once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The solution branch already ships `.githooks/pre-commit`. Write your own first.
+
+### 4. Test it
+
+Ask Claude:
+
+```text
+change Money to round HALF_UP on purpose and commit
+```
+
+Watch the block, the feedback, the fix.
+
+If Claude did not try to commit, leave a test red and ask Claude to run this command:
+
+:::tip[Checkpoint]
+
+```bash
+git commit -m "test"
+```
+
+Expected: the hook exits 2, the commit does not happen, and Claude's next message refers to the failing test from stderr.
+
+:::
+
+### 5. Why both?
+
+The Claude hook gives the agent feedback inside its loop and runs on every `git commit`, flags or not. The git hook protects the repo from everyone, humans included, but `--no-verify` (or `-n`) skips it. The deny rules from Part A close that escape hatch for the agent.
 
 ## Optional: Stop hook {/* #optional-stop-hook */}
 
+You do not need this for the exercise. A Stop hook runs only the fast `ArchitectureTest` when Java files changed, and checks `stop_hook_active` to avoid loops.
+
+The `solution/level-3` branch has one, `.claude/hooks/architecture-check-on-stop.sh`, wired into its `.claude/settings.json`. Read it there: [solution/level-3](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-3).
+
 ## Part C: Skill and command {/* #part-c-skill-and-command */}
 
+About 9 minutes.
+
+### 1. Create the skill
+
+Create `.claude/skills/new-use-case/SKILL.md`: a repeatable workflow for adding a use case through all onion layers (domain behaviour, flow method, port change, adapter, migration if needed, tests per layer, verify). Frontmatter: `name`, a precise `description` (this is what makes Claude pick it), `allowed-tools`. Put the layer cheat sheet in a supporting file `reference.md` so it loads only when needed.
+
+### 2. Use it
+
+Ask Claude:
+
+```text
+Customers must be able to cancel an order that has not shipped yet.
+```
+
+Watch Claude load the skill. It should load it without being told to, visible in the transcript.
+
+### 3. Create the command
+
+Create a command `.claude/commands/ship.md` with `disable-model-invocation: true` semantics (only you trigger it). It shows `` !`git status --short` ``, runs verify, proposes a conventional commit message for `$ARGUMENTS`, and commits (the hook from Part B still guards it). Custom commands and skills are the same mechanism now; both create `/ship`.
+
+Commit the cancel-order use case through `/ship`.
+
 ## Stretch {/* #stretch */}
+
+Create a review subagent `.claude/agents/architecture-reviewer.md` (`tools: Read, Glob, Grep, Bash`, instructed to use Bash only for `git diff` and `git status`) that reviews the diff against the layer rules before `/ship`.
+
+## Before you move on
+
+Guideline versus guarantee. Which of your Level 0 findings are now impossible, and which are only less likely?
+
+When you are done, compare your result with the branch [solution/level-3](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-3).
 
 ## Level cleared when
 
