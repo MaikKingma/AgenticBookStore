@@ -42,4 +42,9 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
   `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per
   path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>`
   extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
+- A warning inventory with a case-insensitive `warn` grep hits about 130 lines per referee here (app WARN logs that
+  ACL, data and web tests provoke on purpose, Spring AI BeanPostProcessorChecker, npm `install-scripts` printed as
+  `[ERROR]`), far beyond a directive's short "pre-existing" list. Prove ownership instead of arguing: `git reset --hard
+  <base>` inside a throwaway worktree, run the base referee there, classify both logs by category in a python script,
+  and diff the normalised multisets (timestamps, PIDs, thread names, `.m2` path); "0 added at TIP" closes it.
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

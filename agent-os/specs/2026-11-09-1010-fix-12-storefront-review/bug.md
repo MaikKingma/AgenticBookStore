@@ -2,7 +2,7 @@
 bug: fix-12-storefront-review
 severity: S3
 path: lite
-status: open
+status: fixed
 closes: [spec 12 review R19 stale storefront after a rebuild, R15 double order and wiped basket, limits.ts comment]
 ---
 # Bug: the storefront goes blank after a rebuild, and a late order answer doubles the order or wipes the basket

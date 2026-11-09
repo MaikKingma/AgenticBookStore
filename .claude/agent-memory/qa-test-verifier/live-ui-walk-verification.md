@@ -27,4 +27,13 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
   pid files and stop them with an explicit `stop` subcommand plus an `lsof -tiTCP:<port>` sweep.
 - Spec scenario "a red frontend test fails the build": drop a failing `*.test.ts` into the tip extraction (never the
   repo), `./mvnw verify` there, expect `frontend FAILURE` with `bookstore`/`distributor SKIPPED`, then delete the file.
+- Any walk that provokes a 4xx on purpose (insufficient stock 409) logs Chromium's `error: Failed to load resource:
+  the server responded with a status of 409 (Conflict)` with the API URL as location, in jar and dev mode alike. It is
+  the browser's network log, not an app or React diagnostic: quote it, attribute it by its location URL (not a script)
+  plus an empty `console.` grep over production `src`, and let the lead judge it.
+- Cache-policy fixes: the Tomcat access log is the discriminator. A hashed asset with the jar's 1980 `Last-Modified`
+  is served from the heuristic cache on a second `goto` (no access-log line) and answers `If-Modified-Since: now` with
+  304, while a `no-cache` entry document shows a fresh `200` line per navigation. The asset 304 doubles as an
+  in-run control that the date-validator branch is live on the same server.
+- `( cd dir && nohup node ... & echo $! > pid )` recorded a pid that did not own the port; stop by `lsof -tiTCP:<p>`.
 Related: [[readme-and-live-jar-probes]], [[ci-workflow-verification]], [[shell-traps]]

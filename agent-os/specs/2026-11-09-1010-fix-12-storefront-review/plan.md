@@ -1,12 +1,13 @@
 ---
 spec: fix-12-storefront-review
 source: docs/spec-pack/specs/12-storefront.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-09T10:08:33Z
 origin: read-only spec 12 review at 6c17253 (main session), findings R19, R15 and a comment finding
 gate1: 2026-11-09T10:11:41Z
 qa-lead: on
+gate2: 2026-11-09T11:58:02Z
 base: factory
 branch: sdd/fix-12-storefront-review/spec
 module-vocabulary: [root, bookstore, distributor, frontend, guide]
@@ -214,3 +215,24 @@ T3 depends on T2 only for ordering (same module, one task at a time).
   basket context until the next order is sent and reappears when the visitor returns to checkout (keep it, or clear
   it when the visitor leaves the checkout); `state/basket.tsx` imports `pages/problem` (`problemOf` could move to
   `api/`).
+
+## Final QA and Gate 2
+
+- qa-final (opus, run 1, tip 5437982): PASS. Referee `./mvnw clean verify` 21.0 s; Vitest 22 files, 598 passed + 2
+  expected fail; bookstore 984; distributor 190. Branch-level negative controls at origin/factory: T1 12 run, 6
+  failed with the named shapes; T2 `CheckoutPage.test.tsx` 6 of 26 and `basket.test.tsx` 4 of 56 failed, only new
+  tests. Live jar: `/shop`, `/shop/`, `/shop/index.html` answer 200 with `Cache-Control: no-cache`, no
+  `Last-Modified`, never 304 (If-Modified-Since now and 1980); a real browser's second visit reached the server with
+  200. Live walk: scenario B one place POST, scenario A only the fourth book kept, scenario C basket byte-identical.
+  Verdict: `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`.
+- qa-lead final review: ENDORSE, Gate 2 QA confidence high, every criterion traced (ledger
+  `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-12-storefront-review.md`).
+- Gate 2 self-accepted by the orchestrator 2026-11-09T11:58:02Z: every task PR merged (#105, #106, #108), no
+  stragglers, the cycle diff is confined to the three file scopes plus tests, spec docs and agent memory.
+- Residual risks and follow-ups for Maik: (1) a sentence in pack spec 12 "Routes and serving" on how `index.html` is
+  cached; (2) a reload while an order is in flight, then Confirm again, places a second order (qa-final 10b; outside
+  R15's in-app scope, same on the base; options: an idempotency key on the place command, or a persisted in-flight
+  marker with a policy for a lost answer); (3) the 409 alert reappears after leaving and returning to the checkout
+  (qa-final 10a); (4) `AssistantPage.tsx:35` keeps its in-flight flag in the page; (5) move `problemOf` to `api/`;
+  (6) browsers that opened `/shop/` before this fix need one forced reload; (7) standards proposals in the QA ledger
+  (frontend state of requests that outlive a page, entry-document caching, bugfix negative-control wording).
