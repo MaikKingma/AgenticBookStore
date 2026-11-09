@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {readFileSync, readdirSync} from 'node:fs';
+import {copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, relative, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -142,6 +142,69 @@ test('runChecks with content: the bare token passes on the setup page, the Power
   const {errors} = check(page(SETUP, extra));
   assert.deepEqual(errors, []);
   assert.ok(REAL[LEVEL4].includes('{/* #feature-briefs */}'), 'the Level 4 skeleton holds the anchor, and the real-guide test above passes with it');
+});
+
+test('runChecks with content: a warning that says never to set the token passes on the setup page, the same words as a command fail', () => {
+  const warning = check(page(SETUP, 'Never set ANTHROPIC_API_KEY: the workshop uses its own key. Do not export or unset it either.'));
+  assert.deepEqual(warning.errors, []);
+  const command = check(page(SETUP, '```bash\nexport ANTHROPIC_API_KEY\n```'));
+  assert.ok(command.errors.some((e) => /^content: docs\/00-setup-check\.md: line \d+: ANTHROPIC_API_KEY in an export, set, setx or unset command/.test(e)), command.errors.join('\n'));
+  const inline = check(page(SETUP, 'Never run `unset ANTHROPIC_API_KEY` here.'));
+  assert.ok(inline.errors.some((e) => /in an export, set, setx or unset command/.test(e)), inline.errors.join('\n'));
+});
+
+test('runChecks with content: an unclosed {/* in inline code does not hide a PowerShell line or a tab group from the rules', () => {
+  const group = (id, line) =>
+    `Type \`{/*\` with care.\n\n<Tabs groupId="${id}">\n<TabItem value="a" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\n\`\`\`powershell\n${line}\n\`\`\`\n\n</TabItem>\n</Tabs>`;
+  const invented = check(page(SETUP, group('os', 'Remove-Item -Recurse inventedfolder')));
+  assert.ok(invented.errors.some((e) => /^content: .*the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line/.test(e)), invented.errors.join('\n'));
+  assert.ok(invented.lines.some((line) => line.startsWith('FAIL content')), invented.lines.join('\n'));
+  const unknown = check(page(SETUP, group('nope', 'Get-Command jdtls')));
+  assert.ok(unknown.errors.some((e) => /^content: .*unknown tab groupId "nope"/.test(e)), unknown.errors.join('\n'));
+  assert.deepEqual(check(page(SETUP, group('os', 'Get-Command jdtls'))).errors, [], 'the same page with a pack line is fine');
+});
+
+// The pack folder the rules read is options.workshopDir: a scratch copy of the real pack, with
+// or without one of its files.
+function withScratchPack(skip, run) {
+  const real = fileURLToPath(new URL('../../docs/spec-pack/', import.meta.url));
+  const scratch = mkdtempSync(join(tmpdir(), 'guide-pack-'));
+  try {
+    for (const rel of Object.values(SOURCE_FILES)) {
+      if (skip.includes(rel)) continue;
+      mkdirSync(dirname(join(scratch, rel)), {recursive: true});
+      copyFileSync(join(real, rel), join(scratch, rel));
+    }
+    mkdirSync(join(scratch, 'workshop'), {recursive: true});
+    return run(join(scratch, 'workshop'));
+  } finally {
+    rmSync(scratch, {recursive: true, force: true});
+  }
+}
+
+test('runChecks with content: the coverage and content rules read the pack from options.workshopDir', () => {
+  const full = withScratchPack([], (workshopDir) => check({}, {workshopDir}));
+  assert.deepEqual(full.errors, [], 'a complete copy of the pack behaves like the real one');
+  // A pack without the briefs: every entry of the briefs fails the anchoring, and only those.
+  const briefs = ENTRIES.filter((e) => e.source === 'briefs');
+  const noBriefs = withScratchPack([SOURCE_FILES.briefs], (workshopDir) => check({}, {workshopDir}));
+  const coverage = noBriefs.errors.filter((e) => e.startsWith('coverage:'));
+  assert.equal(coverage.length, briefs.length, coverage.join('\n'));
+  assert.ok(coverage.every((e) => /the pack file workshop\/level-4-feature-briefs\.md is missing/.test(e)), coverage.join('\n'));
+  assert.ok(noBriefs.lines.some((line) => line.startsWith('FAIL coverage')), noBriefs.lines.join('\n'));
+  // The PowerShell rule reads the same pack: a line that only the SDD guide states passes with the guide and fails without it.
+  const install = 'irm https://openspec.dev/cli/install.ps1 | iex';
+  const tab = `<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\n\`\`\`powershell\n${install}\n\`\`\`\n\n</TabItem>\n</Tabs>`;
+  const withGuide = withScratchPack([], (workshopDir) => check(page(SETUP, tab), {workshopDir}));
+  assert.deepEqual(withGuide.errors, []);
+  const withoutGuide = withScratchPack([SOURCE_FILES.sdd], (workshopDir) => check(page(SETUP, tab), {workshopDir}));
+  assert.ok(withoutGuide.errors.some((e) => e.startsWith('content: ') && e.includes(`the PowerShell line "${install}"`)), withoutGuide.errors.join('\n'));
+});
+
+test('runChecks with content: a malformed manifest (a duplicate id) fails the coverage line', () => {
+  const {lines, errors} = check({[SETUP]: FINISHED}, {manifest: {...TINY, entries: [TINY.entries[0], TINY.entries[0]]}});
+  assert.ok(errors.some((e) => /^coverage: entry SU-01: the id is used twice$/.test(e)), errors.join('\n'));
+  assert.ok(lines.some((line) => line.startsWith('FAIL coverage')), lines.join('\n'));
 });
 
 test('runChecks with content: removing the marker from the index lists every index entry as missing from the page', () => {

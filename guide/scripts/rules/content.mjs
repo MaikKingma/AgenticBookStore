@@ -3,7 +3,7 @@
 // PowerShell lines (c) and the Level 0 observation card (h). Pure functions on text; the
 // file reads are in lib/content.mjs. The rules (c) to (h) read every page, a skeleton
 // included, except (h), which waits for the Level 0 page to lose its marker.
-import {collapse, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
+import {codeOf, collapse, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
 import {isSkeleton} from './coverage.mjs';
 
 export const LEVEL0_PAGE = 'docs/01-level-0-break-the-agent.mdx';
@@ -57,19 +57,24 @@ export function denyListErrors(file, text) {
 
 // (e) ANTHROPIC_API_KEY never in an assignment, export or $env: form (the workshop uses
 // BOOKSTORE_AI_API_KEY), and the bare token only on the setup and troubleshooting pages.
+// The words export, set, setx and unset are ordinary English in a warning ("Never set
+// ANTHROPIC_API_KEY: ..."), so that form is read in code only (a fenced block line or an
+// inline code span); the other forms (an assignment, $env:, a settings key) fail anywhere.
 const KEY = 'ANTHROPIC_API_KEY';
 const KEY_FORMS = [
-  ['an export, set, setx or unset command', new RegExp(`\\b(?:export|set|setx|unset)\\s+${KEY}`, 'gi')],
-  ['a $env: or Env: form', new RegExp(`(?:\\$env:|\\bEnv:)\\s*${KEY}`, 'gi')],
-  ['an assignment', new RegExp(`${KEY}\\s*=`, 'gi')],
-  ['a settings or JSON key', new RegExp(`["']${KEY}["']\\s*:`, 'gi')],
+  ['an export, set, setx or unset command', new RegExp(`\\b(?:export|set|setx|unset)\\s+${KEY}`, 'gi'), true],
+  ['a $env: or Env: form', new RegExp(`(?:\\$env:|\\bEnv:)\\s*${KEY}`, 'gi'), false],
+  ['an assignment', new RegExp(`${KEY}\\s*=`, 'gi'), false],
+  ['a settings or JSON key', new RegExp(`["']${KEY}["']\\s*:`, 'gi'), false],
 ];
 
 export function apiKeyErrors(file, text) {
   const errors = [];
-  for (const [form, pattern] of KEY_FORMS) {
-    for (const m of text.matchAll(pattern)) {
-      errors.push(`${file}: line ${lineOf(text, m.index)}: ${KEY} in ${form}, the workshop only ever uses BOOKSTORE_AI_API_KEY`);
+  const code = codeOf(scanMarkdown(text.replace(/\r\n/g, '\n')));
+  for (const [form, pattern, codeOnly] of KEY_FORMS) {
+    const searched = codeOnly ? code : text;
+    for (const m of searched.matchAll(pattern)) {
+      errors.push(`${file}: line ${lineOf(searched, m.index)}: ${KEY} in ${form}, the workshop only ever uses BOOKSTORE_AI_API_KEY`);
     }
   }
   if (!KEY_PAGES.includes(file)) {

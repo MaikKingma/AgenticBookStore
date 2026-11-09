@@ -65,6 +65,15 @@ test('deny-list FF-16: feature-briefs as a file name, as prose, or on another pa
   fails(denyListErrors(INDEX, '[x](./02-level-1-context-engineering.mdx#feature-briefs)'), /"feature-briefs"/);
 });
 
+test('deny-list FF-16: the exemption is the link target right before the id, a link to Level 4 earlier in the text is none', () => {
+  const l4 = '[L4](./05-level-4-spec-driven-development.mdx)';
+  fails(denyListErrors(SETUP, `${l4} and #feature-briefs`), /"feature-briefs"/);
+  fails(denyListErrors(SETUP, `${l4}\n#feature-briefs`), /"feature-briefs"/);
+  fails(denyListErrors(SETUP, '[L4](/level-4-spec-driven-development) then #feature-briefs'), /"feature-briefs"/);
+  fails(denyListErrors(SETUP, `${l4} and [x](./02-level-1-context-engineering.mdx#feature-briefs)`), /"feature-briefs"/);
+  passes(denyListErrors(SETUP, `${l4} and [x](./05-level-4-spec-driven-development.mdx#feature-briefs)`));
+});
+
 test('deny-list FF-16: the exemption is exactly the id: a longer id, another case or another term gets none', () => {
   fails(denyListErrors(LEVEL4_PAGE, '[x](#feature-briefs-extra)'), /"feature-briefs"/);
   fails(denyListErrors(LEVEL4_PAGE, '[x](#Feature-Briefs)'), /"feature-briefs"/);
@@ -75,23 +84,60 @@ test('deny-list FF-16: the exemption is exactly the id: a longer id, another cas
 
 // (e) the API key
 
+// The forms that are a command or a setting: they fail wherever they stand, in a fenced block,
+// in an inline code span or in a sentence.
+const KEY_FORMS_EVERYWHERE = [
+  'export ANTHROPIC_API_KEY=x',
+  'ANTHROPIC_API_KEY=x claude',
+  'ANTHROPIC_API_KEY = x',
+  '$env:ANTHROPIC_API_KEY="x"',
+  '$env: ANTHROPIC_API_KEY',
+  'Remove-Item Env:ANTHROPIC_API_KEY',
+  'set ANTHROPIC_API_KEY=x',
+  '{"env": {"ANTHROPIC_API_KEY": "x"}}',
+  "'ANTHROPIC_API_KEY' : 'x'",
+];
+// The export, set, setx and unset words are ordinary English in a warning ("Never set
+// ANTHROPIC_API_KEY: the workshop uses its own key"), so they fail only as a command: in a
+// fenced block line or an inline code span.
+const KEY_COMMANDS = ['export ANTHROPIC_API_KEY', 'setx ANTHROPIC_API_KEY x', 'set ANTHROPIC_API_KEY', 'unset ANTHROPIC_API_KEY', 'export  ANTHROPIC_API_KEY'];
+
 test('api key: an assignment, export, $env:, setx and settings form each fail on the setup page', () => {
-  for (const text of [
-    'export ANTHROPIC_API_KEY=x',
-    'ANTHROPIC_API_KEY=x claude',
-    'ANTHROPIC_API_KEY = x',
-    '$env:ANTHROPIC_API_KEY="x"',
-    '$env: ANTHROPIC_API_KEY',
-    'Remove-Item Env:ANTHROPIC_API_KEY',
-    'setx ANTHROPIC_API_KEY x',
-    'set ANTHROPIC_API_KEY=x',
-    'unset ANTHROPIC_API_KEY',
-    '{"env": {"ANTHROPIC_API_KEY": "x"}}',
-    "'ANTHROPIC_API_KEY' : 'x'",
-  ]) {
-    fails(apiKeyErrors(SETUP, text), /ANTHROPIC_API_KEY in /);
-    fails(apiKeyErrors(TROUBLE, text), /ANTHROPIC_API_KEY in /);
+  for (const text of KEY_FORMS_EVERYWHERE) {
+    for (const wrapped of [text, `\`\`\`bash\n${text}\n\`\`\``, `Run \`${text}\` first.`, `Then ${text} in a sentence.`]) {
+      fails(apiKeyErrors(SETUP, wrapped), /ANTHROPIC_API_KEY in /);
+      fails(apiKeyErrors(TROUBLE, wrapped), /ANTHROPIC_API_KEY in /);
+    }
   }
+});
+
+test('api key: export, set, setx and unset fail as a command (fenced block line, inline code span), also in any letter case', () => {
+  for (const text of KEY_COMMANDS) {
+    for (const wrapped of [`\`\`\`bash\n${text}\n\`\`\``, `Run \`${text}\` first.`, `\`\`\`powershell\n  ${text.toUpperCase()}\n\`\`\``, `Never \`${text.toLowerCase()}\`.`]) {
+      for (const file of [SETUP, TROUBLE, OTHER]) fails(apiKeyErrors(file, wrapped), /ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+    }
+  }
+});
+
+test('api key: a warning that says never to set, export or unset the token passes on the setup and troubleshooting pages', () => {
+  for (const sentence of [
+    'Never set ANTHROPIC_API_KEY: the workshop uses its own key.',
+    'Do not export ANTHROPIC_API_KEY, and do not unset ANTHROPIC_API_KEY either.',
+    'If you setx ANTHROPIC_API_KEY once, remove it again.',
+    'Never\nset\nANTHROPIC_API_KEY on this machine.',
+  ]) {
+    passes(apiKeyErrors(SETUP, sentence));
+    passes(apiKeyErrors(TROUBLE, sentence));
+    fails(apiKeyErrors(OTHER, sentence), /may only be named on the setup and troubleshooting pages/);
+  }
+  // The same words in a sentence with code around them: the span or the line is what counts.
+  passes(apiKeyErrors(SETUP, 'Never set `BOOKSTORE_AI_API_KEY` or `ANTHROPIC_API_KEY`: use the key on screen.'));
+  fails(apiKeyErrors(SETUP, 'Never set this: `export ANTHROPIC_API_KEY`.'), /in an export, set, setx or unset command/);
+});
+
+test('api key: a command word in one code span and the token in the next span is no command', () => {
+  passes(apiKeyErrors(SETUP, 'Never use `set` or `ANTHROPIC_API_KEY` for this.'));
+  passes(apiKeyErrors(SETUP, 'Never `export` `ANTHROPIC_API_KEY`.'));
 });
 
 test('api key: the bare token passes on the setup and troubleshooting pages and fails on every other page', () => {
@@ -218,6 +264,28 @@ test('powershell: a block of a PowerShell tab nested in another group is attribu
   const errors = psCheck(text);
   assert.equal(errors.length, 1, errors.join('\n'));
   assert.match(errors[0], /"del x"/);
+});
+
+test('powershell: the innermost tab decides, so a bash fence in a PowerShell tab nested in a track tab is checked', () => {
+  const text = '<Tabs groupId="track">\n<TabItem label="Track A: OpenSpec">\n<Tabs groupId="os">\n<TabItem label="macOS/Linux">\n```bash\nrm x\n```\n</TabItem>\n<TabItem label="Windows PowerShell">\n```bash\ndel x\n```\n</TabItem>\n</Tabs>\n```bash\nrm y\n```\n</TabItem>\n</Tabs>\n';
+  const errors = psCheck(text);
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], /line 11: the PowerShell line "del x"/);
+  // The same fence in the macOS tab, or in the track tab outside the os group, is not checked.
+  passes(psCheck(text.replace('label="Windows PowerShell"', 'label="macOS/Linux"')));
+});
+
+test('powershell and tabs: a comment opener in inline code hides neither a Windows line nor a tab group (the unclosed {/* witness)', () => {
+  for (const opener of ['{/*', '<!--']) {
+    const intro = `Type \`${opener}\` with care.\n\n`;
+    fails(contentErrors({pages: {[OTHER]: `${intro}${psTab(['Remove-Item -Recurse inventedfolder'])}`}, packTexts: PACK}).errors, /the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line/);
+    fails(contentErrors({pages: {[OTHER]: `${intro}${tabs('nope', ['macOS/Linux', 'Windows PowerShell'])}`}, packTexts: PACK}).errors, /unknown tab groupId "nope"/);
+  }
+  // The span may run over a line break.
+  const wrapped = 'Type `a\nb {/*` c.\n\n';
+  fails(contentErrors({pages: {[OTHER]: `${wrapped}${psTab(['Remove-Item -Recurse inventedfolder'])}`}, packTexts: PACK}).errors, /the PowerShell line/);
+  // A real comment still hides what it covers.
+  passes(contentErrors({pages: {[OTHER]: `{/*\n${psTab(['Remove-Item -Recurse inventedfolder'])}*/}\n`}, packTexts: PACK}).errors);
 });
 
 test('powershell: packCommandLines reads fenced lines, stripped comments, inline spans, escaped pipes and wrapped spans', () => {

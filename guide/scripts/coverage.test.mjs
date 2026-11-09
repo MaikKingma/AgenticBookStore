@@ -105,6 +105,19 @@ test('coverage (a): a section runs to the next heading of the same or a higher l
   assert.match(runA([entry({section: 'Part A: Extra', snippet: 'git clean -fd'})]).errors.join('\n'), /is not in/, 'a part does not hold its parent');
 });
 
+test('coverage (a): a part ends at the next heading of a higher level too, so it holds nothing from the section after it', () => {
+  const pack = '## 4. Level 0\n\n### Part A: Extra\n\nOnly here: `git status`\n\n## 5. Level 1\n\nAfter: `git log`\n\n### Part B: More\n\nLater: `git tag`\n';
+  const part = packSection(pack, 'Part A: Extra').text;
+  assert.equal(part.includes('git status'), true);
+  assert.equal(part.includes('git log'), false, 'the next ## ends the ### part');
+  assert.equal(part.includes('git tag'), false);
+  const sections = {pack: {plan: pack}, sourceFiles: SOURCE_FILES, pageFiles: PAGE_FILES, pages: SKELETONS};
+  const probe = (name, snippet) => coverageErrors({entries: [entry({section: name, snippet})], ...sections}).errors.join('\n');
+  assert.match(probe('Part A: Extra', 'git log'), /E1: the snippet "git log" is not in workshop\/workshop-plan\.md, section "Part A: Extra"/);
+  assert.equal(probe('Part A: Extra', 'git status'), '');
+  assert.equal(probe('5. Level 1', 'git tag'), '', 'a parent holds its own parts');
+});
+
 test('coverage (a): a heading-like line inside a fenced block does not end or start a section', () => {
   assert.equal(packSection(PLAN, '3. Setup check').text.includes('java -version'), true);
   assert.deepEqual(packSection(PLAN, 'not a heading'), {error: 'no heading starts with "not a heading"'});
@@ -156,8 +169,15 @@ test('coverage: a long snippet is shortened in the message', () => {
 });
 
 test('coverage (a): the match is case-sensitive and exact, a word inside a longer snippet is not enough', () => {
-  assert.match(run([entry({snippet: 'JAVA -version'})]).errors.join('\n'), /not in/);
-  assert.match(run([entry({snippet: 'java -version 26'})]).errors.join('\n'), /not in/);
+  // The rule (a) message itself, not just "not in": the rule (b) message of a snippet that is
+  // missing from a finished page ("is not in a fenced block of the page") reads alike. The
+  // pages here are finished and carry the lower-case command, so only rule (a) can speak.
+  for (const [snippet, shownAs] of [['JAVA -version', 'JAVA -version'], ['java -version 26', 'java -version 26']]) {
+    const result = run([entry({snippet, pageSnippet: 'java -version'}), entry({id: 'E2', snippet: 'java -version'})]);
+    assert.equal(result.errors.length, 1, result.errors.join('\n'));
+    assert.match(result.errors[0], new RegExp(`^coverage: E1: the snippet "${shownAs}" is not in workshop/workshop-plan\\.md, section "3\\. Setup check"$`));
+    assert.equal(result.anchored, result.total - 1);
+  }
 });
 
 test('coverage (b): a finished page without the page snippet fails and names page and entry', () => {
@@ -288,6 +308,15 @@ test('pageViews: comments are blanked, blockquote markers dropped, blocks kept a
   const view = pageViews('a {/* hidden */} b\n> c\n\n```bash\nx   y\n```\n```bash\nz\n```\n');
   assert.equal(view.prose, 'a b c');
   assert.deepEqual(view.blocks, ['x y', 'z']);
+});
+
+test('coverageErrors: a malformed manifest entry is an error of the rule itself, not only of a direct manifestShapeErrors call', () => {
+  const messages = (entries) => run(entries, SKELETONS).errors.join('\n');
+  assert.match(messages([entry({}), entry({})]), /^coverage: entry E1: the id is used twice$/m);
+  assert.match(messages([entry({kind: 'prose'})]), /^coverage: entry E1: unknown kind "prose"$/m);
+  assert.match(messages([entry({source: 'nope'})]), /unknown source "nope"/);
+  assert.match(messages([entry({row: ''})]), /the field row is missing/);
+  assert.match(coverageErrors({entries: [entry({})], manualRows: [{row: 'WP:2', item: 'x', page: 'ZZ', reason: ''}], sourceFiles: SOURCE_FILES, pageFiles: PAGE_FILES, pack: PACK, pages: SKELETONS}).errors.join('\n'), /manual row WP:2: the field reason is missing/);
 });
 
 test('manifest shape: an empty manifest, missing fields, duplicate ids and unknown values are errors', () => {

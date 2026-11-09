@@ -49,6 +49,47 @@ test('mdscan: a fence inside a comment is not a fence, a comment inside a fence 
   assert.deepEqual(code.blocks[0].body, ['{/* kept */}']);
 });
 
+test('mdscan: a comment opener inside an inline code span does not start a comment (what follows stays visible)', () => {
+  for (const opener of ['{/*', '<!--', '{ /*']) {
+    const prose = proseOf(scanMarkdown(`Type \`${opener}\` with care.\nNext line.\n<Tabs groupId="os">\n`));
+    assert.equal(collapse(prose), `Type \`${opener}\` with care. Next line. <Tabs groupId="os">`, opener);
+  }
+  // A longer backtick run holds a single backtick, and the span may have more than one opener.
+  assert.equal(collapse(proseOf(scanMarkdown('``a ` {/* <!-- b`` c'))), '``a ` {/* <!-- b`` c');
+  // A comment opener after the span, outside any code, is a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('`x` <!-- hidden'))), '`x`');
+  // The comment that follows the span is still a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('`{/*` {/* hidden */} shown'))), '`{/*` shown');
+});
+
+test('mdscan: a code span that runs over a line break keeps its comment opener inert too', () => {
+  const prose = proseOf(scanMarkdown('Type `a\nb {/*` c\nafter\n\n{/* gone */} end'));
+  assert.equal(collapse(prose), 'Type `a b {/*` c after end');
+});
+
+test('mdscan: a code span ends where it closes, and an opening backtick finds its closer only in its own paragraph', () => {
+  // The line after the closing backtick is prose again: a comment there is a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('Type `a\nb {/*` c\nnext {/* hidden */} line'))), 'Type `a b {/*` c next line');
+  // A backtick on the other side of a blank line is no closer: the comment after the lone backtick is a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('one ` two {/* hidden */} three\n\nlater ` four'))), 'one ` two three later ` four');
+  // A fenced block ends the paragraph: a backtick inside it is no closer either.
+  assert.equal(collapse(proseOf(scanMarkdown('one ` two {/* hidden */}\n```bash\nx `\n```\nafter'))), 'one ` two after');
+});
+
+test('mdscan: a backtick without a closing one is plain text, and an escaped backtick opens no span', () => {
+  assert.equal(collapse(proseOf(scanMarkdown('one ` two {/* hidden */} three'))), 'one ` two three');
+  assert.equal(collapse(proseOf(scanMarkdown('one \\`{/* hidden */} two` three'))), 'one \\` two` three');
+  // A lone backtick inside a comment does not matter, the comment still closes.
+  assert.equal(collapse(proseOf(scanMarkdown('{/* a ` b */} visible'))), 'visible');
+});
+
+test('mdscan: the comment opener inside inline code does not hide a Tabs group from tabGroups', () => {
+  const text = 'Type `{/*` with care.\n\n<Tabs groupId="os">\n<TabItem value="a" label="Windows PowerShell">\n```powershell\nRemove-Item -Recurse x\n```\n</TabItem>\n</Tabs>\n';
+  const scan = scanMarkdown(text);
+  assert.equal(tabGroups(scan).groups.length, 1);
+  assert.equal(scan.blocks.length, 1);
+});
+
 test('mdscan: proseOf drops fenced lines but keeps the line count', () => {
   const text = 'one\n```\ncode\n```\ntwo';
   assert.deepEqual(proseOf(scanMarkdown(text)).split('\n'), ['one', '', '', '', 'two']);

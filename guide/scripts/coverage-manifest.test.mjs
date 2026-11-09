@@ -74,7 +74,7 @@ test('manifest: every entry is anchored in its pack section, and the count is th
 });
 
 test('manifest: each page has at least its pinned number of entries, so entries cannot be dropped quietly', () => {
-  const floor = {SU: 21, L0: 23, L1: 33, L2: 28, L3: 33, L4: 63, WU: 22, IX: 10, CS: 52, TS: 16};
+  const floor = {SU: 21, L0: 23, L1: 33, L2: 28, L3: 34, L4: 65, WU: 22, IX: 10, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -105,6 +105,13 @@ test('manifest: an entry whose snippet is absent from the pack fails and is not 
   assert.match(result.errors.join('\n'), /^coverage: SU-01: the snippet "claude --versionn" is not in workshop\/workshop-plan\.md, section "3\. Setup check"/);
 });
 
+test('manifest: SU-21 pins the sentence "Node.js is not needed": a setup page that says Node.js is required fails it', () => {
+  const su = ENTRIES.filter((e) => e.id === 'SU-21');
+  const page = (body) => ({pages: {...readPages(), [PAGE_FILES.SU]: `---\ntitle: Setup check\n---\n\n${body}\n`}});
+  assert.deepEqual(run(su, page('Node.js is not needed: the build installs its own copy.')).errors, []);
+  assert.match(run(su, page('You need Node.js 22 installed.')).errors.join('\n'), /^coverage: SU-21: docs\/00-setup-check\.md: the text "Node\.js is not needed" is not on the page/);
+});
+
 test('manifest: an entry attributed to the wrong pack section fails (an L1 command in the Level 3 section)', () => {
   const moved = ENTRIES.map((e) => (e.id === 'L1-04' ? {...e, section: LEVEL3} : e));
   assert.match(run(moved).errors.join('\n'), /L1-04: the snippet "\.\/mvnw -pl bookstore test -Dtest=BookTest" is not in .*section "8\. Level 3"/);
@@ -112,10 +119,14 @@ test('manifest: an entry attributed to the wrong pack section fails (an L1 comma
 
 // The independent literal sweep (the guard against silent exclusion): every inline code span
 // and every fenced-block line of the participant-useful sections of the workshop plan, the SDD
-// guide and the briefs is contained in a manifest snippet, or is listed here with its reason.
+// guide and the briefs is contained in a snippet of a manifest entry that has the same source,
+// whose section holds that very line of the pack, and whose page is the page that section
+// belongs to (PAGES below). A snippet of another section or of another page does not count, or
+// is listed here with its reason.
 const LEVEL3 = '8. Level 3';
 
-function literalsOf(text, {from, to, skipSections = [], skipParagraphs = []}) {
+// Where a literal sits: {literal, line}, line being the 0-based line of the pack file.
+function literalsOf(text, {from, to, skipSections = [], skipParagraphs = [], skipLists = []}) {
   const lines = text.split('\n');
   const start = lines.findIndex((line) => line.startsWith(from));
   const end = to === undefined ? lines.length : lines.findIndex((line, index) => index > start && line.startsWith(to));
@@ -123,63 +134,153 @@ function literalsOf(text, {from, to, skipSections = [], skipParagraphs = []}) {
   const found = [];
   let fenced = false;
   let skipping = false;
+  let skippingList = false;
   let paragraph = [];
   const flush = () => {
-    const joined = paragraph.join(' ');
+    const rows = paragraph;
     paragraph = [];
+    const joined = rows.map((row) => row.text).join(' ');
     if (skipParagraphs.some((prefix) => joined.startsWith(prefix))) return;
-    for (const m of joined.matchAll(/(?<!`)`([^`]+)`(?!`)/g)) found.push(m[1].replace(/\\\|/g, '|'));
+    // The line of a span is the line of the paragraph row that holds its first character.
+    const starts = [];
+    rows.reduce((offset, row) => (starts.push(offset), offset + row.text.length + 1), 0);
+    for (const m of joined.matchAll(/(?<!`)`([^`]+)`(?!`)/g)) {
+      const row = starts.filter((s) => s <= m.index).length - 1;
+      found.push({literal: m[1].replace(/\\\|/g, '|'), line: rows[row].index});
+    }
   };
-  for (const line of lines.slice(start, end)) {
+  lines.slice(start, end).forEach((line, offset) => {
+    const index = start + offset;
     if (/^#{2,3}\s/.test(line)) skipping = skipSections.some((name) => line.includes(name));
-    if (skipping) continue;
+    if (skipping) return;
+    if (skippingList) {
+      // A "Level cleared when" list is checked by the structure rule: it ends at the blank line.
+      if (line.trim() !== '') return;
+      skippingList = false;
+    }
+    if (skipLists.some((prefix) => line.startsWith(prefix))) {
+      flush();
+      skippingList = true;
+      return;
+    }
     if (/^\s*(```|~~~)/.test(line)) {
       flush();
       fenced = !fenced;
-      continue;
+      return;
     }
     if (fenced) {
       const literal = line.trim().replace(/\s+#.*$/, '').trim();
-      if (literal) found.push(literal);
+      if (literal) found.push({literal, line: index});
     } else if (line.trim() === '') {
       flush();
     } else {
-      paragraph.push(line.trim());
+      paragraph.push({text: line.trim(), index});
     }
-  }
+  });
   flush();
   return found;
 }
 
+// The 0-based lines [from, to) of the pack section that starts with `name`: to the next heading
+// of the same or a higher level. Own scanner (fence-aware), not the checker's packSection.
+function sectionLines(text, name) {
+  const lines = text.split('\n');
+  const heads = [];
+  let fenced = false;
+  lines.forEach((line, index) => {
+    if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+    const m = !fenced && /^(#{1,6})\s+(.*?)\s*$/.exec(line);
+    if (m) heads.push({index, level: m[1].length, title: m[2]});
+  });
+  const [head] = heads.filter((h) => h.title.startsWith(name));
+  assert.ok(head, `the pack has a section "${name}"`);
+  const next = heads.find((h) => h.index > head.index && h.level <= head.level);
+  return [head.index, next ? next.index : lines.length];
+}
+
+// The page that carries each part of the pack: the pages of the manifest for the sections of
+// the workshop plan, and Level 4 for the SDD tracks and the briefs. A part may list a second
+// page when the pack states the same literal for two pages.
 const SWEEPS = [
-  ['plan', {from: '## 3. Setup check', to: '## 10. Wrap-up', skipSections: ['6. Break'], skipParagraphs: ['Facilitator fallback kit', '**Expected findings']}],
-  ['sdd', {from: '## Part 2', to: '---'}],
-  ['briefs', {from: '## Brief A', to: '---'}],
+  [
+    'plan',
+    {
+      from: '## 3. Setup check',
+      to: '## 10. Wrap-up',
+      skipSections: ['6. Break'],
+      skipParagraphs: ['Facilitator fallback kit', '**Expected findings'],
+      skipLists: ['**Level cleared when**'],
+      pages: [['3. Setup check', ['SU']], ['4. Level 0', ['L0']], ['5. Level 1', ['L1']], ['7. Level 2', ['L2']], ['8. Level 3', ['L3']], ['9. Level 4', ['L4', 'CS']]],
+    },
+  ],
+  ['sdd', {from: '## Part 2', to: '---', skipSections: ['Level cleared when'], pages: [['Part 2', ['L4']]]}],
+  ['briefs', {from: '## Brief A', to: '---', pages: [['Brief A', ['L4']], ['Brief B', ['L4']], ['Brief C', ['L4']]]}],
 ];
 
-// What no snippet contains, with the reason. Everything else of the sweep is in the manifest.
+// What no entry of its own section and page covers, keyed "source:line literal" (the 1-based
+// line of the pack file; the pack is frozen on this branch, so a pack edit that moves a line
+// fails this test and the new place gets reviewed), with the reason. Everything else of the
+// sweep is in the manifest. A literal that another section or page covers (CS-08 and L1-27 hold
+// "/clear") is no reason: that is the case the sweep exists to catch.
 const SWEEP_EXCLUDED = {
-  'level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
-  'solution/level-1': 'Start, Catch-up and Compare lines of the boxes (structure rule) and the plugin declaration claim (follow-up F4)',
-  'solution/level-2': 'Start, Catch-up and Compare lines of the boxes (structure rule) and the plugin declaration claim (follow-up F4)',
-  'Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
-  'sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
-  'openspec ...': 'notation of the Track A gotcha, covered by L4-22',
-  '/opsx:...': 'notation of the Track A gotcha, covered by L4-22',
+  'plan:46 PATH': 'a word of the prerequisites sentence: SU-06 and SU-07 carry the jdtls binary check, SU-19 to SU-21 the other prerequisites',
+  'plan:65 PATH': 'the wrapper-script half of the Other Linux row, which SU-12 carries; the word PATH alone says nothing to check',
+  'plan:68 jdtls-lsp': 'the plugin is installed in Level 2 Part A, which SU-15 carries and L2-04 shows as a command; the plugin id is the sentence subject here',
+  'plan:89 main': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:89 level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:89 CLAUDE.md': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:89 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:108 double': 'a hint inside the money question, which L0-11 (for money) carries',
+  'plan:132 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
+  'plan:143 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
+  'plan:180 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
+  'plan:180 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
+  'plan:182 which jdtls': 'the facilitator demo sentence, where the participant steps carry it: L2-02 (Part A) and SU-06',
+  'plan:182 /plugin install jdtls-lsp@claude-plugins-official': 'the facilitator demo sentence, where the participant steps carry it: L2-04 (Part A)',
+  'plan:183 /plugin': 'the facilitator demo sentence about the Installed tab, which L2-09 carries',
+  'plan:183 claude mcp add': 'the facilitator demo sentence, where the participant steps carry it: L2-20 (Part B)',
+  'plan:193 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
+  'plan:198 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
+  'plan:230 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
+  'plan:230 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
+  'plan:237 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:237 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:250 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
+  'plan:260 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
+  'plan:267 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
+  'plan:267 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
+  'plan:285 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
+  'plan:300 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  'plan:307 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
+  'plan:309 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:311 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
+  'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
+  'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
+  'sdd:101 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'sdd:114 openspec ...': 'notation of the Track A gotcha, covered by L4-22',
+  'sdd:114 /opsx:...': 'notation of the Track A gotcha, covered by L4-22',
 };
 
-function sweep(entries) {
+// The literals no entry covers, as [{literal, source, line, pages}] (line is 1-based).
+function uncovered(entries) {
   const pack = readPack();
-  const snippets = entries.map((e) => fold(e.snippet));
   const left = [];
-  for (const [source, options] of SWEEPS) {
-    for (const literal of literalsOf(pack[source], options)) {
-      if (!snippets.some((s) => s.includes(fold(literal)))) left.push(literal);
+  for (const [source, {pages, ...options}] of SWEEPS) {
+    const text = pack[source];
+    const ranges = pages.map(([name, codes]) => ({range: sectionLines(text, name), codes}));
+    const own = entries.filter((e) => e.source === source).map((e) => ({e, snippet: fold(e.snippet), range: sectionLines(text, e.section)}));
+    for (const {literal, line} of literalsOf(text, options)) {
+      const home = ranges.find(({range}) => range[0] <= line && line < range[1]);
+      assert.ok(home, `${source}:${line + 1} ${literal} is in a part that has a page`);
+      const covered = own.some(({e, snippet, range}) => home.codes.includes(e.page) && range[0] <= line && line < range[1] && snippet.includes(fold(literal)));
+      if (!covered) left.push({literal, source, line: line + 1, pages: home.codes});
     }
   }
-  return [...new Set(left)].sort();
+  return left;
 }
+
+const sweep = (entries) => uncovered(entries).map((u) => `${u.source}:${u.line} ${u.literal}`).sort();
 
 test('manifest: the literal sweep of the pack leaves exactly the listed exclusions (no entry silently dropped)', () => {
   assert.deepEqual(sweep(ENTRIES), Object.keys(SWEEP_EXCLUDED).sort());
@@ -187,9 +288,35 @@ test('manifest: the literal sweep of the pack leaves exactly the listed exclusio
 
 test('manifest: the literal sweep notices a dropped entry (witness)', () => {
   const dropped = ENTRIES.filter((e) => e.id !== 'L1-04');
-  assert.ok(sweep(dropped).includes('./mvnw -pl bookstore test -Dtest=BookTest'));
+  assert.ok(sweep(dropped).some((u) => u.endsWith(' ./mvnw -pl bookstore test -Dtest=BookTest')));
   const droppedFence = ENTRIES.filter((e) => e.id !== 'SU-08');
-  assert.ok(sweep(droppedFence).includes('git clone https://github.com/MaikKingma/AgenticBookStore.git && cd AgenticBookStore'));
+  assert.ok(sweep(droppedFence).some((u) => u.endsWith(' git clone https://github.com/MaikKingma/AgenticBookStore.git && cd AgenticBookStore')));
+});
+
+test('manifest: the sweep counts coverage per section and per page, a snippet of another section or page does not cover a literal', () => {
+  // "/clear" is also in L1-27 (Level 1 section, page L1) and CS-08 (cheat sheet), "./mvnw verify"
+  // in SU-09, L0-06 and L1-03 (three sections of the plan, three pages).
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-64')).includes('sdd:110 /clear'), 'the Track A step is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:56 ./mvnw verify'), 'the setup check command is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-65')).includes('sdd:97 claude'), 'the common start line is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:276 name'), 'the skill frontmatter field is covered by its own entry only');
+  // The right snippet on the wrong page, and on the right page but attributed to another section.
+  const wrongPage = ENTRIES.map((e) => (e.id === 'L4-11' ? {...e, page: 'WU'} : e));
+  assert.ok(sweep(wrongPage).includes('sdd:105 /opsx:explore'));
+  const wrongSection = ENTRIES.map((e) => (e.id === 'L4-18' ? {...e, section: 'Track B: Spec Kit'} : e));
+  assert.ok(sweep(wrongSection).includes('sdd:110 /opsx:apply'));
+});
+
+test('manifest: every excluded literal of the sweep is still found uncovered (no stale exclusion)', () => {
+  const found = new Set(sweep(ENTRIES));
+  for (const key of Object.keys(SWEEP_EXCLUDED)) assert.ok(found.has(key), `${key} is excluded but the sweep no longer finds it uncovered`);
+});
+
+test('manifest: the three gaps the first review found each have an entry on their page (Track A /clear, the common start claude, the skill name)', () => {
+  const byId = Object.fromEntries(ENTRIES.map((e) => [e.id, e]));
+  assert.deepEqual([byId['L4-64'].page, byId['L4-64'].source, byId['L4-64'].section, byId['L4-64'].snippet], ['L4', 'sdd', 'Track A: OpenSpec', '/clear']);
+  assert.deepEqual([byId['L4-65'].page, byId['L4-65'].source, byId['L4-65'].kind, byId['L4-65'].snippet], ['L4', 'sdd', 'command', 'claude # new session']);
+  assert.deepEqual([byId['L3-34'].page, byId['L3-34'].source, byId['L3-34'].section, byId['L3-34'].snippet], ['L3', 'plan', 'Part C: A skill and a command', 'Frontmatter: `name`']);
 });
 
 test('manifest: the exclusions of the sweep each have a reason in a sentence', () => {
@@ -222,8 +349,8 @@ test('manifest: snippets shorter than 8 characters are the pinned short ones, ea
     'L3-05 /plan',
     'L3-25 /ship',
     'L4-37 /plan',
+    'L4-64 /clear',
     'SU-02 /status',
-    'SU-21 Node.js',
     'TS-05 /usage',
     'TS-10 /status',
     'TS-16 /mcp',

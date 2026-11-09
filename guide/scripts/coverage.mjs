@@ -156,7 +156,7 @@ export const ENTRIES = [
   setup('SU-18', 'WP:78-79', 'text', '/model sonnet'),
   setup('SU-19', 'WP:45-47', 'text', 'Temurin 25'),
   setup('SU-20', 'WP:45-47', 'text', 'Docker Desktop'),
-  setup('SU-21', 'WP:45-47', 'text', 'Node.js'),
+  setup('SU-21', 'WP:45-47', 'text', 'Node.js is not needed'),
 
   // Level 0 (WP section 4)
   level0('L0-01', 'WP:92-93', 'text', 'onion diagram'),
@@ -282,6 +282,7 @@ export const ENTRIES = [
   skill('L3-17', 'WP:274-277', 'text', '.claude/skills/new-use-case/SKILL.md'),
   skill('L3-18', 'WP:274-277', 'text', 'reference.md'),
   skill('L3-19', 'WP:274-277', 'text', 'allowed-tools'),
+  skill('L3-34', 'WP:274-277', 'text', 'Frontmatter: `name`'),
   skill('L3-30', 'WP:274-277', 'text', 'a precise `description`'),
   skill('L3-20', 'WP:278', 'text', 'Customers must be able to cancel an order that has not shipped yet.'),
   skill('L3-21', 'WP:279-282', 'text', '.claude/commands/ship.md'),
@@ -303,6 +304,7 @@ export const ENTRIES = [
   common('L4-06', 'SDD:93-97', 'command', 'git stash -u'),
   common('L4-07', 'SDD:93-97', 'command', 'git switch start/level-4-<track>'),
   common('L4-08', 'SDD:93-97', 'text', '/model sonnet'),
+  common('L4-65', 'SDD:93-97', 'command', 'claude # new session'),
   common('L4-09', 'SDD:99-102', 'text', 'your own words'),
   common('L4-10', 'SDD:99-102', 'text', 'your contribution as the human'),
   common('L4-63', 'SDD:99-102', 'text', 'built from `solution/level-3`'),
@@ -313,6 +315,7 @@ export const ENTRIES = [
   trackA('L4-15', 'SDD:104-115', 'text', 'silently ignored'),
   trackA('L4-16', 'SDD:104-115', 'text', 'openspec/changes/add-book-reviews/specs/.../spec.md'),
   trackA('L4-17', 'SDD:104-115', 'command', '/opsx:update'),
+  trackA('L4-64', 'SDD:104-115', 'command', '/clear'),
   trackA('L4-18', 'SDD:104-115', 'command', '/opsx:apply'),
   trackA('L4-19', 'SDD:104-115', 'command', '/ship add book reviews'),
   trackA('L4-20', 'SDD:104-115', 'command', '/opsx:archive'),

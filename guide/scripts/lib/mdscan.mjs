@@ -12,6 +12,11 @@ const COMMENTS = [
   {open: /<!--/, close: /-->/},
 ];
 
+// A run of backticks that can open an inline code span (not escaped, not part of a longer run),
+// and the run of exactly the same length that closes it.
+const BACKTICK_RUN = /(?<![\\`])(`+)(?!`)/;
+const closerOf = (length) => new RegExp(`(?<!\`)\`{${length}}(?!\`)`);
+
 const spaces = (text) => text.replace(/[^\n]/g, ' ');
 
 // Whitespace runs become one space and the ends are trimmed.
@@ -21,16 +26,28 @@ export const collapse = (text) => text.replace(/\s+/g, ' ').trim();
 //   lines: one {text, fence} per line of the text. fence is null for prose, 'open' or
 //     'close' for the fence lines and 'body' for the lines in between. The text of a prose
 //     line has its comments blanked with spaces (offsets stay valid); fenced lines are raw.
+//     A comment opener inside an inline code span (`{/*`) is code, not a comment, also when
+//     the span runs over a line break.
 //   blocks: one {lang, open, close, body} per fenced block: the 0-based line numbers of the
 //     two fence lines (close is the last line when the fence never closes) and the raw
 //     body lines.
 export function scanMarkdown(text) {
   const lines = [];
   const blocks = [];
+  const all = text.replace(/\r\n/g, '\n').split('\n');
+  // Does a span opened on line `at` with `length` backticks close later in the same paragraph?
+  const spanContinues = (at, length) => {
+    for (let next = at + 1; next < all.length && all[next].trim() !== '' && !FENCE_OPEN.test(all[next]); next++) {
+      if (closerOf(length).test(all[next])) return true;
+    }
+    return false;
+  };
   let fence = null;
   let closer = null;
-  for (const raw of text.replace(/\r\n/g, '\n').split('\n')) {
+  let carry = 0; // the backtick count of an inline code span that continues on this line
+  for (const raw of all) {
     const index = lines.length;
+    if (raw.trim() === '') carry = 0;
     if (fence) {
       const closes = new RegExp(`^\\s*${fence.char}{${fence.length},}\\s*$`).test(raw);
       lines.push({text: raw, fence: closes ? 'close' : 'body'});
@@ -70,10 +87,43 @@ export function scanMarkdown(text) {
         }
         continue;
       }
+      if (carry > 0) {
+        const end = closerOf(carry).exec(rest);
+        if (end === null) {
+          prose += rest;
+          rest = '';
+        } else {
+          const stop = end.index + end[0].length;
+          prose += rest.slice(0, stop);
+          rest = rest.slice(stop);
+          carry = 0;
+        }
+        continue;
+      }
       let first = null;
       for (const comment of COMMENTS) {
         const found = comment.open.exec(rest);
         if (found && (first === null || found.index < first.index)) first = {index: found.index, length: found[0].length, close: comment.close};
+      }
+      // An inline code span that starts before the first comment opener is code: copy it through.
+      const run = BACKTICK_RUN.exec(rest);
+      if (run && (first === null || run.index < first.index)) {
+        const length = run[1].length;
+        const after = run.index + length;
+        const end = closerOf(length).exec(rest.slice(after));
+        if (end) {
+          const stop = after + end.index + end[0].length;
+          prose += rest.slice(0, stop);
+          rest = rest.slice(stop);
+        } else if (spanContinues(index, length)) {
+          prose += rest;
+          rest = '';
+          carry = length;
+        } else {
+          prose += rest.slice(0, after);
+          rest = rest.slice(after);
+        }
+        continue;
       }
       if (first === null) {
         prose += rest;
@@ -93,6 +143,24 @@ export function scanMarkdown(text) {
 // line numbers still match the file.
 export function proseOf(scan) {
   return scan.lines.map((line) => (line.fence === null ? line.text : '')).join('\n');
+}
+
+// An inline code span within one paragraph (no blank line inside): the backtick run, the content.
+const INLINE_SPAN = /(?<![\\`])(`+)(?!`)((?:(?!\n[ \t]*\n)[\s\S])+?)(?<!`)\1(?!`)/g;
+
+// The code of a scan as one text with the line structure of the file: the fenced lines as
+// written and the inside of every inline code span, everything else (the prose, comments,
+// the backticks themselves) replaced by a filler character, so that a word of a sentence is
+// never read as part of a command.
+export function codeOf(scan) {
+  const prose = proseOf(scan);
+  const mask = prose.split('').map((char) => (char === '\n' ? '\n' : '\u0001'));
+  for (const m of prose.matchAll(INLINE_SPAN)) {
+    const start = m.index + m[1].length;
+    for (let i = start; i < start + m[2].length; i++) mask[i] = prose[i];
+  }
+  const proseLines = mask.join('').split('\n');
+  return scan.lines.map((line, index) => (line.fence === null ? proseLines[index] : line.text)).join('\n');
 }
 
 // The attribute `name` of a tag text: {present, value}. value is undefined when the
