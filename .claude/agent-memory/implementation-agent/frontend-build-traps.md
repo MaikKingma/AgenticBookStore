@@ -76,6 +76,11 @@ metadata:
   inherited from `.card` makes `th`/`td` min-content 1 char: `overflow-wrap: normal` alone still wraps headings at spaces
   (taller on a phone); add `white-space: nowrap` for the short columns. A style test needs a non-colour property in CSS
   fixtures (`color: red` trips the colour-literal scan).
+- "Existing test file unmodified, 0 deletions" tasks: add imports as NEW lines after the old import block (never widen an
+  existing `import { a }` line) and append to the last `describe` by replacing its closing lines with themselves plus the
+  new block; fixtures for a page that only reads some fields can omit the C0-6c words (isbn, onHand, reserved). Shared
+  in-flight state (a request that outlives its page) belongs in the root provider with a `useRef` guard next to the
+  state: only a same-tick hook test (`act(() => { place(); place() })`) kills a state-only guard.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.

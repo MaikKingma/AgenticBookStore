@@ -20,3 +20,14 @@
 - [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT and REQUIRES_NEW delegate probes, row-lock hang
 - [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag guards on JSON views, null-key forms, detail pins
 - [Live UI walk verification](live-ui-walk-verification.md) — re-walking a recorded browser walk, playwright-cli listeners, UI traps
+- [Seed data probes](seed-data-probes.md) — JSON/text seed mutants with a byte-identity generator, CRLF and at-minimum probes
+- [MCP tool probes](mcp-tool-probes.md) — @McpTool mutants, runtime-enforced required params, output-cap boundary witnesses
+- [STDIO shared-fork probes](stdio-shared-fork-probes.md) — in-process swapped-stream tests, leaking-logging and stdout noise probes
+- [README and live-jar probes](readme-and-live-jar-probes.md) — README fact checks, repeated jar start runs, real-jar STDIO driver, claude mcp checks, shutdown trap
+- [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and content-type probes for an MVC interceptor with validated properties
+- [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks, timeout annotations, job-log truncation traps
+- [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
+- [Frontend Vitest probe techniques](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap survivor gap, dev-server script, sort mutants incl. derived columns, page-level status-keyed probes, tsc type probes
+- [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls
+- [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
+- [Live UI walk verification](live-ui-walk-verification.md) — re-walking a browser walk with own seed, playwright-cli listeners, favicon/Tab traps, table squeeze, inventory normalisation, 4xx console line, access-log cache check

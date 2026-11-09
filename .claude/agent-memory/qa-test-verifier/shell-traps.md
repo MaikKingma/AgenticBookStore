@@ -36,4 +36,9 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - macOS `/bin/bash` is 3.2: `declare -A` (associative arrays) and `${!arr[@]}` fail in a runner script. Use a `case` function mapping names to paths.
 - A foreground `bash <wait script>` with a `sleep 10` loop (about 3 minutes per call) is the way to wait for a background probe batch; a bare `sleep` in a Bash call is blocked and a Monitor alone ends nothing for a subagent.
 
+- A Maven log that captured a raw NUL (an escape mutant logging U+0000) makes ugrep print `Binary file ... matches`
+  instead of lines, so a summary grep looks empty. Use `grep -a` on probe logs.
+- Ledger hash baselines are `shasum -a 256` (64 hex); plain `shasum` prints sha1 and will never match. Also, a path
+  built from the repo root without the `.claude/worktrees/<id>` segment still exists (the main checkout), so a `printf >`
+  there succeeds silently outside the worktree; use worktree-relative paths for scratch files.
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
