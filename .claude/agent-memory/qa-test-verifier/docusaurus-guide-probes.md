@@ -108,4 +108,12 @@ Rule: when self-tests move from a live tree to a committed snapshot, derive the 
 - CLI-vs-runChecks consistency tests are state-dependent: exit-code and stderr mutants only show when the live tree has errors, so run the CLI mutant set in a clean and an error state; a mutant of a constant both sides share (the pack path) is equivalent for them by construction and must be killed elsewhere.
 - Probe a rule-violating body on a live page too: it must reach only `check.mjs`, never a self-test.
 
+Rule: for a content-page task, bind the pages to the frozen oracle with page mutants in a scratch copy plus a rendered cross-check.
+
+**Why:** a green `npm run check` on real pages does not show that each rule binds those pages; only one exact edit per rule on the real page text does, and the kill line must name the rule.
+**How to apply:**
+- Scratch = `rsync guide` (no node_modules, builds) plus `docs/spec-pack`, symlinked node_modules; one runner applies a single `replaceOnce` per mutant, runs `node scripts/check.mjs` (about 1 s), prints the non-ok lines, restores. A reinserted skeleton marker exits 0 (pending only) until the marker ban exists: not a survivor. Break one contractual anchor in the copy: `npm run build` exits 1 with "broken anchors".
+- Rendered cross-check imports `ENTRIES` and `packCommandLines` read-only. Tab panel n of a `.tabs-container` pairs with tab n; copy buttons must equal the `pre` count with hidden panels. Docusaurus heading hash-links add one U+200B per heading to article text, so a non-ASCII text sweep counts them: not page content.
+- Dev mode: spawn `docusaurus start --port N --no-open --host localhost` from the script, drive the flow, kill the child, show `lsof` empty. `gh run view <id> --json jobs,headSha,event,conclusion > file` binds CI evidence to the head sha.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
