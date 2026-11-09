@@ -22,4 +22,8 @@ metadata:
   name contains application" can never hold. Match the config files by `startsWith("Config resource")` instead
   (names look like `Config resource 'class path resource [application.yml]' via location ...`).
 
+- Pinning a property in `@TestPropertySource` on the shared IT base is visible to EPPs (inlined test properties are in the
+  environment before they run): an EPP that adds a source only when a property is unset (AssistantModeConfig) then skips,
+  so a full-context test that expects that source goes red. Check such tests before pinning (T3 of fix-08).
+
 Related: [[maven-build-traps]].
