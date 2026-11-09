@@ -10,3 +10,4 @@
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
 - [Docusaurus guide traps](docusaurus-guide-traps.md) — pinned Node scripts, serve needs siteDir, MDX scanner paragraph model, scratch probe builds, built-HTML evasions, NBSP/Edit traps, skeleton snapshot and tmpdir symlink
+- [Guide print and ban traps](guide-print-and-ban-traps.md) — A4 row costs and PDF page counting, silent-pass rule for line-compared live tests, hash-link anchors in rendered link checks
