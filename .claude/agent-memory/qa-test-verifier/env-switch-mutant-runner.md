@@ -11,6 +11,7 @@ Rule: when a probe list has 20+ mutants on a few small classes, write one "mutan
 **How to apply:**
 - Per probe the script does: `cp` mutant over the production file, `QA_PROBE=<id> bash with-budget.sh 300 ./mvnw -pl <module> clean test -Dtest=<Class>`, `cp` the FF7 `.orig` back, `shasum` all touched files and compare with the snap-before, then append one result line (id, rc, hash flag, summary line, failing test lines).
 - When a later round reuses round 1 `.orig` copies, make the runner abort unless every `.orig` is hash-equal to the live production file. A stale `.orig` would otherwise silently restore old bytes.
+- A rework that changed a TEST file makes the round-0 guard abort (its `.orig` of that test is stale). Write a per-round runner: guard every live file against the new round's hash snapshot, take fresh `cp -p` origs into a per-round dir, and read a per-round index (`index-r1.txt`). A single-probe rerun at the end of a round tends to overwrite `index.txt`, so the full probe list is not recoverable from it.
 - Prove the schema first with a CONTROL run (all mutants in place, variable unset): same green count as the real code. A killed probe then also proves the variable reaches the JVM.
 - Compare hashes only against the `^[0-9a-f]{64}` lines of the snapshot; the `git status` lines in the same file also match a filename grep and gave false mismatches.
 - Parameterized tests: grep the failing `[n]` index per probe (for example `grep -oE 'With400\(String\)\[[0-9]\]'`) to show which input killed which mutant.

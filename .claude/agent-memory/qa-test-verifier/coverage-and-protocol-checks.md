@@ -17,5 +17,6 @@ Rule: treat an impl artifact's `updated` as a claim; compare it with the file's 
 
 **Why:** an impl artifact once carried an `updated` stamp minutes in the future (estimated, not taken from `date -u`). It passes the literal heartbeat gate, but it hides a dead agent from the 15-minute rule.
 **How to apply:** `stat -f "%Sm" -t "%Y-%m-%dT%H:%M:%S%z" <artifact>` (local +0100, so convert it) against `date -u`. A future stamp is a process note in the verdict, not a FAIL, unless the gate's stated conditions fail.
+The same trap hits your own artifact: class-level probe batches and referees here finish far faster than guessed, so run `date -u` right before every `updated` bump instead of estimating.
 
 Related: [[shell-traps]], [[integration-test-probes]]

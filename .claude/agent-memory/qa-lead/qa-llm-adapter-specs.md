@@ -1,6 +1,6 @@
 ---
 name: qa-llm-adapter-specs
-description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes; read before the strategy of any model or tool-calling spec
+description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes, EPP pipeline order; read before the strategy of any model or tool-calling spec
 metadata:
   type: feedback
 ---
@@ -50,6 +50,15 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
    needs exactly k freed AND the next rejected (kills a tumbling window); "rejections not counted" needs exactly the
    limit then one more rejected; a `synchronized` removal probe is nondeterministic, so require a start latch plus many
    rounds and pre-declare the three-run rule.
+
+11. **Pipeline position is invisible to direct-call unit tests.** An `EnvironmentPostProcessor` that reads a
+    config-file value (the offline switch) is wrong if it runs before `ConfigDataEnvironmentPostProcessor`
+    (`ORDER` = HIGHEST + 10 in Boot 4.1.2): the key reads null and the app stays offline even with a key. Unit tests
+    that call `postProcessEnvironment` directly and a test profile with a blank key are green in both orders, so an
+    added `@Order(HIGHEST_PRECEDENCE)` survives everything. Falsifier: in the shared full context, the switch's
+    property source sits after every `application*.yml` config source (index comparison, with non-vacuity on both
+    names). Put it in the strategy's falsifier list for the EPP task.
+    The key blank guard (`isBlank`) needs the U+2003 witness too, like every other blank guard.
 
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is
