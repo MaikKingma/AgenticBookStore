@@ -1,0 +1,52 @@
+# Zero-model proofs on the level-1 sandbox (built from origin/factory with the T1 scripts)
+sandbox: $SP/t3/tmp/<sbx>/level-1
+level-0 stand-in commit: 3b34237764412495519afd8fc1c28fc479a8029c
+level-1 commit:          fcff79f61d83f9e46e915b215fa9173e4f973a25
+
+## P1 no @ anywhere in CLAUDE.md (grep exits 1 when nothing matches)
+$ grep -n '@' CLAUDE.md
+exit: 1
+
+## P2 the only mention of docs/architecture.md is a plain path
+$ grep -n -F 'architecture' CLAUDE.md
+18:- Read docs/architecture.md before adding or moving classes. Inbound adapters (command, query, process, assistant)
+
+## P3 every @ in the three rule files sits inside a backtick code span (annotation names, not imports)
+$ grep -n '@' .claude/rules/*.md
+.claude/rules/testing.md:7:- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testcontainers
+.claude/rules/testing.md:8:  PostgreSQL (`@Import(PostgresTestConfig.class)`, never an embedded database). ACL: `MockRestServiceServer`.
+$ sed -E 's/`[^`]*`//g' .claude/rules/*.md | grep -c '@'   (rule text with code spans removed)
+0
+$ grep -rn -E '(^|[[:space:]])@[A-Za-z./]' CLAUDE.md .claude/rules CLAUDE.local.md.example   (a bare @path outside code spans)
+exit: 1
+
+## P4 line count (limit 60)
+$ wc -l CLAUDE.md
+      29 CLAUDE.md
+
+## P5 the five staged paths on the sandbox tree
+A	.claude/rules/data-and-migrations.md
+A	.claude/rules/domain.md
+A	.claude/rules/testing.md
+A	CLAUDE.local.md.example
+A	CLAUDE.md
+
+## P6 ./mvnw clean verify in this sandbox (full log kept in the scratchpad, tail quoted)
+run date: 2026-11-09
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.169 s -- in nl.openvalue.bookstore.ArchitectureTest
+[INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.040 s]
+[INFO] frontend ........................................... SUCCESS [  7.890 s]
+[INFO] bookstore .......................................... SUCCESS [ 14.724 s]
+[INFO] distributor ........................................ SUCCESS [  4.397 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  27.211 s
+
+## P7 the single test command named by CLAUDE.md line 9
+$ ./mvnw -pl bookstore test -Dtest=BookTest
+[INFO] Running nl.openvalue.bookstore.domain.BookTest
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s -- in nl.openvalue.bookstore.domain.BookTest
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS

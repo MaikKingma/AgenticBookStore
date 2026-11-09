@@ -1,6 +1,6 @@
 ---
 name: qa-harness-staging-specs
-description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence
+description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging
 metadata:
   type: feedback
 ---
@@ -55,3 +55,13 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    **Why:** without (a) verifiers drift into pure reading; without (c) Gate 2 reads unproven scenarios as passed.
    **How to apply:** static matching of permission rules is consistency, not behaviour; the rehearsal rows must
    carry position variants a prefix rule misses (`git commit -m x -n`, `git -C . push`, `cat .env` via Bash).
+
+10. **Rehearsal rows must produce the state they premise.** Verifiers check row wording and tokens, not whether the
+   row's setup, reset and judge commands give "fresh" runs. On one clone, `git restore . && git clean -fd` keeps the
+   ignored `target/` (a stale `target/classes/db/migration/V5__*.sql` reaches the next run's Flyway classpath) and
+   any commit (a CLAUDE.md asking for "small commits" invites them); working-tree-only judging then misreads a
+   committed run. Require a recorded start sha, `git reset --hard <start> && git clean -fdx` (or a fresh clone),
+   judging against `<start>`, and `./mvnw clean verify`. Put this in C0-13e at strategy time (spec 10 T3 r1).
+   A third witness lives outside the repo: Claude Code's per-project auto memory, keyed by the clone path, survives
+   any reset in the same folder; require a new clone folder per run or a `/memory` check before each run. I missed it
+   in r1, found it in the bounded r2 and could only route it as a follow-up: list all three witnesses up front.

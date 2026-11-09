@@ -15,4 +15,5 @@
 - [Frontend Vitest probes](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, sort and CSS mutants
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques, annotations, log and cache traps
 - [Final sweep and coverage](final-sweep-checks.md) — qa-final traps, bugfix control ladder, JaCoCo from the CLI, heartbeat stamps
-- [Bash script QA probes](bash-script-qa-probes.md) — copy-based mutants for bash self-tests, xtrace coverage, unreached refusals, rollback witnesses, README-as-written
+- [Bash script QA probes](bash-script-qa-probes.md) — copy-based mutants for bash self-tests, xtrace coverage, rollback witnesses
+- [Consistency-check verification](consistency-check-verification.md) — own token inventory, glob tests with file-level control, row byte checks
