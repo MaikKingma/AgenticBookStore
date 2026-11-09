@@ -594,7 +594,52 @@ class DistributorAppServiceImplTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    static Stream<ForeignAnswer> foreignTitleAnswers() {
+        return Stream.of(
+                new ForeignAnswer("another seed title", "9789900010050", contract("title-9780141439518.json")),
+                new ForeignAnswer("last digit differs", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "9789900010051"))),
+                new ForeignAnswer("leading space", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", " 9789900010050"))),
+                new ForeignAnswer("trailing space", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "9789900010050 "))),
+                new ForeignAnswer("EAN with add-on", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "978990001005090000"))),
+                new ForeignAnswer("hyphenated", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "978-99-0001-005-0"))),
+                new ForeignAnswer("foreign and priced in USD", "9789900010050",
+                        contract("derived-title-usd-currency.json")),
+                new ForeignAnswer("foreign and unmapped subject code", "9780141439518",
+                        contract("derived-title-unmapped-subject.json")));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("foreignTitleAnswers")
+    void aTitleAnswerForAnotherEanIsUnusableWithOneWarning(ForeignAnswer answer, CapturedOutput output) {
+        stubTitleBody(answer.requested(), answer.body());
+
+        assertThatThrownBy(() -> distributor.findTitle(answer.requested()))
+                .isExactlyInstanceOf(DistributorUnavailableException.class)
+                .hasMessage("The distributor gave no usable answer for ISBN " + answer.requested());
+        List<String> warnings = Arrays.stream(output.getOut().split("\\R"))
+                .filter(line -> line.contains("WARN"))
+                .toList();
+        assertThat(warnings).hasSize(1);
+        assertThat(warnings.getFirst())
+                .contains("Distributor answer for EAN " + answer.requested() + " is unusable");
+        assertThat(output.getOut()).doesNotContain("No bookstore genre");
+    }
+
     // ---- helpers -------------------------------------------------------------------------------------------------
+
+    /** A 200 title body whose {@code ean} is not the requested one, and the EAN the adapter is asked for. */
+    record ForeignAnswer(String name, String requested, String body) {
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     /** The two port methods, each with the request it sends and the committed 2xx body it expects back. */
     enum Call {
