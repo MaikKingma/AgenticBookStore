@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,13 @@ class InventoryFlowTest {
     private static final Clock OTHER_CLOCK = Clock.fixed(Instant.parse("2021-03-04T05:06:07Z"), ZoneOffset.UTC);
 
     private static final UUID BOOK_ID = UUID.fromString("7a1e2b3c-4d5e-4f60-8a9b-0c1d2e3f4a5b");
+
+    // Two pending restocks that differ in every field; neither quantity equals the reorder quantity of a stock item it
+    // is used with, and neither date is two days after a clock of this class.
+    private static final PendingRestockDTO PENDING =
+            new PendingRestockDTO("R-7781", 13, LocalDate.of(2026, 7, 3), true);
+    private static final PendingRestockDTO OTHER_PENDING =
+            new PendingRestockDTO("DIST-RO-0042", 5, LocalDate.of(2027, 11, 30), false);
 
     @Mock
     private StockItemDataService stockItems;
@@ -92,6 +100,32 @@ class InventoryFlowTest {
 
         verify(stockItems).save(saved.capture());
         assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 6, 2, 3, 10, false));
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void receiveFromAPendingItemSavesTheStockItemWithoutAPendingRestock() {
+        // Receiving 1 ends at available 1, three below the reorder level 4: the stock stays low and signalled, and the
+        // delivery still completes the pending restock.
+        when(stockItems.findByBookId(BOOK_ID)).thenReturn(new StockItemDTO(BOOK_ID, 0, 0, 4, 7, true, PENDING));
+
+        flow.receive(BOOK_ID, 1);
+
+        verify(stockItems).save(saved.capture());
+        assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 1, 0, 4, 7, true, null));
+        assertThat(saved.getValue().pendingRestock()).isNull();
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void receiveAboveTheReorderLevelFromAPendingItemSavesTheStockItemWithoutAPendingRestock() {
+        when(stockItems.findByBookId(BOOK_ID))
+                .thenReturn(new StockItemDTO(BOOK_ID, 3, 2, 3, 10, true, OTHER_PENDING));
+
+        flow.receive(BOOK_ID, 3);
+
+        verify(stockItems).save(saved.capture());
+        assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 6, 2, 3, 10, false, null));
         verifyNoInteractions(events);
     }
 
@@ -184,6 +218,39 @@ class InventoryFlowTest {
         verify(stockItems).save(saved.capture());
         assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 7, 2, 4, 6, false));
         verifyNoInteractions(events);
+    }
+
+    @Test
+    void correctKeepsThePendingRestockInTheSavedStockItem() {
+        // Correcting to 7 with reserved 2 ends at available 5, above the reorder level 4: no event.
+        when(stockItems.findByBookId(BOOK_ID)).thenReturn(new StockItemDTO(BOOK_ID, 9, 2, 4, 6, false, PENDING));
+
+        flow.correct(BOOK_ID, 7, "stocktake");
+
+        verify(stockItems).save(saved.capture());
+        assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 7, 2, 4, 6, false, PENDING));
+        assertThat(saved.getValue().pendingRestock())
+                .isEqualTo(new PendingRestockDTO("R-7781", 13, LocalDate.of(2026, 7, 3), true));
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void correctThatStartsADipKeepsThePendingRestockAndPublishesTheEvent() {
+        // On hand 20, reserved 1; correcting to 4 ends at available 3, exactly the reorder level. No figure equals a
+        // field of the pending restock.
+        when(stockItems.findByBookId(BOOK_ID))
+                .thenReturn(new StockItemDTO(BOOK_ID, 20, 1, 3, 10, false, OTHER_PENDING));
+
+        flow.correct(BOOK_ID, 4, "stocktake");
+
+        InOrder inOrder = inOrder(stockItems, events);
+        inOrder.verify(stockItems).save(saved.capture());
+        inOrder.verify(events).publishEvent(published.capture());
+        assertThat(saved.getValue()).isEqualTo(new StockItemDTO(BOOK_ID, 4, 1, 3, 10, true, OTHER_PENDING));
+        assertThat(saved.getValue().pendingRestock())
+                .isEqualTo(new PendingRestockDTO("DIST-RO-0042", 5, LocalDate.of(2027, 11, 30), false));
+        assertThat(published.getValue()).isEqualTo(new StockRunningLowEvent(BOOK_ID, 3, 10, CLOCK.instant()));
+        verifyNoMoreInteractions(events);
     }
 
     @Test
