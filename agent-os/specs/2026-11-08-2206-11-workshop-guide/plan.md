@@ -392,8 +392,10 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
     state, page bodies, pending counts) that T6 to T11 would break; each one found is moved to the snapshot the same
     way, or listed with a reason why it stays live.
   - AC3: with the T6 branch's three pages applied on top (`git show a1817fe:<path>` in a scratch copy), `npm run
-    check` exits 0; with all eleven markers removed from a scratch copy, the only failures are coverage errors of the
-    pages' missing content, never a self-test.
+    check` exits 0; with all eleven markers removed from a scratch copy, no self-test fails; the remaining failures are
+    rule errors about the pages' missing content (coverage entries, and the structure and content rules that judge a
+    finished but empty page, such as the sync moment count and the observation card), never a self-test. (Wording
+    clarified by the orchestrator on 2026-11-09: the frozen rules correctly report empty finished pages.)
   - AC4: freeze: only the edited test files and the new fixture differ from `t5b-freeze-baseline-hashes.txt`; a new
     baseline `t5c-freeze-baseline-hashes.txt` replaces it for FF-32 (a).
   - AC5: no new dependency; no product file outside `guide/scripts/**`; no test is removed or weakened; node:test total
