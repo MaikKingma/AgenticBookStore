@@ -2,14 +2,14 @@ import {elementTree, lineOf, textContent} from '../lib/html.mjs';
 
 // Rule (c) on the built pages: every line of every pre or code element inside a tab panel
 // whose tab label contains "PowerShell" (any case), and every line of a PowerShell-language
-// code block (pre class language-powershell, -pwsh, -ps1, -ps, -cmd or -bat, any case) inside
-// or outside any tab panel, is a pack command line. The source rule (c) in rules/content.mjs
-// reads the MDX with a scanner that can lose track of a tab; the built HTML is what the
-// participant sees, so this rule reads that, hidden panels included.
-// A tabs container is an element with the class tabs-container (the Docusaurus Tabs
+// code block (class language-powershell, -pwsh, -ps1, -ps, -cmd or -bat, any case, on the pre
+// or on a code element inside it) inside or outside any tab panel, is a pack command line. The
+// source rule (c) in rules/content.mjs reads the MDX with a scanner that can lose track of a
+// tab; the built HTML is what the participant sees, so this rule reads that, hidden panels
+// included. A tabs container is an element with the class tabs-container (the Docusaurus Tabs
 // component); its n-th [role=tabpanel] belongs to its n-th [role=tab], counting only the tabs
-// and panels whose nearest tabs container it is. Tab labels are compared as they read (no soft
-// hyphens, zero-width characters or leftover character references). A line inside any
+// and panels whose nearest tabs container it is. Tab labels are compared as they read (no
+// invisible characters or leftover character references). A line inside any
 // PowerShell panel counts, also when a nested panel around it has another label. A line is the
 // text of one .token-line (a highlighted code block), one newline-split line of the text of a
 // pre outside its token lines, or the text of an inline code element; character references
@@ -35,11 +35,11 @@ function nearest(node, test) {
 
 const isContainer = (node) => classes(node).includes('tabs-container');
 
-// A tab label as it reads: without soft hyphens and zero-width characters (U+00AD, U+200B to
-// U+200D, U+2060, U+FEFF), and without the character references the tree leaves undecoded
-// (such as &shy;), so "Power&shy;Shell" is PowerShell. The characters are built from their
-// code points so this file stays ASCII.
-const INVISIBLE = new RegExp(`[${[0xad, 0x200b, 0x200c, 0x200d, 0x2060, 0xfeff].map((code) => String.fromCharCode(code)).join('')}]`, 'g');
+// A tab label as it reads: without any invisible character (every Unicode
+// Default_Ignorable_Code_Point, such as the soft hyphen, the zero-width space and joiners, bidi
+// marks, variation selectors and tag characters), and without the character references the tree
+// leaves undecoded (such as &shy;), so "Power&shy;Shell" is PowerShell.
+const INVISIBLE = /\p{Default_Ignorable_Code_Point}/gu;
 const visibleLabel = (text) => text.replace(/&#?[A-Za-z0-9]+;/g, '').replace(INVISIBLE, '');
 
 // Returns {labels, problems}: labels maps a panel node to its tab label; problems lists, as
@@ -92,14 +92,23 @@ function lines(all) {
   return out;
 }
 
-// The PowerShell-family language classes of a code block, as the source rule (c) lists them.
-const POWERSHELL_LANGUAGE = /^language-(powershell|pwsh|ps1|ps|cmd|bat)$/i;
+// The PowerShell-family language classes of a code block, as the source rule (c) lists them. A
+// suffix that does not start with a letter or digit keeps the language (a fence info string
+// powershell{1} builds the class language-powershell{1}); language-ps1x or language-psql is another.
+const POWERSHELL_LANGUAGE = /^language-(powershell|pwsh|ps1|ps|cmd|bat)(?![a-z0-9])/i;
+
+// The PowerShell language class of a pre: on the pre itself or on a code element inside it (a raw
+// <pre><code className="language-powershell">), or undefined.
+function preLanguage(pre) {
+  const codes = elements(pre).filter((node) => node.name === 'code');
+  return [pre, ...codes].flatMap(classes).find((name) => POWERSHELL_LANGUAGE.test(name));
+}
 
 // The PowerShell language class of the pre a line belongs to (the node itself or a pre around
 // it), or undefined.
 function powershellLanguage(node) {
   for (let up = node; up; up = up.parent) {
-    const language = up.name === 'pre' ? classes(up).find((name) => POWERSHELL_LANGUAGE.test(name)) : undefined;
+    const language = up.name === 'pre' ? preLanguage(up) : undefined;
     if (language) return language;
   }
   return undefined;

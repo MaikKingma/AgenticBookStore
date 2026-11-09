@@ -328,6 +328,18 @@ test('built powershell: a tab label is compared without soft hyphens, zero-width
     assert.match(errors[0], /in the "Windows PowerShell" tab/, JSON.stringify(label));
     assert.equal(windowsLines, 1, JSON.stringify(label));
   }
+  // every default-ignorable code point goes, not only the six above: bidi marks and isolates, the
+  // combining grapheme joiner, the Mongolian vowel separator, the invisible operators, variation
+  // selectors and tag characters (built from code points so this file stays ASCII), also as a reference
+  const ignorable = [0x200e, 0x200f, 0x034f, 0x061c, 0x180e, 0x2061, 0x2062, 0x2063, 0x2064, 0x202a, 0x202e, 0x2066, 0x2069, 0xfe00, 0xfe0f, 0xe0001, 0xe0041];
+  for (const mark of [...ignorable.map((code) => String.fromCodePoint(code)), '&lrm;', '&#x200E;', '&#8207;', '&#847;']) {
+    const label = `Windows Power${mark}Shell`;
+    const shown = label.replace(/[^ -~]/gu, (c) => `<U+${c.codePointAt(0).toString(16).toUpperCase()}>`);
+    const {errors, windowsLines} = scanPage(tabs([['macOS/Linux', '<p>Nothing.'], [label, '<p><code>Invented-Hidden-Mark</code>']]));
+    assert.deepEqual(offending(errors), ['Invented-Hidden-Mark'], shown);
+    assert.match(errors[0], /in the "Windows PowerShell" tab/, shown);
+    assert.equal(windowsLines, 1, shown);
+  }
   // every mark in a label goes, not only the first
   const twice = `Win${invisible[0]}dows Po&shy;wer${invisible[1]}Sh&zwj;ell`;
   assert.deepEqual(offending(scanPage(tabs([['macOS/Linux', '<p>Nothing.'], [twice, '<p><code>Invented-Twice</code>']])).errors), ['Invented-Twice']);
@@ -398,4 +410,48 @@ test('built powershell: a PowerShell-language code block inside a non-PowerShell
   assert.deepEqual(offendingBlocks(both.errors), []);
   assert.equal(both.errors.length, 1, both.errors.join('\n'));
   assert.equal(both.windowsLines, 1);
+});
+
+test('built powershell: a PowerShell language class on the code element inside a pre counts as on the pre', () => {
+  // pre-code-lang: <pre><code className="language-powershell"> holding Get-Command jdtls and
+  // Invented-Code-Lang, then <pre><code className="language-bash"> holding Invented-Code-Bash
+  const {errors, windowsLines} = scanPage(fixture('pre-code-lang'));
+  assert.deepEqual(offendingBlocks(errors), [['Invented-Code-Lang', 'language-powershell']]);
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], /^built: probe\.html:\d+ the line /);
+  assert.equal(windowsLines, 2);
+  // a pack line alone passes
+  const pass = scanPage('<pre><code class=language-powershell>Get-Command jdtls</code></pre>');
+  assert.deepEqual(pass.errors, []);
+  assert.equal(pass.windowsLines, 1);
+  // among other classes, in any case, and deeper inside the pre too
+  const other = scanPage('<pre><code class="x-one language-PWSH">Invented-Code-Pwsh</code></pre><pre><b><code class=language-cmd>Invented-Code-Deep</code></b></pre>');
+  assert.deepEqual(offendingBlocks(other.errors), [['Invented-Code-Pwsh', 'language-PWSH'], ['Invented-Code-Deep', 'language-cmd']]);
+  assert.equal(other.errors.length, 2, other.errors.join('\n'));
+});
+
+// The PowerShell code block errors as [line, language class], in order, any class text.
+const offendingClasses = (errors) =>
+  errors.map((e) => /the line "(.*)" in a PowerShell code block \((language-[^)]+)\) is not a command line/s.exec(e)).filter(Boolean).map((m) => [m[1], m[2]]);
+
+test('built powershell: a language class with a non-alphanumeric suffix counts as that language', () => {
+  // fence-suffix: fences powershell{1} (Get-Command jdtls, Invented-Suffix), bat{2}
+  // (Invented-Bat-Suffix), ps1x{1} (Invented-Ps1x-Suffix) and psql (Invented-Psql); the build keeps
+  // the info string whole in the class (language-powershell{1})
+  const {errors, windowsLines} = scanPage(fixture('fence-suffix'));
+  assert.deepEqual(offendingClasses(errors), [
+    ['Invented-Suffix', 'language-powershell{1}'],
+    ['Invented-Bat-Suffix', 'language-bat{2}'],
+  ]);
+  assert.equal(errors.length, 2, errors.join('\n'));
+  assert.equal(windowsLines, 3);
+  // other suffixes after a listed name count; a letter or digit after it makes another language
+  for (const name of ['language-pwsh-x', 'language-ps1:x', 'language-cmd.x', 'language-ps_x']) {
+    assert.deepEqual(offendingClasses(scanPage(`<pre class=${name}>Invented-Suffixed</pre>`).errors), [['Invented-Suffixed', name]], name);
+  }
+  for (const name of ['language-ps1x', 'language-psql', 'language-ps1x{1}', 'language-pwsh2', 'language-batch-x']) {
+    const near = scanPage(`<pre class=${name}>Invented-Near</pre>`);
+    assert.deepEqual(near.errors, [], name);
+    assert.equal(near.windowsLines, 0, name);
+  }
 });
