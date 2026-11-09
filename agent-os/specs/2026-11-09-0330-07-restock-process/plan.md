@@ -43,7 +43,7 @@ When stock runs low the bookstore asks the distributor for more. `StockItem` gai
 | T3 | `InventoryFlow.requestRestock` and `handleStockRunningLow` (O1), WARN logs, port Javadoc, `IntegrationTestBase` default answer | bookstore | [T2] | 3 | critical | opus | opus | done (branch `sdd/07-restock-process/T3`) | PASS (r0) | ENDORSE | 0 | #98 | afcac9c |
 | T4 | `POST /inventory/{bookId}/commands/request-restock`, `PendingRestockView`, `StockView.pendingRestock`, 6 to 7 key pins | bookstore | [T3] | 4 | elevated | sonnet | sonnet | done (branch `sdd/07-restock-process/T4`) | PASS (r1) | ENDORSE | 1 | #102 | 7f8cf9b |
 | T5 | `EventProcessor`, `RequestRestockDelegate` (trade-off Javadoc), process unit tests, `RestockProcessIntegrationTest` event path, post-dip pins | bookstore | [T4] | 5 | critical | opus | opus | done (branch `sdd/07-restock-process/T5`) | PASS (r0) | ENDORSE | 0 | #103 | e62b914 |
-| T6 | Manual-path and delivery scenarios in `RestockProcessIntegrationTest` (closes spec 06 R6), three ArchUnit fixtures, PR trade-off text | bookstore | [T5] | 6 | critical | opus | opus | todo | | | | | |
+| T6 | Manual-path and delivery scenarios in `RestockProcessIntegrationTest` (closes spec 06 R6), three ArchUnit fixtures, PR trade-off text | bookstore | [T5] | 6 | critical | opus | opus | done (branch `sdd/07-restock-process/T6`) | PASS (r1) | ENDORSE | 1 | #107 | 63edf93 |
 | T7 | `http/inventory.http` request-restock examples | root | [T4, T5] | 7 | elevated | sonnet | sonnet | todo | | | | | |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7.
