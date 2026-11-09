@@ -51,4 +51,13 @@ metadata:
 - **Live replays on a shared machine must name an isolated database** in the directive: `spring-boot:run` plus `docker compose down -v` removes the shared `bookstore-postgres-1` volume of every checkout (spec 07 T7), and `spring-boot:run` alone creates it (spec 08 T4). `bookstore/compose.yaml` binds host 5432, so a second compose project cannot run beside it. Ask for an own `docker run` Postgres on a free port, `java -jar` with `--spring.docker.compose.enabled=false`, app port never 8080, a quoted teardown, and a name-based docker proof (other cycles start containers mid-run, so an empty `docker ps -a` diff never holds).
 - **Spec cut from another unmerged spec branch (spec 08 on 07):** merge `origin/factory` in a scratch `git worktree add` on the local spec branch while a task branch is checked out in the main worktree; then each open task branch merges the spec tip before its ship gate (memory-only conflicts). PR checks can register after 60 s: the watch script must loop on "no checks reported".
 - **LLM adapter specs (spec 08):** check vendor API rules against the pack config (a sampling setting the API now rejects was dropped as a self-accepted, flagged decision); keep tests offline by construction and run every gate's referee twice, plain and with a fake key exported. Sonnet held for tools, integration tests and README; opus for config, ChatClient wiring and the HTTP adapter. Every round-0 FAIL was one surviving mutant, closed test-only in one round.
+- **Offline pin for integration tests (fix-08 A4):** pinning `spring.ai.model.chat` in a shared test base makes the
+  offline EnvironmentPostProcessor skip and breaks its full-boot witness; pin the blank key plus a loopback base URL
+  instead (inlined test properties outrank the environment). Prove exported-variable safety with a decoy loopback
+  base URL and a per-host connection count.
+- **LLM live checks find what offline tests cannot** (fix-08 A2, A3): thinking-block replay order (Spring AI 2.0.2),
+  follow-up lookups without tool results in memory, fields the prompt never names. Plan a stub-server contract test
+  of the real model client and a prompt-text test set up front; a readable genre list needs the tool argument form too.
+- **Pausing for a main-session check as a subagent:** the harness forces a hand-back when the run idles; hand back
+  with a precise resume point instead of waiting.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.
