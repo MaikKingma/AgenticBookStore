@@ -2,4 +2,4 @@
 - [Test-data falsifiers](qa-test-data-falsifiers.md) — data and witnesses that can falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex and unicode; read before a falsifier list
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, warning greps; read before a CI spec strategy
 - [Docs and checker specs](qa-docs-checker-specs.md) — checker-as-oracle traps: mutation probes, manifest gaming, parser witnesses, hex anchors, font evidence, axe scope, MDX anchor and H1 traps, regex MDX scanners; read before a docs-site strategy
-- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, null guards, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review
+- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, null guards, REJECT vs inspection threshold, oracle helpers, scope edits, survivors in files that freeze; read before every review

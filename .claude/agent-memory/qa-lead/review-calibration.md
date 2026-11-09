@@ -93,4 +93,12 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
 16. **Oracle-hardening gaps outside the criteria.** When a verifier finds that a self-written checker passes vacuously in a way no criterion covers (zero self-tests discovered still exits 0), do not REJECT the PASS. Make it a criterion amendment for the next task that owns the same files, with must-fail witnesses. Until then, add a verifier-side guard: the test total is never below the last gated total, and the earlier test titles are a subset of the current ones. "N equals the grep count" misses a deleted test file, because both numbers drop together (spec 11 T1).
 
+17. **Regression-guard survivors in a file that freezes at this PASS.** A survivor that narrows a property class (a
+   Unicode property replaced by categories, one element type instead of any) is no REJECT, even on a critical rule, when
+   the verifier proved the current bytes on every member (an exhaustive enumeration through the real function plus a
+   real build), the file joins the freeze hash baseline at merge, and another gate or an authoring grep already rejects
+   the reachable forms. Record it as a follow-up (exhaustive test loop, then re-baseline). Before accepting a "reachable
+   residual", check whether a hygiene gate rejects the probe source (spec 11 T5b: raw non-ASCII fails the ascii rule;
+   only references and escapes reach a label).
+
 15. **Survivors killed by a gate grep.** Before judging a verifier's "informational survivor", check whether a common-directive gate check rejects the mutant (a clock grep that must print exactly one `Clock.system` line rejects a bean built with `Clock.systemUTC()`; a mapper grep rejects `JsonMapper.builder()` in main). Then it is gate-proven, not a survivor, as long as the grep runs in every later task and qa-final. Feed a test-pinned follow-up only if the clause is high-risk under rule 3. Verifiers miss this (spec 05 T1).

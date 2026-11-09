@@ -41,7 +41,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | PASS r2 | #79 | sdd/11-workshop-guide/T4 | ENDORSE r2 |
 | T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | PASS r1 | #83 | sdd/11-workshop-guide/T4a | ENDORSE |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | FAIL r4, human override (A7) | #87 | sdd/11-workshop-guide/T5 | AMEND r4, override: human |
-| T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | verifying | #100 | sdd/11-workshop-guide/T5b | |
+| T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
@@ -264,6 +264,41 @@ From the T5 meta-reviews (AMEND r3, checkpoint manifest review, AMEND r4) and th
   lone backtick in prose.
 - Merge order (A7): no content task (T6 to T11) PR merges before T5b has merged.
 
+From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and the orchestrator's rework rulings
+(A9 below):
+
+- FF-31 (T6 to T11 implDirective; extends FF-27 and FF-30; bars residuals R-1 to R-5): (a) every `TabItem` has a
+  plain string label `label="..."` made only of ASCII letters, digits, spaces and `/ ( ) . + -`; never `label={...}`,
+  a character reference (`&...;`), a backslash escape or markup inside a label; a tab that holds Windows commands has
+  the literal word `PowerShell` in its label. (b) A Windows command (PowerShell or cmd syntax) outside a PowerShell
+  tab goes in a fence whose language word is `powershell`; never `batch`, `posh`, `dos` or another near name. (c) Fence
+  metadata goes after a space: ```` ```powershell {1} ```` or ```` ```powershell title="x" ````, never
+  `powershell{1}`. (d) No hand-written `class` or `className` on `pre`, `code` or `span`; a command in prose is a
+  backtick span, never a `<code>` element. (e) A checker false positive is a `question`, never a checker edit.
+- FF-32 (T6 to T11 verifiers and qa-final, from the T5b merge): (a) `shasum -a 256 -c
+  agent-os/specs/2026-11-08-2206-11-workshop-guide/t5b-freeze-baseline-hashes.txt` prints 75 OK and
+  `git ls-files guide/scripts | wc -l` prints 75; this file replaces the T5 file as the C0-12 baseline; any FAILED
+  entry or extra file is a FAIL. (b) Quote both `check:built` lines (`ok   built: N html files, no literal ":::", C
+  checkboxes, all named` and `ok   built: M Windows PowerShell lines in tab panels and PowerShell code blocks, all
+  pack command lines`); M equals the verifier's own FF-25 (b) count plus the lines of `powershell` blocks outside
+  PowerShell tabs; M > 0 from T6 on and never drops below the previous task's M without a stated removal. (c) The
+  summed `git grep -c '<TabItem' -- guide/docs` equals the summed `git grep -cE '<TabItem[^>]*label="[A-Za-z0-9 ./()+-]+"' -- guide/docs`,
+  and `git grep -nE 'label=\{|label="[^"]*[&\\]' -- guide/docs` prints nothing. (d)
+  `git grep -nE '<(pre|code|span)[^>]*class(Name)?[[:space:]]*=' -- guide/docs` prints nothing. (e)
+  `git grep -nE '^[[:space:]]*(```+|~~~+)[A-Za-z0-9_-]+[^[:space:]A-Za-z0-9_-]|^[[:space:]]*(```+|~~~+)(batch|posh|dos)([^A-Za-z0-9]|$)' -- guide/docs`
+  prints nothing. Run each grep against a control that must match on a scratch copy, never on the task tree; keep
+  the patterns in single quotes. (f) Read the task's pages: every Windows command sits in a PowerShell tab or a
+  `powershell` fence.
+- FF-33 (T6 to T11 verifiers and qa-final; orchestrator, for the T5 r4 case OA1b-f, a raw `<img>` hidden from source
+  rule (f) behind an unclosed comment opener): the built article HTML of every page of the task holds no `<img`
+  element (no images are expected, ground rule G4); quote the count (0).
+- Gate 2 residuals from T5b: F-T5b-1 (test-only: an exhaustive Default_Ignorable loop in the label test and pins for
+  the C05 and C06 shapes; the code already catches all of them; after the cycle or with any future change to
+  `rules/built-powershell.mjs`); R-1 visible spaces in a label, R-2 look-alike letters in a label, R-3 hidden markup
+  in a JSX label, R-4 a language class on a `span` inside `pre`, R-5 `batch`/`posh` fences and an inline
+  `<code className="language-powershell">` outside tabs (all barred for authors by FF-31, checked by FF-32). The offline
+  build has no page HTML to check (code text lives in JS chunks); the Pages build in CI is the guard.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -333,6 +368,14 @@ From the T5 meta-reviews (AMEND r3, checkpoint manifest review, AMEND r4) and th
     of the real build with one invented line fails.
   - AC4: CI runs it on every PR through the existing `npm run check:built` step (no workflow change).
   - AC5: no new dependency; `package.json` and the lockfile unchanged; no product file outside `guide/scripts/**`.
+
+- A9 (2026-11-09, orchestrator, during T5b): A8 AC1 extended (raises the bar, closes known evasions of the
+  structural guard): `check:built` also checks every PowerShell-family language code block (`powershell`, `pwsh`,
+  `ps1`, `ps`, `cmd`, `bat`, class on the `pre` or its `code`, whole name or followed by a non-alphanumeric suffix)
+  anywhere on the page; all text of a raw `pre` around token lines; tab labels cleaned of every Default_Ignorable code
+  point and leftover character references. Two of T5b's own round-0 assertions were edited accordingly and the count
+  line reads "in tab panels and PowerShell code blocks". The C0-12 freeze baseline after T5b is
+  `t5b-freeze-baseline-hashes.txt` (75 files under `guide/scripts/**`).
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 
