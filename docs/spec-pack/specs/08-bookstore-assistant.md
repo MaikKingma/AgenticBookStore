@@ -30,7 +30,6 @@ spring:
       chat:
         model: ${BOOKSTORE_AI_MODEL:<current Haiku model id from docs.claude.com/en/docs/about-claude/models>}
         max-tokens: 1024
-        temperature: 0.2
 bookstore:
   assistant:
     max-requests-per-minute: 20
@@ -60,7 +59,7 @@ point the customer to the shop for orders; answer in the language of the custome
 ## API
 | Method and path | Body | Success | Errors |
 |---|---|---|---|
-| `POST /assistant/chat` | `ChatPayload { conversationId (UUID), message }` | 200 `AssistantReplyView { conversationId, reply }` | 400 validation or message too long, 429 rate limit (`AssistantRateLimiter` throws Spring's `ErrorResponseException` with `TOO_MANY_REQUESTS`), 503 assistant offline (`UnavailableException`, code `assistant-offline`) |
+| `POST /assistant/chat` | `ChatPayload { conversationId (UUID), message }` | 200 `AssistantReplyView { conversationId, reply }` | 400 validation or message too long, 429 rate limit (`AssistantRateLimiter` throws Spring's `ErrorResponseException` with `TOO_MANY_REQUESTS`), 503 assistant offline (`UnavailableException`, code `assistant-offline`), 503 assistant unavailable when a live model call fails (`UnavailableException`, code `assistant-unavailable`, decision D10) |
 
 ## Requirements
 
@@ -92,6 +91,17 @@ The application SHALL start and pass all tests without an API key; the chat endp
 - **GIVEN** `BOOKSTORE_AI_API_KEY` is empty
 - **WHEN** the application starts and a client posts to `/assistant/chat`
 - **THEN** startup succeeds and the response is 503 with a ProblemDetail "Assistant offline: set BOOKSTORE_AI_API_KEY"
+
+### Requirement: Failed model call (decision D10, Maik 2026-11-09)
+When a key is configured and the call to the model fails (authentication, spend or rate limit at Anthropic, an
+Anthropic error, a timeout or a connection failure), the chat endpoint SHALL answer 503 with a ProblemDetail, code
+`assistant-unavailable`, title "Assistant unavailable", and a detail that names no key and no internal message. The
+customer's question SHALL NOT stay in the conversation memory, so the next question starts from the last answered turn.
+
+#### Scenario: Model call fails
+- **GIVEN** a key is configured and the model call throws
+- **WHEN** a client posts to `/assistant/chat`
+- **THEN** the response is 503 with `code` `assistant-unavailable`, and the conversation memory holds no entry for that question
 
 Implementation note: Spring AI's Anthropic auto-configuration may refuse an empty key at startup. Choose a mechanism
 (for example `spring.ai.model.chat=none` unless a key is present, set by an `EnvironmentPostProcessor`, plus an

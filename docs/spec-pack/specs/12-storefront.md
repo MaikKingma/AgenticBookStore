@@ -99,7 +99,8 @@ standard and the `hexagonal-slice` skill, before any frontend code depends on it
 ### Errors
 Every non-2xx response is parsed as RFC 9457 `ProblemDetail` and shown by `ProblemDetailAlert` with `title`,
 `detail` and the `details` list (for example the shortages of `insufficient-stock` or the `{field, message}` pairs of
-`validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline" and `429` as
+`validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline", `503
+assistant-unavailable` as "The assistant is unavailable right now, try again later" (decision D10) and `429` as
 "Too many requests, try again in a minute".
 
 ### Visual design (decision D7, Maik 2026-11-08)

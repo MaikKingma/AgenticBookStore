@@ -145,3 +145,18 @@ Maik, 2026-11-09, on two questions from the spec 10 orchestrator:
 Changed file: `specs/10-harness-reference-solutions.md` (Level 3 settings and the PowerShell note). The guide (spec 11)
 carries the Git Bash prerequisite on the setup and Level 3 pages.
 
+## D10. Assistant: no temperature, and a 503 when a live call fails
+
+Maik, 2026-11-09, after the spec 08 review:
+
+- Spec 08 no longer configures `temperature: 0.2`. The Messages API rejects sampling parameters (`temperature`,
+  `top_p`, `top_k`) with a 400 on the current models and from API version 2026-10-21 on every model, so the setting
+  would break every live call. The code already sends none.
+- A failed live model call (authentication, spend or rate limit at Anthropic, an Anthropic error, a timeout or a
+  connection failure) answers 503 with code `assistant-unavailable` instead of Spring's generic 500, and the
+  unanswered question does not stay in the conversation memory. The storefront shows "The assistant is unavailable
+  right now, try again later".
+
+Changed files: `specs/08-bookstore-assistant.md` (configuration, API table, new requirement "Failed model call"),
+`specs/12-storefront.md` (assistant error messages). Implemented through /sdd-bugfix (`fix-08-assistant-review`).
+
