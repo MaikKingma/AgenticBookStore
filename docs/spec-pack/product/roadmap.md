@@ -30,6 +30,7 @@ Build strictly in this order. Each spec assumes the previous ones are merged and
 | 09 | Workshop baseline: seed data, http files, README, sanitising, level-0 tag | all | Defines the participant start state |
 | 10 | Harness reference solutions and level branches | all | Catch-up branches for every level |
 | 11 | Workshop guide site (Docusaurus) | guide | Participant-facing instructions |
+| 13 | Assistant chat widget with streamed answers (after the first release, decision D13) | bookstore, frontend | Optional; not part of the first release |
 
 ## The factory branch (important)
 

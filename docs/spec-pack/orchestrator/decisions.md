@@ -191,21 +191,11 @@ not by a separate agent.
 Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
 cap).
 
-## D13. Assistant as a chat widget with streamed answers
+## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
 
-Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant,
-and answers must be streamed.
+Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
+(a launcher in the lower right corner of every page instead of a page), and answers must be streamed over a new
+`POST /assistant/chat/stream`. Shortly after, Maik made it optional and deferred it to after the first release.
 
-- The storefront drops the assistant page and its navigation link. A round launcher button with a chat icon sits in
-  the lower right corner of every page and opens a chat panel. The conversation survives navigation and lasts for
-  the browser session.
-- The bookstore adds `POST /assistant/chat/stream`, which sends the reply as Server-Sent Events (`delta`, then
-  `done`; `error` when the model fails after the first chunk). Errors before the stream starts stay ProblemDetail,
-  the same as `POST /assistant/chat`. The JSON endpoint stays unchanged for the `.http` files, tests and workshop
-  exercises.
-- The D10 rule holds while streaming: a failed answer does not stay in the conversation memory.
-
-Changed files: `specs/08-bookstore-assistant.md` (What changes, API, requirement "Streamed answers", tests),
-`specs/12-storefront.md` (structure, endpoints, requirement "Assistant chat widget", tests, tasks, definition of
-done). Built as one change cycle after `fix-08-assistant-review` and `fix-12-genre-labels-footer` are merged, because
-it touches the same files.
+The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
+12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.
