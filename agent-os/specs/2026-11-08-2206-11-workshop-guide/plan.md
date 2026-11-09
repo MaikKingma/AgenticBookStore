@@ -45,7 +45,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
-| T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
+| T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | verifying | | sdd/11-workshop-guide/T8 | |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |

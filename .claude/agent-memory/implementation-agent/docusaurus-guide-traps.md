@@ -96,6 +96,9 @@ metadata:
   the pack phrase in the imperative as the pack has it ("cross out everything", not "crosses out"). A fence nested in a list
   item still counts for `kind: command` entries. Rendered code blocks: `textContent` of a `pre` joins rows without newlines,
   read `.token-line` per row.
+- Manifest `text` snippets are case-sensitive: a sentence-initial "Project scope" misses "project scope"; start such sentences
+  with another word. Built page files are `build/<route>.html` (no `route/index.html`). A solution-text scan flags wrapped
+  tails of pack lines (e.g. a lone `.claude/settings.json`.): judge each hit against the plan section, not by string.
 - Docusaurus strips the numeric file prefix from routes (`00-setup-check.md` is `/setup-check`, `06-wrap-up.md` is `/wrap-up`).
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Self-tests needing a known page state read `scripts/fixtures/skeleton-docs/` (T5c), never live `guide/docs` (content
