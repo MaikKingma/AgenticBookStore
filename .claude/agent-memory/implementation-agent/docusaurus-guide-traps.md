@@ -61,6 +61,9 @@ metadata:
   interiors, see `codeOf`), the assignment/`$env:` forms on the whole text. An "independent sweep" of pack literals must
   count coverage per pack section AND per page, else `/clear` is "covered" by the cheat sheet; a tiny snippet containing `#`
   falsely covers the literal `#`. Reasons for the leftovers are keyed `source:line literal` (pack is frozen).
+- Keep ONE inline code span recogniser: the scanner returns span offsets (`scan.spans`) and every reader (comment blanking,
+  tag reading via `markupOf`, `codeOf`, the pack allow-list) uses them. Separate span regexes drifted, and a tag inside a span
+  (`` `</TabItem>` ``) ended a tab early so a Windows fence escaped rule (c). Raw `<code>`/`<pre>` interiors count as code too.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).

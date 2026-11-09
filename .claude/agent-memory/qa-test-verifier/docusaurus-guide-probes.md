@@ -76,5 +76,10 @@ Rule: verify a pack-anchored coverage manifest with your own section-aware sweep
 - Regex rules over prose: try the natural sentence on the page where the token is allowed ("Never set ANTHROPIC_API_KEY" hit a `set\s+KEY` form). Also try exotic forms (`set -gx`, `setx /M`, `SetEnvironmentVariable`, YAML key).
 - A mutant whose `tests N` drops below the baseline (266 of 391) broke a module's syntax: invalid evidence, redo it. Survivors often expose a mis-asserted test (`/not in/` also matched another rule's message).
 - In a checker whose ok-detail prints only without errors, "anchored N/N" can never show N-1: a mutant on that count is equivalent.
+- After a comment scanner learns inline code, probe the TAG scanner the same way: an inline `` `</TabItem>` `` inside a PowerShell tab ends the item for a regex tag walker, so a following bash fence escapes the PowerShell-line rule while the build renders it in that tab. Only the closing-item form is fail-open; inline `<Tabs>`/`</Tabs>` give errors (fail-closed).
+- A rule moved to "code only" (fenced lines + inline spans) loses JSX code: `<code>`/`<pre>` forms that the whole-text version caught now pass. Re-run the old witnesses in JSX code after such a rework.
+- Sweeps that strip `# comment` from fence lines never see comment text: entries sourced from a fence comment (`/status`, `/model sonnet`) are guarded only by floors and pins (drop + lower floor survives).
+- Span-scanner mutant families: closer of a longer run, carry reset on blank line, carried line without closer (needs a span over 3 lines), carry length fixed to 1 (double-backtick span over a line break), escaped backtick, span across a blank line. Read `--experimental-test-coverage` uncovered lines first: they name the unexecuted branch. Re-scanning `rest` after a split often makes the longer-run closer mutant equivalent.
+- Classify survivors by direction: fail-open mutants (hide content from a rule) are required pins; fail-closed ones (false positives) are recommended.
 
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
