@@ -37,7 +37,10 @@ metadata:
   frontend state (fix-12); every rework was test-only. The main session's model rule (opus only for qa-lead,
   qa-final, critical tasks) overrides "rework >= 2 -> opus". Shared in-flight state: name "every reset branch has a
   test that sends again" in round 0 (fix-12 T2 r0 survivor). Bugfix criteria for new UI elements: "red set = the named
-  tests plus any test of a new element; no pre-existing test red" up front (fix-12 plan.md A1).
+  tests plus any test of a new element; no pre-existing test red" up front (fix-12 plan.md A1). Also held in one
+  round each for labels and CSS layout (fix-12-genre-labels-footer): pasting the QA lead's must-fail probe list into
+  the implDirective round 0 avoided rework. A requirement change (pack decision) that old tests pin is a listed D3
+  carve-out of exact lines, each replaced by a stronger assertion, never a blanket "tests may change".
 - **Spring static entry document (fix-12 T1):** `no-cache` alone is not enough, the jar fixes `Last-Modified` at
   1980-02-01, so a revalidation still answers 304; a literal resource-handler pattern for one file gives an empty
   resource path (404), use a capture variable. qa-final warning allow-lists must be judged base vs tip, not by a list.

@@ -15,3 +15,24 @@ export const GENRES = [
   'CHILDREN',
   'POETRY',
 ] as const satisfies readonly Genre[]
+
+// The label the shop shows for every genre: sentence case, never the enum name. The map is keyed by the Genre type, so
+// a genre the type gains and this map lacks is a compile error. The search form still sends the enum name.
+export const GENRE_LABELS = Object.freeze({
+  FICTION: 'Fiction',
+  SCIENCE_FICTION: 'Science fiction',
+  FANTASY: 'Fantasy',
+  MYSTERY: 'Mystery',
+  ROMANCE: 'Romance',
+  HISTORY: 'History',
+  SCIENCE: 'Science',
+  TECHNOLOGY: 'Technology',
+  CHILDREN: 'Children',
+  POETRY: 'Poetry',
+} satisfies Record<Genre, string>)
+
+// The label of a genre as the bookstore sent it. A genre this shop does not know (the bookstore gained one before the
+// shop was rebuilt) is shown as sent, so the page is never blank and never fails.
+export function genreLabel(genre: string): string {
+  return Object.hasOwn(GENRE_LABELS, genre) ? GENRE_LABELS[genre as Genre] : genre
+}

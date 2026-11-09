@@ -102,7 +102,7 @@ The system SHALL change the price of an available book and SHALL reject price ch
 - **THEN** the response is 409 and the price is unchanged
 
 ### Requirement: Search the catalogue
-The system SHALL return books matching all given criteria, sorted by title, capped at 100.
+The system SHALL return books matching all given criteria, sorted by title, capped at 200 (decision D12).
 
 #### Scenario: Search by author fragment and genre
 - **GIVEN** books by "Jane Austen" (fiction) and "Mary Shelley" (science fiction)
