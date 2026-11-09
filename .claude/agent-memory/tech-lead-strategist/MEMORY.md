@@ -3,3 +3,5 @@
 - [Strategy constraints](strategy-constraints.md) — module batching, bean, data and pin order, view before behaviour, failure devices for transactional claims, QA-rework criteria rules, escape trap, stripped paths, DoD greps
 - [Distributor design decisions](distributor-design-decisions.md) — spec 05 rationale (advice scope, REST 400 vs MCP clamp, seed reader, shared ISBNs) and spec 06 ACL: catch-all failure mapping, input-first order, derived contract files
 - [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422 split, port shape, events, DTO-derived values, save order, snapshots, spec 07 arity, invariant plus pre-check, process catch rule
+- [Storefront design decisions](storefront-design-decisions.md) — spec 12 rationale: in-house router, no oxlint, resources, no Maven edge, styling contract tests, frontend input and lockfile traps
+- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422 split, port shape, events, DTO-derived values, multi-aggregate save order, payload subset for normalised strings, snapshots

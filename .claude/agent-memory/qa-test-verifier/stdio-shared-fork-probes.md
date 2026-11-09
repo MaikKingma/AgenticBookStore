@@ -33,5 +33,4 @@ context. In alphabetical order the class ran last and the same mutants showed no
   inspection plus the hash baseline.
 - Which stream a framework status line went to: an awk over the class's Surefire XML that tracks the `<system-out>`
   and `<system-err>` sections gives the proof without the implementer's source extracts.
-
 Related: [[mcp-tool-probes]], [[env-switch-mutant-runner]], [[spring-runtime-probes]]

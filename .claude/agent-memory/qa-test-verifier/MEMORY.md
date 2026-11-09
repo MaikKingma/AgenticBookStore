@@ -14,7 +14,9 @@
 - [Interceptor and config probes](interceptor-config-probes.md) — path-pattern, bound, real-sleep and content-type probes for an MVC interceptor with validated properties
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks, timeout annotations, job-log truncation traps
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
+- [Frontend Vitest probe techniques](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap survivor gap, dev-server script, sort mutants incl. derived columns, page-level status-keyed probes, tsc type probes
 - [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
 - [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT listener and REQUIRES_NEW delegate probes, IT-equivalent mutants, row-lock hang, log line attribution
 - [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag region guards on JSON views, null-key forms, startsWith vs exact detail, verifying an outline on patched test copies
+- [Live UI walk verification](live-ui-walk-verification.md) — re-walking a recorded browser walk with own seed, playwright-cli listeners, favicon and Tab-start traps, table-squeeze check, thread-name inventory normalisation

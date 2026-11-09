@@ -38,6 +38,12 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
   Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`), then `tool_use` and `tool_result`. A 429
   `model_requires_usage_credits` kills the turn but init still proves the connection; retry with `--model <alias>` (a
   deviation). The server's `Client initialize request - Protocol: ...` log line proves the negotiated version.
+- Headless Claude Code proxy (never `claude mcp add`): run `claude -p ... --mcp-config <scratch json> --strict-mcp-config
+  --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` from a script that `cd`s to the scratchpad (the
+  project's CLAUDE.md and settings stay out). Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`),
+  then the `tool_use` and its `tool_result`. A 429 `model_requires_usage_credits` on the default model kills the turn but
+  init still proves the connection; a retry with only `--model <alias>` gets the tool call (report it as a deviation).
+  The server log line `Client initialize request - Protocol: ... name=claude-code, version=...` proves the negotiated version.
 - After a Claude Code HTTP session, SIGTERM on a Boot MCP server hangs 30 s in graceful shutdown (open SSE GETs) while the
   port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
 - `clean test` order runs delete `target/<app>.jar`: rebuild (`clean verify`) before live runs from the jar.
@@ -61,4 +67,14 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
   exec -T postgres psql -At`; truncate tables between runs; `compose down -v`, `lsof`, `compose ps -a` prove teardown.
 - A mutant that deletes the capture handler crashes a naive driver (KeyError): turn it into a CHECK FAIL line.
 
+- Thread-safety repro through real wiring: draw from the wired supplier on 8 threads, then count values seen on more
+  than one thread with per-thread sort+dedupe, merge, sort, adjacent-equal (primitive arrays; a HashMap of 1.6M boxed
+  longs is slow and heap-hungry).
+- Multi-phase live run with app restarts (chaos flags, then stopped): one `python3 -I` session script under
+  `with-budget.sh`. It starts each `./mvnw -pl <m> spring-boot:run` with `Popen(start_new_session=True)`, stops it
+  with `os.killpg(pid, SIGTERM)` (that also reaches the forked JVM, mvn exits 143), and then polls `lsof` until the
+  port is free. Pass flags as `-Dspring-boot.run.arguments=--<prop>=<v>`. For every chaos phase, add a witness that
+  hits the dependency directly (a 503 body, a 6 s `time_total`), so the phase proves the flag took effect.
+  Time with curl `-w %{time_total}`, write one CHECK line per expectation, and finish with a DB count via
+  `docker compose exec -T postgres psql -At`.
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]
