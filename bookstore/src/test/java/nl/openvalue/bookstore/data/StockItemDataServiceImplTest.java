@@ -2,12 +2,17 @@ package nl.openvalue.bookstore.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import nl.openvalue.bookstore.DatabaseCleaner;
 import nl.openvalue.bookstore.PostgresTestConfig;
+import nl.openvalue.bookstore.domaininteraction.PendingRestockDTO;
 import nl.openvalue.bookstore.domaininteraction.StockItemDTO;
 import nl.openvalue.bookstore.domaininteraction.StockItemDataService;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +39,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @Import({PostgresTestConfig.class, StockItemDataServiceImpl.class})
 class StockItemDataServiceImplTest {
+
+    // Two pending restocks that differ in every field; no quantity equals a figure of its stock item.
+    private static final PendingRestockDTO PENDING =
+            new PendingRestockDTO("R-7781", 12, LocalDate.of(2026, 7, 3), true);
+    private static final PendingRestockDTO OTHER_PENDING =
+            new PendingRestockDTO("DIST-RO-0042", 5, LocalDate.of(2027, 11, 30), false);
 
     @Autowired
     private StockItemDataService stockItemDataService;
@@ -190,6 +201,218 @@ class StockItemDataServiceImplTest {
 
         assertThat(stockItemDataService.findLowStock()).extracting(StockItemDTO::bookId)
                 .containsExactly(mostUrgent, secondMostUrgent, tieWithLowerId, tieWithHigherId);
+    }
+
+    @Test
+    void savesANewStockItemWithAPendingRestockAndFindsItByBookId() {
+        StockItemDTO stockItem = new StockItemDTO(UUID.randomUUID(), 9, 2, 4, 6, true, PENDING);
+
+        saveStock(stockItem);
+        entityManager.clear();
+
+        assertThat(stockItemDataService.findByBookId(stockItem.bookId())).isEqualTo(stockItem);
+    }
+
+    @Test
+    void storesEveryPendingRestockColumnOnInsert() {
+        UUID bookId = UUID.randomUUID();
+
+        saveStock(new StockItemDTO(bookId, 11, 5, 7, 13, true, PENDING));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", "R-7781"),
+                entry("pending_restock_quantity", 12),
+                entry("pending_restock_expected_delivery_date", LocalDate.of(2026, 7, 3)),
+                entry("pending_restock_backordered", true));
+    }
+
+    @Test
+    void storesNullInEveryPendingRestockColumnOnInsertWithoutAPendingRestock() {
+        UUID bookId = UUID.randomUUID();
+
+        saveStock(new StockItemDTO(bookId, 11, 5, 7, 13, true));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", null),
+                entry("pending_restock_quantity", null),
+                entry("pending_restock_expected_delivery_date", null),
+                entry("pending_restock_backordered", null));
+        entityManager.clear();
+        assertThat(stockItemDataService.findByBookId(bookId).pendingRestock()).isNull();
+    }
+
+    @Test
+    void anUpdateStoresANewPendingRestock() {
+        UUID bookId = UUID.randomUUID();
+        saveStock(new StockItemDTO(bookId, 9, 2, 4, 6, false));
+        entityManager.clear();
+
+        stockItemDataService.save(new StockItemDTO(bookId, 9, 2, 4, 6, false, OTHER_PENDING));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", "DIST-RO-0042"),
+                entry("pending_restock_quantity", 5),
+                entry("pending_restock_expected_delivery_date", LocalDate.of(2027, 11, 30)),
+                entry("pending_restock_backordered", false));
+        assertThat(storedVersion(bookId)).isEqualTo(1L);
+        entityManager.clear();
+        assertThat(stockItemDataService.findByBookId(bookId))
+                .isEqualTo(new StockItemDTO(bookId, 9, 2, 4, 6, false, OTHER_PENDING));
+    }
+
+    @Test
+    void anUpdateWithoutAPendingRestockClearsEveryPendingRestockColumn() {
+        UUID bookId = UUID.randomUUID();
+        saveStock(new StockItemDTO(bookId, 9, 2, 4, 6, true, PENDING));
+        entityManager.clear();
+
+        stockItemDataService.save(new StockItemDTO(bookId, 10, 2, 4, 6, true));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", null),
+                entry("pending_restock_quantity", null),
+                entry("pending_restock_expected_delivery_date", null),
+                entry("pending_restock_backordered", null));
+        entityManager.clear();
+        assertThat(stockItemDataService.findByBookId(bookId))
+                .isEqualTo(new StockItemDTO(bookId, 10, 2, 4, 6, true, null));
+    }
+
+    @Test
+    void anUpdateReplacesOnePendingRestockByAnother() {
+        UUID bookId = UUID.randomUUID();
+        saveStock(new StockItemDTO(bookId, 9, 2, 4, 6, true, PENDING));
+        entityManager.clear();
+
+        stockItemDataService.save(new StockItemDTO(bookId, 9, 2, 4, 6, true, OTHER_PENDING));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", "DIST-RO-0042"),
+                entry("pending_restock_quantity", 5),
+                entry("pending_restock_expected_delivery_date", LocalDate.of(2027, 11, 30)),
+                entry("pending_restock_backordered", false));
+        entityManager.clear();
+        assertThat(stockItemDataService.findByBookId(bookId).pendingRestock()).isEqualTo(OTHER_PENDING);
+    }
+
+    @Test
+    void anUpdateReplacesAPendingRestockThatIsNotBackorderedByOneThatIs() {
+        UUID bookId = UUID.randomUUID();
+        saveStock(new StockItemDTO(bookId, 9, 2, 4, 6, true, OTHER_PENDING));
+        entityManager.clear();
+
+        stockItemDataService.save(new StockItemDTO(bookId, 9, 2, 4, 6, true, PENDING));
+
+        assertThat(storedPendingRestock(bookId)).containsExactly(
+                entry("pending_restock_order_id", "R-7781"),
+                entry("pending_restock_quantity", 12),
+                entry("pending_restock_expected_delivery_date", LocalDate.of(2026, 7, 3)),
+                entry("pending_restock_backordered", true));
+        entityManager.clear();
+        assertThat(stockItemDataService.findByBookId(bookId).pendingRestock()).isEqualTo(PENDING);
+    }
+
+    @Test
+    void findLowStockCarriesThePendingRestockOfEachItem() {
+        // All three items are low: the first and the last in the result have a pending restock, the middle one none.
+        StockItemDTO lowWithPending = new StockItemDTO(id("41"), 3, 2, 3, 10, true, OTHER_PENDING);
+        StockItemDTO lowWithoutPending = new StockItemDTO(id("42"), 2, 0, 3, 10, true);
+        StockItemDTO lowWithOtherPending = new StockItemDTO(id("43"), 4, 1, 4, 7, true, PENDING);
+        saveStock(lowWithoutPending);
+        saveStock(lowWithPending);
+        saveStock(lowWithOtherPending);
+        entityManager.clear();
+
+        assertThat(stockItemDataService.findLowStock())
+                .containsExactly(lowWithPending, lowWithoutPending, lowWithOtherPending);
+    }
+
+    @Test
+    void storesAPendingRestockOrderIdOf64Characters() {
+        UUID bookId = UUID.randomUUID();
+        PendingRestockDTO longestId = new PendingRestockDTO("R".repeat(63) + "9", 12, LocalDate.of(2026, 7, 3), true);
+
+        saveStock(new StockItemDTO(bookId, 9, 2, 4, 6, true, longestId));
+        entityManager.clear();
+
+        assertThat(stockItemDataService.findByBookId(bookId).pendingRestock()).isEqualTo(longestId);
+    }
+
+    @Test
+    void rejectsAPendingRestockOrderIdOf65Characters() {
+        // The 65th character is no space: PostgreSQL silently cuts trailing spaces that do not fit the column.
+        UUID bookId = UUID.randomUUID();
+        seedBook(bookId);
+        StockItemDTO tooLong = new StockItemDTO(bookId, 9, 2, 4, 6, true,
+                new PendingRestockDTO("R".repeat(64) + "9", 12, LocalDate.of(2026, 7, 3), true));
+
+        // The failed insert leaves the transaction unusable, so nothing touches the database after it.
+        assertThatThrownBy(() -> stockItemDataService.save(tooLong))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("character varying(64)");
+    }
+
+    @Test
+    void theStockItemTableHasExactlyTheFourNullablePendingRestockColumnsWithoutDefaults() {
+        List<Map<String, Object>> columns = jdbcTemplate.queryForList("""
+                select column_name, data_type, character_maximum_length, is_nullable, column_default
+                from information_schema.columns
+                where table_schema = current_schema() and table_name = 'stock_item'
+                  and column_name like 'pending%'
+                order by column_name""");
+
+        assertThat(columns).containsExactly(
+                column("pending_restock_backordered", "boolean", null),
+                column("pending_restock_expected_delivery_date", "date", null),
+                column("pending_restock_order_id", "character varying", 64),
+                column("pending_restock_quantity", "integer", null));
+    }
+
+    @Test
+    void theStockItemTableHasNoOtherColumnsThanTheStoredFields() {
+        List<String> columns = jdbcTemplate.queryForList("""
+                select column_name from information_schema.columns
+                where table_schema = current_schema() and table_name = 'stock_item'
+                order by ordinal_position""", String.class);
+
+        assertThat(columns).containsExactly("book_id", "on_hand", "reserved", "reorder_level", "reorder_quantity",
+                "low_stock_signalled", "version", "pending_restock_order_id", "pending_restock_quantity",
+                "pending_restock_expected_delivery_date", "pending_restock_backordered");
+    }
+
+    @Test
+    void thePendingRestockColumnsAddNoConstraint() {
+        // PostgreSQL 18 lists NOT NULL as constraints of type 'n'; every other constraint is the one V2 created.
+        List<String> constraints = jdbcTemplate.queryForList("""
+                select conname from pg_constraint
+                where conrelid = 'stock_item'::regclass and contype <> 'n'
+                order by conname""", String.class);
+
+        assertThat(constraints).containsExactly("fk_stock_item_book", "pk_stock_item");
+    }
+
+    /** One row of {@code information_schema.columns} for a nullable column without a default. */
+    private static Map<String, Object> column(String name, String dataType, Integer maximumLength) {
+        Map<String, Object> column = new LinkedHashMap<>();
+        column.put("column_name", name);
+        column.put("data_type", dataType);
+        column.put("character_maximum_length", maximumLength);
+        column.put("is_nullable", "YES");
+        column.put("column_default", null);
+        return column;
+    }
+
+    /**
+     * Reads the four pending restock columns by JDBC, in column order, with the date as a {@link LocalDate}. JDBC never
+     * flushes Hibernate, so it shows what the save itself wrote.
+     */
+    private Map<String, Object> storedPendingRestock(UUID bookId) {
+        Map<String, Object> row = jdbcTemplate.queryForMap("select pending_restock_order_id, pending_restock_quantity,"
+                + " pending_restock_expected_delivery_date, pending_restock_backordered from stock_item"
+                + " where book_id = ?", bookId);
+        Object date = row.get("pending_restock_expected_delivery_date");
+        row.put("pending_restock_expected_delivery_date", date == null ? null : ((Date) date).toLocalDate());
+        return row;
     }
 
     /** A fixed book id starting with the given hex digits; keep the first digit 0 to 7 (see the class comment). */

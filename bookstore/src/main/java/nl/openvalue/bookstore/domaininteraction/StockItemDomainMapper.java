@@ -2,9 +2,13 @@ package nl.openvalue.bookstore.domaininteraction;
 
 import java.time.Clock;
 import nl.openvalue.bookstore.domain.BookId;
+import nl.openvalue.bookstore.domain.PendingRestock;
 import nl.openvalue.bookstore.domain.StockItem;
 
-/** Rebuilds a {@link StockItem} from a {@link StockItemDTO}; the stock item checks every invariant again. */
+/**
+ * Rebuilds a {@link StockItem} from a {@link StockItemDTO}; the stock item checks every invariant again, and the
+ * pending restock checks every value of its own.
+ */
 public final class StockItemDomainMapper {
 
     private StockItemDomainMapper() {
@@ -19,7 +23,16 @@ public final class StockItemDomainMapper {
                 dto.reorderLevel(),
                 dto.reorderQuantity(),
                 dto.lowStockSignalled(),
-                null, // the stock item DTO does not carry a pending restock yet
+                toDomain(dto.pendingRestock()),
                 clock);
+    }
+
+    /** A missing pending restock stays missing; any other one is checked by {@link PendingRestock}. */
+    private static PendingRestock toDomain(PendingRestockDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        return new PendingRestock(dto.restockOrderId(), dto.quantity(), dto.expectedDeliveryDate(),
+                dto.backordered());
     }
 }
