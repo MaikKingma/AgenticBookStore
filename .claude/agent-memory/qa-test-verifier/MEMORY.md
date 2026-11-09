@@ -17,3 +17,4 @@
 - [Frontend Vitest probe techniques](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap survivor gap, dev-server script, sort mutants incl. derived columns, page-level status-keyed probes, tsc type probes
 - [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
+- [Live UI walk verification](live-ui-walk-verification.md) — re-walking a recorded browser walk with own seed, playwright-cli listeners, favicon and Tab-start traps, table-squeeze check, thread-name inventory normalisation

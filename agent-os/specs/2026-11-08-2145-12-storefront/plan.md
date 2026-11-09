@@ -33,7 +33,8 @@ gate and green checks.
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | #88 | sdd/12-storefront/T7 | PASS r2 | ENDORSE |
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | #92 | sdd/12-storefront/T8 | PASS r1 | ENDORSE |
 | T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | #96 | sdd/12-storefront/T9 | PASS r2 | ENDORSE |
-| T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | | | | |
+| T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | #99 | sdd/12-storefront/T10 | PASS r1 | ENDORSE |
+| T11 | frontend | [T10] | 11 | elevated | sonnet | fix task (A11): order table keeps whole words and scrolls at 390 px, no `/favicon.ico` request, 14 screenshots retaken, record updated | | | | |
 
 Batches are sequential because tasks run one at a time; T1 and T2 are independent, T4 and T5 are independent, T8 and
 T9 are independent.
@@ -229,6 +230,21 @@ Never fable.
   ("disabled buttons have a visible reason") is accepted as not applying to an empty chat field (the empty field is
   the reason; the 1001-character case shows its counter). Residuals R17 (chat styling has no live screenshot until
   spec 08) and R18 (leaving the page clears the visible conversation; the server keeps its memory) go to Gate 2.
+  Gate re-run self-accepted.
+- A11 (2026-11-09, orchestrator, after T10 and the QA lead's T10 r1 review): origin/factory (spec 06) was merged into
+  the spec branch before T10 (eba9b1d); Java baselines at that point are bookstore 936 (ArchitectureTest 22,
+  ArchitectureSelfTest 58), distributor 190; the bookstore/pom.xml T1 hash line is replaced by the patch-id check
+  `97b8dbc4d10d5efe93535c873b80cd51994c0505` (spec 12's own pom change). T10 found two product defects, so fix task
+  T11 is added (module frontend, depends on T10, tier elevated, verifier sonnet): F1, the order page Items table breaks
+  words mid-word at 390 px because its cells inherit `overflow-wrap: anywhere` from `.card`, so `.table-scroll` never
+  scrolls: fixed as an addition on `.order-lines th, .order-lines td` (`overflow-wrap: normal`), not an edit of `.card`;
+  F2, a fresh session requests `/favicon.ico` (404): fixed with `<link rel="icon" href="data:,">` in `index.html` (no
+  URL, no colour literal). T11 retakes all 14 screenshots and updates the record (F1/F2 fixed, stale lines, the "about
+  69" WARN sentence to 67 + 1). T11 fileScope: `frontend/src/styles/global.css` (addition only),
+  `frontend/index.html`, new test files under `frontend/src/` (or insert-only into `indexHtml.test.ts`), the record and
+  `visuals/*.png`. T11 qaDirective: C0 plus the "T11" block of the QA ledger section 4. The referee times in the PR body
+  quote both measurements (implementer 25.1 / 21.1 s, verifier 34.1 / 30.0 s under parallel load). origin/factory is
+  merged again before qa-final; baselines then come from a base referee on the merged factory commit (FF-T10 3).
   Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
