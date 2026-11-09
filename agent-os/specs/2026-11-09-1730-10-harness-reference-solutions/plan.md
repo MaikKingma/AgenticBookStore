@@ -27,7 +27,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | staging layout, scripts, self-test, branch-cut tool | root | [] | 1 | critical | opus | opus | | | |
+| T1 | staging layout, scripts, self-test, branch-cut tool | root | [] | 1 | critical | opus | opus | #135 | sdd/10-harness-reference-solutions/T1 | ENDORSE (r3) |
 | T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | | | |
 | T3 | Level 1 scenarios run and recorded | root | [T2] | 3 | elevated | sonnet | sonnet | | | |
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | | | |
