@@ -97,6 +97,13 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     test for `defaultOptions` merge side effects (model, `max_tokens`, sampling params) killed by override mutants;
     an unconditional option vs a model chosen by env variable is a residual. Live acceptance stays a keyed re-check.
 
+15. **Test contexts against exported variables (fix-08 T3, A4).** Env vars outrank `application-test.yml`. Pin a blank
+    key plus a loopback base URL (`http://127.0.0.1:9`) in the test base's `@TestPropertySource`; never
+    `spring.ai.model.chat=none` there (the EPP then skips and the switch's full-boot witness goes red). Falsifiers:
+    first source holding each key indexed before `systemEnvironment` (filter `configurationProperties`), exact URL
+    value. Proof the URL binds: an information run with the model exported, per-host `Failed to connect` counts. Spring
+    AI 2.0.2 has one URL property; `AnthropicSetup` reads `ANTHROPIC_BASE_URL` only when it is null.
+
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is
     still the evidence.
