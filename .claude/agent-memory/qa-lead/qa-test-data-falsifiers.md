@@ -1,6 +1,6 @@
 ---
 name: qa-test-data-falsifiers
-description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs); read before writing the falsifier list of a qaDirective
+description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs, producer-shaped external ids, partial-row decode residuals); read before writing the falsifier list of a qaDirective
 metadata:
   type: feedback
 ---
@@ -82,3 +82,9 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
    - Length bounds on a string kept as given: add a witness padded with a trailing space to n+1 (kills a length
      measured on `strip()`). In a slice test the 65th character must not be a space: PostgreSQL silently truncates
      excess trailing spaces in `varchar(n)` instead of failing.
+   - An external id passed through copy paths needs one witness in the real producer's shape and case (the
+     distributor emits lowercase UUIDs, so one lowercase UUID literal with a-f letters): all-uppercase test ids
+     (`R-7781`) let a case-folding copy path survive every equality test (spec 07 T2). Name it in the strategy.
+   - A stored optional value object decoded by a guard on one column (all four columns or none) gives an NPE or a
+     silent ignore on hand-written partial rows. Accept it as a residual only after a grep shows a single writer
+     that writes all columns or none; name both behaviours in the residual text at strategy time.
