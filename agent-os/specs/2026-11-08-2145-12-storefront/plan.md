@@ -30,7 +30,7 @@ gate and green checks.
 | T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | #77 | sdd/12-storefront/T4 | PASS r3 | ENDORSE |
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | #81 | sdd/12-storefront/T5 | PASS r3 | ENDORSE |
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | #85 | sdd/12-storefront/T6 | PASS r2 | ENDORSE |
-| T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | | | | |
+| T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | #88 | sdd/12-storefront/T7 | PASS r2 | ENDORSE |
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | | | | |
 | T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | | | | |
 | T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | | | | |
@@ -112,6 +112,19 @@ Never fable.
   submit listener removed with `onTestFinished` (probes: removal and a late `setTimeout` cancel). The `Not implemented`
   grep on the verifier's own Vitest log (stderr captured) is the only guard for jsdom errors. T10 and qa-final: live
   sticky header check after scrolling, `PagePending` grep empty, T6 frozen lines hold.
+- FF-T7 (qa-lead, T7 r2; applies to T8 to T10 and qa-final; full text QA ledger "FF-T7" 1 to 7): Vitest baseline 14
+  files, 457 tests (455 passed + 2 expected fail); setupTests.ts pin b6ac2e72 (A8). Frozen T7 files (basket.tsx,
+  basket.test.tsx except the A8 row, estimate.ts, estimate.test.ts, BookDetailPage.tsx, BookDetailPage.test.tsx,
+  BasketBadge.tsx, StockBadge.tsx, setupTests.ts) keep their T7 hashes. Pages use `useBasket()` (`lines`, `itemCount`,
+  `add`, `setQuantity`, `remove`, `clear`; `add`/`setQuantity` return the refusal message or undefined) and
+  `lineTotal`, `basketTotal`, `isMoney` from state/estimate.ts, and show refusal messages from the action's return
+  value; tests seed the basket with a raw JSON literal under `openbook.basket` and assert an empty basket as key null.
+  T8 basket page: quantity changes from a line at 3 to 0, 11, `''`, `2.5` are refused (input and stored line stay 3),
+  1 and 10 accepted; the only `Number(` outside estimate.ts is the quantity handler; trailing-zero witness (12.50 x 2
+  shows "25.00"); sort sweep over displayed lines; the estimated total states its currency source. One basket action per
+  event handler; checkout calls `clear()` once after the 202. After the 202 the key is null, the header badge shows "0"
+  and the order page shows; on 409 the stored basket text is unchanged; error helpers live in T8's own files. T9 adds
+  one constant to limits.ts with no removed line. T10: badge updates without reload, basket survives a reload.
 
 ## Amendments
 
@@ -166,6 +179,15 @@ Never fable.
   `setupTests.ts:5` claims jsdom "Not implemented" errors reach the console trap; they do not, the C0-7 grep is the
   only guard): T7's fileScope gains a comment-only correction of that line (no code change; the new setupTests.ts
   hash replaces the FF-T2 pin). Gate re-run self-accepted.
+- A8 (2026-11-09, orchestrator, on the QA lead's T7 r2 recommendation): accepted T7 implementer decisions inside the
+  card: storage key `openbook.basket`, an empty basket removes the key; corrupt storage gives an empty basket; an
+  unknown book id on `setQuantity` or `remove` is a no-op; the price parser accepts 0 to 2 fraction digits, else
+  `RangeError`; a failed book or stock request shows the alert; the level-1 heading is "Book" while loading or failed;
+  the header badge always renders (0 when empty) next to the Basket link inside the banner; `basketTotal` adds
+  without a currency check (spec 02 money is EUR only). The setupTests.ts pin is now
+  `b6ac2e72aa9032f8299a3e92882f97831b8946e229e67d9a286102ad9c55ac2c` (comment-only change; FF-T2's P10, P10c, P11
+  trigger applies to code edits of setupTests.ts only). T8's fileScope gains `frontend/src/state/basket.test.tsx` for
+  one insertion-only `['null', null]` row in the mixed-list table (closes survivor N-P9i3). Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 

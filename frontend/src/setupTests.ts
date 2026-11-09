@@ -2,9 +2,10 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, expect, vi } from 'vitest'
 
-// Console trap: React key and act warnings and jsdom "Not implemented" errors reach console.error or console.warn.
-// They fail the test instead of passing as noise on stderr. A test that provokes a log on purpose must clear the
-// recorded calls with vi.mocked(console.error).mockClear() (or the warn equivalent) before it ends.
+// Console trap: React key and act warnings reach console.error or console.warn. They fail the test instead of passing
+// as noise on stderr. jsdom "Not implemented" errors do not go through the console: they print to raw stderr and are
+// not caught here, so the test log is searched for "Not implemented". A test that provokes a log on purpose must clear
+// the recorded calls with vi.mocked(console.error).mockClear() (or the warn equivalent) before it ends.
 beforeEach(() => {
   vi.spyOn(console, 'error')
   vi.spyOn(console, 'warn')

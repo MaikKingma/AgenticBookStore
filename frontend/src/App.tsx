@@ -1,6 +1,9 @@
+import { BasketBadge } from './components/BasketBadge'
+import { BookDetailPage } from './pages/BookDetailPage'
 import { CataloguePage } from './pages/CataloguePage'
 import { HashRouter, Link, useRoute } from './router'
 import type { KnownRoute } from './router'
+import { BasketProvider } from './state/basket'
 
 // The navigation items. A page that belongs to an item (a book to the catalogue, the checkout to the basket, one order
 // to the orders) keeps that item marked as the current page.
@@ -27,6 +30,7 @@ function SiteHeader() {
                 <Link to={item.to} aria-current={item.pages.some((page) => page === route.name) ? 'page' : undefined}>
                   {item.label}
                 </Link>
+                {item.to === '/basket' && <BasketBadge />}
               </li>
             ))}
           </ul>
@@ -55,7 +59,7 @@ function Page({ route }: { route: KnownRoute }) {
     case 'catalogue':
       return <CataloguePage />
     case 'book':
-      return <PagePending title="Book" />
+      return <BookDetailPage id={route.id} />
     case 'basket':
       return <PagePending title="Basket" />
     case 'checkout':
@@ -71,13 +75,13 @@ function Page({ route }: { route: KnownRoute }) {
 
 function App() {
   return (
-    <>
+    <BasketProvider>
       <SiteHeader />
       <main className="page">
         <HashRouter>{(route) => <Page route={route} />}</HashRouter>
       </main>
       <SiteFooter />
-    </>
+    </BasketProvider>
   )
 }
 

@@ -53,6 +53,11 @@ metadata:
   underscore (`SCIENCE_FICTION`) to pin "shown as sent".
 - Worktree Bash guard refuses `cd <dir> && ...` and `for` loops inline: use relative paths from the worktree root or a
   script in `.claude/comms/tmp`. The `Grep` tool does not exist here; grep through Bash.
+- A synchronous App test row that now renders a real fetching page: install `mockFetch` routes whose `respond` is
+  `new Promise<Response>(() => {})`, or the answer lands after the test and logs an act warning (console trap fails it).
+  A hook that throws outside its provider logs through `console.error`: `vi.mocked(console.error).mockClear()` after the
+  `toThrow` assertion. A stale-answer test needs `await act(async () => { for (...) await Promise.resolve() })` after the
+  body-read witness; probe it by forcing `if (true)` in the guard (both success and failure branch).
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.

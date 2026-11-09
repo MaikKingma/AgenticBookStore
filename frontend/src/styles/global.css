@@ -366,6 +366,56 @@ textarea {
   margin-bottom: 0;
 }
 
+/* Header: the basket count sits next to the Basket link */
+
+.site-nav li {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Book detail: the facts are a list that stacks on a phone and has two columns from tablet width */
+
+.book-facts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 1.5rem;
+  margin: 0 0 1.5rem;
+}
+
+.book-facts dt {
+  font-weight: 600;
+}
+
+.book-facts dd {
+  margin: 0 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.book-facts ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.stock-note {
+  margin-left: 0.5rem;
+}
+
+.book-actions p {
+  margin: 1rem 0 0;
+}
+
+@media (min-width: 40rem) {
+  .book-facts {
+    grid-template-columns: max-content 1fr;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .book-facts dd {
+    margin: 0;
+  }
+}
+
 /* Reduced motion: no transitions or animations for people who ask for none */
 
 @media (prefers-reduced-motion: reduce) {
