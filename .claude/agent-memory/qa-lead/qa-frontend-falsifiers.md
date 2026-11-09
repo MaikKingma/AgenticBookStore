@@ -36,7 +36,7 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
 - A named-surface comment is a trusted claim: demand a test that the claimed surface exists (the ancestor rule's background), or deleting the ancestor rule leaves white-on-snow links green (spec 12 T4 K4).
 - A threshold constant is pinned only between the nearest calibration pairs: name a band witness (`#767676` on white 4.54 passes, `#777777` 4.48 fails), or record it as equivalent only after checking no pair of the pinned token set lies in the band.
 - A class contract checked as "some selector names the class" lets base blocks be deleted; later tasks need an insertion-only diff on the stylesheet.
-- A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11).
+- A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11). A cascade-aware reader that skips at-rules (so a never-true `@media (min-width: 9999px)` dies) still misses an always-true media override and a same-specificity rule on another selector (`main.page` vs `.app-shell > main`): to pin it in a test, name a closed-world allow-list of (selector, context) pairs over ALL contexts in the falsifier list (fix-12g T2).
 
 ## Layout and live-browser checks
 

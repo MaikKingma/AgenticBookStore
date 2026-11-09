@@ -305,3 +305,30 @@ describe('the shell', () => {
     expect(screen.getByRole('contentinfo')).toHaveTextContent('OpenBook, the J-Fall 2026 workshop shop by OpenValue')
   })
 })
+
+describe('the shell element', () => {
+  // The banner, the main landmark and the footer are the only element children of one shell element, in this order. The
+  // shell is what the stylesheet gives the full window height, so the footer can sit at the bottom of a short page.
+  function expectOneShell(container: HTMLElement) {
+    const shells = container.querySelectorAll('.app-shell')
+    expect(shells).toHaveLength(1)
+    const children = Array.from(shells[0].children)
+    expect(children).toHaveLength(3)
+    expect(children[0]).toBe(screen.getByRole('banner'))
+    expect(children[1]).toBe(screen.getByRole('main'))
+    expect(children[2]).toBe(screen.getByRole('contentinfo'))
+  }
+
+  it('puts the header, the main and the footer in one shell element', async () => {
+    answerCatalogue()
+    const user = userEvent.setup()
+    const { container } = render(<App />)
+    expect(await screen.findByText('No books match your search.')).toBeInTheDocument()
+    expectOneShell(container)
+
+    await user.click(screen.getByRole('link', { name: 'Basket' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Basket' })).toBeInTheDocument()
+    expectOneShell(container)
+  })
+})
