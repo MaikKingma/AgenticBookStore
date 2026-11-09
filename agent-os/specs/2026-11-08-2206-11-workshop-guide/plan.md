@@ -48,7 +48,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
-| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
+| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | in QA | #124 | sdd/11-workshop-guide/T11 | |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
@@ -547,6 +547,12 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   gains exactly one added line on `guide/docs/04-level-3-behavioral-control.mdx`, after line 130:
   `[Windows hooks](./reference/troubleshooting.md#windows-hooks)`. Checked under FF-44. Consequence: one line; no other
   change to the L3 page (the line 55 wording, R4, stays an owner note).
+  Revised 2026-11-09 (orchestrator, on the T11 implementer's finding that a single line renders inside the L3:130
+  paragraph): exactly two added lines, one empty line and the unchanged link line, so the link is its own paragraph.
+  FF-44's "exactly that line" reads "exactly these two lines"; with them removed the file hashes to `t9-hashes.txt`.
+- A13 (2026-11-09, orchestrator, T11 card ruling): the cheat sheet's "two tables" in the card summary yields to spec 11
+  ("one page, printable", S11:36) and card AC2 (at most 2 A4 pages, the second only for the Level 4 table): commands
+  and files as one bullet list, the Level 4 commands as a table. Consequence: none outside the cheat sheet.
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 
