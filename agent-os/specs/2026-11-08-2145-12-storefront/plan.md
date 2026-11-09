@@ -28,7 +28,7 @@ gate and green checks.
 | T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | #72 | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
 | T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | PASS r2 | ENDORSE |
 | T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | #77 | sdd/12-storefront/T4 | PASS r3 | ENDORSE |
-| T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | | | | |
+| T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | (pending) | sdd/12-storefront/T5 | PASS r3 | ENDORSE |
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | | | | |
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | | | | |
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | | | | |
@@ -86,6 +86,20 @@ Never fable.
   insertion in T6, styleContract.test.ts, tokens.css, fonts.css, OFL.txt, woff2, indexHtml.test.ts,
   setupTests.test.ts, setupTests.ts) keep their T4 hashes; only `main.tsx` (T6) and `global.css` (T6 to T9, additions
   only) may change.
+- FF-T5 (qa-lead, T5 r3; applies to T6 to T10 and qa-final): Vitest baseline 8 files, 206 tests (204 passed + 2
+  expected fail); the 10 T5 files keep their T5 hashes (QA ledger). Pages use the T5 API surface and never
+  re-implement it: `getJson`, `postJson`, `ApiError` (`.problem`), `Problem {status, title, detail?, code?, details}`
+  (network failure status 0 "Cannot reach the bookstore"; Boot error JSON has no code); pages key on `problem.code`
+  (429 on the status); endpoints `searchBooks`, `getBook`, `getStock`, `getOrder`, `findOrders`, `placeOrder`, `chat`;
+  test helpers `mockFetch(routes)` (`calls`, `assertAllMatched`, `takeUnmatched`), `jsonResponse`, `problemResponse`,
+  `textResponse`; routes match exactly in URLSearchParams encoding. Unmatched-route trap: an unmatched request becomes
+  the network alert, so a test expecting "Cannot reach the bookstore" answers through a matched route whose `respond`
+  throws and asserts `mock.calls.map((c) => c.path)` exactly; every other error test asserts code-specific text. T7
+  renders authors from a list unordered on full string, surname and length (for example `['Ian Goodfellow',
+  'Yoshua Bengio', 'Aaron Courville']`) and probes a surname sort. Fixture tabulation: before handoff implementers
+  tabulate every array inside a pass-through or order assertion (three or more elements, every attribute a peak,
+  valley or zigzag in string and number order, UUIDs one entity each, first hex digit 0 to 7); verifiers rebuild the
+  table and run one sort sweep per attribute and direction.
 
 ## Amendments
 
@@ -121,6 +135,14 @@ Never fable.
   `/* ob-on: ... */` surface on a descendant selector `.X ...` must equal the background of the `.X` rule (or a
   documented ancestor surface), with a fixture proving a false claim fails. Closes residual R10 (deleting the
   `.site-footer` base rule left white footer links on snow undetected). Gate re-run self-accepted.
+- A6 (2026-11-09, orchestrator, on the QA lead's T5 r3 recommendation): T5's fileScope includes
+  `frontend/src/api/endpoints.test.ts` and `frontend/src/api/fetchMock.test.ts`. Accepted implementer decisions inside
+  the card: `searchBooks` omits missing, empty or whitespace-only criteria and sends other values as typed (no trim);
+  the `Accept` header is exactly `application/json, application/problem+json`; queries use URLSearchParams encoding;
+  a 2xx with a non-JSON, empty or malformed body and an unreadable body become an `ApiError`; `mockFetch` has an
+  optional `whenTestFinishes` parameter. C0-17 reads per field (every string sent needs one edge-whitespace witness).
+  Residual R11 (no test pins the default `onTestFinished` wiring of `mockFetch`; a deliberately failing test would be
+  needed) is carried to Gate 2, mitigated by the T5 hash pin. Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 
