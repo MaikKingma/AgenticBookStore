@@ -20,3 +20,4 @@
 - [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT and REQUIRES_NEW delegate probes, row-lock hang
 - [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag guards on JSON views, null-key forms, detail pins
 - [Live UI walk verification](live-ui-walk-verification.md) — re-walking a browser walk with own seed, playwright-cli listeners, favicon/Tab traps, table squeeze, 4xx console line, access-log cache check
+- [Bash script test probes](bash-script-test-probes.md) — PATH-bash interpreter trap, exact-replace mutant dirs, push trace/lease/atomic witnesses, CI internal-error runs

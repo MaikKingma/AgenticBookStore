@@ -56,11 +56,12 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | branch | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Demo seed, Flyway locations per profile, empty-catalogue guard, seed census test | bookstore | [] | 1 | elevated | sonnet | sonnet | done | PASS | ENDORSE (r0 REJECT) | 1 | #121 | sdd/09-workshop-baseline/T1 | 7664a56 |
-| T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | todo | | | | | | |
+| T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | #123 | sdd/09-workshop-baseline/T4 | cd354c6, 30303e6 |
 | T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | todo | | | | | | |
 | T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | todo | | | | | | |
+| T5 | Test-only follow-up FU-T4-1: pin that a remote baseline `main` wins over a different local one | root | [T4] | 4 | critical | opus | opus | todo | | | | | | |
 
-Execution order, one task at a time: T1, T4, T2, T3.
+Execution order, one task at a time: T1, T4, T2, T3, T5.
 
 ## T1 Demo seed data and Flyway locations per profile
 
@@ -221,9 +222,27 @@ Execution order, one task at a time: T1, T4, T2, T3.
   guarded; none is tracked today). The optional refusal when `main` is checked out in a worktree is accepted into T4
   criterion 2.
 
+## T5 Test-only follow-up for the publish script (FU-T4-1)
+
+- fileScope: `scripts/test-publish-workshop-main.sh`.
+- qaDirective: ledger C0, T4 directive, review log "T4 r1" (FU-T4-1, R10).
+- Acceptance criteria:
+  1. A new test case after the existing reuse cases makes a local parentless commit with the published `main`'s tree,
+     the baseline message and a different date, then runs `--push`: exit 0, remote `main` and tag unchanged, local
+     `main` equal to the remote's.
+  2. The case kills the mutant that swaps the remote-first reuse order (script:217-221) under `/bin/bash` 3.2 with a
+     logging shim proving which bash ran; every earlier assertion stays green; no change to the script or workflows.
+  3. Same safety rules as T4: scratch repositories only, GitHub's `main` and tags untouched.
+
 ## Amendments
 
-(none)
+- A1 (2026-11-09, orchestrator, after the T4 r1 ENDORSE): (1) T4 criterion 7 reads "adds no actionlint finding"
+  (the base `ci.yml` has one SC2016 info finding at line 28 on the existing verify job, which the insertion-only rule
+  keeps) and "runs on every push and pull request that `ci.yml` already triggers on" (its existing triggers). (2) T5
+  added as a test-only follow-up for residual R10 (a remote baseline `main` must win over a different local one, or a
+  second machine's run would force-move public `main` to an equal-tree commit). (3) T4 accepts `--remote` without a
+  value or without `--push` as a usage error (exit 2). Consequence: none for T1 to T3; qa-final gains the T4 hash,
+  shim, lint and R10 harness checks.
 
 ## QA feed-forward
 
@@ -238,3 +257,10 @@ Execution order, one task at a time: T1, T4, T2, T3.
   run order from the `Running` lines.
 - FF-3 (qa-final): on the tip seed `grep -c 'ON CONFLICT DO NOTHING'` is 5 and `grep -c 'DO UPDATE'` is 0 (R8); the
   non-ASCII gate runs over every file of the spec diff; the seed SQL and census test hashes equal the T1 baseline.
+- FF-4 (T4, all later tasks): `updated` and `created` stamps only from `date -u`, never estimated.
+- FF-5 (T4, qa-final): tip hashes of the four T4 files equal the r1 baseline (or the T5 test file its final hash);
+  `/bin/bash scripts/test-publish-workshop-main.sh` with a logging Homebrew-bash shim first on PATH is green with 0
+  shim calls; shellcheck 0 on both scripts, actionlint only the base SC2016 at `ci.yml:28`; an R10 harness (second
+  clone of `factory` without local `main`, default run, then `--push`: remote `main` and tag unchanged) with the
+  swapped-order script as a control that force-moves. Residual R9: CI runs the test on Linux bash 5 only, so bash 3.2
+  stays a manual macOS check.
