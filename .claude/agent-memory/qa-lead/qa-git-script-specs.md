@@ -23,6 +23,10 @@ Written at the spec 09 strategy (publish-workshop-main.sh), confirmed by the T4 
 3. **Reuse precedence.** When a script can reuse a baseline from the remote or from a local branch, ask for a
    witness where both are valid baselines with different SHAs (second machine: default mode first, then `--push`);
    otherwise a swapped order that force-moves the public ref survives. Put it in the falsifier list at strategy time.
+   One such case is not enough: a "newer (or older) committer date wins" variant survives a single local baseline on
+   one side of the remote's date (spec 09 T5 r0 FAIL). Ask for two cases, dated before and after the remote, each with
+   setup checks (distinct commit, `%ct` order) proven live by a flipped-date test variant, and name the tag-first and
+   "local main equals local tag" variants as must-kill.
 4. **Path matching.** Look-alike witnesses for every listed path (`.claude-foo/`, `CLAUDE.md.example`,
    `docs/specs-notes.md`, nested `x/specs/y`, `docs/spec-pack-old/`) kill prefix-grep mutants; a guard run from a
    subdirectory kills a missing cd to the top level (pathspecs are cwd-relative, the guard then passes silently).

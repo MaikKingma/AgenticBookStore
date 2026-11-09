@@ -22,7 +22,9 @@ For a prose task the tests are a claim census plus gate greps. What held:
 - **Background jars and Vite:** start each from a script file with `run_in_background`, stop by the PID that
   `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows; the exit-143 task notifications that follow are the kill, not a failure.
 - **`rg` works in the Bash tool, not in script files.** Run the gate greps as separate Bash calls with a positive control
-  file in the scratchpad (exit 0) next to each empty result (exit 1). `rg -ni 'a|b'`, never `-E`.
+  file in the scratchpad (exit 0) next to each empty result (exit 1). `rg -ni 'a|b'`, never `-E`. The Bash tool's
+  `rg` is a shell function and its exit 1 shows only as "no output": add `--stats` so "0 matches, N files searched"
+  is the quotable proof.
 - **A rate limit behind the offline check is not reachable offline.** To prove a 429 live, start a second instance with a
   made-up key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub that answers a minimal
   Messages JSON; the stub's request count shows rejected calls never reach the model.

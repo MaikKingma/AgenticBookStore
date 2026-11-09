@@ -1,7 +1,7 @@
 # JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
-# The bookstore starts with demo data: 40 books, their stock and 6 orders. Every ISBN used in this folder is one that the demo data leaves out.
+# The bookstore starts with demo data: 40 books, their stock and 6 orders. Every ISBN these requests add or import is one that the demo data leaves out.
 # Run the files of this folder in this order on one database: catalogue.http, inventory.http, orders.http, distributor.http, demo-flow.http.
-# Every file also runs alone on a freshly seeded database. Run each file once per database, because a second run is refused with 409: its ISBNs are in the catalogue by then.
+# Every file also runs alone on a freshly seeded database. Run this file once per database: a second run is refused with 409, because its ISBNs are in the catalogue by then.
 # Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
 
 # Add Northanger Abbey and remember the new book id for the requests below. The demo data does not hold this ISBN. The body of the answer holds the id of the new book.
