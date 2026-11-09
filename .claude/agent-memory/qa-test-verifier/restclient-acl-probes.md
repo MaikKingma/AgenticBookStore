@@ -41,15 +41,7 @@ became price `0.09`. Neither is a RestClientException, so the adapter's catch ne
   prints the outer class again.
 - Two constructors (public for Spring, package-private for tests) need `@Autowired` on the public one; removing it
   gives "No default constructor found" in every ApplicationContextRunner test, which is the falsifier to quote.
-- Identity-field-equals-request check (answer's `ean` vs the requested id): probe `strip`/`trim`, `stripTrailing`,
-  `startsWith`, `contains`, `endsWith`, digits-only, hyphen-removed, length-only, case-fold. Witness set that kills all
-  but case-fold: another id, last digit differs, leading AND trailing space, suffix (`<id>0`), hyphenated. Leading-space
-  plus last-digit cases alone let `startsWith` and `stripTrailing` live; an implementer's mutant note can be wrong
-  about this, run it. Mutants for "check moved after X" need a real reordering (hoist the later call into a local) in the
-  generator, not a text swap. `lines()` equals `split("\\R")` for LF/CR/CRLF only (differs for VT, FF, U+0085, U+2028/9).
-  Confirmed killers: trailing space kills `stripTrailing` and `startsWith`; an EAN with add-on (`<id>90000`) kills
-  `startsWith` and `contains`. When a lead rejects for surviving mutants, rerun the whole set (reuse the old generator
-  by exec with a renamed output prefix) because an asserting line changed.
+- Identity-field-equals-request check (answer ean vs requested id): use the full op set and witness rows in [[env-switch-mutant-runner]] (identity-equality bullets). Killers confirmed here: trailing space kills `stripTrailing` and `startsWith`; an EAN with add-on (`<id>90000`) kills `startsWith` and `contains`; leading-space plus last-digit cases alone let both live (an implementer mutant note can be wrong, run it). "Check moved after X" mutants need a real reordering (hoist the later call into a local), not a text swap. `lines()` equals `split("\\R")` only for LF/CR/CRLF. After a lead rejects for surviving mutants, rerun the whole set (exec the old generator with a renamed prefix).
 - Log-escaping helper (CR/LF/control chars before logging foreign text): probe CR-only, LF-only, CRLF, U+2028 and
   U+2029 kept, no ISO controls, hex case and width (`%04x`, `%X`; U+2028 prints the same at any width, only a
   leading-zero char like TAB or VT kills width), a missing call site per value, null-safety, a second WARN. The
@@ -61,5 +53,4 @@ became price `0.09`. Neither is a RestClientException, so the adapter's catch ne
   real ACL exception and from the cause-less constructor through both advice classes and compares JSON.
 - Equivalent survivors worth naming, not failing: removing an explicit `contentType(APPLICATION_JSON)` on a POST
   (the JSON converter sets it), hard-coding a currency that a guard already restricts to one value.
-
 Related: [[env-switch-mutant-runner]], [[contract-capture-verification]], [[shell-traps]]

@@ -23,5 +23,4 @@ Rule: a "join instead of exists" probe is only killed by a test whose SQL row li
 - Arithmetic JPQL (`a - b <= c`, `order by a - b`): probe each operand with its default literal (`s.reserved` -> `0`, `s.reorderLevel` -> `3`) in the `where` AND in the `order by` separately; grep the probe log for the generated SQL (`(x.on_hand-0)`) to prove the mutant ran.
 - Mapper helpers shared by insert and update (`toNewEntity` calls `copyInto`): to probe one path only, append the mutated setter calls after the shared call in that one method instead of editing the helper.
 - A "save unchanged keeps version 0" test (save, clear, `save(findBy(...))`) also kills read-path swaps in `toDTO`, because the swapped DTO dirties the entity on the second save.
-
 Related: [[domain-mutation-probes]], [[spring-runtime-probes]]

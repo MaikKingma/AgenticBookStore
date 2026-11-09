@@ -18,7 +18,6 @@ Self-test (fixture) review techniques:
 - Containment-only assertions (`anyMatch(contains(fqn))`) cannot see a rule that reports TOO MUCH. Shared-LayeredArchitecture mutation: in ArchUnit 1.5.1, `whereLayer` constraints pile up on a shared instance, while `ignoreDependency` returns a copy. So rules 2 and 3 start reporting the rule-9 positive control and the self-test stays green. Check with detail counts from the dump. The fix is a control asserted absent from every rule.
 - Field-only completeness (`getDeclaredFields` + `@ArchTest`) misses a rule declared as an `@ArchTest static void m(JavaClasses)` method. Probe it: ArchitectureTest runs 21 tests and the self-test stays green.
 - Probe both halves of a two-package rule (each package string removed separately) and a rename that keeps the count, so both the size line and the set-equality line are proven to fail.
-
 - Shared-LayeredArchitecture probe via a lazily cached `layers()` (static field without initializer, so class-init order cannot null it) makes every layered description, rule 1's ignoreDependency copy included, show 8 `where layer '` clauses: the copy shares the constraint list.
 
 Composite and parameter-predicate rules (money rule style):
@@ -41,5 +40,4 @@ Grep traps:
 - The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
 - The impl verifier and the QA verifier share the session scratchpad and the W7 prefix. Check `ls` first and use a role infix (`t4-qa-*`) so you never overwrite the impl's evidence.
 - Suffix set equality: script-parse the section 3 table and the test, then prove the checker can fail on a mutated scratch copy.
-
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[shell-traps]]

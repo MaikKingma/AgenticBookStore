@@ -1,0 +1,291 @@
+---
+spec: 12-storefront
+source: docs/spec-pack/specs/12-storefront.md
+status: done
+accepted-by: orchestrator (autonomous)
+gate1: 2026-11-08T20:46:00Z
+gate2: 2026-11-09T09:50:13Z
+qa-lead: on
+base: factory
+spec-branch: sdd/12-storefront/spec
+---
+
+# Plan: 12-storefront (OpenBook)
+
+Every task card (summary, acceptance criteria, fileScope, directive and traps) is the "Task breakdown" section of
+`strategy.md` in this folder, amended by the QA Gate 1 findings GQ1 to GQ14 of `qa-strategy.md` section 2 (all
+accepted) and by the orchestrator decisions in `shape.md`. Each task's qaDirective is C0 (`qa-strategy.md` section 3)
+plus the task's block (`qa-strategy.md` section 4), plus every entry under "QA feed-forward" below.
+
+Tasks run one at a time in the order below. Each branch `sdd/12-storefront/<Tn>` is cut from the spec branch tip and
+its PR is squash-merged into `sdd/12-storefront/spec` after gate PASS (verifier PASS and QA lead ENDORSE), the ship
+gate and green checks.
+
+## Tasks
+
+| id | module | dependsOn | batch | qaTier | qaModel | summary | pr | branch | verdict | qa-lead |
+|---|---|---|---|---|---|---|---|---|---|---|
+| T1 | bookstore | [] | 1 | elevated | sonnet | `StorefrontConfig`, `StorefrontConfigTest` on `IntegrationTestBase`, test `static/shop/index.html`, `bookstore/pom.xml` resources (two parent entries re-declared plus the unfiltered dist entry) | #70 | sdd/12-storefront/T1 | PASS r1 | ENDORSE |
+| T2 | frontend | [] | 2 | elevated | sonnet | `frontend/pom.xml`, create-vite 9.3.4 react-ts scaffold with exact pins, `vite.config.ts`, `setupTests.ts` plus `setupTests.test.ts` guard and console trap (GQ4), smoke test, README; standalone `-f frontend/pom.xml` build | #72 | sdd/12-storefront/T2 | PASS r2 | ENDORSE |
+| T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | PASS r2 | ENDORSE |
+| T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | #77 | sdd/12-storefront/T4 | PASS r3 | ENDORSE |
+| T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | #81 | sdd/12-storefront/T5 | PASS r3 | ENDORSE |
+| T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | #85 | sdd/12-storefront/T6 | PASS r2 | ENDORSE |
+| T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | #88 | sdd/12-storefront/T7 | PASS r2 | ENDORSE |
+| T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | #92 | sdd/12-storefront/T8 | PASS r1 | ENDORSE |
+| T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | #96 | sdd/12-storefront/T9 | PASS r2 | ENDORSE |
+| T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | #99 | sdd/12-storefront/T10 | PASS r1 | ENDORSE |
+| T11 | frontend | [T10] | 11 | elevated | sonnet | fix task (A11): order table keeps whole words and scrolls at 390 px, no `/favicon.ico` request, 14 screenshots retaken, record updated | #101 | sdd/12-storefront/T11 | PASS r1 | ENDORSE |
+
+Batches are sequential because tasks run one at a time; T1 and T2 are independent, T4 and T5 are independent, T8 and
+T9 are independent.
+
+## Models
+
+Implementation sonnet (opus for any rework round 2 or later); verifiers per the table; qa-lead and qa-final opus.
+Never fable.
+
+## Manual checks (not automatable in this cycle)
+
+- Live assistant round trip on `/shop/#/assistant` against the running bookstore, after spec 08 merges (GQ9). Also
+  re-check the 429 and 503 body shapes against the T9 fixtures (OQ-4). Until then T10 records what was observed (page
+  loads, empty state, a sent message shows the alert for the absent endpoint).
+- "Modern", "generous whitespace" and "prominent search bar" (D7) are judged by Maik from the screenshots (GQ8).
+
+## QA feed-forward
+
+- FF-T1 (qa-lead, T1 r1; applies to T2 to T10): compare against the spec 12 baselines: Java tests bookstore 689,
+  distributor 190, ArchitectureTest 21, ArchitectureSelfTest 40, skipped 0; Started lines 15 (bookstore 10,
+  distributor 5), exactly one postgres:18.6 container; C0-7 warning inventory against the T1 referee log
+  (30 `warn|deprecat|self-attach` lines, 5 error-pattern lines) plus this task's classified npm lines; C0-6g non-ASCII
+  prints exactly `IsbnTest.java:67` and `:74`; the four T1 files (`StorefrontConfig.java`, `StorefrontConfigTest.java`,
+  test `static/shop/index.html`, `bookstore/pom.xml`) keep their T1 hashes (QA ledger, Cross-task patterns). No later
+  task's fileScope names a bookstore file.
+- FF-T2 (qa-lead, T2 r2; applies to T3 to T10 and qa-final): Vitest baseline 2 files, 4 tests; each later total is the
+  previous total plus the task's added tests, minus only a removal its card names. `frontend/src/setupTests.ts` keeps
+  sha256 `4b4e2e2dc4d7775e0b1ef457fe0fa178c7bc6293b70179f523eb655e2da68e7a` unless a task's fileScope names it. Every
+  frontend verifier runs two must-fail probes in one of its own task's test files, `console.error('probe')` and
+  separately `console.warn('probe')`, each failing with "console.error or console.warn was called during the test";
+  a task that changes setupTests.ts also runs P10, P10c and P11 as must-fail. Hash files hold only `shasum -a 256`
+  lines (`shasum -c` prints no "improperly formatted" warning). Quote the C0-3 grep in full (including `fails` and the
+  `xit`/`xdescribe`/`xtest` forms). T3 warning inventory: exactly 4 new `[ERROR] npm warn install-scripts ...
+  fsevents@2.3.3` lines per frontend run, counted in both inventories (30+4 and 5+4). Carried to qa-final: the README
+  claim that `./mvnw clean verify` packages dist into the bookstore becomes true at T3; check it at the tip.
+- FF-T3 (qa-lead, T3 r2; applies to T4 to T10 and qa-final): new baselines: referee 22.249 s (first run including the
+  frontend), local warning inventory 34 / 9, CI warnings `verify` 31 and `windows-build` 2. T10 cache-hit evidence:
+  caches saved by a pull_request run do not reach later PRs, so cite the save lines of the spec-branch push run plus
+  the restore lines of a later run, the npm-Windows restore included. The Windows `npm_config_cache` is set only on the
+  `Compile only` step; any later Windows step that runs npm must set the same value. T3 bytes are in the QA ledger.
+- FF-T4 (qa-lead, T4 r3; applies to T5 to T10 and qa-final): Vitest baseline 5 files, 132 tests (130 passed + 2
+  expected fail); exactly 2 expected fail (setupTests.test.ts:56, :64) up to the spec tip, any other `.fails(` is a C0-3
+  FAIL; referee time baseline stays 22.249 s. T6 to T9 use the 17 `CONTRACT_CLASSES` (`wordmark` and `wordmark-book`
+  for "Open" and "Book"); `global.css` changes are additions only (`git diff -U0 -- frontend/src/styles/global.css` shows
+  no `^-[^-]` line unless the card names it). For every new `color` rule with an ob-on comment the verifier quotes the
+  surface it sits on (file:line) and FAILs a claim no CSS backs; a new focusable element on mist, teal or the error
+  background needs its ring surface checked (blue 2.91 on mist, 2.73 on teal, 3.70 on error background). C0-6 greps
+  scan test titles, comments and fixtures: implementers run the literal C0-6 grep set before handoff and build fixtures
+  holding a banned form from string parts; the only exemptions are A2 and A4. T4 bytes (contrast.test.ts except the A5
+  insertion in T6, styleContract.test.ts, tokens.css, fonts.css, OFL.txt, woff2, indexHtml.test.ts,
+  setupTests.test.ts, setupTests.ts) keep their T4 hashes; only `main.tsx` (T6) and `global.css` (T6 to T9, additions
+  only) may change.
+- FF-T5 (qa-lead, T5 r3; applies to T6 to T10 and qa-final): Vitest baseline 8 files, 206 tests (204 passed + 2
+  expected fail); the 10 T5 files keep their T5 hashes (QA ledger). Pages use the T5 API surface and never
+  re-implement it: `getJson`, `postJson`, `ApiError` (`.problem`), `Problem {status, title, detail?, code?, details}`
+  (network failure status 0 "Cannot reach the bookstore"; Boot error JSON has no code); pages key on `problem.code`
+  (429 on the status); endpoints `searchBooks`, `getBook`, `getStock`, `getOrder`, `findOrders`, `placeOrder`, `chat`;
+  test helpers `mockFetch(routes)` (`calls`, `assertAllMatched`, `takeUnmatched`), `jsonResponse`, `problemResponse`,
+  `textResponse`; routes match exactly in URLSearchParams encoding. Unmatched-route trap: an unmatched request becomes
+  the network alert, so a test expecting "Cannot reach the bookstore" answers through a matched route whose `respond`
+  throws and asserts `mock.calls.map((c) => c.path)` exactly; every other error test asserts code-specific text. T7
+  renders authors from a list unordered on full string, surname and length (for example `['Ian Goodfellow',
+  'Yoshua Bengio', 'Aaron Courville']`) and probes a surname sort. Fixture tabulation: before handoff implementers
+  tabulate every array inside a pass-through or order assertion (three or more elements, every attribute a peak,
+  valley or zigzag in string and number order, UUIDs one entity each, first hex digit 0 to 7); verifiers rebuild the
+  table and run one sort sweep per attribute and direction.
+- FF-T6 (qa-lead, T6 r2; applies to T7 to T10 and qa-final; full text QA ledger "FF-T6" 1 to 9): Vitest baseline 11
+  files, 332 tests (330 passed + 2 expected fail). Router contract: `useRoute()` (catalogue, book {id}, basket,
+  checkout, orders, order {id}, assistant, not-found; ids decoded once), `navigate(path)` sets the hash as given
+  (callers encode), `Link to` renders `href="#/..."`; App's `Page` switch is the only route-to-page map; router.tsx and
+  router.test.tsx are frozen. PagePending replacement rule per A7. T7 (owns App.tsx, App.test.tsx) asserts the count
+  badge and the `Main` navigation inside the banner and `toHaveClass('site-header')` on it. StockBadge (T7) keeps the
+  catalogue on `inStock` (T7 verifier re-runs T6 P1, P2, C-badge-inverted); ProblemDetailAlert (T8) keeps its test
+  green unchanged (T8 verifier re-runs P8 and the index-key probe). Every stale-answer guard tests a late success and a
+  late failure with hand-resolved promises. Every form submit test asserts `event.defaultPrevented` from a `document`
+  submit listener removed with `onTestFinished` (probes: removal and a late `setTimeout` cancel). The `Not implemented`
+  grep on the verifier's own Vitest log (stderr captured) is the only guard for jsdom errors. T10 and qa-final: live
+  sticky header check after scrolling, `PagePending` grep empty, T6 frozen lines hold.
+- FF-T7 (qa-lead, T7 r2; applies to T8 to T10 and qa-final; full text QA ledger "FF-T7" 1 to 7): Vitest baseline 14
+  files, 457 tests (455 passed + 2 expected fail); setupTests.ts pin b6ac2e72 (A8). Frozen T7 files (basket.tsx,
+  basket.test.tsx except the A8 row, estimate.ts, estimate.test.ts, BookDetailPage.tsx, BookDetailPage.test.tsx,
+  BasketBadge.tsx, StockBadge.tsx, setupTests.ts) keep their T7 hashes. Pages use `useBasket()` (`lines`, `itemCount`,
+  `add`, `setQuantity`, `remove`, `clear`; `add`/`setQuantity` return the refusal message or undefined) and
+  `lineTotal`, `basketTotal`, `isMoney` from state/estimate.ts, and show refusal messages from the action's return
+  value; tests seed the basket with a raw JSON literal under `openbook.basket` and assert an empty basket as key null.
+  T8 basket page: quantity changes from a line at 3 to 0, 11, `''`, `2.5` are refused (input and stored line stay 3),
+  1 and 10 accepted; the only `Number(` outside estimate.ts is the quantity handler; trailing-zero witness (12.50 x 2
+  shows "25.00"); sort sweep over displayed lines; the estimated total states its currency source. One basket action per
+  event handler; checkout calls `clear()` once after the 202. After the 202 the key is null, the header badge shows "0"
+  and the order page shows; on 409 the stored basket text is unchanged; error helpers live in T8's own files. T9 adds
+  one constant to limits.ts with no removed line. T10: badge updates without reload, basket survives a reload.
+- FF-T8 (qa-lead, T8 r1; applies to T9, T10 and qa-final; full text QA ledger "FF-T8" 1 to 7): Vitest baseline 19
+  files, 549 tests (547 passed + 2 expected fail). T8 files frozen except App.tsx, App.test.tsx, global.css (T9);
+  ProblemDetailAlert.tsx and its test unchanged; T9 removes the last `PagePending` (grep empty after T9). T9 chat form:
+  `defaultPrevented` `[true]` from a document listener (probes: removal, late `setTimeout` cancel); pending guard proven
+  by `fireEvent.submit` past the disabled button (one POST) and by the disabled state, as two separate must-fail
+  probes; after a failure the input keeps its text and the button is enabled again; the alert clears when the next send
+  starts. Fixture tables also cover values the page derives and displays (counters, formatted text) in text and number
+  order. T9 and T10 verifiers report each strategy.md decision their files implement as met (file:line) or a disclosed
+  deviation. T10 walk-through: at 390 px the order page has `scrollWidth <= 390` while `.table-scroll` scrolls; the
+  placed time equals `placedAt` cut to `YYYY-MM-DD HH:MM:SS UTC`; the shortage alert uses basket titles; after checkout
+  the badge reads 0 and `openbook.basket` is null.
+- FF-T9 (qa-lead, T9 r2; applies to T10 and qa-final; full text QA ledger "FF-T9" 1 to 5): Vitest baseline 21 files,
+  581 tests (579 passed + 2 expected fail); T10 adds no test, its referee shows exactly 21 / 581. Every frontend file
+  stays at its latest gate's hash; the T10 product diff (`frontend bookstore pom.xml .github`) is empty. T10 live
+  assistant checks with spec 08 absent: the page opens with h1 "Assistant", an empty conversation, `0 / 1000
+  characters` and Send disabled; pasting 1001 characters shows `1001 / 1000 characters, too long` and disables Send,
+  1000 enables it; one send: quote the status of `POST /assistant/chat` and the exact alert text, no text names an API
+  key variable, the field keeps its text and Send is enabled again; `openbook.conversationId` is a lower-case v4 UUID
+  equal to the request body's `conversationId` and a reload plus a second send posts the same id; the record marks the
+  live round trip and the 429/503 shapes as pending spec 08; the assistant screenshots show the empty state. GQ8 at
+  390 px on the assistant page: `scrollWidth <= 390` with 1000 characters without spaces, focus outline on the textarea
+  and Send, console errors only for the deliberate chat failure.
+
+## Amendments
+
+- A1 (2026-11-08, orchestrator, during T2): the `frontend/README.md` sentence that colour tokens live in
+  `src/styles/tokens.css` moves from T2 to T4, because the file only exists from T4. T4's fileScope gains
+  `frontend/README.md`. Also accepted in T2: `server.host: '127.0.0.1'` in `vite.config.ts` (the dev server listens on
+  the address the README documents). Consequence: none for other tasks. Gate re-run self-accepted.
+- A2 (2026-11-08, orchestrator, on the QA lead's T2 r2 recommendation): T4's fileScope gains
+  `frontend/src/setupTests.test.ts` (test-only, insertion-only) for a guard that proves the console trap fails a test:
+  one `it.fails` per console method that silences the spy and logs, each registering `onTestFailed` to record the
+  error message in a describe-scoped array, plus a following test asserting the array holds two entries containing
+  "console.error or console.warn was called during the test". C0-3 gets an exemption for exactly those `it.fails`
+  lines in `setupTests.test.ts` (nowhere else; the `{ fails: true }` options form stays banned). T4's verifier runs
+  P10, P10c and P11 as must-fail probes. Consequence: residual R9 closes at T4. Gate re-run self-accepted (test-only
+  addition inside the cycle's scope).
+- A3 (2026-11-08, orchestrator, after the T3 r1 FAIL): the T3 card literal `~\AppData\Local\npm-cache` for the Windows
+  npm cache does not exist on `windows-latest` (PR run 42528266851 logged "Path Validation Error" and saved nothing).
+  The Windows job now sets the location explicitly: the `Compile only` step gets `env: npm_config_cache:
+  ${{ runner.temp }}\npm-cache` and the `Cache npm packages` step caches `${{ runner.temp }}\npm-cache` (the `runner`
+  context is allowed in step `env` and `with`). Key, restore-key, pin and step order unchanged; the Linux job keeps
+  `~/.npm`, which saved correctly. Consequence: T3 criterion 2's Windows path reads as amended. Gate re-run
+  self-accepted.
+- A4 (2026-11-08, orchestrator, during T4): `frontend/src/assets/fonts/OFL.txt` is a byte-identical copy of the
+  pinned licence (`@fontsource/montserrat` 5.3.0 `LICENSE`, sha256
+  `f429f739351287574c0c3175a9222bb3e49c7cad3f568a04f2c08d74c107724e`); a licence file is never edited. The C0-6e URL
+  grep and the C0-6c `reserved` grep exempt exactly that file (licence text, not code). Also accepted in T4: the two
+  style tests read CSS with `node:fs` because Vitest 5.1.0 empties every CSS import including `?raw` (card criterion 2's
+  "Vite `?raw`" reads as amended); the 17 classes of `CONTRACT_CLASSES` in `styleContract.test.ts` are the styling
+  contract for T6 to T9: "pinned" means a rule names each class, and declarations are pinned only for the criterion 5
+  primitives; Vitest totals count the two `it.fails` "expected fail" tests. Gate re-run self-accepted.
+- A5 (2026-11-08, orchestrator, on the QA lead's T4 r3 recommendation): T6's fileScope gains
+  `frontend/src/styles/contrast.test.ts` (test-only, insertion-only) for an ob-on surface check: every
+  `/* ob-on: ... */` surface on a descendant selector `.X ...` must equal the background of the `.X` rule (or a
+  documented ancestor surface), with a fixture proving a false claim fails. Closes residual R10 (deleting the
+  `.site-footer` base rule left white footer links on snow undetected). Gate re-run self-accepted.
+- A6 (2026-11-09, orchestrator, on the QA lead's T5 r3 recommendation): T5's fileScope includes
+  `frontend/src/api/endpoints.test.ts` and `frontend/src/api/fetchMock.test.ts`. Accepted implementer decisions inside
+  the card: `searchBooks` omits missing, empty or whitespace-only criteria and sends other values as typed (no trim);
+  the `Accept` header is exactly `application/json, application/problem+json`; queries use URLSearchParams encoding;
+  a 2xx with a non-JSON, empty or malformed body and an unreadable body become an `ApiError`; `mockFetch` has an
+  optional `whenTestFinishes` parameter. C0-17 reads per field (every string sent needs one edge-whitespace witness).
+  Residual R11 (no test pins the default `onTestFinished` wiring of `mockFetch`; a deliberately failing test would be
+  needed) is carried to Gate 2, mitigated by the T5 hash pin. Gate re-run self-accepted.
+- A7 (2026-11-09, orchestrator, on the QA lead's T6 r2 recommendation): accepted T6 implementer decisions inside the
+  card: strict route matching (trailing slash, empty id, extra segments, wrong case, malformed escape give "Page not
+  found"); active navigation (book marks Catalogue, checkout marks Basket, an order marks Orders, unknown marks
+  nothing); genre shown as the server sends it and price as `<price> <currency>`; last search in sessionStorage key
+  `openbook.lastSearch`, invalid stored values ignored; an error replaces the list, a non-ApiError shows "Something
+  went wrong". PagePending replacement rule: T7 replaces `book`, T8 `basket`, `checkout`, `orders`, `order`, T9
+  `assistant`; the App.test.tsx row of a replaced route may change only to install `mockFetch` and to use the real
+  page's level-1 heading; after T9 `grep -rn PagePending frontend/src` is empty. Residual R13 (the comment at
+  `setupTests.ts:5` claims jsdom "Not implemented" errors reach the console trap; they do not, the C0-7 grep is the
+  only guard): T7's fileScope gains a comment-only correction of that line (no code change; the new setupTests.ts
+  hash replaces the FF-T2 pin). Gate re-run self-accepted.
+- A8 (2026-11-09, orchestrator, on the QA lead's T7 r2 recommendation): accepted T7 implementer decisions inside the
+  card: storage key `openbook.basket`, an empty basket removes the key; corrupt storage gives an empty basket; an
+  unknown book id on `setQuantity` or `remove` is a no-op; the price parser accepts 0 to 2 fraction digits, else
+  `RangeError`; a failed book or stock request shows the alert; the level-1 heading is "Book" while loading or failed;
+  the header badge always renders (0 when empty) next to the Basket link inside the banner; `basketTotal` adds
+  without a currency check (spec 02 money is EUR only). The setupTests.ts pin is now
+  `b6ac2e72aa9032f8299a3e92882f97831b8946e229e67d9a286102ad9c55ac2c` (comment-only change; FF-T2's P10, P10c, P11
+  trigger applies to code edits of setupTests.ts only). T8's fileScope gains `frontend/src/state/basket.test.tsx` for
+  one insertion-only `['null', null]` row in the mixed-list table (closes survivor N-P9i3). Gate re-run self-accepted.
+- A9 (2026-11-09, orchestrator, on the QA lead's T8 r1 recommendation): accepted T8 implementer decisions inside the
+  card: instants shown as `2026-06-15 10:00:00 UTC` from the string (fraction dropped, non-instants shown as sent);
+  e-mail inputs are `type="text"` with `inputMode="email"` so the address is sent exactly as typed; the orders list
+  shows a fixed EUR (OrderSummaryView has no currency, spec 02 money is EUR); the estimated total uses the first line's
+  currency; a blank e-mail is sent and the server's answer shown; `ProblemDetailAlert` gains an optional `titleOf`
+  prop (id fallback, index keys kept). F1: strategy decision 10's `<time dateTime>` wrapper is struck; plain-text
+  instants are accepted (the pack spec does not ask for `<time>`; cheap to add later). The T8 card's
+  `navigate('/orders/' + id)` reads `+ encodeURIComponent(id)`. Residual R15 (a 202 that arrives after the visitor left
+  the checkout still clears the basket, and re-opening the checkout while a request is in flight allows a second
+  order) goes to Gate 2 as a follow-up. Gate re-run self-accepted.
+- A10 (2026-11-09, orchestrator, on the QA lead's T9 r2 recommendation): accepted T9 implementer decisions inside the
+  card: the message is sent and shown exactly as typed; empty or whitespace-only input keeps Send disabled; a message
+  joins the list together with its reply after success (after a failure the text stays in the field and Send is
+  enabled again); the textarea is read-only while pending; 429 is keyed on the status, the offline text on code
+  `assistant-offline`; the conversation id is read at the first send (a failing `crypto.randomUUID` shows "Something
+  went wrong" and posts nothing); the visible conversation lives in page state. F1-T9: strategy quality gate G11
+  ("disabled buttons have a visible reason") is accepted as not applying to an empty chat field (the empty field is
+  the reason; the 1001-character case shows its counter). Residuals R17 (chat styling has no live screenshot until
+  spec 08) and R18 (leaving the page clears the visible conversation; the server keeps its memory) go to Gate 2.
+  Gate re-run self-accepted.
+- A11 (2026-11-09, orchestrator, after T10 and the QA lead's T10 r1 review): origin/factory (spec 06) was merged into
+  the spec branch before T10 (eba9b1d); Java baselines at that point are bookstore 936 (ArchitectureTest 22,
+  ArchitectureSelfTest 58), distributor 190; the bookstore/pom.xml T1 hash line is replaced by the patch-id check
+  `97b8dbc4d10d5efe93535c873b80cd51994c0505` (spec 12's own pom change). T10 found two product defects, so fix task
+  T11 is added (module frontend, depends on T10, tier elevated, verifier sonnet): F1, the order page Items table breaks
+  words mid-word at 390 px because its cells inherit `overflow-wrap: anywhere` from `.card`, so `.table-scroll` never
+  scrolls: fixed as an addition on `.order-lines th, .order-lines td` (`overflow-wrap: normal`), not an edit of `.card`;
+  F2, a fresh session requests `/favicon.ico` (404): fixed with `<link rel="icon" href="data:,">` in `index.html` (no
+  URL, no colour literal). T11 retakes all 14 screenshots and updates the record (F1/F2 fixed, stale lines, the "about
+  69" WARN sentence to 67 + 1). T11 fileScope: `frontend/src/styles/global.css` (addition only),
+  `frontend/index.html`, new test files under `frontend/src/` (or insert-only into `indexHtml.test.ts`), the record and
+  `visuals/*.png`. T11 qaDirective: C0 plus the "T11" block of the QA ledger section 4. The referee times in the PR body
+  quote both measurements (implementer 25.1 / 21.1 s, verifier 34.1 / 30.0 s under parallel load). origin/factory is
+  merged again before qa-final; baselines then come from a base referee on the merged factory commit (FF-T10 3).
+  Gate re-run self-accepted.
+- A12 (2026-11-09, orchestrator, after T11): accepted in T11 a second addition `.order-lines th, .order-lines td:not(:first-child)
+  { white-space: nowrap }` so the order table's header cells keep their 1280 px height at 390 px (the QA lead's T11 block
+  called nowrap optional; it has its own pin test and probes). Residuals for Gate 2: i01 (a later cascading rule would
+  pass the text pins; qa-final checks the live computed style), R19 (`/shop/index.html` is served with `Last-Modified`
+  1980 and no `Cache-Control`, so a returning browser can keep a stale page after a rebuild; recommended follow-up:
+  `Cache-Control: no-cache` for the storefront page via StorefrontConfig, through /sdd-bugfix), R20 (favicon fix proven in
+  Chromium only). Gate re-run self-accepted.
+
+## Decisions log (self-accepted gates and judgment calls)
+
+- Gate 1 self-accepted by the orchestrator on 2026-11-08: every task has summary, criteria, fileScope, one module,
+  dependsOn, qaTier, qaModel, qaDirective; untestable criteria rewritten (GQ2, GQ8) or pinned (GQ5, GQ6, GQ11); the
+  spec is consistent with the mission, tech stack, standards and strategy; no decision outside authority.
+- See `shape.md` "Decisions" 1 to 9.
+- Gate 2 self-accepted by the orchestrator on 2026-11-09: qa-final (opus) PASS at tip 767d992 over merged factory
+  9cbf1e2, endorsed by the QA lead with Gate 2 QA confidence high and no untraced criterion at test level; every task
+  PR (T1 to T11) merged into the spec branch; no unattributed stragglers; the spec diff is confined to the file scopes
+  plus tests (91 hashed paths plus `bookstore/pom.xml` by patch-id). Tip referee without a global Node.js 23.8 s
+  (budget 60 s): Vitest 22 files, 588 passed + 2 expected fail; bookstore 977, distributor 190. CI push run
+  42591638635 and PR run 42591647612 green.
+
+## Follow-ups and manual checks (Gate 2)
+
+- Manual after spec 08 merges: live assistant round trip on `/shop/#/assistant`, the 429 and 503 body shapes against
+  the T9 fixtures, and the chat styling (R1, R17); `spec-12-done` is tagged only after that walk.
+- Maik: visual judgment of the 14 screenshots in `visuals/` (D7 "modern", whitespace, prominent search; R5) and the
+  light-header call (`shape.md` decision 6).
+- Recommended follow-up via /sdd-bugfix (R19): `/shop/index.html` is served with `Last-Modified` 1980 and no
+  `Cache-Control`, so a returning browser can keep a stale page after a rebuild (blank page when old assets are gone);
+  add `Cache-Control: no-cache` for the storefront page in `StorefrontConfig`, ideally before the rehearsal.
+- R15: a 202 that arrives after leaving the checkout still clears the basket, and re-opening the checkout while a
+  request is in flight allows a second order.
+- Test-only follow-ups: A-key duplicate-detail witness in the alert list; i01 effective-value CSS test (optional).
+- Accepted residuals: R11 (fetchMock default wiring), R16 (plain-text instants, A9), R18 (visible conversation in page
+  state, A10), R20 (favicon proven in Chromium only), R3 (assistant over a LAN IP shows the generic alert).
+- Spec wording proposals for the pack (main session): the root redirect `Location` resolves to `/shop/` on the same
+  origin (absolute on a real server, GQ10); `frontend/node/npm run dev` needs `frontend/node` on PATH (OQ-2); the
+  `-DskipTests` skip uses the plugin's phase binding instead of `skip=${skipTests}`.
+- QA lead standards proposals (owner decides): frontend test results in the CI report; a layout CSS rule is proven
+  live at 390 and 1280 px in the task that writes it; banned tokens never spelled out in test text; trailing-zero
+  money witnesses and limit-counting witnesses; strategy-decided forms copied into task criteria; a fresh browser
+  context per build for live checks.
