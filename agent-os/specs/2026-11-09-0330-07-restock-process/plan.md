@@ -38,7 +38,7 @@ When stock runs low the bookstore asks the distributor for more. `StockItem` gai
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Domain pending restock: `PendingRestock`, `InvalidPendingRestockException`, `RestockAlreadyPendingException`, `restockRequested`, `hasPendingRestock`, `pendingRestock()`, `restockRequestFailed`, `receive` clears, `restore` takes the pending restock | bookstore | [] | 1 | elevated | sonnet | sonnet | todo | | | | | |
+| T1 | Domain pending restock: `PendingRestock`, `InvalidPendingRestockException`, `RestockAlreadyPendingException`, `restockRequested`, `hasPendingRestock`, `pendingRestock()`, `restockRequestFailed`, `receive` clears, `restore` takes the pending restock | bookstore | [] | 1 | elevated | sonnet | sonnet (r2 opus) | done (branch `sdd/07-restock-process/T1`) | PASS (r2) | ENDORSE | 2 | #94 | c8365c7 |
 | T2 | Persistence: `PendingRestockDTO`, `StockItemDTO` 7 components plus 6-argument convenience constructor, mapper both ways, `V4__add_pending_restock.sql`, `StockItemJPA`, `StockItemJPAMapper` | bookstore | [T1] | 2 | critical | opus | opus | todo | | | | | |
 | T3 | `InventoryFlow.requestRestock` and `handleStockRunningLow` (O1), WARN logs, port Javadoc, `IntegrationTestBase` default answer | bookstore | [T2] | 3 | critical | opus | opus | todo | | | | | |
 | T4 | `POST /inventory/{bookId}/commands/request-restock`, `PendingRestockView`, `StockView.pendingRestock`, 6 to 7 key pins | bookstore | [T3] | 4 | elevated | sonnet | sonnet | todo | | | | | |
