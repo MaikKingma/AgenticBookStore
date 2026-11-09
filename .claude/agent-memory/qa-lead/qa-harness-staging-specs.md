@@ -36,7 +36,9 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    lists hook blocks; a `--settings` stand-in file must hold only what it stands in for.
 
 7. **Time-dependent paths in staged docs.** Exemplary paths and patch bases are checked against the simulated base
-   at a recorded sha, and listed for re-check at the real cut (later specs may add or change them).
+   at a recorded sha, and listed for re-check at the real cut (later specs may add or change them). Verbatim staged
+   text naming a not-yet-existing path is no FAIL of the staging task (verbatim is the criterion); route it as a
+   product finding and make the scenario task that exercises the text record the absence and the re-check.
 
 8. **"Refs unchanged" in a shared repo.** Parallel spec runs move `sdd/*` refs and worktree HEADs during any
    verifier run, so a whole-repo `for-each-ref` before/after diff is never clean. Write the check as "no ref the

@@ -45,5 +45,10 @@ does not cover "every refusal path".
 - After a rollback rework, mutate each `|| record_failure` guard to `|| true` separately and run a witness per guard:
   a failure the tests never force (rm of an added top-level file, a mode-only change skipped by a "same file"
   shortcut) makes the tool claim "unchanged" while the tree differs. Shim the one command with a PATH-first script.
+- Verbatim-staging tasks (pack fenced blocks copied into a step folder): the extractor must be fence-aware, because
+  a CLAUDE.md block contains `## ` lines that end a naive section scan; end the section at a bare `---` outside a
+  fence and map heading to target by the first backticked token. Run one negative control PER file (flip one byte in a
+  copy of the staged tree) plus a dropped-final-newline control. A sandbox built from `origin/factory` can hold more
+  tests than the worktree referee (factory moved past the spec branch); compare totals per base, not across.
 
 Related: [[shell-traps]], [[env-switch-mutant-runner]], [[readme-and-live-jar-probes]]
