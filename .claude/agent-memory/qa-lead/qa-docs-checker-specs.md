@@ -64,16 +64,18 @@ contrast), the checker is production code AND the oracle for every later task. T
     in-checker floor breaks them, so require a quoted exact tail line (`N html files, M checkboxes`) in every later
     verifier instead.
 
-14. **Regex scanners of MDX** (spec 11 T5, three FAIL rounds): each fresh-probe round found one new construct where the
-    scanner and MDX disagree about code, comments or tags. At strategy time, put a closed construct list in the
-    directive (paragraph ends at list markers, ATX/setext headings, `|` rows and cells, `>`, `<`/`{` flow lines,
-    `:::`; fences after `>` or a list marker; backslash parity; `\<` and string literals in `{...}`; raw
-    `<pre>`/`<code>`), with one probe per construct x consumer. Fail direction differs per consumer of a shared span
-    recogniser: a false span is fail-open for comment blanking (coverage counts hidden text) and tag reading, and
-    fail-closed for code-only rules, so "end the paragraph early" is the safe default. Source checkers can never stop
+14. **Regex scanners of MDX** (spec 11 T5, four FAIL rounds): each fresh-probe round found one new construct where the
+    scanner and MDX disagree about code, comments or tags. Neither a false span NOR a missed span is safe: a false span
+    blanks or hides text, a missed span hands its literal `</TabItem>` or `{/*` to the tag reader and comment blanker
+    (item ends early, rest of page blanked: fail-open). "End the paragraph early" is NOT fail-closed (refuted by builds).
+    CommonMark continues a paragraph at an ordered marker other than 1, an empty item, a `<tag>` or `{expr}` followed by
+    text, a `|` line without a delimiter row, `  >` in a list item: never list those as paragraph ends. Cheap nets that
+    match MDX: an orphan closing tag and an unclosed or nested comment opener never build, so report them. Even so a
+    closed construct list may not terminate on a regex model; for a rule whose truth is the rendered page, check the
+    build in CI (`check:built`) at strategy time instead of hardening the source model. Source checkers can never stop
     deliberate hiding (ESM lines, attribute text, CSS): pair rule (b)-type coverage with a rendered textContent
     cross-check in the content verifiers. Before sending a contract as a Required Action, read the pinned tests it
-    touches (my own-line tag rule broke a pinned mid-line case). Swapping in the MDX parser breaks a "dependency free"
-    checker rule and a dependency key-set test: a plan decision, never a last-round fix.
+    touches, and trace every consumer before calling an over-approximation fail-closed. Swapping in the MDX parser
+    breaks a "dependency free" checker rule and a dependency key-set test: a plan decision, never a last-round fix.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).
