@@ -76,6 +76,23 @@ test('mdscan: a code span ends where it closes, and an opening backtick finds it
   assert.equal(collapse(proseOf(scanMarkdown('one ` two {/* hidden */}\n```bash\nx `\n```\nafter'))), 'one ` two after');
 });
 
+test('mdscan: a code span over three lines keeps its middle line, a double-backtick span over a line break closes on two backticks', () => {
+  // The middle line has no closer of its own: it is code, copied through, not blanked.
+  assert.equal(collapse(proseOf(scanMarkdown('Type `a\nb\nc {/*` d\n{/* gone */} end'))), 'Type `a b c {/*` d end');
+  // A single backtick does not close a span opened with two: the comment after the double closer is a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('Type ``a\nb`` c {/* hidden */} d'))), 'Type ``a b`` c d');
+});
+
+test('mdscan: spans are the proseOf offsets of the span contents, one line or many, after a fence too', () => {
+  const text = 'a `b` c ``d`` e\n```bash\nx\n```\nf `g\nh` i';
+  const scan = scanMarkdown(text);
+  const prose = proseOf(scan);
+  assert.deepEqual(
+    scan.spans.map(([start, end]) => prose.slice(start, end)),
+    ['b', 'd', 'g\nh'],
+  );
+});
+
 test('mdscan: a backtick without a closing one is plain text, and an escaped backtick opens no span', () => {
   assert.equal(collapse(proseOf(scanMarkdown('one ` two {/* hidden */} three'))), 'one ` two three');
   assert.equal(collapse(proseOf(scanMarkdown('one \\`{/* hidden */} two` three'))), 'one \\` two` three');
@@ -150,6 +167,45 @@ test('tabGroups: unbalanced and stray tags are errors', () => {
   assert.match(tabGroups(scanMarkdown('<Tabs groupId="os">\n<TabItem value="a" label="x">\n')).errors.join('|'), /never closed/);
   assert.match(tabGroups(scanMarkdown('</Tabs>\n')).errors.join('|'), /closing <\/Tabs>/);
   assert.match(tabGroups(scanMarkdown('<TabItem value="a" label="x">\n</TabItem>\n')).errors.join('|'), /outside <Tabs>/);
+});
+
+test('tabGroups: a tag written in an inline code span is text, so the item ends at the real closing tag (K2)', () => {
+  const text =
+    '<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\nx\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\nClose with `</TabItem>` later.\n```bash\nRemove-Item -Recurse inventedfolder\n```\n</TabItem>\n</Tabs>\n';
+  const {groups, errors} = tabGroups(scanMarkdown(text));
+  assert.deepEqual(errors, []);
+  assert.deepEqual(
+    groups.map((g) => [g.groupId, g.items.map((i) => [i.label, i.line, i.end])]),
+    [
+      [
+        'os',
+        [
+          ['macOS/Linux', 1, 3],
+          ['Windows PowerShell', 4, 9],
+        ],
+      ],
+    ],
+  );
+});
+
+test('tabGroups: an opening or closing tag in an inline code span is no tag, a tag next to a span still is (K1)', () => {
+  for (const prose of [
+    'Docusaurus writes `<Tabs groupId="os">` for this.',
+    'Write ``<TabItem value="a" label="x">`` here.',
+    'Write `<Tabs\ngroupId="os">` here, the span runs over a line break.',
+    'A `</Tabs>` closes it and a `</TabItem>` ends an item.',
+  ]) {
+    assert.deepEqual(tabGroups(scanMarkdown(prose)), {groups: [], errors: []}, prose);
+  }
+  // A span over a line break before a real tag keeps the line numbers of the file.
+  const after = tabGroups(scanMarkdown('Write `<Tabs\ngroupId="os">` here.\n<Tabs groupId="os">\n</Tabs>\n'));
+  assert.deepEqual([after.groups.map((g) => g.line), after.errors], [[2], []]);
+  const next = tabGroups(scanMarkdown('Use `x` <Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\n`y` </TabItem>\n</Tabs>\n'));
+  assert.deepEqual(next.errors, []);
+  assert.deepEqual(
+    next.groups.map((g) => [g.groupId, g.items.map((i) => [i.label, i.line, i.end])]),
+    [['os', [['macOS/Linux', 1, 2]]]],
+  );
 });
 
 test('tabGroups: nested groups keep the item spans apart', () => {

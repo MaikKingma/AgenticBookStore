@@ -3,7 +3,7 @@
 // PowerShell lines (c) and the Level 0 observation card (h). Pure functions on text; the
 // file reads are in lib/content.mjs. The rules (c) to (h) read every page, a skeleton
 // included, except (h), which waits for the Level 0 page to lose its marker.
-import {codeOf, collapse, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
+import {codeOf, collapse, markupOf, proseOf, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
 import {isSkeleton} from './coverage.mjs';
 
 export const LEVEL0_PAGE = 'docs/01-level-0-break-the-agent.mdx';
@@ -58,14 +58,18 @@ export function denyListErrors(file, text) {
 // (e) ANTHROPIC_API_KEY never in an assignment, export or $env: form (the workshop uses
 // BOOKSTORE_AI_API_KEY), and the bare token only on the setup and troubleshooting pages.
 // The words export, set, setx and unset are ordinary English in a warning ("Never set
-// ANTHROPIC_API_KEY: ..."), so that form is read in code only (a fenced block line or an
-// inline code span); the other forms (an assignment, $env:, a settings key) fail anywhere.
+// ANTHROPIC_API_KEY: ..."), so that form (with its flags: set -gx, setx /M) and the YAML
+// key form (the warning's colon) are read in code only: a fenced block line, an inline
+// code span or a raw <code> or <pre> element. The other forms (an assignment, $env:, a
+// SetEnvironmentVariable call, a quoted settings key) are no English and fail anywhere.
 const KEY = 'ANTHROPIC_API_KEY';
 const KEY_FORMS = [
-  ['an export, set, setx or unset command', new RegExp(`\\b(?:export|set|setx|unset)\\s+${KEY}`, 'gi'), true],
+  ['an export, set, setx or unset command', new RegExp(`\\b(?:export|set|setx|unset)(?:\\s+(?:-{1,2}|/)[A-Za-z]*)*\\s+${KEY}`, 'gi'), true],
   ['a $env: or Env: form', new RegExp(`(?:\\$env:|\\bEnv:)\\s*${KEY}`, 'gi'), false],
+  ['a SetEnvironmentVariable call', new RegExp(`SetEnvironmentVariable\\s*\\(\\s*["']${KEY}["']`, 'gi'), false],
   ['an assignment', new RegExp(`${KEY}\\s*=`, 'gi'), false],
   ['a settings or JSON key', new RegExp(`["']${KEY}["']\\s*:`, 'gi'), false],
+  ['a YAML key', new RegExp(`\\b${KEY}\\s*:`, 'gi'), true],
 ];
 
 export function apiKeyErrors(file, text) {
@@ -85,9 +89,11 @@ export function apiKeyErrors(file, text) {
   return errors;
 }
 
-// (f) No raw <img>: Markdown image syntax only.
+// (f) No raw <img>: Markdown image syntax only. The tag is read in the markup, like the tab
+// tags: an <img> written in inline code, a fenced block or a comment is text, not a tag.
 export function imgErrors(file, text) {
-  return [...text.matchAll(/<img\b/gi)].map((m) => `${file}: line ${lineOf(text, m.index)}: a raw <img> tag, use Markdown image syntax`);
+  const markup = markupOf(scanMarkdown(text.replace(/\r\n/g, '\n')));
+  return [...markup.matchAll(/<img\b/gi)].map((m) => `${file}: line ${lineOf(markup, m.index)}: a raw <img> tag, use Markdown image syntax`);
 }
 
 // (g) Every Tabs element has a known groupId and exactly the labels of that group.
@@ -122,7 +128,8 @@ export function tabErrors(file, scan) {
 
 // The command lines the pack states, for rule (c): every trimmed line of a fenced block
 // (once as written, once with its trailing "# comment" stripped) and every inline code
-// span, whitespace-collapsed and with the table escape \| undone. Returns a Set.
+// span (the scanner's spans), whitespace-collapsed and with the table escape \| undone.
+// Returns a Set.
 export function packCommandLines(packTexts) {
   const allowed = new Set();
   for (const text of packTexts) {
@@ -137,9 +144,9 @@ export function packCommandLines(packTexts) {
         if (stripped !== '') allowed.add(stripped);
       }
     }
-    const prose = scan.lines.map((line) => (line.fence === null ? line.text : '')).join('\n');
-    for (const m of prose.matchAll(/(?<!`)(`+)(?!`)([\s\S]+?)(?<!`)\1(?!`)/g)) {
-      const span = m[2].replace(/\\\|/g, '|');
+    const prose = proseOf(scan);
+    for (const [start, end] of scan.spans) {
+      const span = prose.slice(start, end).replace(/\\\|/g, '|');
       allowed.add(span.trim());
       allowed.add(collapse(span));
     }

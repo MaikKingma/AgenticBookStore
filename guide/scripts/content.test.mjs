@@ -140,6 +140,63 @@ test('api key: a command word in one code span and the token in the next span is
   passes(apiKeyErrors(SETUP, 'Never `export` `ANTHROPIC_API_KEY`.'));
 });
 
+test('api key: a command on any line of an inline code span over three lines fails, prose after a double-backtick span stays prose', () => {
+  fails(apiKeyErrors(SETUP, 'Type `a\nexport ANTHROPIC_API_KEY\nc` d.'), /line 2: ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+  fails(apiKeyErrors(SETUP, 'Type `a\nb\nunset ANTHROPIC_API_KEY` d.'), /line 3: ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+  passes(apiKeyErrors(SETUP, 'Type ``a\nb`` Never set ANTHROPIC_API_KEY: use the key on screen.'));
+});
+
+test('api key: fish set -gx, setx /M, a SetEnvironmentVariable call and a YAML key fail in code, the call in prose too', () => {
+  const inCode = [
+    ['set -gx ANTHROPIC_API_KEY x', /in an export, set, setx or unset command/],
+    ['set -Ux ANTHROPIC_API_KEY x', /in an export, set, setx or unset command/],
+    ['setx /M ANTHROPIC_API_KEY x', /in an export, set, setx or unset command/],
+    ['unset -v ANTHROPIC_API_KEY', /in an export, set, setx or unset command/],
+    ['export --  ANTHROPIC_API_KEY', /in an export, set, setx or unset command/],
+    ['[Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "x", "User")', /in a SetEnvironmentVariable call/],
+    ["[System.Environment]::SetEnvironmentVariable( 'ANTHROPIC_API_KEY' , $null)", /in a SetEnvironmentVariable call/],
+    ['ANTHROPIC_API_KEY: x', /in a YAML key/],
+    ['env:\n  ANTHROPIC_API_KEY : "x"', /in a YAML key/],
+  ];
+  for (const [text, form] of inCode) {
+    for (const wrapped of [`\`\`\`bash\n${text}\n\`\`\``, `Run \`${text.replace('\n', ' ')}\` first.`]) {
+      for (const file of [SETUP, TROUBLE]) fails(apiKeyErrors(file, wrapped), form);
+    }
+  }
+  fails(apiKeyErrors(SETUP, 'Never call [Environment]::SetEnvironmentVariable("ANTHROPIC_API_KEY", "x") here.'), /in a SetEnvironmentVariable call/);
+  // The warning keeps passing: its colon is prose, and set with a flag-like word is no command in prose.
+  passes(apiKeyErrors(SETUP, 'Never set ANTHROPIC_API_KEY: use the key on screen. Do not set -gx ANTHROPIC_API_KEY either.'));
+  // $env: and Env: are the PowerShell form, not a YAML key; the JSON key is the settings form.
+  const env = apiKeyErrors(SETUP, '```powershell\n$env:ANTHROPIC_API_KEY\nRemove-Item Env:ANTHROPIC_API_KEY\n{"ANTHROPIC_API_KEY": "x"}\n```');
+  assert.equal(env.filter((e) => /in a YAML key/.test(e)).length, 0, env.join('\n'));
+  assert.equal(env.length, 3, env.join('\n'));
+});
+
+test('api key: lone backticks in other paragraphs and escaped backticks make no code of the warning between them', () => {
+  passes(apiKeyErrors(SETUP, 'One ` lone backtick.\n\nNever set ANTHROPIC_API_KEY: use the key on screen.\n\nAnother ` lone backtick.'));
+  passes(apiKeyErrors(SETUP, 'Never \\`set ANTHROPIC_API_KEY\\` on this machine.'));
+});
+
+test('api key: a command in a raw HTML <code> or <pre> element is code and fails, the warning in prose still passes', () => {
+  for (const element of [
+    '<code>export ANTHROPIC_API_KEY</code>',
+    '<code>export ANTHROPIC_API_KEY=...</code>',
+    '<pre>unset ANTHROPIC_API_KEY</pre>',
+    '<pre>\nsetx ANTHROPIC_API_KEY x\n</pre>',
+    '<code className="language-bash">set ANTHROPIC_API_KEY</code>',
+    '<CODE>unset ANTHROPIC_API_KEY</CODE>',
+  ]) {
+    for (const file of [SETUP, TROUBLE]) fails(apiKeyErrors(file, `Run ${element} first.`), /ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+  }
+  passes(apiKeyErrors(SETUP, 'Never set ANTHROPIC_API_KEY: <code>BOOKSTORE_AI_API_KEY</code> is the one to use.'));
+  // A <code> tag written in an inline code span or in a comment opens no element, and <codex> is another tag.
+  passes(apiKeyErrors(SETUP, 'The tag `<code>` starts code. Never set ANTHROPIC_API_KEY: use the key on screen. The tag `</code>` ends it.'));
+  passes(apiKeyErrors(SETUP, '{/* <code> */} Never set ANTHROPIC_API_KEY: use the key on screen. {/* </code> */}'));
+  passes(apiKeyErrors(SETUP, '<codex>Never set ANTHROPIC_API_KEY: use the key on screen.</codex> Use <code>BOOKSTORE_AI_API_KEY</code>.'));
+  // Each element ends at its own closing tag: the warning between two elements is prose.
+  passes(apiKeyErrors(SETUP, 'Use <code>BOOKSTORE_AI_API_KEY</code>. Never set ANTHROPIC_API_KEY: use <code>the key on screen</code>.'));
+});
+
 test('api key: the bare token passes on the setup and troubleshooting pages and fails on every other page', () => {
   const warning = 'Never export your own key. If `ANTHROPIC_API_KEY` is set, Claude Code uses it.';
   passes(apiKeyErrors(SETUP, warning));
@@ -163,6 +220,15 @@ test('img: <img and <IMG fail, Markdown image syntax and other tags pass', () =>
   fails(imgErrors(OTHER, '<img\nsrc="/x.png">'), /a raw <img> tag/);
   passes(imgErrors(OTHER, '![alt text](/img/x.png)'));
   passes(imgErrors(OTHER, '<imgfoo> and <Tabs groupId="os">'));
+});
+
+test('img: a tag written in inline code, a fenced block or a comment is text, a tag next to them or in a <pre> element still fails', () => {
+  passes(imgErrors(OTHER, 'Write `<img src="/x.png">` and ``<img alt="x">`` as text.'));
+  passes(imgErrors(OTHER, '```html\n<img src="/x.png">\n```'));
+  passes(imgErrors(OTHER, '{/* <img src="/x.png"> */}\n<!-- <img src="/y.png"> -->'));
+  fails(imgErrors(OTHER, 'Write `x`\n```html\n<b>\n```\n<img src="/x.png">'), /line 5: a raw <img> tag/);
+  fails(imgErrors(OTHER, 'Write `x` <img src="/x.png">'), /line 1: a raw <img> tag/);
+  fails(imgErrors(OTHER, '<pre><img src="/x.png"></pre>'), /a raw <img> tag/);
 });
 
 // (g) tabs
@@ -288,6 +354,18 @@ test('powershell and tabs: a comment opener in inline code hides neither a Windo
   passes(contentErrors({pages: {[OTHER]: `{/*\n${psTab(['Remove-Item -Recurse inventedfolder'])}*/}\n`}, packTexts: PACK}).errors);
 });
 
+test('powershell and tabs: a tag in inline code neither ends a Windows tab early nor counts as a tab group (K1, K2)', () => {
+  const k2 =
+    '<Tabs groupId="os">\n<TabItem value="mac" label="macOS/Linux">\n\n```bash\nls\n```\n\n</TabItem>\n<TabItem value="win" label="Windows PowerShell">\n\nClose with `</TabItem>` later.\n\n```bash\nRemove-Item -Recurse inventedfolder\n```\n\n</TabItem>\n</Tabs>\n';
+  const errors = contentErrors({pages: {[OTHER]: k2}, packTexts: PACK}).errors;
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], /line 14: the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line/);
+  // K1: a tag in a span in prose is text: no group, no unclosed tag, no missing label.
+  passes(contentErrors({pages: {[OTHER]: 'Docusaurus writes `<Tabs groupId="os">` for this.\n'}, packTexts: PACK}).errors);
+  // A span that opens a PowerShell tab does not make the bash fence after it a Windows block.
+  passes(contentErrors({pages: {[OTHER]: 'Wrap it in `<TabItem value="w" label="Windows PowerShell">` yourself.\n\n```bash\nrm -rf x\n```\n'}, packTexts: PACK}).errors);
+});
+
 test('powershell: packCommandLines reads fenced lines, stripped comments, inline spans, escaped pipes and wrapped spans', () => {
   assert.ok(allowed.has('claude --version'));
   assert.ok(allowed.has('claude --version            # Claude Code installed'));
@@ -296,6 +374,11 @@ test('powershell: packCommandLines reads fenced lines, stripped comments, inline
   assert.ok(!allowed.has('Remove-Item x'));
   assert.ok(!allowed.has(''));
   assert.ok(!allowed.has('Get-Command'), 'a word of a line is not a line');
+});
+
+test('powershell: packCommandLines reads the spans of the shared scanner (no span across a blank line, none from an escaped backtick)', () => {
+  const lines = packCommandLines(['One ` lone.\n\nTwo ` lone.\n', 'Not \\`Remove-Item x\\` code, but `Get-Command jdtls` is.\n']);
+  assert.deepEqual([...lines].sort(), ['Get-Command jdtls']);
 });
 
 // (h) the Level 0 observation card

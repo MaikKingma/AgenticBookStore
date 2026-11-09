@@ -22,7 +22,7 @@ const spaces = (text) => text.replace(/[^\n]/g, ' ');
 // Whitespace runs become one space and the ends are trimmed.
 export const collapse = (text) => text.replace(/\s+/g, ' ').trim();
 
-// scanMarkdown(text) returns {lines, blocks}.
+// scanMarkdown(text) returns {lines, blocks, spans}.
 //   lines: one {text, fence} per line of the text. fence is null for prose, 'open' or
 //     'close' for the fence lines and 'body' for the lines in between. The text of a prose
 //     line has its comments blanked with spaces (offsets stay valid); fenced lines are raw.
@@ -31,9 +31,14 @@ export const collapse = (text) => text.replace(/\s+/g, ' ').trim();
 //   blocks: one {lang, open, close, body} per fenced block: the 0-based line numbers of the
 //     two fence lines (close is the last line when the fence never closes) and the raw
 //     body lines.
+//   spans: one [start, end] per inline code span, the offsets in proseOf(scan) of its
+//     content (between the backtick runs). This is the one code span recogniser: the
+//     comment blanking above, the tag reading of tabGroups and the code of codeOf all
+//     use it, so they cannot disagree about what is code.
 export function scanMarkdown(text) {
   const lines = [];
   const blocks = [];
+  const spans = [];
   const all = text.replace(/\r\n/g, '\n').split('\n');
   // Does a span opened on line `at` with `length` backticks close later in the same paragraph?
   const spanContinues = (at, length) => {
@@ -45,8 +50,11 @@ export function scanMarkdown(text) {
   let fence = null;
   let closer = null;
   let carry = 0; // the backtick count of an inline code span that continues on this line
+  let opened = 0; // the proseOf offset where the content of that continuing span starts
+  let offset = 0; // the proseOf offset of the current line (a fenced line is empty there)
   for (const raw of all) {
     const index = lines.length;
+    if (index > 0) offset += (lines[index - 1].fence === null ? lines[index - 1].text.length : 0) + 1;
     if (raw.trim() === '') carry = 0;
     if (fence) {
       const closes = new RegExp(`^\\s*${fence.char}{${fence.length},}\\s*$`).test(raw);
@@ -94,6 +102,7 @@ export function scanMarkdown(text) {
           rest = '';
         } else {
           const stop = end.index + end[0].length;
+          spans.push([opened, offset + prose.length + end.index]);
           prose += rest.slice(0, stop);
           rest = rest.slice(stop);
           carry = 0;
@@ -113,9 +122,11 @@ export function scanMarkdown(text) {
         const end = closerOf(length).exec(rest.slice(after));
         if (end) {
           const stop = after + end.index + end[0].length;
+          spans.push([offset + prose.length + after, offset + prose.length + after + end.index]);
           prose += rest.slice(0, stop);
           rest = rest.slice(stop);
         } else if (spanContinues(index, length)) {
+          opened = offset + prose.length + after;
           prose += rest;
           rest = '';
           carry = length;
@@ -136,7 +147,7 @@ export function scanMarkdown(text) {
     }
     lines.push({text: prose, fence: null});
   }
-  return {lines, blocks};
+  return {lines, blocks, spans};
 }
 
 // The prose of a scan as one text: fenced lines are empty, comments are blank, so the
@@ -145,21 +156,35 @@ export function proseOf(scan) {
   return scan.lines.map((line) => (line.fence === null ? line.text : '')).join('\n');
 }
 
-// An inline code span within one paragraph (no blank line inside): the backtick run, the content.
-const INLINE_SPAN = /(?<![\\`])(`+)(?!`)((?:(?!\n[ \t]*\n)[\s\S])+?)(?<!`)\1(?!`)/g;
+// The markup of a scan: proseOf with the content of every inline code span blanked too, so
+// that a tag written in a span (`</TabItem>`) is text, as MDX renders it, and never a tag.
+// Offsets and line numbers still match the file.
+export function markupOf(scan) {
+  const chars = proseOf(scan).split('');
+  for (const [start, end] of scan.spans) {
+    for (let i = start; i < end; i++) if (chars[i] !== '\n') chars[i] = ' ';
+  }
+  return chars.join('');
+}
+
+// A raw HTML code element in the markup: <code ...>...</code> or <pre ...>...</pre>, any
+// letter case, over line breaks; group 2 is its content.
+const HTML_CODE = /<(code|pre)(?=[\s>])[^>]*>([\s\S]*?)<\/\1\s*>/gi;
 
 // The code of a scan as one text with the line structure of the file: the fenced lines as
-// written and the inside of every inline code span, everything else (the prose, comments,
-// the backticks themselves) replaced by a filler character, so that a word of a sentence is
-// never read as part of a command.
+// written, the inside of every inline code span (scan.spans) and the inside of every raw
+// <code> and <pre> element of the markup; everything else (the prose, comments, the
+// backticks and tags themselves) replaced by a filler character, so that a word of a
+// sentence is never read as part of a command.
 export function codeOf(scan) {
   const prose = proseOf(scan);
-  const mask = prose.split('').map((char) => (char === '\n' ? '\n' : '\u0001'));
-  for (const m of prose.matchAll(INLINE_SPAN)) {
-    const start = m.index + m[1].length;
-    for (let i = start; i < start + m[2].length; i++) mask[i] = prose[i];
+  const keep = prose.split('').map((char) => char === '\n');
+  for (const [start, end] of scan.spans) keep.fill(true, start, end);
+  for (const m of markupOf(scan).matchAll(HTML_CODE)) {
+    const start = m.index + m[0].indexOf('>') + 1;
+    keep.fill(true, start, start + m[2].length);
   }
-  const proseLines = mask.join('').split('\n');
+  const proseLines = prose.split('').map((char, i) => (keep[i] ? char : '\u0001')).join('').split('\n');
   return scan.lines.map((line, index) => (line.fence === null ? proseLines[index] : line.text)).join('\n');
 }
 
@@ -173,9 +198,10 @@ function attribute(tag, name) {
 
 // The Docusaurus Tabs groups of a scan: {groups, errors}. A group is {line, groupId,
 // items}; an item is {line, end, label} with 0-based line numbers (end is the line of the
-// closing tag, or the last line when it never closes). errors name unbalanced tags.
+// closing tag, or the last line when it never closes). errors name unbalanced tags. Tags
+// are read in the markup only: never in a fenced block, a comment or an inline code span.
 export function tabGroups(scan) {
-  const prose = proseOf(scan);
+  const prose = markupOf(scan);
   const lineOf = (offset) => prose.slice(0, offset).split('\n').length - 1;
   const groups = [];
   const errors = [];

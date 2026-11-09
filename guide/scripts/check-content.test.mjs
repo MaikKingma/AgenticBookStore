@@ -153,6 +153,13 @@ test('runChecks with content: a warning that says never to set the token passes 
   assert.ok(inline.errors.some((e) => /in an export, set, setx or unset command/.test(e)), inline.errors.join('\n'));
 });
 
+test('runChecks with content: a command in a raw HTML <code> or <pre> element fails on the setup page', () => {
+  const html = check(page(SETUP, 'Run <code>export ANTHROPIC_API_KEY</code> first.\n\n<pre>unset ANTHROPIC_API_KEY</pre>'));
+  const commands = html.errors.filter((e) => /^content: docs\/00-setup-check\.md: line \d+: ANTHROPIC_API_KEY in an export, set, setx or unset command/.test(e));
+  assert.equal(commands.length, 2, html.errors.join('\n'));
+  assert.ok(html.lines.some((line) => line.startsWith('FAIL content (2 errors)')), html.lines.join('\n'));
+});
+
 test('runChecks with content: an unclosed {/* in inline code does not hide a PowerShell line or a tab group from the rules', () => {
   const group = (id, line) =>
     `Type \`{/*\` with care.\n\n<Tabs groupId="${id}">\n<TabItem value="a" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\n\`\`\`powershell\n${line}\n\`\`\`\n\n</TabItem>\n</Tabs>`;
@@ -162,6 +169,20 @@ test('runChecks with content: an unclosed {/* in inline code does not hide a Pow
   const unknown = check(page(SETUP, group('nope', 'Get-Command jdtls')));
   assert.ok(unknown.errors.some((e) => /^content: .*unknown tab groupId "nope"/.test(e)), unknown.errors.join('\n'));
   assert.deepEqual(check(page(SETUP, group('os', 'Get-Command jdtls'))).errors, [], 'the same page with a pack line is fine');
+});
+
+test('runChecks with content: a tag in inline code neither ends the Windows tab early nor counts as a tab group (K1, K2)', () => {
+  const k2 = check(
+    page(
+      SETUP,
+      '<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\n\n```bash\nls\n```\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\nClose with `</TabItem>` later.\n\n```bash\nRemove-Item -Recurse inventedfolder\n```\n\n</TabItem>\n</Tabs>',
+    ),
+  );
+  assert.ok(k2.errors.some((e) => /^content: docs\/00-setup-check\.md: line \d+: the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line/.test(e)), k2.errors.join('\n'));
+  assert.ok(k2.lines.some((line) => line.startsWith('FAIL content (1 errors)')), k2.lines.join('\n'));
+  const k1 = check(page(SETUP, 'Docusaurus writes `<Tabs groupId="os">` for this.'));
+  assert.deepEqual(k1.errors, []);
+  assert.ok(k1.lines.some((line) => line.startsWith('ok   content')), k1.lines.join('\n'));
 });
 
 // The pack folder the rules read is options.workshopDir: a scratch copy of the real pack, with
