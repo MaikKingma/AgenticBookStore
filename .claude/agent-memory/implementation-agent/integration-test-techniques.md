@@ -50,5 +50,9 @@ metadata:
   test that needs "today by the application Clock" autowires its own `Clock` and writes
   `LocalDate.ofInstant(clock.instant(), clock.getZone())`. Stub the shared `@MockitoBean` default in the base
   `@BeforeEach` with `doAnswer(...).when(mock)`; it causes no strict-stubbing failure in tests that never call it.
+- Null-valued JSON key pins: wrap the unchanged `Map.of(...)` literal in one `withNoPending...(Map)` helper that copies
+  into a `LinkedHashMap` and puts the null, so existing pin lines keep their figures. `Map.equals` treats a missing key
+  as different from a null value, so `isEqualTo` is itself a presence check. In slices,
+  `jsonPath("$.k").value(nullValue())` fails on a missing path, and `jsonPath("$", hasKey("k"))` pins presence.
 
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
