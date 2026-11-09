@@ -30,3 +30,9 @@ metadata:
 - `ChatClient.Builder.defaultSystem(Resource)` reads with the platform default charset; pass `UTF_8` explicitly.
 - Adding a bean method that injects `ChatClient.Builder` breaks every `ApplicationContextRunner` over that config:
   register a builder and the tools with `withBean(...)` (supporting beans only, the asserts stay unchanged).
+- Spring AI 2.0.2 here has no `spring-ai-retry`: `NonTransientAiException`/`TransientAiException` do not exist. A live
+  Anthropic failure is a `com.anthropic.errors.AnthropicException` subclass (SDK 2.72; `AnthropicIoException` and
+  `AnthropicRetryableException` take a `(String)`, the HTTP ones such as `RateLimitException` only a builder). Check a
+  plan's named types with `dependency:build-classpath` plus `javap` before writing tests on them.
+- `AssistantCommandsTest.useCaseExceptionsMapToTheirStatus` throws the four use-case exceptions out of the chat call:
+  a catch-all around that call must let them through or that pre-existing test goes red.

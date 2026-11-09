@@ -1,6 +1,6 @@
 ---
 name: qa-llm-adapter-specs
-description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes, EPP pipeline order, catch-all tool error helpers (NPE kills, parser catch behind a guard); read before the strategy of any model or tool-calling spec
+description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes, EPP pipeline order, catch-all tool error helpers (NPE kills, parser catch behind a guard), failure translation with memory restore (cause, catch type, concurrency); read before the strategy of any model or tool-calling spec
 metadata:
   type: feedback
 ---
@@ -78,6 +78,16 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     For rejections, an empty `details` list is the natural default and lets a defensive filter survive. Ask for a
     non-empty foreign-key witness at strategy time. Before accepting an "unreachable" claim, read the flow methods the
     tool actually calls, not the whole flow class (spec 08 T2).
+
+13. **Failure translation and memory restore at the chat boundary (fix-08 T1).** The use-case exception's cause has
+    no consumer (`AssistantExceptionHandler` reads message, title, code, details only), so a dropped-cause mutant
+    survives every web and IT test; a "WARN without throwable" mutant dies only by NPE unless the test asserts
+    `getThrowableProxy()` isNotNull first; `catch (Throwable)` for `RuntimeException` has no test. If the decision is
+    binding, list the witnesses up front: a direct `commands.chat(...)` call with `hasCauseReference`, and a gate grep
+    on the catch types. A dropped `List.copyOf` on the snapshot is equivalent (the in-memory repository returns a
+    fresh `ArrayList` and stores `List.copyOf`). Snapshot plus `clear`/`add` restore can erase a concurrent turn on the
+    same id: price it as a residual. Once failures answer 503 `assistant-unavailable`, an escaped live call in an
+    offline test also answers 503: offline assertions must check the code, never the status alone.
 
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is
