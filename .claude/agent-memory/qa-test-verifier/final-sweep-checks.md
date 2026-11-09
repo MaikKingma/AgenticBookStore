@@ -38,4 +38,8 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
   BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
 - Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a
   recipe; use a comma between classes.
+- Per-task hash baselines into one integrity check: a python script reads the gate files in task order, keeps only
+  `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per
+  path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>`
+  extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

@@ -1,9 +1,10 @@
 ---
 spec: 12-storefront
 source: docs/spec-pack/specs/12-storefront.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-08T20:46:00Z
+gate2: 2026-11-09T09:50:13Z
 qa-lead: on
 base: factory
 spec-branch: sdd/12-storefront/spec
@@ -260,3 +261,31 @@ Never fable.
   dependsOn, qaTier, qaModel, qaDirective; untestable criteria rewritten (GQ2, GQ8) or pinned (GQ5, GQ6, GQ11); the
   spec is consistent with the mission, tech stack, standards and strategy; no decision outside authority.
 - See `shape.md` "Decisions" 1 to 9.
+- Gate 2 self-accepted by the orchestrator on 2026-11-09: qa-final (opus) PASS at tip 767d992 over merged factory
+  9cbf1e2, endorsed by the QA lead with Gate 2 QA confidence high and no untraced criterion at test level; every task
+  PR (T1 to T11) merged into the spec branch; no unattributed stragglers; the spec diff is confined to the file scopes
+  plus tests (91 hashed paths plus `bookstore/pom.xml` by patch-id). Tip referee without a global Node.js 23.8 s
+  (budget 60 s): Vitest 22 files, 588 passed + 2 expected fail; bookstore 977, distributor 190. CI push run
+  42591638635 and PR run 42591647612 green.
+
+## Follow-ups and manual checks (Gate 2)
+
+- Manual after spec 08 merges: live assistant round trip on `/shop/#/assistant`, the 429 and 503 body shapes against
+  the T9 fixtures, and the chat styling (R1, R17); `spec-12-done` is tagged only after that walk.
+- Maik: visual judgment of the 14 screenshots in `visuals/` (D7 "modern", whitespace, prominent search; R5) and the
+  light-header call (`shape.md` decision 6).
+- Recommended follow-up via /sdd-bugfix (R19): `/shop/index.html` is served with `Last-Modified` 1980 and no
+  `Cache-Control`, so a returning browser can keep a stale page after a rebuild (blank page when old assets are gone);
+  add `Cache-Control: no-cache` for the storefront page in `StorefrontConfig`, ideally before the rehearsal.
+- R15: a 202 that arrives after leaving the checkout still clears the basket, and re-opening the checkout while a
+  request is in flight allows a second order.
+- Test-only follow-ups: A-key duplicate-detail witness in the alert list; i01 effective-value CSS test (optional).
+- Accepted residuals: R11 (fetchMock default wiring), R16 (plain-text instants, A9), R18 (visible conversation in page
+  state, A10), R20 (favicon proven in Chromium only), R3 (assistant over a LAN IP shows the generic alert).
+- Spec wording proposals for the pack (main session): the root redirect `Location` resolves to `/shop/` on the same
+  origin (absolute on a real server, GQ10); `frontend/node/npm run dev` needs `frontend/node` on PATH (OQ-2); the
+  `-DskipTests` skip uses the plugin's phase binding instead of `skip=${skipTests}`.
+- QA lead standards proposals (owner decides): frontend test results in the CI report; a layout CSS rule is proven
+  live at 390 and 1280 px in the task that writes it; banned tokens never spelled out in test text; trailing-zero
+  money witnesses and limit-counting witnesses; strategy-decided forms copied into task criteria; a fresh browser
+  context per build for live checks.

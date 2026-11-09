@@ -18,4 +18,13 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
 - `playwright-cli` drops `.playwright-cli/` (page snapshots, console log) into the cwd, here the repo root, as untracked files that break a before/after porcelain snapshot; delete them and `rmdir` before the final snapshot.
 - Before calling a leftover process yours, read `ps -o lstart,ppid`; an MCP server started weeks ago is not.
 - Warning-inventory diffs against an earlier referee log: normalise Tomcat thread names (`[1-auto-1-exec-N]`) as well as timestamps and PIDs, else a reshuffle shows up as paired add/remove lines; then group the real additions by logger to attribute them (merged-in spec vs this task).
+- Dev-mode console check (the jar serves a production React build, which strips React dev warnings): the Vite proxy
+  target is fixed at 127.0.0.1:8080, so start a SECOND tip jar on 8080 against the same throwaway DB and Vite from the
+  `git archive` extraction with `--port <free> --strictPort`; derive the dev journey from the jar journey with a
+  string-replace script and switch to books that still have stock (the first walk used it up). Dev consoles show only
+  `debug`/`info` lines (`[vite] connecting`, React DevTools hint); count `error`/`warning` types, not all messages.
+- Background children started inside `with-budget.sh` keep running after it exits (Vite stayed on its port): write
+  pid files and stop them with an explicit `stop` subcommand plus an `lsof -tiTCP:<port>` sweep.
+- Spec scenario "a red frontend test fails the build": drop a failing `*.test.ts` into the tip extraction (never the
+  repo), `./mvnw verify` there, expect `frontend FAILURE` with `bookstore`/`distributor SKIPPED`, then delete the file.
 Related: [[readme-and-live-jar-probes]], [[ci-workflow-verification]], [[shell-traps]]
