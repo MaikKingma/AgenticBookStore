@@ -1,6 +1,6 @@
 - [ArchUnit referee design](archunit-referee-design.md) — rule-3 split, anti-vacuity guards, fixtures per rule half, rule 9 mutation map, traps
-- [Test context cost model](test-context-cost-model.md) — one container and Spring context; what splits contexts; 60 s budget levers
+- [Test context cost model](test-context-cost-model.md) — one container and Spring context; what splits contexts; test-only beans on the base; offline test keys; 60 s budget levers
 - [Strategy constraints](strategy-constraints.md) — module batching, bean and pin order, failure devices, QA-rework criteria, escape trap, stripped paths
 - [Distributor design decisions](distributor-design-decisions.md) — spec 05 advice scope, 400 vs clamp, seed reader; spec 06 ACL failure mapping
-- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422, port shape, events, save order, snapshots, process catch rule
+- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422, port shape, events, save order, snapshots, process catch rule, spec 08 limits and tool ids
 - [Storefront design decisions](storefront-design-decisions.md) — spec 12: in-house router, no oxlint, no Maven edge, styling tests, lockfile traps

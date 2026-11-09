@@ -1,7 +1,7 @@
 - [Scaffold verification techniques](scaffold-verification-techniques.md) — checking scaffolds and rework carry-forward
 - [Shell traps](shell-traps.md) — zsh, grep, git and Bash-tool quirks that look like empty results
 - [ArchUnit probes](archunit-probes.md) — mutation probes for ArchUnit rules
-- [Spring runtime probes](spring-runtime-probes.md) — Spring app probes, advice and slice witnesses, live smoke replays, validator semantics
+- [Spring runtime probes](spring-runtime-probes.md) — Spring app probes, advice and slice witnesses, live smoke replays, validator semantics, EPP/offline-switch probes, view-controller order witness, keyed-referee grep traps
 - [Domain mutation probes](domain-mutation-probes.md) — witnesses and bypass probes for domain invariants, flow translators, port order
 - [JPA adapter probes](jpa-adapter-probes.md) — probes for JPA adapters on Hibernate 7
 - [Integration test probes](integration-test-probes.md) — probes for end-to-end integration tests

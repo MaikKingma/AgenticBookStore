@@ -68,4 +68,13 @@ Spec 07 proposals (lead-1 strategy outbox, 2026-11-09; verify in the spec 07 pla
   only. **Why:** a caught exception that crossed the flow proxy already marked the transaction rollback-only.
 - **Dates in views are `LocalDate.toString()` strings**, like instants, so no Jackson date setting matters.
 
+Spec 08 proposals (lead-1 strategy outbox, 2026-11-09; verify in the spec 08 plan and code):
+- **A limit configured in properties is checked in code**, a nested controller exception mapped to 400
+  `validation-failed`; a `@Size` constant would leave the property without effect.
+- **LLM tools take ids as `String` and parse inside**, so a hallucinated id reaches our curated error text instead of
+  failing in the framework's argument conversion. Tool error texts: use-case details verbatim, fixed texts for tool
+  input, a generic "<tool> failed for a technical reason." for anything else (trace to the log only).
+- **Request order in a guarded adapter:** validation, then offline, then rate limit, then the model; rejected requests
+  consume no slot and touch no memory.
+
 Related: [[strategy-constraints]], [[test-context-cost-model]].
