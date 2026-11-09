@@ -172,3 +172,13 @@ Maik, 2026-11-09, during the live walk of the storefront:
 
 Changed file: `specs/12-storefront.md` (Visual design, catalogue scenario). Implemented through /sdd-bugfix
 (`fix-12-genre-labels-footer`).
+
+## D12. Seed data: at least 10 books per genre
+
+Maik, 2026-11-09, during the live walk of the storefront: the demo catalogue needs at least 10 books in every genre,
+so a genre filter never shows a near-empty page. The spec 09 seed grows from 40 to 100 books, with at least 10
+AVAILABLE books per genre. The 20 books shared with the distributor stay exactly as they are; the 60 new books are
+bookstore-only, invented, with ISBNs from the bookstore-only range, stocked above their reorder level, with no
+pending restock. The stock, order and reserved rules of spec 09 are unchanged.
+
+Changed file: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario).
