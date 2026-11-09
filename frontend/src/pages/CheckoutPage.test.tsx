@@ -492,3 +492,161 @@ describe('CheckoutPage answers that are not an order', () => {
     expect(attempts).toBe(2)
   })
 })
+
+describe('CheckoutPage while an order is being placed', () => {
+  // A fourth book, not in the basket, for the visitor to add while the first order is on its way.
+  const FOURTH_ID = '2c8e6a15-9d43-4b07-a5f2-1e7b0d3c9a64'
+  const WAIT_TEXT = 'Your order is being placed. You can change the basket again when the bookstore has answered.'
+  const FOURTH_LINE = { bookId: FOURTH_ID, title: 'Emma', price: '9.99', currency: 'EUR', quantity: 1 }
+
+  function fourthBookRoutes(): MockRoute[] {
+    return [
+      {
+        method: 'GET',
+        path: `/books/${FOURTH_ID}`,
+        respond: () =>
+          jsonResponse({
+            id: FOURTH_ID,
+            title: 'Emma',
+            authors: ['Jane Austen'],
+            genre: 'FICTION',
+            price: '9.99',
+            currency: 'EUR',
+            publicationYear: 1815,
+            status: 'AVAILABLE',
+            available: 7,
+            inStock: true,
+          }),
+      },
+      { method: 'GET', path: `/inventory/${FOURTH_ID}`, respond: () => jsonResponse({ bookId: FOURTH_ID, available: 7, lowStock: false }) },
+    ]
+  }
+
+  // Opens the checkout with the seeded basket and presses Confirm order; the bookstore does not answer until the test
+  // resolves `held`.
+  async function startOrder(extra: MockRoute[] = []) {
+    seed()
+    const held = deferred<Response>()
+    const mock = mockFetch([
+      { method: 'POST', path: PLACE, respond: () => held.promise },
+      { method: 'GET', path: `/orders/${ORDER_ID}`, respond: () => jsonResponse(placedOrder()) },
+      ...extra,
+    ])
+    const user = userEvent.setup()
+    openCheckout()
+    await user.type(emailInput(), EMAIL)
+    await user.click(confirmButton())
+    expect(confirmButton()).toBeDisabled()
+    return { held, mock, user }
+  }
+
+  async function goTo(hash: string, heading: string) {
+    window.location.hash = hash
+    await screen.findByRole('heading', { level: 1, name: heading })
+  }
+
+  function inMain() {
+    return within(screen.getByRole('main'))
+  }
+
+  function placeRequests(mock: { calls: Array<{ method: string; path: string }> }): number {
+    return mock.calls.filter((call) => call.method === 'POST' && call.path === PLACE).length
+  }
+
+  function stockProblem() {
+    return problemResponse(409, {
+      title: 'Insufficient stock',
+      code: 'insufficient-stock',
+      details: [{ bookId: DUNE_ID, requested: '3', available: '0' }],
+    })
+  }
+
+  it('sends one order when the checkout is opened again while the first order is being placed', async () => {
+    const { held, mock, user } = await startOrder()
+
+    await goTo('#/basket', 'Basket')
+    await user.click(screen.getByRole('link', { name: 'Go to checkout' }))
+    await screen.findByRole('heading', { level: 1, name: 'Checkout' })
+    await user.click(confirmButton())
+    fireEvent.submit(screen.getByRole('form', { name: 'Order details' }))
+
+    expect(placeRequests(mock)).toBe(1)
+    held.resolve(jsonResponse({ id: ORDER_ID }, 202))
+    expect(await screen.findByText('PLACED')).toBeInTheDocument()
+    expect(window.location.hash).toBe(`#/orders/${ORDER_ID}`)
+    expect(placeRequests(mock)).toBe(1)
+  })
+
+  it('keeps a book added while the order was being placed and removes only the submitted lines', async () => {
+    const { held, user } = await startOrder(fourthBookRoutes())
+
+    await goTo(`#/books/${FOURTH_ID}`, 'Emma')
+    await user.click(await screen.findByRole('button', { name: 'Add to basket' }))
+    expect(await screen.findByText('Added to your basket.')).toBeInTheDocument()
+    held.resolve(jsonResponse({ id: ORDER_ID }, 202))
+
+    expect(await screen.findByText('PLACED')).toBeInTheDocument()
+    expect(JSON.parse(storedText() ?? 'null')).toEqual([FOURTH_LINE])
+    expect(basketBadge().textContent).toBe('1')
+  })
+
+  it('removes the lines of the submitted books whatever their quantity is by then, and keeps the lines of other books', async () => {
+    const { held, user } = await startOrder(fourthBookRoutes())
+
+    await goTo('#/basket', 'Basket')
+    fireEvent.change(screen.getByLabelText('Quantity for Dune'), { target: { value: '5' } })
+    await user.click(screen.getByRole('button', { name: 'Remove Neuromancer' }))
+    await goTo(`#/books/${FOURTH_ID}`, 'Emma')
+    await user.click(await screen.findByRole('button', { name: 'Add to basket' }))
+    expect(await screen.findByText('Added to your basket.')).toBeInTheDocument()
+    expect(basketBadge().textContent).toBe('7')
+    held.resolve(jsonResponse({ id: ORDER_ID }, 202))
+
+    expect(await screen.findByText('PLACED')).toBeInTheDocument()
+    expect(JSON.parse(storedText() ?? 'null')).toEqual([FOURTH_LINE])
+    expect(basketBadge().textContent).toBe('1')
+  })
+
+  it('shows a status text with the reason instead of the link back to the basket, and gives the link back after an error answer', async () => {
+    const { held } = await startOrder()
+
+    expect(await inMain().findByRole('status')).toHaveTextContent(WAIT_TEXT)
+    expect(inMain().queryByRole('link', { name: 'Back to the basket' })).not.toBeInTheDocument()
+    expect(confirmButton()).toBeDisabled()
+    held.resolve(stockProblem())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Insufficient stock')
+    expect(inMain().getByRole('link', { name: 'Back to the basket' })).toHaveAttribute('href', '#/basket')
+    expect(inMain().queryByRole('status')).not.toBeInTheDocument()
+    expect(confirmButton()).toBeEnabled()
+  })
+
+  it('shows the status text and no link back, with the button disabled, on a checkout page opened again during the order', async () => {
+    const { held } = await startOrder()
+
+    await goTo('#/basket', 'Basket')
+    await goTo('#/checkout', 'Checkout')
+
+    expect(await inMain().findByRole('status')).toHaveTextContent(WAIT_TEXT)
+    expect(inMain().queryByRole('link', { name: 'Back to the basket' })).not.toBeInTheDocument()
+    expect(confirmButton()).toBeDisabled()
+    held.resolve(jsonResponse({ id: ORDER_ID }, 202))
+    expect(await screen.findByText('PLACED')).toBeInTheDocument()
+  })
+
+  it('shows a failure that arrives on a checkout page opened again, enables the button and keeps the stored basket byte for byte', async () => {
+    const { held } = await startOrder()
+
+    await goTo('#/basket', 'Basket')
+    await goTo('#/checkout', 'Checkout')
+    expect(await inMain().findByRole('status')).toHaveTextContent(WAIT_TEXT)
+    held.resolve(stockProblem())
+
+    const alert = await screen.findByRole('alert')
+    expect(alertItems(alert)).toEqual(['Book Dune: requested 3, available 0'])
+    expect(confirmButton()).toBeEnabled()
+    expect(inMain().getByRole('link', { name: 'Back to the basket' })).toBeInTheDocument()
+    expect(storedText()).toBe(BASKET_JSON)
+    expect(window.location.hash).toBe('#/checkout')
+  })
+})
