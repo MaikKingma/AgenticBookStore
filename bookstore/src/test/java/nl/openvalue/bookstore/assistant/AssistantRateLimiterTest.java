@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -13,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -134,6 +138,90 @@ class AssistantRateLimiterTest {
         } finally {
             threads.shutdownNow();
             assertThat(threads.awaitTermination(10, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    /**
+     * Two requests released together never read the clock at the same time: the clock holds each caller for 50 ms, so
+     * a limiter that lets both in at once shows two threads inside {@code instant()}.
+     */
+    @Test
+    void neverTwoRequestsInsideTheLimiterAtOnce() throws Exception {
+        InspectingClock inspectingClock = new InspectingClock(START);
+        AssistantRateLimiter limiter = new AssistantRateLimiter(inspectingClock, new AssistantProperties(20, 1000));
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        try {
+            CountDownLatch ready = new CountDownLatch(2);
+            CountDownLatch start = new CountDownLatch(1);
+            List<Future<?>> calls = new ArrayList<>();
+            for (int thread = 0; thread < 2; thread++) {
+                calls.add(threads.submit(() -> {
+                    ready.countDown();
+                    start.await();
+                    limiter.acquire();
+                    return null;
+                }));
+            }
+            assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            for (Future<?> call : calls) {
+                call.get(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            threads.shutdownNow();
+            assertThat(threads.awaitTermination(10, TimeUnit.SECONDS)).isTrue();
+        }
+
+        assertThat(inspectingClock.reads()).as("both requests read the clock").isEqualTo(2);
+        assertThat(inspectingClock.maxThreadsInside()).isEqualTo(1);
+    }
+
+    /**
+     * A clock that stands still, holds every caller of {@code instant()} for 50 ms on a latch nobody opens and records
+     * the most threads it saw inside at once.
+     */
+    private static final class InspectingClock extends Clock {
+
+        private final Instant instant;
+        private final AtomicInteger inside = new AtomicInteger();
+        private final AtomicInteger maxInside = new AtomicInteger();
+        private final AtomicInteger reads = new AtomicInteger();
+        private final CountDownLatch never = new CountDownLatch(1);
+
+        InspectingClock(Instant instant) {
+            this.instant = instant;
+        }
+
+        @Override
+        public Instant instant() {
+            reads.incrementAndGet();
+            maxInside.accumulateAndGet(inside.incrementAndGet(), Math::max);
+            try {
+                never.await(50, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                inside.decrementAndGet();
+            }
+            return instant;
+        }
+
+        int maxThreadsInside() {
+            return maxInside.get();
+        }
+
+        int reads() {
+            return reads.get();
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            throw new UnsupportedOperationException("InspectingClock runs in UTC only");
         }
     }
 

@@ -644,6 +644,13 @@ class BookstoreToolsTest {
                 new InvalidInputException("invalid-thing", "Invalid thing", "Something is off"));
 
         assertThat(failureOf(() -> tools().searchCatalogue("book", "x"))).isEqualTo("Something is off");
+
+        // A rejection whose details name a field, not a genre: no detail has a genre key, so nothing is appended.
+        when(catalogue.search("long", null, null, null)).thenThrow(
+                new InvalidInputException("invalid-query", "Invalid query", "Query too long",
+                        List.of(Map.of("field", "q", "message", "Query too long"))));
+
+        assertThat(failureOf(() -> tools().searchCatalogue("long", null))).isEqualTo("Query too long");
     }
 
     @Test
