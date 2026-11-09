@@ -13,3 +13,7 @@ export const MIN_QUANTITY_PER_LINE = 1
 // At most this many different books (order lines) in one order. Owned by spec 04 (orders), enforced on the server by
 // the `PlaceOrderPayload` class.
 export const MAX_BASKET_LINES = 20
+
+// At most this many characters in one chat message. Owned by spec 08 (assistant), configured on the server by the
+// property `bookstore.assistant.max-message-length`. The chat page disables sending beyond it and shows the limit.
+export const MAX_CHAT_MESSAGE_LENGTH = 1000
