@@ -81,9 +81,9 @@ class DistributorImportIntegrationTest extends IntegrationTestBase {
 
     @Test
     void importWithAPriceAboveTheRecommendedOneAndAHyphenatedIsbnStoresTheOverrideAndTheNormalisedRequestIsbn() {
-        // The stubbed title carries a different ISBN than the request: the stored book must follow the request.
+        // The request is hyphenated and the distributor answers for the normalised ISBN.
         when(distributorAppService.findTitle(PRIDE_ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(
-                "9789900010050", "The Last Man", List.of("Percy Shelley", "Mary Shelley"), "SCIENCE_FICTION",
+                PRIDE_ISBN, "The Last Man", List.of("Percy Shelley", "Mary Shelley"), "SCIENCE_FICTION",
                 new BigDecimal("11.99"), "EUR", 1826, true)));
 
         UUID id = importBook(Map.of("isbn", "978-0-14-143951-8", "price", "12.00")).expectStatus().isAccepted()
@@ -216,13 +216,31 @@ class DistributorImportIntegrationTest extends IntegrationTestBase {
     @Test
     void anUnavailableDistributorIsReportedWith503AndNothingIsStored() {
         when(distributorAppService.findTitle(PRIDE_ISBN))
-                .thenThrow(new DistributorUnavailableException("The distributor answered with status 503"));
+                .thenThrow(new DistributorUnavailableException(
+                        "The distributor gave no usable answer for ISBN 9780141439518"));
 
         Map<String, Object> problem = problem(importBook(Map.of("isbn", "978-0-14-143951-8")), 503);
 
         assertThat(problem.get("code")).isEqualTo("distributor-unavailable");
         assertThat(problem.get("title")).isEqualTo("Distributor unavailable");
-        assertThat(problem.get("detail")).isEqualTo("The distributor answered with status 503");
+        assertThat(problem.get("detail")).isEqualTo("The distributor gave no usable answer for ISBN 9780141439518");
+        assertThat(problem.get("details")).isEqualTo(List.of());
+        assertRowCounts(0, 0, 0);
+        verify(distributorAppService).findTitle("9780141439518");
+        verifyNoMoreInteractions(distributorAppService);
+    }
+
+    @Test
+    void aDistributorTitleForAnotherIsbnIsReportedWith503AndNothingIsStored() {
+        when(distributorAppService.findTitle(PRIDE_ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(
+                "9789900010050", "The Last Man", List.of("Percy Shelley", "Mary Shelley"), "SCIENCE_FICTION",
+                new BigDecimal("11.99"), "EUR", 1826, true)));
+
+        Map<String, Object> problem = problem(importBook(Map.of("isbn", "978-0-14-143951-8", "price", "12.00")), 503);
+
+        assertThat(problem.get("code")).isEqualTo("distributor-unavailable");
+        assertThat(problem.get("title")).isEqualTo("Distributor unavailable");
+        assertThat(problem.get("detail")).isEqualTo("The distributor gave no usable answer for ISBN 9780141439518");
         assertThat(problem.get("details")).isEqualTo(List.of());
         assertRowCounts(0, 0, 0);
         verify(distributorAppService).findTitle("9780141439518");

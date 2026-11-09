@@ -1,6 +1,6 @@
 ---
 name: qa-test-data-falsifiers
-description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs, producer-shaped external ids, partial-row decode residuals); read before writing the falsifier list of a qaDirective
+description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs, producer-shaped external ids, partial-row decode residuals, log-escape sets); read before writing the falsifier list of a qaDirective
 metadata:
   type: feedback
 ---
@@ -88,3 +88,18 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
    - A stored optional value object decoded by a guard on one column (all four columns or none) gives an NPE or a
      silent ignore on hand-written partial rows. Accept it as a residual only after a grep shows a single writer
      that writes all columns or none; name both behaviours in the residual text at strategy time.
+   - "Exact equality" with an expected identifier (answered `ean` vs requested ISBN): derive the witness set once
+     from the operator family, both sides and both receiver orders: leading pad, trailing pad, extension at front,
+     extension at end, proper prefix (truncated), proper suffix (front-truncated), plus null. The mutant set holds
+     `a.op(b)` and `b.op(a)` for op in startsWith/endsWith/contains, and strip/stripLeading/stripTrailing. Growing
+     the list only by the survivors just seen cost a REJECT or FAIL in three straight rounds (fix-06 T1 r0, T2 r0,
+     T2 r1). A reversed `expected.endsWith(answer)` also accepts the empty string. Case-folding mutants are equivalent
+     when the expected value is digits only. Stated to the verifier as "a.op(b) and b.op(a) for every op", it was
+     followed in full and left no survivor in one round. Line-count assertions over captured logs: `String.lines()` skips U+2028/U+2029/U+0085, so a log
+     test with those characters must split with `\R`.
+   - Log-escape sets named by a JDK predicate ("every `Character.isISOControl` char plus U+2028/U+2029"): list the
+     witnesses at strategy time, or hand-rolled ranges survive as inspection items. That means every `\R` member (LF, VT,
+     FF, CR, U+0085, U+2028, U+2029) and the predicate's edges: NUL, U+001F, U+007F, U+0080, U+009F. Add one hex digit
+     that is a letter (lowercase-hex probe) and one leading-zero code (width probe). A new exception constructor that
+     must leave a pass-through untouched (`details` empty, so the problem body is unchanged) needs that field asserted
+     in the new test. Otherwise "details filled from the cause" survives (fix-06 T3).
