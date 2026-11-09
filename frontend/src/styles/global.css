@@ -63,6 +63,22 @@ a:hover {
   padding: 1.5rem 1rem 3rem;
 }
 
+/* Shell: header, main and footer sit in one column that is at least as high as the window. The main takes the free
+   space, so the footer is at the bottom of the window when the content is short and below the content when it is long.
+   The footer stays in the normal flow (never fixed, absolute or sticky), so it can never cover content. The static unit
+   comes first as the fallback for browsers without the dynamic unit, which follows the toolbars of a phone. */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.app-shell > main {
+  flex: 1 0 auto;
+}
+
 /* Header: a white surface with a navy bottom border, sticky at the top of the page */
 
 .site-header {

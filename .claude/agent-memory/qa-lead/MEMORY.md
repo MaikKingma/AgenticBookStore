@@ -1,6 +1,6 @@
 - [QA directive traps](qa-directive-traps.md) — traps when writing a task qaDirective: probes, snapshots, greps, evidence files, ArchUnit vacuity, bugfix cycles; read before a directive
 - [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, timeouts, log escapes; read before a falsifier list
-- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout and live-browser witnesses; read before a UI task falsifier list
+- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout, live-browser witnesses, negctl worktree Node setup; read before a UI falsifier list or final brief
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, caches; read before a CI spec strategy
 - [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI specs: keyed referee, env-reading tests, network-safe probes, default-equivalent mutants, EPP order, memory window, tool double, tool helpers, failure translation, provider stubs; read first
 - [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review

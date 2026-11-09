@@ -26,6 +26,7 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
 - A browser mirror of a server length cap on an untrimmed field needs boundary rows with edge whitespace on each side (`'a'.repeat(1000) + ' '`, `' ' + 'a'.repeat(1000)`, and 999 plus a space enabled) and one astral character (`String.fromCodePoint(0x1f4d6)`, length 2) at cap and cap + 1, or trimmed-length, one-sided trim and code-point counters survive (spec 12 T9 lost a round).
 - A list keyed by index needs two identical entries under the console trap, or `key={text}` survives (T8 A-key, T9 F2).
 - "Show our own text, not the server's" is untestable with the realistic fixture when the server sends that same text (the bookstore's `assistant-unavailable` detail IS the spec 12 text): the fixture detail and title must differ from the page text, and the `details` list must be non-empty, or rendering `problem.detail` or keeping `details: problem.details` survives (fix-08 T2 lost a round on the list).
+- A lookup helper with a fallback ("unknown value shown as sent") pinned only by its unit test lets each consumer that reads the map directly survive when the consumer's input is typed as the union (`GENRE_LABELS[book.genre]` type-checks). Name a consumer witness per render site (a value cast `as BookView['genre']`) at strategy time; found late, a gate grep (map indexed only in its module) plus a residual, not a REJECT (fix-12g T1).
 
 ## Contrast and style-guard tests
 
@@ -36,10 +37,14 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
 - A named-surface comment is a trusted claim: demand a test that the claimed surface exists (the ancestor rule's background), or deleting the ancestor rule leaves white-on-snow links green (spec 12 T4 K4).
 - A threshold constant is pinned only between the nearest calibration pairs: name a band witness (`#767676` on white 4.54 passes, `#777777` 4.48 fails), or record it as equivalent only after checking no pair of the pinned token set lies in the band.
 - A class contract checked as "some selector names the class" lets base blocks be deleted; later tasks need an insertion-only diff on the stylesheet.
-- A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11).
+- A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11). A cascade-aware reader that skips at-rules (so a never-true `@media (min-width: 9999px)` dies) still misses an always-true media override and a same-specificity rule on another selector (`main.page` vs `.app-shell > main`): to pin it in a test, name a closed-world allow-list of (selector, context) pairs over ALL contexts in the falsifier list (fix-12g T2).
 
 ## Layout and live-browser checks
 
 - Layout claims in CSS (a scroll wrapper, wrapping, sticky) have no falsifier in jsdom: put a short live-browser measurement with realistic data at 390 px into the task that writes the rule, not only into the final walk. An `overflow-x: auto` wrapper needs `scrollWidth > clientWidth` on it and one client rect per word of every cell; an inherited `overflow-wrap: anywhere` (from a card) shrinks a table's min-content, so the wrapper never scrolls and headings break mid-word (spec 12, found only at T10).
 - A data-URI favicon with an SVG `xmlns` URL trips any "no absolute URL in index.html" test; `data:,` avoids the request with no URL and no colour literal.
 - The Boot jar serves `/shop/index.html` with `Last-Modified` 1980 and no `Cache-Control`, so a reused browser keeps the old page after a rebuild: every live check of a new build runs in a brand-new browser context.
+
+## Frontend negative control in a throwaway worktree
+
+- A fresh worktree has no `frontend/node` or `node_modules`. `./mvnw -q -pl frontend generate-resources` from its root installs both (the frontend-maven-plugin binds install-node-and-npm and `npm ci` to that phase, tests not run). Do not point Vitest at another tree's `node_modules`: imports resolve from the test file's directory, so trees mix. A test that imports a new export of the fix is green-after-only: leave it out of the red run and name the red set from the tests that exercise unchanged exports (fix-12g).

@@ -160,3 +160,59 @@ Maik, 2026-11-09, after the spec 08 review:
 Changed files: `specs/08-bookstore-assistant.md` (configuration, API table, new requirement "Failed model call"),
 `specs/12-storefront.md` (assistant error messages). Implemented through /sdd-bugfix (`fix-08-assistant-review`).
 
+## D11. Storefront: readable genre labels and a footer at the bottom of the window
+
+Maik, 2026-11-09, during the live walk of the storefront:
+
+- The storefront showed the raw enum names (`SCIENCE_FICTION`) in the genre select and on the book cards. The shop
+  shows a readable label in sentence case instead ("Science fiction"); the select still sends the enum name to
+  `GET /books`. The label casing is my default; the spec did not name one.
+- The footer floated in the middle of the window on a short page. It now sits at the bottom of the window when the
+  content is short, and below the content when it is long.
+
+Changed file: `specs/12-storefront.md` (Visual design, catalogue scenario). Implemented through /sdd-bugfix
+(`fix-12-genre-labels-footer`).
+
+## D12. Seed data: at least 10 books per genre
+
+Maik, 2026-11-09, during the live walk of the storefront: the demo catalogue needs at least 10 books in every genre,
+so a genre filter never shows a near-empty page. The spec 09 seed grows from 40 to 100 books, with at least 10
+AVAILABLE books per genre. The 20 books shared with the distributor stay exactly as they are; the 60 new books are
+bookstore-only, invented, with ISBNs from the bookstore-only range, stocked above their reorder level, with no
+pending restock. The stock, order and reserved rules of spec 09 are unchanged.
+
+Spec 02 capped `GET /books` at 100 results without paging, so 100 seeded books plus one added in a demo would push a
+book off the unfiltered list. Maik chose to raise the cap to 200 results (still sorted by title, no paging). The
+assistant tools keep their own smaller limits.
+
+Both changes are built by the spec 09 orchestrator in its normal SDD cycle (default model policy, QA and QA lead),
+not by a separate agent.
+
+Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
+cap).
+
+Clarified by the main session on 2026-11-09 after the spec 09 orchestrator found a contradiction (10 genres times at
+least 10 AVAILABLE books leaves no room for discontinued books in exactly 100): the seed has 103 books, 100 AVAILABLE
+(exactly 10 per genre) plus the 3 discontinued bookstore-only books spec 09 already asks for. This keeps both of
+Maik's requirements and fits under the cap of 200.
+
+## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
+
+Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
+(a launcher in the lower right corner of every page instead of a page), and answers must be streamed over a new
+`POST /assistant/chat/stream`. Shortly after, Maik made it optional and deferred it to after the first release.
+
+The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
+12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.
+
+## D14. Spec 10: no headless Claude Code runs; Maik rehearses the levels
+
+Maik, 2026-11-09: the agents' headless Claude Code runs cannot log in under the isolated HOME that protects Maik's
+real `~/.claude`. Instead of a login workaround, Maik rehearses every level himself on 2026-11-10. The agents build
+every branch file directly and replace each scenario run and rehearsal with a careful consistency check against spec
+10, the guide and the code on `main`, with `./mvnw clean verify` green on every branch. Files a Claude Code step would
+generate (Spec Kit constitution, Agent OS product docs and standards) are written directly from the pack and listed
+for Maik's review. Scenarios that need a Claude Code session, the macOS LSP rehearsal and the timed Level 4 rehearsal
+are Maik's manual checks.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble, Definition of done).

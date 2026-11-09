@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import type { BookSearch } from '../api/books'
-import { GENRES } from '../genres'
+import { GENRES, genreLabel } from '../genres'
 
 // The four criteria of the catalogue search. An empty text means "not set"; the API function leaves it out.
 export type SearchCriteria = Required<BookSearch>
@@ -56,7 +56,7 @@ export function SearchForm({ initial, onSearch }: { initial: SearchCriteria; onS
           <option value="">Any genre</option>
           {GENRES.map((genre) => (
             <option key={genre} value={genre}>
-              {genre}
+              {genreLabel(genre)}
             </option>
           ))}
         </select>
