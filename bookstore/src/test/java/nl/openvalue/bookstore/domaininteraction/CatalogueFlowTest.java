@@ -421,28 +421,28 @@ class CatalogueFlowTest {
     }
 
     @Test
-    void searchesWithNormalisedCriteriaTheCanonicalGenreAndALimitOf100() {
+    void searchesWithNormalisedCriteriaTheCanonicalGenreAndALimitOf200() {
         List<BookDTO> found = List.of(storedBook("AVAILABLE"), storedBook("DISCONTINUED"));
-        when(books.search("pride", "Pride and Prejudice", "austen", "SCIENCE_FICTION", 100)).thenReturn(found);
+        when(books.search("pride", "Pride and Prejudice", "austen", "SCIENCE_FICTION", 200)).thenReturn(found);
 
         List<BookDTO> result = flow.search(" pride\t", "  Pride and Prejudice ", "  austen ", "science-fiction");
 
         assertThat(result).containsExactlyElementsOf(found);
-        verify(books).search("pride", "Pride and Prejudice", "austen", "SCIENCE_FICTION", 100);
+        verify(books).search("pride", "Pride and Prejudice", "austen", "SCIENCE_FICTION", 200);
     }
 
     @Test
     void treatsBlankCriteriaAsAbsent() {
         flow.search("", "   ", "\t", "  ");
 
-        verify(books).search(null, null, null, null, 100);
+        verify(books).search(null, null, null, null, 200);
     }
 
     @Test
     void passesAbsentCriteriaOnAsAbsent() {
         flow.search(null, null, null, null);
 
-        verify(books).search(null, null, null, null, 100);
+        verify(books).search(null, null, null, null, 200);
     }
 
     @Test
@@ -451,7 +451,7 @@ class CatalogueFlowTest {
         flow.search(EM_SPACE + "pride" + EM_SPACE, null, EM_SPACE + "austen" + EM_SPACE,
                 EM_SPACE + "poetry" + EM_SPACE);
 
-        verify(books).search("pride", null, "austen", "POETRY", 100);
+        verify(books).search("pride", null, "austen", "POETRY", 200);
     }
 
     @Test
