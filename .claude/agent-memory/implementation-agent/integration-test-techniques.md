@@ -63,4 +63,11 @@ metadata:
 - Re-stubbing the shared mock replaces the base default; for "fail first, then the default", rebuild the default answer
   locally (`doThrow(e).doAnswer(this::defaultConfirmation)`), since the base's lambda cannot be chained.
 
+- JDBC witnesses for nullable column groups: a `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
+  rs.getObject(2, Integer.class), rs.getObject(3, LocalDate.class), rs.getObject(4, Boolean.class)), id)` row gives
+  nulls for SQL NULL (pgjdbc), so "all cleared" is `isEqualTo(Arrays.asList(null, null, null, null))`. "Row unchanged
+  after a rejected command": `queryForMap("select * ...")` before and after, compared with `isEqualTo`. Run every
+  "unchanged" claim from each start of the flag it could flip (`@ValueSource(booleans = {true, false})`): from one
+  start, a reset-with-rollback-suppressed mutant changes nothing and survives (QA rule C0-17).
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

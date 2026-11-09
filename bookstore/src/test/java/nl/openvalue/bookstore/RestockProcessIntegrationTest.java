@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -40,6 +42,9 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * commit the process asks the distributor mock to restock the book in a transaction of its own. Real HTTP into the
  * full application on PostgreSQL; every test starts on an empty database with the default distributor answer. Books
  * have the default reorder level 3 and reorder quantity 10. Log lines are read from the captured console output.
+ *
+ * <p>It also covers the manual path, the request-restock command that asks the distributor through the same mock and
+ * answers 202, 503, 404 or 422, and the delivery that completes a pending restock.
  */
 @ExtendWith(OutputCaptureExtension.class)
 class RestockProcessIntegrationTest extends IntegrationTestBase {
@@ -51,6 +56,11 @@ class RestockProcessIntegrationTest extends IntegrationTestBase {
     private static final String TALE_ISBN = "9780141439600";
 
     private static final String WUTHERING_ISBN = "9780141439563";
+
+    private static final String OLIVER_ISBN = "9780141439747";
+
+    /** The four pending restock columns of a stock item without a pending restock. */
+    private static final List<Object> NO_PENDING_RESTOCK_COLUMNS = Arrays.asList(null, null, null, null);
 
     @Test
     void orderDrivingStockBelowTheReorderLevelRequestsOneRestock() {
@@ -223,6 +233,176 @@ class RestockProcessIntegrationTest extends IntegrationTestBase {
         assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 5, 3, 2, true), 10));
     }
 
+    @Test
+    void manualRequestRestockRequestsAndShowsThePendingRestock() {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 20);
+
+        requestRestock(a).expectStatus().isAccepted().expectBody().isEmpty();
+
+        ArgumentCaptor<String> reference = ArgumentCaptor.forClass(String.class);
+        verify(distributorAppService).requestRestock(eq("9780141439747"), eq(10), reference.capture());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(reference.getValue()).matches("^" + a + "/\\d+$");
+        assertThat(stockEvents.committed()).isEmpty();
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 20, 0, 20, false), 10));
+        assertThat(pendingRestockColumns(a))
+                .isEqualTo(List.of("c4f1a7e2-3b9d-4e8a-b6f5-2d1e0a9c8b7f", 10, defaultExpectedDeliveryDate, false));
+    }
+
+    @Test
+    void manualRequestShowsTheDistributorAnswerAsGiven() {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 20);
+        // Every value differs from the default answer: an order id with an uppercase letter, more copies than
+        // requested, backordered, and a fixed date with a single-digit month and day.
+        doAnswer(invocation -> new RestockConfirmationDTO("R-7781", 12, LocalDate.of(2001, 2, 3), true))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        requestRestock(a).expectStatus().isAccepted().expectBody().isEmpty();
+
+        verify(distributorAppService).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        Map<String, Object> pending = Map.of(
+                "restockOrderId", "R-7781",
+                "quantity", 12,
+                "expectedDeliveryDate", "2001-02-03",
+                "backordered", true);
+        assertThat(getStock(a)).isEqualTo(withPendingRestock(stockView(a, 20, 0, 20, false), pending));
+        assertThat(pendingRestockColumns(a)).isEqualTo(List.of("R-7781", 12, LocalDate.of(2001, 2, 3), true));
+    }
+
+    @Test
+    void manualRetryWhilePendingIsAcceptedWithoutCallingTheDistributor() {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 4);
+        // The order dips the stock, so the automatic path has already left a pending restock.
+        placeOrder(List.of(line(a, 2)));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 4, 2, 2, true), 10));
+        // Another answer from now on, so a second recorded restock would show.
+        doAnswer(invocation -> new RestockConfirmationDTO("R-9902", 15, LocalDate.of(2001, 11, 30), true))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        requestRestock(a).expectStatus().isAccepted().expectBody().isEmpty();
+
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 4, 2, 2, true), 10));
+        assertThat(pendingRestockColumns(a))
+                .isEqualTo(List.of("c4f1a7e2-3b9d-4e8a-b6f5-2d1e0a9c8b7f", 10, defaultExpectedDeliveryDate, false));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void manualRetryWhileTheDistributorIsDownIs503(boolean signalled) {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        // Three copies are at the reorder level: low stock without a pending restock, signalled or not.
+        receive(a, 3);
+        setLowStockSignalled(a, signalled);
+        doThrow(new DistributorUnavailableException("Manual restock test: the distributor answered status 502"))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        Map<String, Object> problem = problem(requestRestock(a), 503);
+
+        assertThat(problem.get("code")).isEqualTo("distributor-unavailable");
+        assertThat(problem.get("title")).isEqualTo("Distributor unavailable");
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(lowStockSignalled(a)).isEqualTo(signalled);
+        assertThat(pendingRestockColumns(a)).isEqualTo(NO_PENDING_RESTOCK_COLUMNS);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 3, 0, 3, true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void manualRequestForATitleUnknownAtTheDistributorIs404(boolean signalled) {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 3);
+        setLowStockSignalled(a, signalled);
+        Map<String, Object> before = stockRow(a);
+        doThrow(new TitleNotFoundAtDistributorException("9780141439747"))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        Map<String, Object> problem = problem(requestRestock(a), 404);
+
+        assertThat(problem.get("code")).isEqualTo("title-not-found-at-distributor");
+        assertThat(problem.get("title")).isEqualTo("Title not found at distributor");
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(stockRow(a)).isEqualTo(before);
+        assertThat(pendingRestockColumns(a)).isEqualTo(NO_PENDING_RESTOCK_COLUMNS);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 3, 0, 3, true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void manualRequestForATitleNotOrderableIs422(boolean signalled) {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 3);
+        setLowStockSignalled(a, signalled);
+        Map<String, Object> before = stockRow(a);
+        doThrow(new TitleNotOrderableException("9780141439747"))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        Map<String, Object> problem = problem(requestRestock(a), 422);
+
+        assertThat(problem.get("code")).isEqualTo("title-not-orderable");
+        assertThat(problem.get("title")).isEqualTo("Title not orderable");
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(stockRow(a)).isEqualTo(before);
+        assertThat(pendingRestockColumns(a)).isEqualTo(NO_PENDING_RESTOCK_COLUMNS);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 3, 0, 3, true));
+    }
+
+    @Test
+    void manualRequestForAnUnknownBookIs404WithoutCallingTheDistributor() {
+        UUID unknown = UUID.fromString("0b7e5d3c-2a19-4f68-9c4d-8e1f2a3b4c5d");
+
+        Map<String, Object> problem = problem(requestRestock(unknown), 404);
+
+        assertThat(problem.get("code")).isEqualTo("book-not-found");
+        assertThat(problem.get("title")).isEqualTo("Book not found");
+        verifyNoInteractions(distributorAppService);
+        assertThat(countRows("stock_item")).isZero();
+    }
+
+    @Test
+    void deliveryCompletesThePendingRestock() {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 4);
+        placeOrder(List.of(line(a, 2)));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 4, 2, 2, true), 10));
+
+        receive(a, 10);
+
+        assertThat(getStock(a)).isEqualTo(stockView(a, 14, 2, 12, false));
+        assertThat(pendingRestockColumns(a)).isEqualTo(NO_PENDING_RESTOCK_COLUMNS);
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+    }
+
+    @Test
+    void automaticRestockIsSkippedWhileOneIsPending() {
+        UUID a = addBook(OLIVER_ISBN, "Oliver Twist", "9.50");
+        receive(a, 20);
+        requestRestock(a).expectStatus().isAccepted().expectBody().isEmpty();
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        // Another answer from now on, so a second recorded restock would show.
+        doAnswer(invocation -> new RestockConfirmationDTO("R-9903", 15, LocalDate.of(2001, 11, 30), true))
+                .when(distributorAppService).requestRestock(any(), anyInt(), any());
+
+        // The stocktake starts a dip, so the running-low event is handled after its commit.
+        correct(a, 3, "Stocktake after water damage").expectStatus().isAccepted().expectBody().isEmpty();
+
+        assertThat(stockEvents.committed()).extracting(StockRunningLowEvent::bookId).containsExactly(a);
+        verify(distributorAppService, times(1)).requestRestock(eq("9780141439747"), eq(10), any());
+        verifyNoMoreInteractions(distributorAppService);
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 3, 0, 3, true), 10));
+        assertThat(pendingRestockColumns(a))
+                .isEqualTo(List.of("c4f1a7e2-3b9d-4e8a-b6f5-2d1e0a9c8b7f", 10, defaultExpectedDeliveryDate, false));
+    }
+
     /** The answer the base gives by default: the default order for the requested quantity, delivery in two days. */
     private RestockConfirmationDTO defaultConfirmation(InvocationOnMock invocation) {
         return new RestockConfirmationDTO(DEFAULT_RESTOCK_ORDER_ID, invocation.getArgument(1),
@@ -318,5 +498,54 @@ class RestockProcessIntegrationTest extends IntegrationTestBase {
         Integer count = jdbcTemplate.queryForObject("select count(*) from " + table, Integer.class);
         assertThat(count).isNotNull();
         return count;
+    }
+
+    private RestTestClient.ResponseSpec requestRestock(UUID bookId) {
+        return restTestClient.post().uri("/inventory/{bookId}/commands/request-restock", bookId).exchange();
+    }
+
+    private RestTestClient.ResponseSpec correct(UUID bookId, int onHand, String reason) {
+        return restTestClient.post().uri("/inventory/{bookId}/commands/correct", bookId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("onHand", onHand, "reason", reason))
+                .exchange();
+    }
+
+    /** A copy of a stock view as JSON gives it, with the given pending restock in place of its own. */
+    private static Map<String, Object> withPendingRestock(Map<String, Object> view, Map<String, Object> pending) {
+        Map<String, Object> expected = new LinkedHashMap<>(view);
+        expected.put("pendingRestock", pending);
+        return expected;
+    }
+
+    /** The four pending restock columns of the book's stock item: order id, quantity, delivery date, backordered. */
+    private List<Object> pendingRestockColumns(UUID bookId) {
+        List<Object> columns = jdbcTemplate.queryForObject("""
+                select pending_restock_order_id, pending_restock_quantity, pending_restock_expected_delivery_date,
+                       pending_restock_backordered
+                from stock_item where book_id = ?""",
+                (resultSet, rowNumber) -> Arrays.<Object>asList(resultSet.getString(1),
+                        resultSet.getObject(2, Integer.class), resultSet.getObject(3, LocalDate.class),
+                        resultSet.getObject(4, Boolean.class)),
+                bookId);
+        assertThat(columns).isNotNull();
+        return columns;
+    }
+
+    private boolean lowStockSignalled(UUID bookId) {
+        Boolean signalled = jdbcTemplate.queryForObject("select low_stock_signalled from stock_item where book_id = ?",
+                Boolean.class, bookId);
+        assertThat(signalled).isNotNull();
+        return signalled;
+    }
+
+    private void setLowStockSignalled(UUID bookId, boolean signalled) {
+        assertThat(jdbcTemplate.update("update stock_item set low_stock_signalled = ? where book_id = ?", signalled,
+                bookId)).isEqualTo(1);
+    }
+
+    /** Every column of the book's stock item row, as JDBC reads it. */
+    private Map<String, Object> stockRow(UUID bookId) {
+        return jdbcTemplate.queryForMap("select * from stock_item where book_id = ?", bookId);
     }
 }
