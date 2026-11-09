@@ -1,0 +1,5 @@
+5c159b195a3efa554efd4e09c716bec2931f820aaf28f0319c702fd306a58ac6  guide/docs/reference/cheat-sheet.md
+0f673c921c45066c1b99b84cc09904a1186600e689fb353983fbabb3829d9bfb  guide/docs/reference/architecture.md
+53947314bf41e5e6db245a7c97648f578b82b3fbbccd656c082f9a8bbe3dcdf2  guide/docs/reference/troubleshooting.md
+c3f1bb9bde84b2e0245cbdf41ca81f5ef61a0e4407f6cca248c7da8611a60e1b  guide/docs/03-level-2-give-your-agent-eyes.mdx
+31e92101d5dd2c7e7bbdbf85e5f82698c570bdbaa53736398c86e34f6f83d683  guide/docs/04-level-3-behavioral-control.mdx

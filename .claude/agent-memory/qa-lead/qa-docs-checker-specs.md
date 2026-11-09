@@ -1,6 +1,6 @@
 ---
 name: qa-docs-checker-specs
-description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content, axe preload noise on file://, shape-vs-count rules, built meta descriptions, substring command entries, branch lag, derived scenario prompts; read before the strategy of any docs or checker task
+description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content, axe preload noise on file://, shape-vs-count rules, built meta descriptions, substring command entries, branch lag, derived scenario prompts, print margins, designated-source ranges; read before the strategy of any docs or checker task
 metadata:
   type: feedback
 ---
@@ -48,9 +48,8 @@ contrast), the checker is production code AND the oracle for every later task. T
     later task, the orchestrator's `git add` can sweep it in. Check every folder a task generates against the ignore
     file AT that task (`git check-ignore -v`), and move the line forward if needed.
 11. **Self-hosted static sites in Docusaurus**: the hash-router build skips SSG and link checks (exit 0 on broken
-    links and crashing pages), so only the browser build is evidence; a missing `.md` link failing the hash build too
-    proves `markdown.hooks.onBrokenMarkdownLinks: 'throw'` survived a config spread. Pointer: res-1 report copied
-    into the spec 11 folder.
+    links and crashing pages), so only the browser build is evidence; a missing `.md` link failing the hash build
+    too proves `markdown.hooks.onBrokenMarkdownLinks: 'throw'` survived a config spread (res-1, spec 11 folder).
 12. **Docusaurus markup traps for a page grammar**: `{#id}` heading ids do not compile under `future.v4` (use
     `{/* #id */}`, spec 11 plan.md A3); `- [ ]` task lists render bare disabled checkboxes that fail axe `label`
     (critical). At strategy time say whether "axe" means color-contrast only or the full ruleset, and give every
@@ -88,8 +87,10 @@ contrast), the checker is production code AND the oracle for every later task. T
     sourced clauses as embellishments; the content spec itself and app specs or product docs hold sources too. Direct
     a whole-pack search before any "embellished" mark; a usage instruction derived from a cited mechanism is faithful,
     a tool-behaviour claim never is. Facilitator-only ranges overlap participant facts: bar facilitator-only content,
-    accept a fact a participant line repeats (cite both). Cross-page link texts that quote another task's headings are
-    unpinned by anchor rules: give the owning task a heading-keep rule plus a rendered text check.
+    accept a fact a participant line repeats (cite both); a range that is one page's designated source with named
+    exclusions (risk table -> troubleshooting) is ruled by its exclusion list, not its label. Cross-page link texts
+    quoting another task's headings: heading-keep rule plus a rendered text check. Print criteria: `page.pdf` defaults
+    to margin 0, a browser dialog prints at about 10 mm and reflows; name the margin or check both (T11 O-4).
 
 17. **axe on `file://`** (spec 11 T4a to T7): axe-core's CSSOM preload fetches stylesheets by XHR; on `file://` it
     fails and axe logs `Couldn't load preload assets:` (string only in `axe-core/axe.min.js`), Chromium adds a CORS

@@ -15,3 +15,4 @@
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions-config tasks; job vs step timeout annotations; job-log escape-sequence and cache-list truncation traps; rg `${{` harness trap
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
 - [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe and mutant runner, scanner witnesses, MDX variants, offline traps, built-HTML tab reader probes, self-test moves to a snapshot
+- [Marker ban and site-wide pass](docusaurus-marker-ban-and-site-pass.md) — ban mutants and reinsertion probes, patched render script, CI zip, dev-mode driver races, print page count
