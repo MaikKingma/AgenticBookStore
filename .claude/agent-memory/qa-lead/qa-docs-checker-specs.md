@@ -1,6 +1,6 @@
 ---
 name: qa-docs-checker-specs
-description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content; read before the strategy of any docs or checker task
+description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content, axe preload noise on file://, shape-vs-count rules; read before the strategy of any docs or checker task
 metadata:
   type: feedback
 ---
@@ -90,5 +90,15 @@ contrast), the checker is production code AND the oracle for every later task. T
     a tool-behaviour claim never is. Facilitator-only ranges overlap participant facts: bar facilitator-only content,
     accept a fact a participant line repeats (cite both). Cross-page link texts that quote another task's headings are
     unpinned by anchor rules: give the owning task a heading-keep rule plus a rendered text check.
+
+17. **axe on `file://`** (spec 11 T4a to T7): axe-core's CSSOM preload fetches stylesheets by XHR; on `file://` it
+    fails and axe logs `Couldn't load preload assets:` (string only in `axe-core/axe.min.js`), Chromium adds a CORS
+    error and `net::ERR_FAILED`: one triple per axe run, then axe runs without the CSSOM. Write the console rule at
+    strategy time: accepted only in the axe phase with phase-tagged logs and one-per-run counts, never in Firefox,
+    Pages or dev mode; full-axe evidence must include the http build. Grep the message string to find its emitter.
+18. **Shape rules are not count rules**: a frozen structure rule that validates a Checkpoint's shape passes a page
+    with none (a retitled tip escapes). Put per-page block counts into the content verifiers' rendered assertions,
+    with one must-fail retitle mutant. Before sending an anchor or markup form in a directive, read the skeleton and
+    the checker constant that pins it (spec 11 FF-36: bare `## Level cleared when`, no comment anchor).
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).

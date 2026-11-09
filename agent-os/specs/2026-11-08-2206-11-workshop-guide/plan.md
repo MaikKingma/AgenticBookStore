@@ -44,7 +44,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
 | T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
-| T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | verifying | | sdd/11-workshop-guide/T7 | |
+| T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
@@ -324,6 +324,36 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   never carried a comment anchor there) and the L2 page keeps `{/* #part-a-lsp */}`. T7 to T10 verify on a tree that contains the T5c merge; node:test floor 496.
   Process: when the orchestrator merges the spec tip into a task branch before spawning its verifier, the verifier
   is told that the implementation outbox predates that merge.
+From the T7 meta-review (qa-lead ENDORSE r1; T7 page hashes in `t7-hashes.txt`):
+
+- FF-37 (all later verifiers, ruling on FF-5): on offline `file://`, inside the axe phase only, axe-core's CSSOM
+  preload produces per axe run exactly one Chromium triple (`Access to XMLHttpRequest at 'file:...' ... blocked by
+  CORS policy`, `Failed to load resource: net::ERR_FAILED`, `Couldn't load preload assets:`), and in WebKit one
+  `Couldn't load preload assets:` warning plus one FF-5 pair. These are not a finding when (a) console messages are
+  tagged by phase and the load, DOM, click, hover and navigation phases show nothing beyond the FF-5 WebKit pair;
+  (b) counts are quoted per text and per axe run and equal one per text per run; (c) none of these texts appears in
+  Firefox, on the Pages build (axe phase included) or in dev mode; (d) full-axe evidence includes the Pages build in
+  all three engines. Any other text, a higher count, or one of these texts outside the axe phase is a finding.
+- FF-38 (T8 to T11 verifiers, qa-final): the frozen checker checks Checkpoint shape, not count. Each level page gets
+  a rendered assertion: the number of tip admonitions titled "Checkpoint", each with exactly one `pre` and one line
+  starting `Expected`, equals the page's count: L0 0, L1 1, L2 2 (diagnostics, `/mcp`), L3 3 (red commit exit 2,
+  `--no-verify` denied, `.env` read denied), L4 as the T10 source table justifies; backed by one must-fail mutant (a
+  Checkpoint retitled) that the checker passes and the rendered assertion fails. T11 and qa-final assert the full
+  per-page list.
+- FF-39 (T8 to T10 verifiers): a solution-text scan: no trimmed line over 20 characters from the level's spec 10
+  section appears in the built page unless the same line is in the level's own source. T8: S10:123-216 against WP
+  section 7 (the plugin-declaration lines S10:140-163 must be absent, F4). T9: S10:217-420 against WP section 8
+  (S10:273-295 exempt as the compare-with quote; S10:297-314 must be absent, M-2). T10: S10:421-484 against WP
+  section 9, SDD:93-137 and FB:6-41. Every scan quotes the checked count, the hits and a control that hits; also
+  `solution/level-4` is 0 in the source and built text of every level page.
+- FF-40 (T8 to T10): C0-6 for content tasks: "`guide/scripts` tree id equals 0a958db4" replaces the "N equals the
+  `test(`/`it(` grep count" clause (FF-2 at least 496 with `comm` empty both ways and the throwaway red probe stay).
+  FF-36 target check: on the Pages build `#level-cleared-when` is a single `h2` with text "Level cleared when"
+  followed directly by the task list; T8 also checks that `#part-a-lsp` is on the "Part A: LSP" `h2` and that the
+  setup page link lands there.
+- Gate 2 owner note from T7: Level 1 step 2 says "Try both" (import and path) before the checkpoint expects
+  `docs/architecture.md` not to be loaded; a participant who kept the `@` import sees it loaded. The page follows the
+  pack.
 - Gate 2 owner note from T6: setup page line 90, "The plugin does not ship the binary" (WP:59 wording), comes before
   the page first names the `jdtls-lsp` plugin (line 119); no later task's file scope covers this page. The T6 page
   hashes are in `t6-hashes.txt`.
