@@ -18,8 +18,6 @@ the type-swap mutant stayed green. The fix is a row that passes the guard and fa
   pulls the 11th book (Mockito returns null, NPE, helper rewraps). The kill is real but not by the asserting line; report it
   as an observation and suggest stubbing the extra row (`lenient().when(...)`, strict stubs would flag the correct tool).
   Re-verify by the Failures/Errors split in the probe row (Errors 0, `containsExactly` and `verify(never())` lines named).
-- A long probe batch can stall when the laptop sleeps (log mtimes jump by an hour); each row restores its own file, so
-  results stay valid, but keep heartbeating from `date -u`.
 - Families that paid off (about 160 mutants, one `python3 -I` generator plus a cp-install runner, about 4.4 s per
   `clean test -Dtest=<Class>` run, 12 minutes in the background): cap +-1 and eager stock lookup, sort-before and
   sort-after-limit on every column, inStock at every site (`>=0`, `>1`, `onHand`, `!lowStock`, `|| pending`, status), comparator
@@ -31,9 +29,6 @@ the type-swap mutant stayed green. The fix is a row that passes the guard and fa
   test plus survivor mutant, run, restore both by `cp -p`, print both hashes next to snap-before.
 - Spring AI default exception processor returns only the message: assert texts through `callback.call` plus
   `DefaultToolExecutionExceptionProcessor.builder().build().process(e)` on the thrown `ToolExecutionException`.
-- A `catch (RuntimeException e)` C0 grep prints exactly one line in the D5 helper; WARN events kept off the console
-  (`additive=false` on the logger plus a `ListAppender`) leave no line in the referee log, so the C0-6 "one WARN per call"
-  accounting is 0 console lines by design.
 
 ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
 - `MessageWindowChatMemory` moves its eviction cut forward to the next USER message, so with only complete Q/A turns a
