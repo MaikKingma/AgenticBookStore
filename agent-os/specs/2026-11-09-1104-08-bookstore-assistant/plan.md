@@ -39,7 +39,7 @@ The bookstore gets an AI assistant as an inbound adapter in `assistant`: `POST /
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Starter, configuration (O1 to O3), test-profile key blank (D1), `AssistantProperties`, `AssistantModeConfig` in `spring.factories`, `OfflineChatModel`, first `AssistantConfig`, ArchUnit fixture uses the real `ChatClient` | bookstore | [] | 1 | critical | opus | opus | todo | | | | | |
+| T1 | Starter, configuration (O1 to O3), test-profile key blank (D1), `AssistantProperties`, `AssistantModeConfig` in `spring.factories`, `OfflineChatModel`, first `AssistantConfig`, ArchUnit fixture uses the real `ChatClient` | bookstore | [] | 1 | critical | opus | opus | done (branch `sdd/08-bookstore-assistant/T1`) | PASS (r1) | ENDORSE | 1 | #113 | 76be904 |
 | T2 | `BookSuggestionView`, `BookDetailsView`, `AvailabilityView`, `BookstoreTools` with caps, ordering and curated error texts | bookstore | [T1] | 2 | elevated | sonnet | sonnet | todo | | | | | |
 | T3 | `assistant-system.st`, `ChatMemory` (20), `ChatClient` bean, `ScriptedChatModel` with the silent tool-drop negative control | bookstore | [T2] | 3 | critical | opus | opus | todo | | | | | |
 | T4 | `AssistantCommands`, `ChatPayload`, `AssistantReplyView`, `AssistantRateLimiter`, `AssistantExceptionHandler`; slice, limiter and offline HTTP tests | bookstore | [T3] | 4 | critical | opus | opus | todo | | | | | |
@@ -62,7 +62,7 @@ qaDirective of every task: C0 plus the task's T<n> block of the QA ledger (T6: t
 
 ### T3: System prompt, `AssistantConfig` ChatClient, chat memory, `ScriptedChatModel`
 - fileScope: `R/prompts/assistant-system.st`; `B/assistant/AssistantConfig.java`; `T/assistant/ScriptedChatModel.java`, `T/assistant/ScriptedChatModelTest.java`, `T/assistant/AssistantConfigTest.java`, `T/assistant/AssistantSystemPromptTest.java`; `T/assistant/AssistantConfigContextTest.java` (supporting beans only); `T/AssistantModeIntegrationTest.java` (additions only).
-- Acceptance criteria: strategy card T3, plus Gate 1 findings G10 (a test pins that the `ChatMemory` bean is ours from `AssistantConfig`, not Spring AI's auto-configured default) and G11.
+- Acceptance criteria: strategy card T3, plus Gate 1 findings G10 (a test pins that the `ChatMemory` bean is ours from `AssistantConfig`, not Spring AI's auto-configured default) and G11, plus G24 (QA feed-forward FF2 from T1): `AssistantModeIntegrationTest.offlineSwitchComesAfterTheConfigurationFiles` lists the shared context's property source names in order, asserts that `assistantOfflineMode` and sources containing `application-test.yml` and `application.yml` exist, and that `assistantOfflineMode` comes after every source whose name contains `application`; must-fail probe for the verifier: `@Order(Ordered.HIGHEST_PRECEDENCE)` on `AssistantModeConfig`.
 
 ### T4: `AssistantCommands`, `AssistantRateLimiter`, `AssistantExceptionHandler`
 - fileScope: `B/assistant/AssistantCommands.java`, `B/assistant/ChatPayload.java`, `B/assistant/AssistantReplyView.java`, `B/assistant/AssistantRateLimiter.java`, `B/assistant/AssistantExceptionHandler.java`; `T/assistant/AssistantCommandsTest.java`, `T/assistant/AssistantCommandsLengthTest.java`, `T/assistant/AssistantRateLimiterTest.java`, `T/assistant/MutableClock.java`; `T/AssistantModeIntegrationTest.java` (additions only).
@@ -82,8 +82,12 @@ Self-accepted by the orchestrator (owner delegated gate approvals). Checklist: e
 
 ## QA feed-forward
 
-(none yet)
+- T1 FF1 (every later verifier and qa-final): C0 amendment A1 of the QA ledger applies (keyed-log network grep without bare numbers, the `spring.ai.anthropic.api-key` property-name constant allowed in `assistant`, sampling grep `temperature|\btop[-_]?[pk]\b|\btop[pk]\b`, log greps count the bookstore section only) and the re-baseline A1-5 on 0d67746.
+- T1 FF2 (T3): Gate 1 finding G24, see task T3.
+- T1 FF3 (every later verifier): read the implementation outbox for in-place production edits and report them as a process finding with the file's hash check, never as evidence.
+- T1 FF4 (every agent): `updated` stamps come from `date -u`, never estimated.
+- T1 ship-gate baseline for T2 (plain log `s08-T1-orch-shipgate-plain.log` in the session scratchpad): BUILD SUCCESS 27.1 s, bookstore 1192, distributor 190, ArchitectureTest 22, ArchitectureSelfTest 63, 14 Started lines over the whole log (equal to the 0d67746 base).
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-09, orchestrator, on the main session's instruction): spec 07 merged into factory (776bf86). `origin/factory` (2fda3b6, with spec 12's `frontend` module and fix-12) was merged into the spec branch with a merge commit (0d67746) and into the T1 branch before its ship gate. Referee on 0d67746: 24.7 s, bookstore 1166, distributor 190. Consequence: the module vocabulary gains `frontend`; the QA lead re-baselined C0 (A1-5 in its ledger).
