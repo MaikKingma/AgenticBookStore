@@ -18,7 +18,8 @@ public interface DistributorAppService {
     Optional<DistributorTitleDTO> findTitle(String isbn);
 
     /**
-     * Asks the distributor to restock a title.
+     * Asks the distributor to restock a title. Implementations must stay non-transactional, because the event-driven
+     * caller catches the exceptions of this method inside its own transaction.
      *
      * @throws TitleNotFoundAtDistributorException when the distributor does not know the ISBN
      * @throws TitleNotOrderableException when the distributor refuses to supply the title
