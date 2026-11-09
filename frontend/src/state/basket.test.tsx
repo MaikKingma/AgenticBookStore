@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { BasketProvider, useBasket } from './basket'
 import { lineTotal } from './estimate'
+import { jsonResponse, mockFetch, problemResponse } from '../test/fetchMock'
 
 const STORAGE_KEY = 'openbook.basket'
 
@@ -493,5 +494,107 @@ describe('useBasket', () => {
     expect(() => renderHook(() => useBasket())).toThrow('useBasket must be used inside a BasketProvider')
     // React reports the error it rethrows to the console as well.
     vi.mocked(console.error).mockClear()
+  })
+})
+
+describe('placing an order', () => {
+  const PLACED_ID = '3d6b0f91-2e58-4a74-8c13-9b5e7a0d2f46'
+
+  function deferred<T>() {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>((done) => {
+      resolve = done
+    })
+    return { promise, resolve }
+  }
+
+  // A basket of three lines in the order B, A, C, mounted, with the bookstore held back until the test answers. The
+  // first order is answered by `held`; any later order is never answered.
+  function mountWithOrder() {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify([lineOf(BOOK_B, 2), lineOf(BOOK_A, 3), lineOf(BOOK_C, 1)]))
+    const held = deferred<Response>()
+    const answers = [held.promise]
+    const mock = mockFetch([
+      {
+        method: 'POST',
+        path: '/orders/commands/place',
+        respond: () => answers.shift() ?? new Promise<Response>(() => {}),
+      },
+    ])
+    return { ...mount(), held, mock }
+  }
+
+  async function answer(held: { resolve: (value: Response) => void }, response: Response) {
+    await act(async () => {
+      held.resolve(response)
+      await Promise.resolve()
+    })
+  }
+
+  it('sends one request for two calls in the same tick and says it is placing', () => {
+    const { result, mock } = mountWithOrder()
+
+    act(() => {
+      result.current.placeOrder('reader@example.com')
+      result.current.placeOrder('reader@example.com')
+    })
+
+    expect(mock.calls.map((call) => `${call.method} ${call.path}`)).toEqual(['POST /orders/commands/place'])
+    expect(result.current.placing).toBe(true)
+    expect(result.current.orderProblem).toBeUndefined()
+  })
+
+  it('removes the lines of the submitted books whatever happened to them meanwhile, and keeps the lines of other books', async () => {
+    const { result, held } = mountWithOrder()
+    act(() => result.current.placeOrder('reader@example.com'))
+    press(() => result.current.remove(BOOK_B.id))
+    expect(press(() => result.current.setQuantity(BOOK_A.id, 7))).toBeUndefined()
+    expect(press(() => result.current.add(numberedBook(1)))).toBeUndefined()
+    expect(result.current.lines).toEqual([lineOf(BOOK_A, 7), lineOf(BOOK_C, 1), lineOf(numberedBook(1), 1)])
+
+    await answer(held, jsonResponse({ id: PLACED_ID }, 202))
+
+    expect(result.current.lines).toEqual([lineOf(numberedBook(1), 1)])
+    expect(stored()).toEqual([lineOf(numberedBook(1), 1)])
+    expect(result.current.placing).toBe(false)
+    expect(window.location.hash).toBe(`#/orders/${PLACED_ID}`)
+  })
+
+  it('keeps the lines and the stored text after an error answer, reports it and takes it away when the next order is sent', async () => {
+    const { result, held } = mountWithOrder()
+    const before = storedText()
+    act(() => result.current.placeOrder('reader@example.com'))
+
+    await answer(held, problemResponse(409, { title: 'Insufficient stock', code: 'insufficient-stock', details: [] }))
+
+    expect(result.current.placing).toBe(false)
+    expect(result.current.orderProblem?.status).toBe(409)
+    expect(result.current.orderProblem?.title).toBe('Insufficient stock')
+    expect(result.current.lines).toEqual([lineOf(BOOK_B, 2), lineOf(BOOK_A, 3), lineOf(BOOK_C, 1)])
+    expect(storedText()).toBe(before)
+
+    act(() => result.current.placeOrder('reader@example.com'))
+
+    expect(result.current.placing).toBe(true)
+    expect(result.current.orderProblem).toBeUndefined()
+  })
+
+  it('sends the next order after an accepted one, with only the lines of that moment', async () => {
+    const { result, held, mock } = mountWithOrder()
+    act(() => result.current.placeOrder('reader@example.com'))
+
+    await answer(held, jsonResponse({ id: PLACED_ID }, 202))
+
+    expect(result.current.placing).toBe(false)
+    expect(press(() => result.current.add(BOOK_C))).toBeUndefined()
+    act(() => result.current.placeOrder('reader@example.com'))
+
+    const placed = mock.calls.filter((call) => call.method === 'POST' && call.path === '/orders/commands/place')
+    expect(placed).toHaveLength(2)
+    expect(JSON.parse(placed[1].body ?? 'null')).toEqual({
+      customerEmail: 'reader@example.com',
+      lines: [{ bookId: BOOK_C.id, quantity: 1 }],
+    })
+    expect(result.current.placing).toBe(true)
   })
 })
