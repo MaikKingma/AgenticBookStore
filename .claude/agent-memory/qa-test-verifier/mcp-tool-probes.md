@@ -5,12 +5,9 @@ metadata:
   type: feedback
 ---
 
-Rule: run every MCP tool mutant against BOTH the unit class and the SDK-client integration class in one Maven call
-(`-Dtest=<Unit>,<Integration>`, about 4 s with `clean`), and attribute kills per class from the Surefire summary.
+Rule: run every MCP tool mutant against BOTH the unit class and the SDK-client integration class in one Maven call (`-Dtest=<Unit>,<Integration>`, about 4 s with `clean`), and attribute kills per class from the Surefire summary.
 
-**Why:** some card criteria live only at one level (get_title has no unit test; annotations, yml and schema only
-exist over the wire). A single-class run reports false survivors or misses that the integration test does not catch
-a trim removal.
+**Why:** some card criteria live only at one level (get_title has no unit test; annotations, yml and schema only exist over the wire). A single-class run reports false survivors or misses that the integration test does not catch a trim removal.
 **How to apply:**
 - Annotation and yml mutants need the live context: removing `protocol: STREAMABLE` gives 404 on `/mcp` (SSE transport), removing `annotations = @McpAnnotations(...)` falls back to the defaults (readOnly false, destructive true, idempotent false, openWorld true; confirm with `javap -v` of `McpTool$McpAnnotations`).
 - Spring AI validates `@McpToolParam` requiredness at runtime (`ToolInputValidator ... required property 'x' not found`, tool result isError). `required = false` on a required param is therefore a testable mutant: probe it, and a test needs `tool.inputSchema()` (a `Map<String,Object>`, read `getOrDefault("required", ...)`) or a call without the argument.
@@ -19,14 +16,11 @@ a trim removal.
 - A test that calls a tool without a required argument makes the server log one `ToolInputValidator` WARN per referee. That line is on purpose, not a defect. Classify it and record its exact count in the warning inventory, the same way as the scanner's BeanPostProcessorChecker lines.
 - Rework rounds: load the r1 generator's PROBES list by path (`importlib.util.spec_from_file_location`) into an r2 generator that reads fresh `r2` `.orig` copies. That way the mutants are byte-identical by construction. Re-run the full list, not just the targeted survivors: new tests shift line numbers and add kills, and the whole list runs in about 6 s per probe.
 
-Rule: an in-process test that swaps `System.out` and re-initialises Boot logging can leak into later test classes
-while every test stays green. So probe its harness lines in the class order where a class FOLLOWS it
-(`-Dsurefire.runOrder=reversealphabetical` when it sorts last), and read the console `Started .* in` count as the
-kill signal, not the test result.
+## In-process STDIO test in a shared Surefire fork
 
-**Why:** with `System.setOut(original)` or the system-property restore removed, the module stays 177/0/0/0, but the
-console Started count drops to 0. Leaked `CONSOLE_LOG_*` properties or a dead capture stream silence every later
-context. In alphabetical order the class ran last and the same mutants showed nothing.
+Rule: an in-process test that swaps `System.out` and re-initialises Boot logging can leak into later test classes while every test stays green. So probe its harness lines in the class order where a class FOLLOWS it (`-Dsurefire.runOrder=reversealphabetical` when it sorts last), and read the console `Started .* in` count as the kill signal, not the test result.
+
+**Why:** with `System.setOut(original)` or the system-property restore removed, the module stays all green, but the console Started count drops to 0. Leaked `CONSOLE_LOG_*` properties or a dead capture stream silence every later context. In alphabetical order the class ran last and the same mutants showed nothing.
 **How to apply:**
 - Put three real-code runs at the top of the probe manifest: `-Dtest=<Class>` alone, alphabetical and reverse. Have the runner print the `Running` class order, the console Started count, the count of the known stderr status line and the Started count in the test's target log file per run. A changed status-line count (4 to 8) also reveals a leak.
 - Logging-prep probes: remove the pre-start `LoggingSystem.cleanUp()` (must fail in the order where cached contexts come FIRST: log lines reach the swapped stdout), remove the property restore and remove the re-initialisation. A re-init can be an equivalent mutant, because Boot cleans up logging on context close. Report it as informational.
