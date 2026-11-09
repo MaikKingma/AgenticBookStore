@@ -1,0 +1,4 @@
+# op	group	staged	target	mode	base
+add	config	files/dot-mcp.json	.mcp.json	644	-
+add	config	files/dot-claude/settings.json	.claude/settings.json	644	-
+add	config	files/docs/lsp-setup.md	docs/lsp-setup.md	644	-
