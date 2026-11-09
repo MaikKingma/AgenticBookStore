@@ -32,7 +32,7 @@ gate and green checks.
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | #85 | sdd/12-storefront/T6 | PASS r2 | ENDORSE |
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | #88 | sdd/12-storefront/T7 | PASS r2 | ENDORSE |
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | #92 | sdd/12-storefront/T8 | PASS r1 | ENDORSE |
-| T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | | | | |
+| T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | #96 | sdd/12-storefront/T9 | PASS r2 | ENDORSE |
 | T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | | | | |
 
 Batches are sequential because tasks run one at a time; T1 and T2 are independent, T4 and T5 are independent, T8 and
@@ -136,6 +136,17 @@ Never fable.
   deviation. T10 walk-through: at 390 px the order page has `scrollWidth <= 390` while `.table-scroll` scrolls; the
   placed time equals `placedAt` cut to `YYYY-MM-DD HH:MM:SS UTC`; the shortage alert uses basket titles; after checkout
   the badge reads 0 and `openbook.basket` is null.
+- FF-T9 (qa-lead, T9 r2; applies to T10 and qa-final; full text QA ledger "FF-T9" 1 to 5): Vitest baseline 21 files,
+  581 tests (579 passed + 2 expected fail); T10 adds no test, its referee shows exactly 21 / 581. Every frontend file
+  stays at its latest gate's hash; the T10 product diff (`frontend bookstore pom.xml .github`) is empty. T10 live
+  assistant checks with spec 08 absent: the page opens with h1 "Assistant", an empty conversation, `0 / 1000
+  characters` and Send disabled; pasting 1001 characters shows `1001 / 1000 characters, too long` and disables Send,
+  1000 enables it; one send: quote the status of `POST /assistant/chat` and the exact alert text, no text names an API
+  key variable, the field keeps its text and Send is enabled again; `openbook.conversationId` is a lower-case v4 UUID
+  equal to the request body's `conversationId` and a reload plus a second send posts the same id; the record marks the
+  live round trip and the 429/503 shapes as pending spec 08; the assistant screenshots show the empty state. GQ8 at
+  390 px on the assistant page: `scrollWidth <= 390` with 1000 characters without spaces, focus outline on the textarea
+  and Send, console errors only for the deliberate chat failure.
 
 ## Amendments
 
@@ -209,6 +220,16 @@ Never fable.
   `navigate('/orders/' + id)` reads `+ encodeURIComponent(id)`. Residual R15 (a 202 that arrives after the visitor left
   the checkout still clears the basket, and re-opening the checkout while a request is in flight allows a second
   order) goes to Gate 2 as a follow-up. Gate re-run self-accepted.
+- A10 (2026-11-09, orchestrator, on the QA lead's T9 r2 recommendation): accepted T9 implementer decisions inside the
+  card: the message is sent and shown exactly as typed; empty or whitespace-only input keeps Send disabled; a message
+  joins the list together with its reply after success (after a failure the text stays in the field and Send is
+  enabled again); the textarea is read-only while pending; 429 is keyed on the status, the offline text on code
+  `assistant-offline`; the conversation id is read at the first send (a failing `crypto.randomUUID` shows "Something
+  went wrong" and posts nothing); the visible conversation lives in page state. F1-T9: strategy quality gate G11
+  ("disabled buttons have a visible reason") is accepted as not applying to an empty chat field (the empty field is
+  the reason; the 1001-character case shows its counter). Residuals R17 (chat styling has no live screenshot until
+  spec 08) and R18 (leaving the page clears the visible conversation; the server keeps its memory) go to Gate 2.
+  Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 

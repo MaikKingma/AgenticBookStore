@@ -501,6 +501,52 @@ textarea {
   font-weight: 600;
 }
 
+/* Assistant chat: a card per message (the visitor's on mist, the assistant's on white), the form a card of its own. The
+   text keeps its line breaks and its edge spaces, because it is shown as it was written. */
+
+.chat-messages {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-message {
+  padding: 0.75rem 1rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--ob-navy);
+  background: var(--ob-white);
+  border: 1px solid var(--ob-mist);
+  border-radius: 0.75rem;
+}
+
+.chat-message-user {
+  color: var(--ob-navy);
+  background: var(--ob-mist);
+}
+
+.chat-form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 40rem;
+  margin-bottom: 1.5rem;
+}
+
+.chat-form textarea {
+  resize: vertical;
+}
+
+.chat-counter {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.chat-counter-over {
+  font-weight: 700;
+}
+
 /* Reduced motion: no transitions or animations for people who ask for none */
 
 @media (prefers-reduced-motion: reduce) {

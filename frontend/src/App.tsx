@@ -1,4 +1,5 @@
 import { BasketBadge } from './components/BasketBadge'
+import { AssistantPage } from './pages/AssistantPage'
 import { BasketPage } from './pages/BasketPage'
 import { BookDetailPage } from './pages/BookDetailPage'
 import { CataloguePage } from './pages/CataloguePage'
@@ -48,16 +49,6 @@ function SiteFooter() {
   return <footer className="site-footer">OpenBook, the J-Fall 2026 workshop shop by OpenValue</footer>
 }
 
-// Stands in for a page that a later task adds, so that every route of the router already leads somewhere.
-function PagePending({ title }: { title: string }) {
-  return (
-    <section>
-      <h1>{title}</h1>
-      <p>This page is not available yet.</p>
-    </section>
-  )
-}
-
 function Page({ route }: { route: KnownRoute }) {
   switch (route.name) {
     case 'catalogue':
@@ -73,7 +64,7 @@ function Page({ route }: { route: KnownRoute }) {
     case 'order':
       return <OrderPage id={route.id} />
     case 'assistant':
-      return <PagePending title="Assistant" />
+      return <AssistantPage />
   }
 }
 
