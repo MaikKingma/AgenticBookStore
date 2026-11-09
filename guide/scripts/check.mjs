@@ -11,6 +11,7 @@ import {siteRules} from './lib/site.mjs';
 import {structureRules} from './lib/structure.mjs';
 import {contentRules} from './lib/content.mjs';
 import {SKELETON_MARKER} from './rules/structure.mjs';
+import {skeletonBanErrors} from './rules/skeleton-ban.mjs';
 
 // The pack folder that holds the workshop plan and the SDD framework guide, found
 // relative to this file so the checker passes from any working directory. guide/ lives
@@ -130,6 +131,13 @@ export function runChecks(root, options = {}) {
     pendingLines.push(...content.coverage.lines);
   }
 
+  // The marker ban: only on request, like the rules above, and silent when it passes (a finished
+  // guide prints "pending skeleton pages: 0" below). A marked page is an error, never a warning.
+  if (options.banSkeleton) {
+    const ban = skeletonBanErrors(files);
+    if (ban.length > 0) report('skeleton', ban, 0);
+  }
+
   const pending = files
     .filter(({file, text}) => file.startsWith('docs/') && text.includes(SKELETON_MARKER))
     .map(({file}) => file);
@@ -149,7 +157,8 @@ function main() {
   const root = positional[0] ?? fileURLToPath(new URL('..', import.meta.url));
   const structure = positional.length === 0 || args.includes('--structure');
   const content = positional.length === 0 || args.includes('--content');
-  const {lines, errors} = runChecks(root, {structure, content});
+  // The marker ban applies to the default root only; no flag turns it off.
+  const {lines, errors} = runChecks(root, {structure, content, banSkeleton: positional.length === 0});
   for (const line of lines) console.log(line);
   for (const error of errors) console.error(error);
   if (errors.length > 0) {

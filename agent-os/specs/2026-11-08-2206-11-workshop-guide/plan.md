@@ -48,7 +48,8 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
-| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
+| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
+| T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | pending | | | |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
@@ -434,6 +435,65 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   checkpoints; optional wording: Track B step 2 says "Answer up to five questions" before the `/speckit-clarify`
   fence, while SDD:119 gives the command first. The T10 page hash is in `t10-hashes.txt`.
 
+From the T11 meta-review (qa-lead ENDORSE r1; hashes in `t11-hashes.txt`, checker freeze in
+`t11-freeze-baseline-hashes.txt`):
+
+- O-1 ruling (QA lead): the two "pair up" sentences on the troubleshooting page stay; the WP:334-347 risk table is the
+  page's designated source (S11:38, res-3 section 3 and 2.11), not a facilitator-only range for this page.
+- FF-49 (T12 verifier and qa-final; freeze; values as updated by the T11 r2 meta-review):
+  `shasum -a 256 -c t11-freeze-baseline-hashes.txt` (file sha256 b62c68ca963e63014d102854e76602036aa2d68d98fd5abb716319c3101867e8)
+  prints 92 OK, `git ls-files guide/scripts | wc -l` prints 92, `git rev-parse HEAD:guide/scripts` prints
+  b4886ba38f649593c357c8fe5834283036f9254c; any FAILED entry, extra file or tree change is a FAIL. node:test floor 514
+  (`ok tests (23 test files, 457 test cases)`) with every T11 r2 title present. Hash chain: `t6`
+  (except the setup page in T12), `t7`, `t10`, `t11` (except L3 and the cheat sheet in T12). `t11-freeze` replaces
+  `t5c-freeze` and `t11-hashes.txt` replaces `t8`/`t9` for L2 and L3 from the T11 merge on.
+- FF-50 (T12 and later, after the `origin/factory` merge): decision D9 shifts S10 line numbers (old to new): 253-272
+  +1; 273-316 +6; 317 becomes 323-326; 318-477 +9; 478-480 become 487-490; 481-486 +10; 487 becomes 497-498; 488 and
+  later +11. Re-point every range: the T9 scan S10:217-420 becomes 217-429 (exemption 273-295 becomes 279-301, the
+  absent Stop hook range 297-314 becomes 303-320); the T10 scan S10:421-484 becomes 430-494. Manifest entries anchor by
+  section heading and survive; only their labels go stale. On the merge commit, `git diff <spec tip before merge>
+  <merge> -- guide` prints nothing.
+- FF-51 (T12 card, A14): (a) insertion-only on the setup page and L3: with the added lines removed the files hash to
+  the `t6` and `t11` values; changing an existing line is a question first; the WP:252-258 fragment and the hook
+  script stay byte for byte. (b) Sources S10:323-326 (Git Bash) and S10:253, 274-277 (`onFailure`); the wording says
+  no more than "times out (180 s) or fails to run"; nothing says or implies that a non-zero exit other than 2 blocks
+  (L3:103, L3:110 and cheat-sheet:33 quoted together with the new sentence). (c) No new fence, tab or command;
+  `"onFailure": "block"` only as inline code; no `PowerShell(...)` text, no "D9", "decision" or "spec 10"; M stays 4,
+  `<TabItem` stays 15, the manifest stays 304/304 with 0 pending. (d) Re-run the FF-39 scan for L3 with the FF-50
+  ranges; hits on the D9 lines are listed as allowed, any other hit is a finding. (e) Owner note, not a T12 finding:
+  setup and L3 say "Git for Windows (Git Bash)" (S10), troubleshooting, L4 and wrap-up say "Git Bash or WSL2"
+  (WP:344); T12 does not edit those pages. (f) Rendered checks in both builds and three engines, 720 px, full axe 0,
+  built descriptions unchanged. Must-fail mutant: L3 plus a line saying "any non-zero exit blocks the commit" passes
+  the frozen checker and fails the (b) check.
+- FF-52 (orchestrator decision): the L3 page says that the reference solution on `solution/level-3` sets
+  `"onFailure": "block"` on the commit hook, so a hook that times out (180 s) or fails to run blocks the commit; it
+  does not tell participants to change the WP:252-258 fragment (that would need a workshop plan change). Follow-up
+  F14: spec 10 verifies that the field exists in the hooks schema; if it does not, the setup and L3 lines change and
+  the gap goes into the guide.
+- FF-53 (qa-final): run FF-46 with the FF-50 re-pointing; re-run the T11 scratch layer (`qa-t11-s11-render.mjs`
+  through `qa-t11-s11-render.sh`, `-static.mjs`, `-ff38mut.sh`, `-reinsert.mjs`, `-mutants.mjs`) with ports and base
+  sha re-pointed and the edits quoted; print the cheat sheet at margin 0 and at 10 mm; quote every final PR run with
+  its attempts.
+- Gate 2 owner notes from T11: O-5 the two CLI copy tests keep titles that say "passes" while asserting exit 1 (FF-2
+  forbids renames in the cycle; rename after it); O-6 an explicit root skips the ban by design (FF-34 (c), pinned);
+  the first CI run on PR #124 failed at startup with 0 jobs and was re-run without a code change.
+- T11 rework (red Guide check on PR #124, run 42679728806): `check.mjs` ends a failing run with `process.exit(1)`
+  right after `console.error`, so on Linux the tail of a long stderr read through a pipe can be lost; the T11 test
+  `skeleton-ban.test.mjs` "one marker put back" lost its last line in 6 to 23 of 200 Linux runs. Fixed in the test only
+  (output captured through files, asserting lines unchanged, one witness test; qa-t11 PASS r2, QA lead ENDORSE r2).
+  Follow-up F15 (post-cycle): in `check.mjs:166` and `check-built.mjs:12` set `process.exitCode = 1` and return
+  instead of `process.exit(1)`, pinned by a static test that no entry script under `guide/scripts` calls
+  `process.exit(`, then re-baseline the freeze. Standards proposal for Gate 2: Node CLI entry points never call
+  `process.exit` after writing output.
+- FF-54 (T12 verifier and qa-final; interim until F15): a red `npm run check` or `check:built` on Linux may lose the
+  tail of stderr, including the `check failed with N error(s)` line; a missing error line in a Linux log is never
+  evidence that the error is absent. A scratch probe that asserts on the stderr of a failing run with more than about
+  100 error lines reads the output through files (`stdio: ['ignore', fd, fd]`) or asserts on the exit status only. A
+  Linux-only red on a test that is green locally is reproduced in a Linux container on the CI Node before any re-run
+  or ruling; one green CI run is no evidence against a 5 to 20 percent race.
+- Process note (all agents, from the T11 r2 meta-review): `updated` in an outbox is written from `date -u`, never as
+  an estimate ahead of the clock; a future heartbeat hides a dead agent from the staleness rule.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -547,6 +607,23 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   gains exactly one added line on `guide/docs/04-level-3-behavioral-control.mdx`, after line 130:
   `[Windows hooks](./reference/troubleshooting.md#windows-hooks)`. Checked under FF-44. Consequence: one line; no other
   change to the L3 page (the line 55 wording, R4, stays an owner note).
+  Revised 2026-11-09 (orchestrator, on the T11 implementer's finding that a single line renders inside the L3:130
+  paragraph): exactly two added lines, one empty line and the unchanged link line, so the link is its own paragraph.
+  FF-44's "exactly that line" reads "exactly these two lines"; with them removed the file hashes to `t9-hashes.txt`.
+- A13 (2026-11-09, orchestrator, T11 card ruling): the cheat sheet's "two tables" in the card summary yields to spec 11
+  ("one page, printable", S11:36) and card AC2 (at most 2 A4 pages, the second only for the Level 4 table): commands
+  and files as one bullet list, the Level 4 commands as a table. Consequence: none outside the cheat sheet.
+- A14 (2026-11-09, orchestrator, on decision D9 relayed by the coordinator, factory f5a0e17): new task T12 after T11
+  and after `origin/factory` is merged into the spec branch. fileScope: `guide/docs/00-setup-check.md`,
+  `guide/docs/04-level-3-behavioral-control.mdx`, `guide/docs/reference/cheat-sheet.md`. Acceptance criteria:
+  (1) the setup check page states that Windows participants need Git for Windows (Git Bash), in prose (the pack states
+  no check command, so no command and no manifest entry); (2) the Level 3 page states the same prerequisite (the `Bash`
+  matcher, the `if` field and the `Bash(...)` rules apply only when Claude Code runs commands through Bash; no
+  `PowerShell(...)` rules) and that the reference solution's commit hook sets `"onFailure": "block"`, so a hook that
+  times out (180 s) or fails to run blocks the commit (FF-52); (3) the cheat sheet prints on at most 2 A4 pages at
+  margin 0 and at 10 mm, and with the Level 4 section hidden on exactly 1 page at both margins, keeping all 52
+  manifest tokens (the T11 O-4 finding); (4) FF-49 to FF-51 hold; the checker is not changed. Verified under FF-49 to
+  FF-51, FF-35, FF-36, FF-38 (setup 1, L3 3), FF-41, FF-47.
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 

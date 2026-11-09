@@ -155,7 +155,17 @@ test('cli: the real guide passes the structure rules from any working directory'
   withSkeletonGuideCopy((guide) => {
     for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
       const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
-      assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+      // T11: the skeleton ban fails the default root with exactly one error per marked page, the 11 skeleton pages
+      // here, and no other error. The structure line below is unchanged.
+      assert.equal(result.status, 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+      const stderr = result.stderr.split('\n').filter(Boolean);
+      const skeletons = Object.entries(realDocs())
+        .filter(([, text]) => text.includes(SKELETON_MARKER))
+        .map(([file]) => file)
+        .sort();
+      assert.equal(skeletons.length, 11);
+      assert.deepEqual(stderr.slice(0, -1).map((line) => /^skeleton: (docs\/\S+): /.exec(line)?.[1]), skeletons, `cwd ${cwd}\n${result.stderr}`);
+      assert.equal(stderr.at(-1), 'check failed with 11 error(s)', `cwd ${cwd}`);
       assert.match(result.stdout, /^ok {3}structure \(11 pages/m);
     }
   });

@@ -1,6 +1,6 @@
 ---
 name: qa-ci-config-specs
-description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs); read before the strategy or final brief of any workflow or CI spec
+description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit); read before the strategy or final brief of any workflow or CI spec
 metadata:
   type: feedback
 ---
@@ -25,3 +25,10 @@ Job summaries are not readable from the CLI. `gh run view --log` lacks them, and
    bookkeeping paths, the workflow blob is unchanged, and the new head's runs are green. A `pull_request` path filter is
    evaluated over the whole PR diff, so those commits re-trigger the workflow. A CI run stands in for the local gates
    only when the task changes no file those gates read; otherwise local gates stay mandatory (spec 11 T2).
+   Linux-only red on a CI step that is green on macOS: suspect a Node CLI that calls `process.exit` right after
+   `console.error`/`console.log`. Over a Linux pipe the queued tail is lost (exit status kept), macOS never loses it, so
+   local loops and one green CI run prove nothing. Directive: reproduce in a Linux container on the CI Node version,
+   N runs before and after (spec 11 T11: 23/200 vs 0/320), plus a witness on the real pipe that dies on a tail cut. A
+   test-side fix reads the child's output through files (`stdio: ['ignore', fd, fd]`); the real fix is
+   `process.exitCode = 1`, pinned by a static no-`process.exit(` test. A red Linux log missing an error line is no
+   proof the error is absent.
