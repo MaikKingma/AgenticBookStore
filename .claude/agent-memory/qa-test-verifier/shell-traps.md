@@ -54,4 +54,7 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with
   `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
 
+- A Maven log that captured a raw NUL (an escape mutant logging U+0000) makes ugrep print `Binary file ... matches`
+  instead of lines, so a summary grep looks empty. Use `grep -a` on probe logs.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

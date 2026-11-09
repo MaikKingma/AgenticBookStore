@@ -31,4 +31,14 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
   (`...distributor.HealthEndpointTest`) sorts BEFORE lower-case subpackages, so reverse runs it last. To prove a
   shared context starts from a given class, run `-Dtest=A,B -Dsurefire.runOrder=alphabetical` and count `Started`.
 
+- Real-ACL end-to-end when IntegrationTestBase mocks the port: a scratch `@SpringBootTest(RANDOM_PORT)` class NOT
+  extending the base, `@Import(PostgresTestConfig.class)`, a static JDK HttpServer started in a static field and wired
+  by `@DynamicPropertySource`, a volatile body field per scenario and a hit counter asserted per call. Add a
+  record-only method (prints status, row delta, stored row) to run per production state (factory, each fix alone).
+  `ExchangeResult.getResponseBodyContent()` gives raw bytes for byte-identity checks.
+- "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the
+  BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
+- Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a
+  recipe; use a comma between classes.
+
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]
