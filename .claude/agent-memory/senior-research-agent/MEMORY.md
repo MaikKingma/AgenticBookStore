@@ -3,4 +3,5 @@
 - [Spring AI MCP traps](spring-ai-mcp-traps.md) — protocol property falls back to SSE, thrown tool errors duplicated, boxed optional params, destructive hint defaults, schema-validated args, curl round trip
 - [Deterministic regression test techniques](deterministic-regression-test-techniques.md) — thread-based midnight probe clock, shared @Primary clock without new context, unseedable randoms need a seam, pre-fix line as negative control
 - [CI Testcontainers research techniques](ci-testcontainers-research-techniques.md) — run-log pull timings, registry digest HEADs, Ryuk env-only, cache branch scoping, mirror no-fallback
+- [Claude Code headless probes](claude-code-headless-probe-techniques.md) — isolation without breaking auth, commands that write user config, hook-before-deny, untrusted -p ignores allow rules
 - [JPA/PostgreSQL persistence traps](jpa-postgres-persistence-traps.md) — Instant micro rounding, Limit ignored with join fetch, element collection version bump, unsorted-update deadlocks, statistics probe
