@@ -89,6 +89,14 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     same id: price it as a residual. Once failures answer 503 `assistant-unavailable`, an escaped live call in an
     offline test also answers 503: offline assertions must check the code, never the status alone.
 
+14. **Provider-shape defects need a stub contract test of the real model client (fix-08 T4).** Model doubles never
+    emit provider blocks (signed thinking), so a library replay bug shows only live. Review rules: the stub answers on
+    the request field the way the API does (thinking block only when `thinking.type` is not `disabled`); after a
+    config fix the request-field assertion is the discriminator, replay-shape assertions carry the red shape; check
+    red fidelity by matching the red body's message/content indices to the provider's error text; demand a guard
+    test for `defaultOptions` merge side effects (model, `max_tokens`, sampling params) killed by override mutants;
+    an unconditional option vs a model chosen by env variable is a residual. Live acceptance stays a keyed re-check.
+
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is
     still the evidence.
