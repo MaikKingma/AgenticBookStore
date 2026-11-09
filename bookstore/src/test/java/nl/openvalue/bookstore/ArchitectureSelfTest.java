@@ -52,6 +52,20 @@ class ArchitectureSelfTest {
     // Control: a double field in assistant, a layer the money rule does not guard.
     private static final String TEMPERATURE_PROPERTIES = FIXTURES + "assistant.TemperatureProperties";
 
+    // Distributor rule fixtures: a controller that uses RestClient, and a controller that holds nested records of an
+    // AppServiceImpl at depths one, two and three, records of AppServiceImpl classes nested in itself, and nested
+    // records of classes only named like one.
+    private static final String DISTRIBUTOR_PROXY_COMMANDS = FIXTURES + "command.DistributorProxyCommands";
+    private static final String TITLE_IMPORT_COMMANDS = FIXTURES + "command.TitleImportCommands";
+    private static final String LEAKY_APP_SERVICE_IMPL = FIXTURES + "acl.LeakyAppServiceImpl";
+    private static final String TITLE_WIRE = LEAKY_APP_SERVICE_IMPL + "$TitleWire";
+    private static final String CONTRIBUTOR_LINE = TITLE_WIRE + "$ContributorLine";
+    private static final String ROLE_CODE = CONTRIBUTOR_LINE + "$RoleCode";
+
+    private static final String APP_SERVICE_IMPL_RULE_DESCRIPTION = "no classes that reside outside of package "
+            + "'nl.openvalue..acl..' should depend on classes that are nested at any depth in a class with simple name "
+            + "ending with 'AppServiceImpl'";
+
     /** The four packages the money rule guards, as the anchored patterns of ArchitectureTest. */
     private static final Set<String> MONEY_RULE_PACKAGES = Set.of("nl.openvalue..domain..",
             "nl.openvalue..domaininteraction..", "nl.openvalue..command..", "nl.openvalue..query..");
@@ -102,7 +116,10 @@ class ArchitectureSelfTest {
             Map.entry("PERSISTENCE_TYPES_ONLY_IN_DATA", List.of(
                     FIXTURES + "domain.BookEntity",
                     FIXTURES + "command.BookCommands")),
-            Map.entry("REST_CLIENT_ONLY_IN_ACL", List.of(FIXTURES + "process.LeakyDelegate")),
+            Map.entry("REST_CLIENT_ONLY_IN_ACL", List.of(
+                    FIXTURES + "process.LeakyDelegate",
+                    DISTRIBUTOR_PROXY_COMMANDS)),
+            Map.entry("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", List.of(TITLE_IMPORT_COMMANDS)),
             Map.entry("SPRING_AI_ONLY_IN_ASSISTANT", List.of(FIXTURES + "command.ChatCommands")),
             Map.entry("REST_CONTROLLERS_ONLY_IN_COMMAND_QUERY_ASSISTANT", List.of(FIXTURES + "data.BookRestController")),
             Map.entry("NO_DOUBLE_OR_FLOAT_FOR_MONEY", List.of(PRICED_BOOK, PRICE_DTO, PRICE_PAYLOAD, PRICE_VIEW,
@@ -235,7 +252,7 @@ class ArchitectureSelfTest {
         });
         Set<String> ruleNames = ruleFields.stream().map(Field::getName).collect(Collectors.toSet());
 
-        assertThat(ruleNames).hasSize(21);
+        assertThat(ruleNames).hasSize(22);
         assertThat(ruleNames).isEqualTo(EXPECTED_VIOLATORS.keySet());
     }
 
@@ -292,6 +309,11 @@ class ArchitectureSelfTest {
     @Test
     void restClientOnlyInAcl() {
         assertReportsExpectedViolators("REST_CLIENT_ONLY_IN_ACL");
+    }
+
+    @Test
+    void appServiceImplNestedClassesOnlyInAcl() {
+        assertReportsExpectedViolators("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL");
     }
 
     @Test
@@ -448,6 +470,132 @@ class ArchitectureSelfTest {
                 .noneMatch(detail -> detail.contains(bookEntity + ".printRuns"));
     }
 
+    @Test
+    void appServiceImplRuleReportsAFieldOfARecordNestedOneLevelDeep() {
+        assertThat(fixtures.contain(TITLE_WIRE)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".title", TITLE_WIRE);
+    }
+
+    @Test
+    void appServiceImplRuleReportsAFieldOfARecordNestedTwoLevelsDeep() {
+        assertThat(fixtures.contain(CONTRIBUTOR_LINE)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".contributor",
+                CONTRIBUTOR_LINE);
+    }
+
+    @Test
+    void appServiceImplRuleReportsAFieldOfARecordNestedThreeLevelsDeep() {
+        assertThat(fixtures.contain(ROLE_CODE)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".role", ROLE_CODE);
+    }
+
+    @Test
+    void appServiceImplRuleReportsARecordOfAnAppServiceImplThatIsItselfNested() {
+        // The suffix sits on the direct enclosing class only; the top-level class does not end with AppServiceImpl.
+        String legacyLine = TITLE_IMPORT_COMMANDS + "$LegacyAppServiceImpl$Line";
+        assertThat(fixtures.contain(legacyLine)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".legacyLine",
+                legacyLine);
+    }
+
+    @Test
+    void appServiceImplRuleReportsARecordWhoseMiddleEnclosingClassEndsWithAppServiceImpl() {
+        // Neither the direct enclosing class nor the top-level class ends with AppServiceImpl, only the one between.
+        String archivedLine = TITLE_IMPORT_COMMANDS + "$ArchiveAppServiceImpl$Batch$Line";
+        assertThat(fixtures.contain(archivedLine)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".archivedLine",
+                archivedLine);
+    }
+
+    @Test
+    void appServiceImplRuleReportsARecordOfAClassNamedExactlyAppServiceImpl() {
+        String bareLine = TITLE_IMPORT_COMMANDS + "$AppServiceImpl$Line";
+        assertThat(fixtures.contain(bareLine)).isTrue();
+
+        assertReportsField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS + ".bareLine",
+                bareLine);
+    }
+
+    @Test
+    void appServiceImplRuleReportsAMethodParameterOfANestedRecord() {
+        assertReportsDependency("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL",
+                "Method <" + TITLE_IMPORT_COMMANDS + ".firstContributor(" + TITLE_WIRE + ")> has parameter of type <"
+                        + TITLE_WIRE + ">");
+    }
+
+    @Test
+    void appServiceImplRuleReportsAMethodReturnTypeOfANestedRecord() {
+        assertReportsDependency("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL",
+                "Method <" + TITLE_IMPORT_COMMANDS + ".firstContributor(" + TITLE_WIRE + ")> has return type <"
+                        + CONTRIBUTOR_LINE + ">");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresUseOfTheNestedRecordsInsideAcl() {
+        assertThat(fixtures.contain(LEAKY_APP_SERVICE_IMPL)).isTrue();
+        // The control only counts if the acl class really depends on its nested records at every depth.
+        assertThat(fixtures.get(LEAKY_APP_SERVICE_IMPL).getDirectDependenciesFromSelf())
+                .extracting(dependency -> dependency.getTargetClass().getName())
+                .contains(TITLE_WIRE, CONTRIBUTOR_LINE, ROLE_CODE);
+
+        assertDoesNotReportOrigin("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", LEAKY_APP_SERVICE_IMPL);
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresNestedClassesOfAClassEndingWithAppService() {
+        assertDoesNotReportField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", "prefixOnly",
+                TITLE_IMPORT_COMMANDS + "$StockAppService$Entry");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresNestedClassesOfAClassEndingWithServiceImpl() {
+        assertDoesNotReportField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", "otherSuffix",
+                TITLE_IMPORT_COMMANDS + "$StockServiceImpl$Entry");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresNestedClassesOfAClassWhoseNameGoesOnAfterAppServiceImpl() {
+        assertDoesNotReportField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", "longerSuffix",
+                TITLE_IMPORT_COMMANDS + "$StockAppServiceImplementation$Entry");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresNestedClassesOfAClassEndingWithAppServiceImplInOtherLetterCase() {
+        assertDoesNotReportField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", "caseOnly",
+                TITLE_IMPORT_COMMANDS + "$StockAppserviceimpl$Entry");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresANestedClassWhoseOwnNameEndsWithAppServiceImpl() {
+        assertDoesNotReportField("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", "ownName",
+                TITLE_IMPORT_COMMANDS + "$StockAppServiceImpl");
+    }
+
+    @Test
+    void appServiceImplRuleIgnoresTheRestClientController() {
+        assertThat(fixtures.contain(DISTRIBUTOR_PROXY_COMMANDS)).isTrue();
+
+        assertDoesNotReportOrigin("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL", DISTRIBUTOR_PROXY_COMMANDS);
+    }
+
+    @Test
+    void restClientRuleIgnoresTheNestedRecordController() {
+        assertThat(fixtures.contain(TITLE_IMPORT_COMMANDS)).isTrue();
+
+        assertDoesNotReportOrigin("REST_CLIENT_ONLY_IN_ACL", TITLE_IMPORT_COMMANDS);
+    }
+
+    @Test
+    void appServiceImplRuleDescriptionNamesTheExemptPackageAndTheNestingPredicate() {
+        assertThat(rule("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL").getDescription())
+                .isEqualTo(APP_SERVICE_IMPL_RULE_DESCRIPTION);
+    }
+
     private static List<String> detailsOf(String ruleField) {
         return rule(ruleField).evaluate(fixtures).getFailureReport().getDetails();
     }
@@ -463,6 +611,39 @@ class ArchitectureSelfTest {
             assertThat(details).as("%s names %s as origin", ruleField, violator)
                     .anyMatch(detail -> asOrigin.matcher(detail).matches());
         }
+    }
+
+    /** The field must be the origin of a violation whose target is exactly the given type. */
+    private static void assertReportsField(String ruleField, String field, String type) {
+        assertReportsDependency(ruleField, "Field <" + field + "> has type <" + type + ">");
+    }
+
+    /** One violation detail must state exactly this dependency, followed by its source location. */
+    private static void assertReportsDependency(String ruleField, String dependency) {
+        assertThat(detailsOf(ruleField)).as("%s states: %s", ruleField, dependency)
+                .anyMatch(detail -> detail.startsWith(dependency + " in ("));
+    }
+
+    /**
+     * A field of TitleImportCommands with the given type must not be the origin of any violation. The field is first
+     * shown to exist with that type, so the control cannot pass on a renamed field.
+     */
+    private static void assertDoesNotReportField(String ruleField, String fieldName, String type) {
+        assertThat(fixtures.contain(type)).as("fixture %s imported", type).isTrue();
+        assertThat(fixtures.get(TITLE_IMPORT_COMMANDS).getField(fieldName).getRawType().getName()).isEqualTo(type);
+
+        Pattern fieldAsOrigin = Pattern.compile("^Field <" + Pattern.quote(TITLE_IMPORT_COMMANDS + "." + fieldName)
+                + "> .*");
+        assertThat(detailsOf(ruleField)).as("%s does not name field %s", ruleField, fieldName)
+                .noneMatch(detail -> fieldAsOrigin.matcher(detail).matches());
+    }
+
+    /** The class, its members and its nested classes must not be the origin of any violation. */
+    private static void assertDoesNotReportOrigin(String ruleField, String className) {
+        Pattern asOrigin = Pattern.compile(
+                "^(Class|Field|Method|Constructor|Static Initializer) <" + Pattern.quote(className) + "[.$>].*");
+        assertThat(detailsOf(ruleField)).as("%s does not name %s as origin", ruleField, className)
+                .noneMatch(detail -> asOrigin.matcher(detail).matches());
     }
 
     private static ArchRule rule(String ruleField) {
