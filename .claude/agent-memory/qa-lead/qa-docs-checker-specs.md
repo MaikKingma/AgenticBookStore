@@ -1,6 +1,6 @@
 ---
 name: qa-docs-checker-specs
-description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule; read before the strategy of any docs or checker task
+description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions; read before the strategy of any docs or checker task
 metadata:
   type: feedback
 ---
@@ -23,6 +23,12 @@ contrast), the checker is production code AND the oracle for every later task. T
    another section must fail; a pack line plus an appended command must fail (whole-line, not `includes`). Guard
    silent exclusion with an independent literal sweep (extract every code span and fenced line of the source ranges,
    diff against manifest plus manual rows). List snippets shorter than 8 chars: they match anything.
+   A source-text manifest forces Markdown-exact wording (a link, emphasis or backticks inside a snippet break it):
+   hand the content implementers the forced forms at the freeze checkpoint. A rendered cross-check of the same
+   manifest must delete whitespace, backticks and `|` on both sides (Docusaurus code lines are `.token-line` spans
+   with `<br>`: no newline in textContent; tables render no pipe). Facilitator-only ranges can overlap lines the
+   manifest requires: absence greps name facilitator-only phrases. Optional quotes vs "anchored by the manifest"
+   criteria conflict after the freeze: settle them at the checkpoint.
 4. **Plan-parser witnesses.** Reword only the continuation line of a wrapped source bullet or Goal (kills first-line
    parsing); drop backticks (kills markup-stripping normalisation); a heading with two parentheticals
    (`(LSP + MCP) (20 min)`) needs the last one; an in-section `(8 min)` must not be accepted as the level time; the
@@ -57,5 +63,17 @@ contrast), the checker is production code AND the oracle for every later task. T
     vacuously with zero matches and a wrong default dir; when earlier CLI tests and `package.json` are pinned, an
     in-checker floor breaks them, so require a quoted exact tail line (`N html files, M checkboxes`) in every later
     verifier instead.
+
+14. **Regex scanners of MDX** (spec 11 T5, three FAIL rounds): each fresh-probe round found one new construct where the
+    scanner and MDX disagree about code, comments or tags. At strategy time, put a closed construct list in the
+    directive (paragraph ends at list markers, ATX/setext headings, `|` rows and cells, `>`, `<`/`{` flow lines,
+    `:::`; fences after `>` or a list marker; backslash parity; `\<` and string literals in `{...}`; raw
+    `<pre>`/`<code>`), with one probe per construct x consumer. Fail direction differs per consumer of a shared span
+    recogniser: a false span is fail-open for comment blanking (coverage counts hidden text) and tag reading, and
+    fail-closed for code-only rules, so "end the paragraph early" is the safe default. Source checkers can never stop
+    deliberate hiding (ESM lines, attribute text, CSS): pair rule (b)-type coverage with a rendered textContent
+    cross-check in the content verifiers. Before sending a contract as a Required Action, read the pinned tests it
+    touches (my own-line tag rule broke a pinned mid-line case). Swapping in the MDX parser breaks a "dependency free"
+    checker rule and a dependency key-set test: a plan decision, never a last-round fix.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).

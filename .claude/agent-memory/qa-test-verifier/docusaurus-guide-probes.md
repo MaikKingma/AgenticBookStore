@@ -81,5 +81,8 @@ Rule: verify a pack-anchored coverage manifest with your own section-aware sweep
 - Sweeps that strip `# comment` from fence lines never see comment text: entries sourced from a fence comment (`/status`, `/model sonnet`) are guarded only by floors and pins (drop + lower floor survives).
 - Span-scanner mutant families: closer of a longer run, carry reset on blank line, carried line without closer (needs a span over 3 lines), carry length fixed to 1 (double-backtick span over a line break), escaped backtick, span across a blank line. Read `--experimental-test-coverage` uncovered lines first: they name the unexecuted branch. Re-scanning `rest` after a split often makes the longer-run closer mutant equivalent.
 - Classify survivors by direction: fail-open mutants (hide content from a rule) are required pins; fail-closed ones (false positives) are recommended.
+- A span scanner whose "paragraph" only ends at blank or fence lines makes false spans across lines where MDX starts a new block: list items, ATX headings, table rows, JSX flow lines (`</TabItem>`). Witness: lone backticks on both sides of a comment or a tag. A rule that moves from whole text to "markup minus spans" inherits this as fail-open (a real `<img>` between two list items passed); confirm with a build.
+- Literal-tag forms MDX renders as text: `\</TabItem>`, `{'</TabItem>'}`; missed spans: `\\` before a backtick (escaped backslash, the span still opens), a ``` line with a backtick in its info string inside a span. Probe every tag reader with them.
+- Docusaurus copies the raw first paragraph, comment text included, into `<meta name=description>`: grep the article body, not the whole HTML, before saying hidden text renders.
 
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

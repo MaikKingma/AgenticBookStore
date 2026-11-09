@@ -64,6 +64,12 @@ metadata:
 - Keep ONE inline code span recogniser: the scanner returns span offsets (`scan.spans`) and every reader (comment blanking,
   tag reading via `markupOf`, `codeOf`, the pack allow-list) uses them. Separate span regexes drifted, and a tag inside a span
   (`` `</TabItem>` ``) ended a tab early so a Windows fence escaped rule (c). Raw `<code>`/`<pre>` interiors count as code too.
+- A multi-line span is only safe inside ONE paragraph as MDX parses it: stop at every block start (list marker, ATX, setext or
+  break, deeper `>`, `|` row, a GFM header row above a delimiter row and the pipe-less rows below it, `<`, `{`, `:::`, fence by
+  the main loop's own test) and bound same-line spans in table rows to their cell. Ending early is tolerated, joining is a
+  fail-open. Also text in MDX: `\<Tag>`, `\{/*`, `{'...'}` strings (tags and comment openers) and `` \\` `` opens a span.
+  Fences after `>`/list markers need container-aware body lines and an implicit end. Check every refactor against the pack
+  with a git-object compare (`.claude/comms/tmp/impl-t5-r3-packspans.mjs`), and drop redundant guards: each one survives its mutant.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
