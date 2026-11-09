@@ -88,7 +88,7 @@ Open question the code does not settle in minutes: none.
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | the select, the card and the detail page show the sentence-case genre label; the select still sends the enum name | frontend | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #133 | sdd/fix-12-genre-labels-footer/T1 |
-| T2 | the footer sits at the bottom of the window on a short page and below the content on a long one | frontend | [T1] | 2 | elevated | sonnet | pending | | | | |
+| T2 | the footer sits at the bottom of the window on a short page and below the content on a long one | frontend | [T1] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | #137 | sdd/fix-12-genre-labels-footer/T2 |
 
 T2 depends on T1 only for ordering (same module, one task at a time).
 
@@ -197,6 +197,14 @@ T2 depends on T1 only for ordering (same module, one task at a time).
   unmodified; no console error or warning.
 - Q1 (qa-lead, T1 r0; applies to qa-final): `git grep -n "GENRE_LABELS\[" -- frontend/src` hits only `genres.ts` and
   `genres.test.ts`, and `genreLabel(book.genre)` appears exactly once in each of `BookCard.tsx` and `BookDetailPage.tsx`.
+- Q3 (qa-lead, T2 r0; applies to qa-final): on the spec tip, `frontend/src/styles/global.css` and `frontend/src/App.tsx`
+  hash to the T2-reviewed values in the QA ledger; `git grep -n "app-shell" -- "frontend/src/styles/*.css"` prints
+  exactly `.app-shell {` and `.app-shell > main {` in `global.css`; no other top-level `main` or `.page` rule sets
+  layout; every `@media` block is quoted and none names `.app-shell`, `main` or `.page`.
+- Q4 (qa-lead, T2 r0; applies to qa-final): on the built jar at `/shop/`, fresh browser context, 1280x800 and 390x844:
+  computed styles of the shell (`display: flex`, column, `minHeight` equal to the window height) and of the main
+  (`flexGrow` 1); short page footer bottom equals the window height within 1 px and `scrollHeight` equals it; long
+  page footer at or below the last card; header top 0 after scrolling.
 
 ## Amendments
 
@@ -204,4 +212,7 @@ T2 depends on T1 only for ordering (same module, one task at a time).
   unit only; optional test-only follow-up: an unknown genre on a card and on the detail page shown as sent. R2 the title
   of the pre-existing listing test in `CataloguePage.test.tsx` ("every value as the bookstore sent it") is slightly
   stale; it is outside D3 and was left unchanged. Orchestrator decision: R1 not added to T1 (S4, the qa-final grep Q1
-  rules out the direct map read on the merged code; cheap to add later).
+  rules out the direct map read on the merged code; cheap to add later). R3 (qa-lead, T2 r0) the source-level CSS
+  reader does not see an override inside a media query or a later same-specificity `main.page` rule; Q3 and Q4 cover
+  the merged code; optional test-only follow-up: an allow-list of the rules that may set layout on the shell, main or
+  `.page`. R4 `.page { width: 100% }` keeps the main full width in the flex column and is pinned only by the Q3 hash.
