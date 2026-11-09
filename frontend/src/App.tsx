@@ -71,11 +71,13 @@ function Page({ route }: { route: KnownRoute }) {
 function App() {
   return (
     <BasketProvider>
-      <SiteHeader />
-      <main className="page">
-        <HashRouter>{(route) => <Page route={route} />}</HashRouter>
-      </main>
-      <SiteFooter />
+      <div className="app-shell">
+        <SiteHeader />
+        <main className="page">
+          <HashRouter>{(route) => <Page route={route} />}</HashRouter>
+        </main>
+        <SiteFooter />
+      </div>
     </BasketProvider>
   )
 }
