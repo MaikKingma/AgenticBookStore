@@ -80,7 +80,7 @@ Bundled owner decisions: none. Open question the code does not settle in minutes
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | `/shop`, `/shop/` and `/shop/index.html` are revalidated on every load; assets unchanged | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #105 | sdd/fix-12-storefront-review/T1 |
-| T2 | the in-flight order lives in the basket context: one order per submit, back link held, late 202 removes only submitted lines | frontend | [] | 2 | elevated | sonnet | pending | | | | |
+| T2 | the in-flight order lives in the basket context: one order per submit, back link held, late 202 removes only submitted lines | frontend | [] | 2 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #106 | sdd/fix-12-storefront-review/T2 |
 | T3 | `limits.ts` names `OrderLine` (spec 04 domain) as the enforcer of the 1 to 10 rule | frontend | [T2] | 3 | elevated | sonnet | pending | | | | |
 
 T3 depends on T2 only for ordering (same module, one task at a time).
@@ -193,7 +193,24 @@ T3 depends on T2 only for ordering (same module, one task at a time).
 - FF-T1 (applies to qa-final): a live `java -jar` check on a throwaway database: `curl -sI` on `/shop`, `/shop/`,
   `/shop/index.html` shows `Cache-Control: no-cache` and no `Last-Modified`; `If-Modified-Since` now and 1980-02-01
   both answer 200 with the body; one hashed asset has no `no-cache`.
+- FF-T2 (qa-lead, T2 r1; applies to T3): at snap-before hash T2's five gated files against the T2 baseline in the
+  ledger (at the T3 branch tip once T2 is merged); Vitest totals equal T2's after-state (22 files, 598 passed + 2
+  expected fail) and the referee log shows `tsc -b && vite build`; `git diff <pr-base> --numstat` lists only
+  `frontend/src/limits.ts` (plus agent memory), every changed line is a comment line, and with comments stripped
+  `limits.ts` is byte-identical to the PR base.
+- FF-T2 (applies to qa-final): a live walk of T2 on the built app in a fresh browser context, holding the place POST
+  with a route interception: scenario B sends exactly one place POST (network log); scenario A leaves only the added
+  book in `sessionStorage['openbook.basket']` and the badge at 1; the `role="status"` text is visible and the console
+  clean; evidence is the request count, the storage value and a screenshot. Check the T2 hash baseline at the spec tip.
+  Report (not pass/fail) what happens when the visitor leaves the checkout after a 409 and comes back.
 
 ## Amendments
 
-(none)
+- A1 (2026-11-09, orchestrator, on the QA lead's T2 r1 ruling): T2 criterion 6 reads "fails on the tests of criteria
+  1 and 2 with the named shapes and on no pre-existing test; tests of criteria 3 to 5 may fail before and must pass
+  after". Consequence: none for the code; the T2 red set of six tests (criteria 1, 2, 5 and three criterion 3/4
+  tests) is in line with the criterion. Gate re-run self-accepted.
+- Follow-ups for Maik (QA lead residuals, not criteria of this cycle): the last order's error alert stays in the
+  basket context until the next order is sent and reappears when the visitor returns to checkout (keep it, or clear
+  it when the visitor leaves the checkout); `state/basket.tsx` imports `pages/problem` (`problemOf` could move to
+  `api/`).
