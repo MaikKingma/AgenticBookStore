@@ -609,3 +609,188 @@ describe('global.css primitives', () => {
     expect(declared(reduce, 'transition')).toBe('none !important')
   })
 })
+
+// ---------------------------------------------------------------------------------------------------------------------
+// The footer at the bottom of the window: the shell layout
+// ---------------------------------------------------------------------------------------------------------------------
+
+// jsdom computes no layout, so the layout is pinned at the source level. The reading follows the cascade: the declarations of
+// all top-level rules that name one selector, in source order, and the last declaration of a property wins. A rule inside an
+// at-rule (a media query, for example) does not hold for every window, so it does not count. Comments are already gone.
+
+function plainSelector(selector: string): string {
+  return selector.trim().replace(/\s*>\s*/g, ' > ').replace(/\s+/g, ' ')
+}
+
+function cascadeOf(css: string, selectors: readonly string[]): Array<[string, string]> {
+  return rulesOf(css)
+    .filter((rule) => rule.context === '' && rule.selector.split(',').some((part) => selectors.includes(plainSelector(part))))
+    .flatMap((rule) => rule.declarations)
+}
+
+function valuesOf(declarations: Array<[string, string]>, property: string): string[] {
+  return declarations.filter(([name]) => name === property).map(([, value]) => value.replace(/\s*!important$/i, '').trim().toLowerCase())
+}
+
+function lastOf(values: string[]): string | undefined {
+  return values[values.length - 1]
+}
+
+// The grow factor that wins for the main of the shell, or undefined when no rule sets one. The shorthand "flex" resets it:
+// "none" and "initial" mean 0, "auto" means 1, otherwise the first number is the grow. Anything else reads as NaN.
+function growOf(declarations: Array<[string, string]>): number | undefined {
+  let grow: number | undefined
+  for (const [property, raw] of declarations) {
+    const value = raw.replace(/\s*!important$/i, '').trim().toLowerCase()
+    if (property === 'flex-grow') grow = +value
+    if (property === 'flex') {
+      const first = value.split(/\s+/)[0]
+      grow = first === 'none' || first === 'initial' ? 0 : first === 'auto' ? 1 : +first
+    }
+  }
+  return grow
+}
+
+// A selector of a group targets the footer when the footer is its subject (the last compound), as in "footer.site-footer"
+// or ".app-shell > .site-footer", but not when it is only an ancestor (".site-footer a").
+function targetsFooter(selector: string): boolean {
+  const subject = selector.trim().split(/\s*[>+~]\s*|\s+/).pop() ?? ''
+  return /\.site-footer(?![\w-])/.test(subject) || /^footer(?![\w-])/i.test(subject)
+}
+
+function expectFullHeightColumn(css: string): void {
+  const shell = cascadeOf(css, ['.app-shell'])
+  expect(lastOf(valuesOf(shell, 'display'))).toBe('flex')
+  expect(lastOf(valuesOf(shell, 'flex-direction'))).toBe('column')
+  // The static unit first as the fallback, the dynamic unit after it, and nothing after that.
+  expect(valuesOf(shell, 'min-height').slice(-2)).toEqual(['100vh', '100dvh'])
+}
+
+function expectMainGrows(css: string): void {
+  const grow = growOf(cascadeOf(css, ['.app-shell > main', '.app-shell > .page']))
+  expect(grow).toBeDefined()
+  expect(grow).toBeGreaterThan(0)
+}
+
+function expectFooterInFlow(css: string): void {
+  const footerRules = rulesOf(css).filter((rule) => rule.selector.split(',').some(targetsFooter))
+  const lifted = footerRules.flatMap((rule) => valuesOf(rule.declarations, 'position')).filter((value) => /^(?:-webkit-)?(?:fixed|absolute|sticky)$/.test(value))
+  expect(lifted).toEqual([])
+}
+
+describe('the footer at the bottom of the window', () => {
+  it('gives the shell a full-height flex column', () => {
+    expectFullHeightColumn(globalCss)
+  })
+
+  it('lets the main of the shell grow', () => {
+    expectMainGrows(globalCss)
+  })
+
+  it('keeps the footer in the normal flow', () => {
+    expectFooterInFlow(globalCss)
+  })
+})
+
+describe('reading the shell rules', () => {
+  const column = '.app-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }'
+  const grows = '.app-shell > main { flex: 1 0 auto; }'
+
+  it('accepts a shell rule that is a full-height flex column', () => {
+    expect(() => expectFullHeightColumn(column)).not.toThrow()
+    expect(() => expectFullHeightColumn(`.app-shell { min-height: 100vh; min-height: 100dvh; flex-direction: column; display: flex; }`)).not.toThrow()
+    expect(() => expectFullHeightColumn(`.x, .app-shell { display: flex; } .app-shell { flex-direction: column; min-height: 100vh; min-height: 100dvh; }`)).not.toThrow()
+    expect(() => expectFullHeightColumn(`${column} .app-shell { display: block; } .app-shell { display: flex; }`)).not.toThrow()
+  })
+
+  it.each<[string, string]>([
+    ['no shell rule', '.page { margin: 0; }'],
+    ['the dynamic unit before the static one', '.app-shell { display: flex; flex-direction: column; min-height: 100dvh; min-height: 100vh; }'],
+    ['the static unit alone', '.app-shell { display: flex; flex-direction: column; min-height: 100vh; }'],
+    ['the dynamic unit alone', '.app-shell { display: flex; flex-direction: column; min-height: 100dvh; }'],
+    ['no flex display', '.app-shell { flex-direction: column; min-height: 100vh; min-height: 100dvh; }'],
+    ['no column direction', '.app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }'],
+    ['a row direction', '.app-shell { display: flex; flex-direction: row; min-height: 100vh; min-height: 100dvh; }'],
+    ['the rule inside a comment', `/* ${column} */`],
+    ['the rule inside a media query', `@media (min-width: 9999px) { ${column} }`],
+    ['a later display block', `${column} .app-shell { display: block; }`],
+    ['a later row direction', `${column} .app-shell { flex-direction: row; }`],
+    ['a later min-height reset', `${column} .app-shell { min-height: 0; }`],
+    ['a later static unit after the dynamic one', `${column} .app-shell { min-height: 100vh; }`],
+    ['a later display block in a grouped selector', `${column} .x, .app-shell { display: block; }`],
+    ['a selector that only contains the class', `.app-shell-x { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }`],
+  ])('rejects %s', (_name, css) => {
+    expect(() => expectFullHeightColumn(css)).toThrow()
+  })
+
+  it.each<[string]>([
+    ['.app-shell > main { flex: 1 0 auto; }'],
+    ['.app-shell > main { flex: 1; }'],
+    ['.app-shell > main { flex-grow: 1; }'],
+    ['.app-shell > main { flex: auto; }'],
+    ['.app-shell > main { flex: 1 1 0%; }'],
+    ['.app-shell>main{flex:1 0 auto}'],
+    ['.app-shell > .page { flex: 1 0 auto; }'],
+    ['.app-shell > main { flex: none; flex-grow: 1; }'],
+    ['.app-shell > main { flex-grow: 0; } .app-shell > main { flex: 1; }'],
+  ])('accepts a growing main: %s', (css) => {
+    expect(() => expectMainGrows(css)).not.toThrow()
+  })
+
+  it.each<[string, string]>([
+    ['no main rule', column],
+    ['a rule for another element', '.app-shell > footer { flex: 1 0 auto; }'],
+    ['a rule for every descendant', '.app-shell main { flex: 1 0 auto; }'],
+    ['the grow inside a comment', `/* ${grows} */`],
+    ['the grow inside a media query', `@media (min-width: 9999px) { ${grows} }`],
+    ['a later flex of 0 0 auto', `${grows} .app-shell > main { flex: 0 0 auto; }`],
+    ['a later flex of 0 1 auto', `${grows} .app-shell > main { flex: 0 1 auto; }`],
+    ['a later flex none', `${grows} .app-shell > main { flex: none; }`],
+    ['a later flex-grow of 0', `${grows} .app-shell > main { flex-grow: 0; }`],
+    ['a later flex initial', `${grows} .app-shell > main { flex: initial; }`],
+    ['a later no-grow rule on the page class', `${grows} .app-shell > .page { flex: none; }`],
+    ['a flex of 0 0 auto', '.app-shell > main { flex: 0 0 auto; }'],
+    ['a flex of 0 1 auto', '.app-shell > main { flex: 0 1 auto; }'],
+    ['flex none', '.app-shell > main { flex: none; }'],
+    ['a flex-grow of 0', '.app-shell > main { flex-grow: 0; }'],
+    ['a flex-grow that is not a number', '.app-shell > main { flex-grow: var(--x); }'],
+    ['a flex-grow reset by the shorthand', '.app-shell > main { flex-grow: 1; flex: 0 1 auto; }'],
+  ])('rejects a main that does not grow: %s', (_name, css) => {
+    expect(() => expectMainGrows(css)).toThrow()
+  })
+
+  it.each<[string]>([
+    ['.site-footer { margin-top: 3rem; padding: 1.5rem 1rem; }'],
+    ['.site-footer { position: static; }'],
+    ['.site-footer { position: relative; }'],
+    ['.site-footer a { position: absolute; }'],
+    ['.site-footer-note { position: fixed; }'],
+    ['.x-site-footer { position: sticky; }'],
+    ['.site-header { position: sticky; top: 0; }'],
+    ['.page { position: absolute; }'],
+    ['/* .site-footer { position: fixed; } */ .site-footer { margin: 0; }'],
+  ])('keeps the footer in the flow for %s', (css) => {
+    expect(() => expectFooterInFlow(css)).not.toThrow()
+  })
+
+  it.each<[string, string]>([
+    ['sticky in a rule of its own', '.site-footer { margin: 0; } .site-footer { position: sticky; }'],
+    ['fixed', '.site-footer { position: fixed; }'],
+    ['absolute', '.site-footer { position: absolute; }'],
+    ['sticky', '.site-footer { position: sticky; }'],
+    ['a vendor sticky', '.site-footer { position: -webkit-sticky; }'],
+    ['no space after the colon', '.site-footer{position:fixed}'],
+    ['capital letters', '.site-footer { POSITION: Fixed; }'],
+    ['an important flag', '.site-footer { position: fixed !important; }'],
+    ['a group of selectors', '.x, .site-footer { position: fixed; }'],
+    ['a group without a space', '.x,.site-footer{position:sticky}'],
+    ['a compound selector with the element', 'footer.site-footer { position: absolute; }'],
+    ['a child combinator', '.app-shell > .site-footer { position: sticky; }'],
+    ['a child combinator without spaces', '.app-shell>.site-footer{position:fixed}'],
+    ['a descendant combinator', '.app-shell .site-footer { position: fixed; }'],
+    ['the footer element', 'footer { position: fixed; }'],
+    ['a media query', '@media (min-width: 40rem) { .site-footer { position: fixed; } }'],
+  ])('rejects a footer that is taken out of the flow: %s', (_name, css) => {
+    expect(() => expectFooterInFlow(css)).toThrow()
+  })
+})

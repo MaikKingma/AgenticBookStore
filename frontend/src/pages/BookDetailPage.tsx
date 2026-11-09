@@ -3,6 +3,7 @@ import { getBook } from '../api/books'
 import { ApiError } from '../api/client'
 import { getStock } from '../api/inventory'
 import type { BookDetailView, Problem, StockView } from '../api/types'
+import { genreLabel } from '../genres'
 import { ProblemDetailAlert } from '../components/ProblemDetailAlert'
 import { StockBadge } from '../components/StockBadge'
 import { Link } from '../router'
@@ -50,7 +51,7 @@ function BookDetail({ book, stock }: { book: BookDetailView; stock: StockView })
           </ul>
         </dd>
         <dt>Genre</dt>
-        <dd>{book.genre}</dd>
+        <dd>{genreLabel(book.genre)}</dd>
         <dt>Published</dt>
         <dd>{book.publicationYear}</dd>
         <dt>Price</dt>
