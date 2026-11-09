@@ -100,3 +100,13 @@ jobs:
         env:
           npm_config_cache: ${{ runner.temp }}\npm-cache
         run: mvnw.cmd -B -fae -DskipTests verify
+
+  publish-script-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Test the workshop publish script
+        run: bash scripts/test-publish-workshop-main.sh

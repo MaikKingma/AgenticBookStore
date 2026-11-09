@@ -1,0 +1,25 @@
+name: No agent config
+
+# main and the tag level-0-start are the workshop baseline: they must not hold agent configuration.
+# The list of forbidden paths lives once, in scripts/publish-workshop-main.sh.
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - level-0-start
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  no-agent-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Refuse agent configuration
+        run: bash scripts/publish-workshop-main.sh --check HEAD
