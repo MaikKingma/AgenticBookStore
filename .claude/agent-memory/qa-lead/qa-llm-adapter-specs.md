@@ -28,14 +28,19 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
    Same family: an EPP that `addLast`s a property behind an "unset" guard; each single mutant (`addFirst`, guard removed)
    is equivalent, only the pair is must-fail. Look for library defaults before listing a mutant as must-fail.
 
-5. **Chat memory window semantics (Spring AI 2.0.2, res-1 verified ordering).** The memory advisor reads memory before
-   adding the new user message and stores only the user message and the final answer. At request 11 of a 20-window the
-   prompt history is Q1..A10 plus Q11; at request 12 it is Q2..A11 plus Q12. Ask for the full ordered text list at both
-   requests: it kills window 19 and 21.
+5. **Chat memory window semantics (Spring AI 2.0.2, read in the sources jar).** The memory advisor stores the user
+   message BEFORE the model call and the final answer after it (never tool messages). At request 11 of a 20-window the
+   prompt history is Q1..A10 plus Q11; at request 12 it is Q2..A11 plus Q12. `MessageWindowChatMemory.process` snaps
+   the cut forward to the next USER message, so with complete turns only an odd window equals the even one below it:
+   exact lists kill 19 but never 21 (my spec 08 G11 premise was wrong). Witness: a first call that throws (its question
+   stays unanswered), then exact history at a later request. Same fact: an offline check inside the model leaves the
+   question in memory, so "no memory after an offline request" is the killer of a removed pre-call offline check.
 
 6. **The tool-calling double trap.** A `ChatModel` double whose `getOptions()` is not `ToolCallingChatOptions` drops tools
    silently (empty reply, tool never called). Make it a must-fail probe on the double itself and require an in-test
-   negative control that differs only in `getOptions()`.
+   negative control that differs only in `getOptions()`. A client built without tools passes tool-calling options
+   with null callbacks: the double must handle that (else a `defaultTools`-dropped mutant dies only by NPE), and it
+   must record a call that fails for lack of a step.
 
 7. **Adapter layer rules cut off domain data.** An inbound adapter allowed only `domaininteraction` cannot read a domain
    enum (`Genre.values()`); a card saying "lists every Genre name" must take them from the use-case exception's
@@ -57,7 +62,10 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     that call `postProcessEnvironment` directly and a test profile with a blank key are green in both orders, so an
     added `@Order(HIGHEST_PRECEDENCE)` survives everything. Falsifier: in the shared full context, the switch's
     property source sits after every `application*.yml` config source (index comparison, with non-vacuity on both
-    names). Put it in the strategy's falsifier list for the EPP task.
+    names). Put it in the strategy's falsifier list for the EPP task. Compare only names that start with
+    `Config resource`: Boot appends its own `applicationInfo` source after every EPP, so "every name containing
+    `application`" is red on correct code (spec 08 G24 had to be reworded). List real runtime values before wording
+    such a falsifier.
     The key blank guard (`isBlank`) needs the U+2003 witness too, like every other blank guard.
 
 12. **Tool adapters with a catch-all error helper.** Two blind spots recur:

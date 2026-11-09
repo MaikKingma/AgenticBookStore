@@ -21,3 +21,12 @@ metadata:
   "key present with null" holds without extra config.
 - Stream laziness: `sorted(..).map(lookup).filter(..).limit(n)` stops looking stock up after n hits, but a Mockito
   strict-stub-per-book then fails on unused stubs: stub through one `thenAnswer` over a map instead.
+- The whole ChatClient (tool loop, memory advisor) runs without a context: `ChatClient.builder(scriptedModel)`
+  passed to the real `AssistantConfig` bean methods. `Prompt` keeps the caller's list by reference, so a recording
+  double must `List.copyOf` the messages. A tool-call reply with content `""` and no tool loop gives `content()` `""`.
+- `MessageWindowChatMemory` moves its cut forward to the next USER message, so complete Q/A turns cannot tell window
+  20 from 21. A window witness needs an odd count: a first call that throws leaves its question unanswered in memory.
+- `ToolCallingChatOptions.getToolCallbacks()` is null for a ChatClient without tools; a recording double must guard it.
+- `ChatClient.Builder.defaultSystem(Resource)` reads with the platform default charset; pass `UTF_8` explicitly.
+- Adding a bean method that injects `ChatClient.Builder` breaks every `ApplicationContextRunner` over that config:
+  register a builder and the tools with `withBean(...)` (supporting beans only, the asserts stay unchanged).
