@@ -31,6 +31,14 @@ public class BookCommands {
         return new CommandResult(id);
     }
 
+    @PostMapping("/commands/import-from-distributor")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public CommandResult importFromDistributor(@Valid @RequestBody ImportBookPayload payload) {
+        BigDecimal price = payload.price() == null ? null : new BigDecimal(payload.price());
+        UUID id = catalogue.importFromDistributor(payload.isbn(), price);
+        return new CommandResult(id);
+    }
+
     @PostMapping("/{id}/commands/change-price")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void changePrice(@PathVariable UUID id, @Valid @RequestBody ChangePricePayload payload) {

@@ -24,3 +24,8 @@ metadata:
   `Resolved [...]` line in the module run, a new but expected line.
 - Exact JSON asserts: read the body with a static `JsonMapper.builder().build()` into `Map<String, Object>`; ints come
   back as `Integer`, so `isEqualTo(7)` works and `Map.equals` pins the key set.
+- Command payload coercion in the @WebMvcTest slice (Boot 4 / Jackson 3, a String record component): a JSON number or
+  boolean is read as its text (`12.5` -> "12.5", `true` -> "true"); an object (`{}`) gives 400 with an EMPTY body and no
+  content type (`HttpMessageNotReadableException`, not the problem-detail advice). Pin these as literals (spec 06 T5).
+- Unstubbed `@MockitoBean` flow methods return null, so a 202 with `CommandResult(null)` passes silently: stub the id and
+  assert `$.id` in every 202 test or a "null id" mutant survives.

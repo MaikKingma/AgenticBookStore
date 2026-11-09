@@ -42,10 +42,10 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 | T2 | Contract JSON captured live from the distributor, README, `http/distributor.http` additions | bookstore | [] | 2 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T2`) | PASS (r0) | ENDORSE | 0 | #69 | 62079f8 |
 | T3 | `DistributorAppServiceImpl`, `DistributorProperties`, restclient starter, base-class mock, contract and wiring tests | bookstore | [T1, T2] | 3 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T3`) | PASS (r2) | ENDORSE | 2 | #75 | 8ee41d4 |
 | T4 | `CatalogueFlow.importFromDistributor` and `CatalogueFlowTest` | bookstore | [T1, T3] | 4 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T4`) | PASS (r2) | ENDORSE | 2 | #78 | ab52051 |
-| T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | pending | | | | | |
+| T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T5`) | PASS (r0) | ENDORSE | 0 | #80 | d6cd48a |
 | T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | pending | | | | | |
 | T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | pending | | | | | |
-| T8 | Test-only follow-ups FU-T3-1 to FU-T3-3 in `DistributorAppServiceImplTest` (Amendment A1) | bookstore | [T3] | 8 | elevated | sonnet | sonnet | pending | | | | | |
+| T8 | Test-only follow-ups FU-T3-1 to 3 in `DistributorAppServiceImplTest` and FU-T5-1 to 3 in `BookCommandsTest` (Amendments A1, A2) | bookstore | [T3, T5] | 8 | elevated | sonnet | sonnet | pending | | | | | |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
 
@@ -136,12 +136,15 @@ qaDirective of every task: C0 plus the task's T<n> section of the QA ledger, plu
 ### T8: Test-only follow-ups to T3 (Amendment A1)
 
 - module: bookstore; dependsOn: [T3]; implModel sonnet; qaTier elevated (sonnet).
-- fileScope: `T/acl/DistributorAppServiceImplTest.java` only. No production change.
+- fileScope: `T/acl/DistributorAppServiceImplTest.java` and `T/command/BookCommandsTest.java` (A2). No production change.
 - Acceptance criteria (the QA lead's FU-T3-1 to FU-T3-3, ledger review "T3 r2"):
   1. FU-T3-1: a title body without `availability` (variant of a committed file) gives `orderable` true and no exception; the mutant `!title.availability().equals("OUT_OF_PRINT")` fails it.
   2. FU-T3-2: `subjectCodes: [null, "FIC028000"]` gives FICTION and exactly one WARN `No bookstore genre for subject code null of EAN 9789900010050, using FICTION`; the mutant `filter(Objects::nonNull).findFirst()` fails it.
   3. FU-T3-3: `listPriceCents: -999` gives `new BigDecimal("-9.99")`; the mutant `cents.abs()` fails it.
-  4. Existing tests unchanged (insertion only); FF-4e and the referee green; the new ACL WARN count stated exactly.
+  4. FU-T5-1 (A2): new parameterized test posting price `"+5"`, `"12.00 "` and `"5 "`, plus a test whose price is `Character.toString(0x0661) + Character.toString(0x0662)` (the file stays ASCII); each gives `expectProblem(result, 400, "validation-failed", "Validation failed")`, `$.details.length()` 1, `$.details[0].field` `"price"` and `verifyNoInteractions(flow)`. Must-fail probes R4, R5, R12.
+  5. FU-T5-2 (A2): captor rows `"12.345"` gives `new BigDecimal("12.345")` and `"123456.789"` gives `new BigDecimal("123456.789")`, each 202 and `isEqualTo`. Must-fail probes R7, R8, C5d.
+  6. FU-T5-3 (A2): isbn pass-through rows `"ABC"` and `"978014143951X"` reach the flow unchanged (`isEqualTo(isbn)`). Must-fail probe C9c.
+  7. Existing tests unchanged (insertion only, new methods); production hashes unchanged; FF-4e and the referee green; the new totals and ACL WARN count stated exactly.
 
 ## QA feed-forward
 
@@ -168,6 +171,12 @@ From the QA lead's T4 r2 review (full text in the QA ledger, FF-9 to FF-11):
 - FF-10 (T5 to T8 implDirective and qaDirective): value-relation sweep. Wherever code chooses or compares between two values (override vs recommended, given vs default, request vs stored), tests hold data below, equal and above, the zero value and both domain range ends, each asserted as a literal or as the exact 422; implementers table the sweep in the outbox (input x relation x test). For T5: price `"0"` and `"0.00"` reach the flow as `new BigDecimal("0")` and `new BigDecimal("0.00")` (captor literals), next to G12's `"-5"`.
 - FF-11 (qa-final): T4 hash integrity; a live import of The Last Man with an override below its captured 11.99 (for example 7.50) stores 7.50 EUR; residual R7 accepted: the remote call widens the window between the duplicate check and the save, closed by the unique constraint and the adapter's 409 translation (no second check, by plan AC2; the lead card's wording differed).
 
+From the QA lead's T5 r0 review (full text in the QA ledger, FF-12, FF-13):
+
+- FF-12 (T6 to T8 C0 baselines and qa-final): bookstore total after T5 is 874 (BookCommandsTest 73); C0-6 (b) also accepts exactly 1 `DefaultHandlerExceptionResolver` WARN in the bookstore section (the `HttpMessageNotReadableException ... START_OBJECT` line from `importRejectsAnObjectPriceAsAnUnreadableBodyWith400`); ACL WARN stays 66; every later gate also runs `shasum -a 256 -c` on the scratchpad file `s06-T5-qa-hashes.txt` (3 of 3 OK) unless T8 owns the change of BookCommandsTest.
+- FF-13 (qa-final): T5 hash integrity (or T8's baseline); live on the running app, POST import with price `{}` and with a malformed body gives 400 and never 500, body and content type recorded verbatim (residual R8); the FU-T5 must-fail probes on the tip.
+
 ## Amendments
 
 - A1 (2026-11-08T22:46Z, orchestrator, self-accepted): new task T8, test-only, inside T3's test file, carrying the QA lead's follow-ups FU-T3-1 to FU-T3-3 from the T3 r2 ENDORSE. Consequence: one more task PR before qa-final; no production change, no requirement change. Within authority (tests only, cheap and reversible).
+- A2 (2026-11-09T00:23Z, orchestrator, self-accepted): T8 also carries the QA lead's test-only follow-ups FU-T5-1 to FU-T5-3 from the T5 r0 ENDORSE; its fileScope gains `T/command/BookCommandsTest.java` and it now depends on T5. Consequence: none on requirements or production code. Within authority (tests only).
