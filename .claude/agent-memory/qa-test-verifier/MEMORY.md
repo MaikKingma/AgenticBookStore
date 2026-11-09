@@ -19,4 +19,5 @@
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
 - [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT and REQUIRES_NEW delegate probes, row-lock hang
 - [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag guards on JSON views, null-key forms, detail pins
+- [Bash script QA probes](bash-script-qa-probes.md) — copy-based mutants for bash self-tests, xtrace coverage via BASH_ENV, gap probes on unreached refusals, per-loop failure probes, rollback-under-set-e witness, README-as-written
 - [Live UI walk verification](live-ui-walk-verification.md) — re-walking a browser walk with own seed, playwright-cli listeners, favicon/Tab traps, table squeeze, 4xx console line, access-log cache check

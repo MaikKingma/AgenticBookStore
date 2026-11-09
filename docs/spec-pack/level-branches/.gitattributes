@@ -1,0 +1,10 @@
+# Line endings of the staged level files, independent of the root .gitattributes.
+# Shell scripts and git hooks run as checked out, so they must stay LF on every platform.
+*.sh text eol=lf
+**/dot-githooks/* text eol=lf
+# PowerShell hooks are checked out with CRLF (the blob stays LF).
+*.ps1 text eol=crlf
+# Manifests are read line by line by apply-level.sh, which refuses a carriage return.
+*.tsv text eol=lf
+# Patches are applied byte for byte; no line ending conversion.
+*.patch -text

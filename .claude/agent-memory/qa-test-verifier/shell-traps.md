@@ -37,4 +37,12 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - Ledger hash baselines are `shasum -a 256` (64 hex); plain `shasum` prints sha1 and will never match. Also, a path
   built from the repo root without the `.claude/worktrees/<id>` segment still exists (the main checkout), so a `printf >`
   there succeeds silently outside the worktree; use worktree-relative paths for scratch files.
-Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
+- macOS `mktemp -d` WITHOUT a template ignores TMPDIR and lands in `/var/folders/.../T` (outside the scratchpad, an
+  HR1 breach). Always pass a template: `mktemp -d "${TMPDIR:-/tmp}/x.XXXXXX"`. When running a README "as written"
+  that uses bare `mktemp -d`, list and delete its folders afterwards by content, and report it.
+- The JVM on macOS ignores TMPDIR too (`java -XshowSettings:properties` prints `java.io.tmpdir = /var/folders/...`
+  with TMPDIR set). For HR1 runs of `./mvnw` (referee, sandboxes) export
+  `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>`; Surefire forks inherit it.
+- `git ls-tree` rejects `:(exclude)` pathspec magic ("pathspec magic not supported by this command"); filter
+  `ls-tree -r --full-tree --name-only` output with awk instead.
+Related: [[scaffold-verification-techniques]], [[final-sweep-checks]], [[bash-script-qa-probes]]
