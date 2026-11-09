@@ -11,5 +11,5 @@
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
 - [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
-- [Bash git script techniques](bash-git-script-techniques.md) — date-varied idempotency, lease with absent sha, atomic hook and PATH shim witnesses, perl mutants, guard refuses bash -c
+- [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, pin config-overriding flags, date-varied idempotency, absent-sha lease, hook and shim witnesses, perl mutants, guard refuses bash -c
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test

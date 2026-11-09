@@ -8,6 +8,12 @@ metadata:
 See also the senior researcher's note `.claude/agent-memory/senior-research-agent/shell-script-git-research-techniques.md`
 (three-shell matrix, hermetic env vars, forced identity failure).
 
+- **Run the script under test with `"$BASH" "$SCRIPT"`, never `bash "$SCRIPT"`:** this Mac has Homebrew bash 5
+  first on PATH, so `/bin/bash test.sh` otherwise tests the script on bash 5 and a "green on 3.2" claim is false.
+  Prove it with a PATH shim `bash` that logs invocations (expect 0) and print `$BASH_VERSION` in the summary.
+  Bash-4 mutants to check the guard: `${x,,}` and an empty `"${a[@]}"` under `set -u`.
+- **Pin git flags that override config:** a flag like `status --untracked-files=normal` needs a test that sets
+  the config it overrides (`status.showUntrackedFiles no`), or dropping the flag survives.
 - **Worktree guard refuses `bash -c '...'`** in Bash calls (it cannot prove no git runs). Put waits, loops and
   container runs in `.claude/comms/tmp/<id>-*.sh` and run `bash <file>`.
 - **Date-varied idempotency:** set `GIT_AUTHOR_DATE`/`GIT_COMMITTER_DATE` per script run, an hour apart. Pinned
