@@ -42,7 +42,8 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | PASS r1 | #83 | sdd/11-workshop-guide/T4a | ENDORSE |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | FAIL r4, human override (A7) | #87 | sdd/11-workshop-guide/T5 | AMEND r4, override: human |
 | T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
-| T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
+| T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | pending | | | |
+| T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | implemented, waiting for T5c | | sdd/11-workshop-guide/T6 | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
@@ -376,6 +377,27 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   point and leftover character references. Two of T5b's own round-0 assertions were edited accordingly and the count
   line reads "in tab panels and PowerShell code blocks". The C0-12 freeze baseline after T5b is
   `t5b-freeze-baseline-hashes.txt` (75 files under `guide/scripts/**`).
+
+- A10 (2026-11-09, orchestrator, raised by T6): five frozen self-tests read the live `guide/docs/**` tree and assume
+  every page still carries the skeleton marker (`check-content.test.mjs` around lines 41, 97, 231, 263, 287 and
+  `coverage-manifest.test.mjs` line 94), so `npm run check` fails as soon as a content task removes its markers. This
+  is a defect of the frozen checker's tests, not of the pages. New task T5c (critical; opus implementation, opus QA,
+  QA lead review; module guide; depends on T5b; must merge before any content task PR, like T5b). Card:
+  - fileScope: `guide/scripts/**` only: a committed snapshot of the T4 skeleton pages as a fixture (for example
+    `guide/scripts/fixtures/skeleton-docs/**`, byte-equal to the pages at spec tip 05e58a2), the tests that read the
+    live tree switched to that snapshot, and a refreshed freeze baseline.
+  - AC1: every self-test that depends on the marker state of the live docs tree reads the snapshot instead; each
+    keeps its assertions and expected values (same intent, same strength); no rule source file changes.
+  - AC2: a sweep of every test under `guide/scripts/**` for any other dependence on the live docs content (marker
+    state, page bodies, pending counts) that T6 to T11 would break; each one found is moved to the snapshot the same
+    way, or listed with a reason why it stays live.
+  - AC3: with the T6 branch's three pages applied on top (`git show a1817fe:<path>` in a scratch copy), `npm run
+    check` exits 0; with all eleven markers removed from a scratch copy, the only failures are coverage errors of the
+    pages' missing content, never a self-test.
+  - AC4: freeze: only the edited test files and the new fixture differ from `t5b-freeze-baseline-hashes.txt`; a new
+    baseline `t5c-freeze-baseline-hashes.txt` replaces it for FF-32 (a).
+  - AC5: no new dependency; no product file outside `guide/scripts/**`; no test is removed or weakened; node:test total
+    unchanged or larger, every title kept.
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 
