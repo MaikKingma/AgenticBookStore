@@ -87,11 +87,13 @@ Planned in the QA ledger section "Scenario-to-test traceability plan"; final met
 
 ## QA feed-forward
 
-(none yet)
+- FF1 (from T1 r1, every verifier T2 to T7): a test outline offered in a Required Action must also kill the boundary twin of the mutant it targets (`>` vs `>=`, `<` vs `<=`, +1/-1); run the twin against the witness before offering it. For a criterion of the form "every X does Y", use one witness from strictly inside each region that any comparison in the method (or a plausible mutant's guard) splits the input into, not only the boundary value.
+- FF2 (from T1 r1, T2 verifier): PostgreSQL truncates a string longer than a `varchar(n)` without error when the extra characters are all spaces; a length witness for `pending_restock_order_id varchar(64)` uses a 65th character that is not a space.
+- FF3 (from T1 r2, T2 implementer and verifier): (a) the `InventoryFlowTest` case "receive from a pending item saves a DTO with null pending" starts from onHand 0, reserved 0, reorderLevel 4, lowStockSignalled true, a pending restock, and receives 1; the saved DTO has onHand 1, signal true, pending null; the `StockItem` mutants X1m1 and X1m2 (`if (available() >= reorderLevel - 1)` or `- 2` around `pendingRestock = null;`) must fail against `InventoryFlowTest`. (b) The `StockItemDomainMapperTest` witness that the `PendingRestock` hand-off rejects uses the id `" " + "R".repeat(64)` and asserts `isExactlyInstanceOf(InvalidPendingRestockException.class)`; the `PendingRestock` mutant D8stripL must fail against `StockItemDomainMapperTest`.
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-09, orchestrator, from the T1 QA review): the strategy card's word "final" for the new domain exceptions is dropped; the repo's domain exceptions are plain `public class ... extends RuntimeException`, and T1 follows that style. No other consequence.
 
 ## Final sweep and Gate 2
 
