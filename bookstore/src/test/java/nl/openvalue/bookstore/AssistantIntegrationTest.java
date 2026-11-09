@@ -1,0 +1,247 @@
+package nl.openvalue.bookstore;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import nl.openvalue.bookstore.assistant.OfflineChatModel;
+import nl.openvalue.bookstore.assistant.ScriptedChatModel;
+import nl.openvalue.bookstore.assistant.ScriptedChatModel.ReceivedPrompt;
+import nl.openvalue.bookstore.command.CommandResult;
+import nl.openvalue.bookstore.domaininteraction.CatalogueFlow;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.anthropic.AnthropicChatModel;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
+
+/**
+ * The assistant end to end over real HTTP into the full application on PostgreSQL, with a scripted chat model in place
+ * of a real one. The model asks for tools and answers from what they return, so the tools, the chat client, the
+ * conversation memory and the flows run as in production. This is the one test context that is online for the
+ * assistant: it has its own rate limit, raised so that no test depends on the order of the others, and a spy around
+ * the catalogue flow to show that a tool call reaches the real flow. The scripted model is reset before every test and
+ * every test uses conversation ids of its own.
+ */
+@TestPropertySource(properties = {"spring.ai.model.chat=scripted", "bookstore.assistant.max-requests-per-minute=1000"})
+@Import(ScriptedChatModel.class)
+class AssistantIntegrationTest extends IntegrationTestBase {
+
+    private static final ParameterizedTypeReference<Map<String, Object>> JSON_OBJECT =
+            new ParameterizedTypeReference<>() {
+            };
+
+    private static final TypeReference<List<Map<String, Object>>> JSON_LIST = new TypeReference<>() {
+    };
+
+    private static final TypeReference<Map<String, Object>> JSON_MAP = new TypeReference<>() {
+    };
+
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+
+    private static final String PRIDE_ISBN = "9780141439518";
+    private static final String FRANKENSTEIN_ISBN = "9780141439471";
+    private static final String PERSUASION_ISBN = "9780141439686";
+    private static final String EMMA_ISBN = "9780141439587";
+
+    @Autowired
+    private ScriptedChatModel scripted;
+
+    @Autowired
+    private ApplicationContext context;
+
+    @Autowired
+    private Environment environment;
+
+    @MockitoSpyBean
+    private CatalogueFlow catalogueFlow;
+
+    @BeforeEach
+    void resetScriptedModel() {
+        scripted.reset();
+    }
+
+    @Test
+    void scriptedContextHasOnlyTheScriptedModel() {
+        assertThat(environment.getProperty("spring.ai.model.chat")).isEqualTo("scripted");
+
+        Map<String, ChatModel> chatModels = context.getBeansOfType(ChatModel.class);
+        assertThat(chatModels).hasSize(1);
+        assertThat(chatModels.values()).allSatisfy(model -> assertThat(model).isInstanceOf(ScriptedChatModel.class));
+        assertThat(chatModels.values()).containsExactly(scripted);
+        assertThat(context.getBeanNamesForType(OfflineChatModel.class)).isEmpty();
+        assertThat(context.getBeanNamesForType(AnthropicChatModel.class)).isEmpty();
+    }
+
+    @Test
+    void toolCallIsExecutedAgainstOurFlows() {
+        UUID pride = addBook(PRIDE_ISBN, "Pride and Prejudice", "Jane Austen", "fiction", "12.50", 1813);
+        addBook(FRANKENSTEIN_ISBN, "Frankenstein", "Mary Shelley", "science_fiction", "9.99", 1818);
+        receive(pride, 3);
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenCallTool("searchCatalogue", "{\"query\":\"austen\"}")
+                .thenReply(prompt -> "My first match: " + firstTitleOf(toolContentOf(prompt.getInstructions())));
+
+        Map<String, Object> reply = chat(conversationId, "Do you have anything by Austen?");
+
+        assertThat(reply).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "My first match: Pride and Prejudice"));
+        verify(catalogueFlow).search("austen", null, null, null);
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(2);
+        assertThat(received.get(0).toolNames()).containsExactlyInAnyOrder("searchCatalogue", "getBookDetails",
+                "checkAvailability", "recommendByGenre");
+        String toolContent = toolContentOf(received.get(1).messages());
+        assertThat(toolContent).contains("Pride and Prejudice").doesNotContain("Frankenstein");
+        List<Map<String, Object>> hits = JSON.readValue(toolContent, JSON_LIST);
+        assertThat(hits).hasSize(1);
+        assertThat(hits.get(0)).isEqualTo(Map.of("id", pride.toString(), "title", "Pride and Prejudice",
+                "authors", List.of("Jane Austen"), "genre", "FICTION", "price", "12.50", "inStock", true));
+    }
+
+    @Test
+    void followUpQuestionSeesOnlyItsOwnConversation() {
+        UUID conversationX = UUID.randomUUID();
+        UUID conversationY = UUID.randomUUID();
+        scripted.thenReply("Frankenstein is a novel by Mary Shelley.")
+                .thenReply("I cannot find Dracula in the shop.")
+                .thenReply("I have no stock figures for it here.");
+
+        String xReply = chat(conversationX, "Tell me about Frankenstein").get("reply").toString();
+        String yReply = chat(conversationY, "Do you have Dracula?").get("reply").toString();
+        String xFollowUpReply = chat(conversationX, "Is it in stock?").get("reply").toString();
+
+        assertThat(xReply).isEqualTo("Frankenstein is a novel by Mary Shelley.");
+        assertThat(yReply).isEqualTo("I cannot find Dracula in the shop.");
+        assertThat(xFollowUpReply).isEqualTo("I have no stock figures for it here.");
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(3);
+        assertThat(withoutSystemMessage(received.get(0))).containsExactly("USER: Tell me about Frankenstein");
+        assertThat(withoutSystemMessage(received.get(1))).containsExactly("USER: Do you have Dracula?");
+        List<String> followUp = withoutSystemMessage(received.get(2));
+        assertThat(followUp).containsExactly("USER: Tell me about Frankenstein",
+                "ASSISTANT: Frankenstein is a novel by Mary Shelley.", "USER: Is it in stock?");
+        assertThat(followUp).noneMatch(message -> message.contains("Dracula"));
+        assertThat(followUp).noneMatch(message -> message.contains(yReply));
+    }
+
+    @Test
+    void toolErrorReachesTheModelAsShortText() {
+        UUID unknown = UUID.randomUUID();
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenCallTool("getBookDetails", "{\"bookId\":\"" + unknown + "\"}")
+                .thenReply("I could not find that book.");
+
+        Map<String, Object> reply = chat(conversationId, "Tell me about book " + unknown);
+
+        assertThat(reply).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "I could not find that book."));
+        assertThat(scripted.received()).hasSize(2);
+        String toolContent = toolContentOf(scripted.received().get(1).messages());
+        assertThat(toolContent).isIn("No book with id " + unknown, "\"No book with id " + unknown + "\"");
+        assertThat(toolContent).doesNotContain("\tat ").doesNotContain("\n").doesNotContain("Exception");
+    }
+
+    @Test
+    void availabilityShowsThePendingRestock() {
+        UUID persuasion = addBook(PERSUASION_ISBN, "Persuasion", "Jane Austen", "fiction", "8.50", 1817);
+        receive(persuasion, 4);
+        // The order takes the stock down to 2, below the reorder level, so the default distributor answer is stored.
+        placeOrder(persuasion, 2);
+        UUID emma = addBook(EMMA_ISBN, "Emma", "Jane Austen", "fiction", "9.50", 1815);
+        receive(emma, 5);
+        scripted.thenCallTool("checkAvailability", "{\"bookId\":\"" + persuasion + "\"}")
+                .thenReply("Persuasion is on its way.")
+                .thenCallTool("checkAvailability", "{\"bookId\":\"" + emma + "\"}")
+                .thenReply("Emma is on the shelf.");
+
+        chat(UUID.randomUUID(), "When can I get Persuasion?");
+        chat(UUID.randomUUID(), "And Emma?");
+
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(4);
+        Map<String, Object> withRestock = JSON.readValue(toolContentOf(received.get(1).messages()), JSON_MAP);
+        assertThat(withRestock.keySet()).containsExactlyInAnyOrder("available", "pendingRestockExpected");
+        assertThat(withRestock).containsEntry("available", 2)
+                .containsEntry("pendingRestockExpected", defaultExpectedDeliveryDate.toString());
+        Map<String, Object> withoutRestock = JSON.readValue(toolContentOf(received.get(3).messages()), JSON_MAP);
+        assertThat(withoutRestock.keySet()).containsExactlyInAnyOrder("available", "pendingRestockExpected");
+        assertThat(withoutRestock).containsEntry("available", 5).containsEntry("pendingRestockExpected", null);
+    }
+
+    private Map<String, Object> chat(UUID conversationId, String message) {
+        return restTestClient.post().uri("/assistant/chat")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("conversationId", conversationId.toString(), "message", message))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(JSON_OBJECT).returnResult().getResponseBody();
+    }
+
+    /** The messages of a prompt without the system prompt, each as {@code TYPE: text}. */
+    private static List<String> withoutSystemMessage(ReceivedPrompt prompt) {
+        return prompt.messages().stream()
+                .filter(message -> message.getMessageType() != MessageType.SYSTEM)
+                .map(message -> message.getMessageType() + ": " + message.getText())
+                .toList();
+    }
+
+    /** What the one tool the model called returned, as the model received it. */
+    private static String toolContentOf(List<Message> messages) {
+        List<ToolResponseMessage> toolMessages = messages.stream()
+                .filter(ToolResponseMessage.class::isInstance)
+                .map(ToolResponseMessage.class::cast)
+                .toList();
+        assertThat(toolMessages).as("tool messages of the prompt").hasSize(1);
+        List<ToolResponseMessage.ToolResponse> responses = toolMessages.get(0).getResponses();
+        assertThat(responses).as("tool responses of the prompt").hasSize(1);
+        return responses.get(0).responseData();
+    }
+
+    private static String firstTitleOf(String searchResult) {
+        return JSON.readValue(searchResult, JSON_LIST).get(0).get("title").toString();
+    }
+
+    private UUID addBook(String isbn, String title, String author, String genre, String price, int year) {
+        CommandResult result = restTestClient.post().uri("/books/commands/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("isbn", isbn, "title", title, "authors", List.of(author), "genre", genre,
+                        "price", price, "publicationYear", year))
+                .exchange()
+                .expectStatus().isAccepted()
+                .expectBody(CommandResult.class).returnResult().getResponseBody();
+        assertThat(result).isNotNull();
+        return result.id();
+    }
+
+    private void receive(UUID bookId, int quantity) {
+        restTestClient.post().uri("/inventory/{bookId}/commands/receive", bookId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("quantity", quantity))
+                .exchange()
+                .expectStatus().isAccepted();
+    }
+
+    private void placeOrder(UUID bookId, int quantity) {
+        restTestClient.post().uri("/orders/commands/place")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("customerEmail", "reader@example.com",
+                        "lines", List.of(Map.of("bookId", bookId, "quantity", quantity))))
+                .exchange()
+                .expectStatus().isAccepted();
+    }
+}

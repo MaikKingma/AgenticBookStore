@@ -250,6 +250,7 @@ Extends the file from `solution/level-2`: keep its `extraKnownMarketplaces` and 
             "type": "command",
             "if": "Bash(git commit *)",
             "timeout": 180,
+            "onFailure": "block",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/tests-before-commit.sh"
           }
         ]
@@ -269,6 +270,11 @@ Extends the file from `solution/level-2`: keep its `extraKnownMarketplaces` and 
   }
 }
 ```
+
+Decision D9 (Maik, 2026-11-09): a commit hook that times out or fails to run blocks the commit
+(`"onFailure": "block"`), so a slow first build never lets an untested commit through. Verify at build time that the
+field exists in the hooks schema of the Claude Code version in use; if it does not, keep the pack's behaviour, record
+the gap in the guide and report it to Maik.
 
 ### `.claude/hooks/tests-before-commit.sh` (chmod +x, LF line endings)
 ```bash
@@ -314,7 +320,10 @@ exit 0
 ```
 
 PowerShell variants `tests-before-commit.ps1` and `architecture-check-on-stop.ps1` with identical behaviour, plus a
-note in the guide on how Windows participants point the hook command at them. *Verify on a Windows machine* which
+note in the guide on how Windows participants point the hook command at them. Windows participants need Git for
+Windows (Git Bash), because the `Bash` matcher, the `if` field and the `Bash(...)` permission rules only apply when
+Claude Code runs commands through Bash (decision D9); the setup check and the guide state this prerequisite, and no
+`PowerShell(...)` handlers or rules are added. *Verify on a Windows machine* which
 shell Claude Code uses for hook commands there and document the result.
 
 ### `.githooks/pre-commit` (chmod +x) and activation
@@ -475,13 +484,15 @@ contradicts `CLAUDE.md`.
 1. Create `solution/level-1` with the files above; run its scenarios.
 2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
    contract test with the distributor MCP; run its scenarios.
-3. LSP rehearsal: run the LSP scenarios on macOS, on Linux, and on Windows through WSL against the real repository.
-   Per OS, record the first-index time and whether the Maven multi-module build resolves (references across
-   `bookstore` packages, no false diagnostics). If LSP fails on an OS, stop and ask Maik before writing a workaround.
+3. LSP rehearsal: run the LSP scenarios on macOS against the real repository (decision D8: macOS only for now; the
+   Linux and Windows-through-WSL runs are a manual check for Maik before the workshop). Record the first-index time
+   and whether the Maven multi-module build resolves (references across `bookstore` packages, no false
+   diagnostics). If LSP fails, stop and ask Maik before writing a workaround.
 4. Create `solution/level-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
 5. Create the three `start/level-4-*` branches; rehearse each.
 6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
 
 ## Definition of done
 - All branches exist, verify green on each, every acceptance scenario above checked and recorded.
-- LSP rehearsal recorded for macOS, Linux and Windows through WSL (first-index time, multi-module result).
+- LSP rehearsal recorded for macOS (first-index time, multi-module result); Linux and Windows through WSL listed as a
+  manual check for Maik (decision D8).

@@ -34,6 +34,12 @@ Rule: one PostgreSQL container per test JVM and one Spring context for all books
 - Shared-database residue: `IntegrationTestBase` cleans before each test, never after, so committed rows can be there
   when a JPA slice runs. Slice tests that need exact counts or fixed unique keys run `DatabaseCleaner` in
   `@BeforeEach`; inside the slice's transaction the truncate is rolled back with the test.
+- Stateful singletons (rate limiter, chat memory, scripted doubles) leak across test methods and classes of one
+  cached context. Isolate by test-controlled inputs: a mutable clock bean advanced in `@BeforeEach`, fresh ids per
+  test, a double's `reset()`; raise a limit in a context where it is not under test. Never a production reset method.
+- External API keys: the test profile sets the key property explicitly empty, so `verify` stays offline even when a
+  developer exports the real key (spec 08 strategy, D1). A forked context for an external double is named in the base
+  Javadoc as the one exception.
 - Over budget is an open question for the orchestrator, never a reason to trim tests (standard section 5).
 
 Related: [[archunit-referee-design]], [[strategy-constraints]].

@@ -1,0 +1,1 @@
+org.springframework.boot.EnvironmentPostProcessor=nl.openvalue.bookstore.assistant.AssistantModeConfig
