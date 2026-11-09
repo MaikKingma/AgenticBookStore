@@ -40,7 +40,8 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | PASS r2 | #76 | sdd/11-workshop-guide/T3 | ENDORSE r2 |
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | PASS r2 | #79 | sdd/11-workshop-guide/T4 | ENDORSE r2 |
 | T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | PASS r1 | #83 | sdd/11-workshop-guide/T4a | ENDORSE |
-| T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | verifying | #87 | sdd/11-workshop-guide/T5 | |
+| T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | FAIL r4, human override (A7) | #87 | sdd/11-workshop-guide/T5 | AMEND r4, override: human |
+| T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | pending | | | |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
@@ -179,6 +180,90 @@ From the T4a meta-review (qa-lead ENDORSE r1):
   (whitespace collapsed); a mismatch is a FAIL of the task that added the item, fixed by rewording, not by editing
   the plugin.
 
+From the T5 meta-reviews (AMEND r3, checkpoint manifest review, AMEND r4) and the human decision A7:
+
+- FF-25 (T6 to T11 verifiers, qa-final): rendered cross-check of rules (b) and (c) on the Pages build. N(x) = x with
+  every whitespace character, every backtick and every `|` deleted. (a) For each non-skeleton page of the task, every
+  manifest entry of that page (ENTRIES imported read-only from the frozen `guide/scripts/coverage.mjs`; `pageSnippet`
+  when present): N(snippet) is a substring of N(the article's textContent, hidden tab panels included); for `kind:
+  command`, of N(the textContent of one single `pre`). (b) Every line of every `pre` inside a tab panel whose tab label
+  contains "PowerShell" (the n-th `[role=tabpanel]` of a tabs container belongs to its n-th `[role=tab]`; a line is the
+  textContent of one `.token-line`, or of one newline-split line of a raw `pre`; trimmed, non-empty) is in
+  `packCommandLines` of the five pack files (imported read-only from the frozen `rules/content.mjs`). Quote: entries
+  checked = the page's entry count, missing 0; Windows lines checked M, outside the allow-list 0. An entry the checker
+  counts but the build lacks, or a Windows line outside the allow-list, is a FAIL of the task. Mandatory by hand until
+  T5b merges (A7); afterwards (b) is also enforced by `check:built`.
+- FF-26 (T6 implementer and verifier): the built `<meta name="description">` of every page holds no `{/` or `*/`; a
+  page whose first paragraph would hold a comment gets a `description` frontmatter.
+- FF-27 (T6 to T11 implDirective, checker-safe authoring after the freeze): `Tabs`/`TabItem` tags alone on their
+  lines; a literal tag only in inline code (never `\<` or `{'<...>'}`); no lone backtick in prose (write "the backtick
+  key"); keep every manifest snippet contiguous in the source (FF-28); a checker false positive is a `question`, never
+  a checker edit (FF-19).
+- FF-28 (T6 to T11 implDirective, manifest-forced wording; the manifest is frozen, so fix the page, never the
+  manifest). General: run `npm run check` before removing the marker and copy the `pending entries <page>` ids into the
+  outbox; each entry is met by its exact snippet (`pageSnippet` when present) in the page's Markdown source:
+  case-sensitive, whitespace free, but Markdown inside the snippet breaks it (a link around part of it, emphasis,
+  backticks added or dropped, `<kbd>`, a table cell boundary). `kind: command` entries sit in a fenced block (a tab is
+  fine). Frontmatter, the at a glance box, comments and the "Level cleared when" checklist never count: repeat in the
+  body what the body needs. Per task:
+  - T6: agenda as a pipe table, Time directly before Block, `| 1:55 | Break | 15 | |` with Break unformatted; block
+    names verbatim (IX-01, IX-02, IX-04, IX-06 to IX-10), "240 minutes". Setup: "Use WSL and install as on Linux
+    there." and "Native Windows is not verified yet." in the Windows (WSL) jdtls tab; "Pro/Max/Team/Enterprise";
+    "Level 2 Part A" (a link wraps all four words or none); "JDT LS release"; "Node.js is not needed";
+    `Get-Command jdtls` in a fenced block (the Windows PowerShell tab is fine); no "under a minute". Wrap-up:
+    "Introduction to Model Context Protocol" (the pack's "Introduction to MCP" alone fails) and the other four titles in
+    their case; "context, behaviour, structure, verification"; "the guide stays online"; "revoked tonight"; install
+    lines in fenced blocks; Windows only as stated: `irm https://openspec.dev/cli/install.ps1 | iex` may sit in a
+    Windows PowerShell tab, Spec Kit's Windows form only as the text `--script ps` (a full `specify init ... --script
+    ps` line in a PowerShell tab fails rule c), no PowerShell tab for uv or Agent OS.
+  - T7: L0 task blockquote verbatim; "`Esc` twice" with backticks (no `<kbd>`); the check-question phrases (L0-09 to
+    L0-15) verbatim; `frontend/` in the body. L1: "never double" (no backticks on double); "Read docs/architecture.md
+    before adding or moving classes." (no backticks on the path in that sentence); "schema changes only via a" (then
+    free); "without showing output"; the three `paths: [...]` lines exactly, in inline code or a fenced block;
+    `/compact focus on <topic>` in inline code; "use a subagent to find every place that formats money"; "1M-token
+    window"; "Level 0 task in a fresh session"; "the rule is loaded" (spec 10 wording).
+  - T8: the five prompts verbatim with their backticks (also inside a code block); "Windows: inside WSL";
+    `Executable not found in $PATH: "jdtls"` and `mcp__distributor__*` in inline code; the real `CatalogMcpTools.java`
+    path; "connected with 4 tools"; "two minutes" with "watch the demo" (no "facilitator").
+  - T9: the permissions JSON as its own fenced block equal to WP:239-244 (merged with the hooks into one object it
+    fails L3-02); the hooks fragment as WP:252-258; spec 10 lines 273-295 in one fenced block, unmodified, as the
+    compare-with reference; `git commit -m "test"` and `git commit --no-verify -m "x"` in fenced blocks framed as what to
+    ask Claude to run (in your own terminal `--no-verify` skips the git hook and no deny rule applies); "Any other
+    non-zero exit code would NOT block" (case as written); "Frontmatter: `name`" and "a precise `description`";
+    `` !`git status --short` `` as a double-backtick span; the Stop hook script not printed (M-2 decision), described
+    as optional with a link.
+  - T10: the common start as one body block copied from SDD:95-97 with its comments (`claude # new session`, literal
+    `start/level-4-<track>`), outside the box and the track tabs; the three track branches in the body (track table);
+    every track command in a fenced block in its tab, Track A `/clear` and Track C `/plan` included;
+    `/speckit-checklist` and `/speckit-analyze` as text; the OpenSpec path with its `.../spec.md`; "Use the existing
+    onion layers, see docs/architecture.md and the constitution." without backticks; briefs verbatim with their
+    backticks (bold route labels may stay); the FB:41 hint verbatim and nothing else of FB:40-45; "built from
+    `solution/level-3`".
+  - T11: cheat sheet tokens contiguous ("`Esc` twice", "openspec validate --strict", `/compact focus on <topic>` in
+    inline code); troubleshooting "Git for Windows (Git Bash) or WSL2", "Agent OS needs bash (WSL or Git Bash)",
+    "switch to that key"; the STDIO fallback commands with `<absolute path>` in fenced blocks; the bare
+    `ANTHROPIC_API_KEY` only in prose.
+- FF-29 (T6 to T11 verifiers, manifest items): (a) quote `ok coverage (anchored 304/304, 15 manual rows, N entries
+  pending)` with N = 251, 195, 167, 133, 68, 0 after T6, T7, T8, T9, T10, T11, and no pending line for the task's
+  pages. (b) For each pinned short snippet on the task's pages, the page line where it sits in its pack step. (c) Tick
+  the task's manual rows with page lines: T6 WP:56, WP:329, S11:34; T7 WP:117-119, 162-166, 111-113, 140-147; T8
+  WP:218-221, 191-194; T9 WP:287-290, the Stop hook row (labelled S10:273-295, item S10:297-314: absent per M-2) and the
+  prose checkpoints row (labelled S10:402-404, item S10:410-417); T10 WP:317-321; T11 S11:38 and AR. (d) Semantic items
+  the manifest leaves out: T7 the Level 0 start premise "No `CLAUDE.md`, no `.claude/`, no MCP" (WP:89) and the money
+  question with "(`double` is a finding.)" (WP:108), present or omitted with a stated reason; T9 the stretch subagent's
+  "Bash only for `git diff` and `git status`" (WP:285); T10 the WP:303-307 table with its Weight column, and FB:42-45
+  absent ("great debrief story", "verified buyer", "scenario-to-test mapping"). (e) C0-13 facilitator-range greps use
+  facilitator-only phrases, never a manifest snippet: WP:334-347 e.g. "spare Max account", "Console spend limit", "MCP
+  spec 2026-07-28"; FB:40-45 as in (d). (f) T11 AR counted trace: 8 package rows (AS:32-41), the nine dependency rules
+  (AS:45-55, rule 9 the process exception), 7 suffix rows (AS:65-73), the onion text block (AS:19-30),
+  `ArchitectureTest` as the referee (AS:158): each present or omitted with a reason; no "exactly these packages" or
+  enforced-package-list claim.
+- FF-30 (T6 to T11 implDirective, extends FF-27; the A7 authoring rules): (a) an inline code span never runs over a
+  line break (any page); (b) never start a non-table line with `|`, and a table always has a delimiter row; (c) in a
+  Windows PowerShell tab use a fence or a plain `<pre>`, never `<pre><code>` or an expression inside `<pre>`; (d) no
+  lone backtick in prose.
+- Merge order (A7): no content task (T6 to T11) PR merges before T5b has merged.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -217,3 +302,39 @@ From the T4a meta-review (qa-lead ENDORSE r1):
   elements from a checkbox label is accepted without a fix: no checklist item in the pack contains an HTML or JSX
   element, every level-page checklist item must equal a pack bullet, and FF-24 bars JSX in task items and checks
   label-equals-visible-text on every page. Consequence: none for the pages; the plugin stays as gated.
+- A7 (2026-11-09, human decision relayed by the main session, options (b) plus (e) of the T5 needs-decision): T5
+  failed its final verification (r4) after the escalated round; the QA lead upheld the FAIL (AMEND r4). The human
+  overrides it: T5 merges with the r4 verifier hash file as the C0-12 freeze baseline (44 files under
+  `guide/scripts/**`, copied into this folder as `t5-freeze-baseline-hashes.txt`; verify with `shasum -a 256 -c` from
+  the repo root). T5b may change only the files its card names. Recorded temporary risk: "a multi-line inline code span holding a literal `</TabItem>` or
+  `{/*`, and the paragraph-continuation cases from T5 r4 (OA1c, OA8c, OA3c, OA5c, OA4c, OA6c, OA6b, OA7c, OA1b, OA1b2,
+  OA1b-f), are not caught by the source checker". Also open: RA-I (a `<pre>` line in a Windows tab that is part of a
+  pack line or contains one is not pinned by a test; the code is correct today, the freeze hashes detect any change).
+  Guards: (1) the authoring rules FF-27 and FF-30 in every content-task directive (no inline code span over a line
+  break, no stray `|` lines, plain fences or `<pre>` in PowerShell tabs); (2) every content verifier checks the built
+  pages by hand (FF-25) until T5b merges; (3) new task T5b (A8) enforces the Windows-line rule on built output in CI.
+  CONDITION: T5b merges into the spec branch before ANY content task (T6 to T11) PR merges; content implementation and
+  verification may run before, but no content task merges first. The MDX parser option (c) stays a logged follow-up for
+  Maik.
+- A8 (2026-11-09, same decision): new task T5b (critical; opus implementation, opus QA, QA lead review; module guide;
+  depends on T5). Card:
+  - fileScope: `guide/scripts/**` (new rule and test files; the T4a files `rules/built.mjs`, `check-built.mjs`,
+    `lib/html.mjs` may change to wire the rule in). The existing tests of T1, T3, T4 and T4a stay untouched and green;
+    T5's frozen source-checker files (r4 baseline) and the manifest stay byte-identical.
+  - AC1: `npm run check:built` checks every line of every `pre` or `code` element inside a tab panel of the built Pages
+    HTML whose tab label contains "PowerShell" (the n-th tab panel of a tabs container belongs to its n-th tab; a line
+    is one `.token-line` or one newline-split line of a raw `pre`, trimmed, non-empty) against the pack command list
+    (`packCommandLines` of the five pack files, imported read-only from `rules/content.mjs`), and fails on any line not
+    in the list, naming file, tab and line.
+  - AC2: self-tests use built HTML fixtures (minified, unquoted attributes, as Docusaurus emits them) and cover the 11
+    T5 r4 cases as built output (each must fail), plus a hidden panel, nested tabs, a `pre` holding a pack line (passes),
+    a raw `<pre>` (each line checked), and a non-PowerShell tab (not checked).
+  - AC3: on the real guide build the rule passes and prints the number of Windows lines checked; a strip probe on a copy
+    of the real build with one invented line fails.
+  - AC4: CI runs it on every PR through the existing `npm run check:built` step (no workflow change).
+  - AC5: no new dependency; `package.json` and the lockfile unchanged; no product file outside `guide/scripts/**`.
+
+## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
+
+T9 does not print the optional Stop hook script; it describes the Stop hook as optional and links `solution/level-3`.
+T9's AC2 (quoted script lines anchored by manifest entries) then holds for the printed bash hook script only.
