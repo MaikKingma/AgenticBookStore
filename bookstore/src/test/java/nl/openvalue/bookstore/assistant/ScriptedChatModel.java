@@ -56,6 +56,14 @@ public class ScriptedChatModel implements ChatModel {
         return this;
     }
 
+    /** Next step: fail with this exception, as a live model call fails. The prompt is still recorded. */
+    public ScriptedChatModel thenFail(RuntimeException failure) {
+        steps.add(prompt -> {
+            throw failure;
+        });
+        return this;
+    }
+
     /** The prompts received so far, oldest first. */
     public List<ReceivedPrompt> received() {
         return List.copyOf(received);
