@@ -36,6 +36,9 @@ metadata:
 - A checker rule that describes the whole guide (page set, plan comparison) cannot run in `runChecks(root)` by default:
   older tests build minimal temp trees and may only gain lines. Gate it behind an option and set it in `main()` for the
   default root (`--structure` for explicit roots); test it through `runChecks(root, {structure: true, workshopDir})`.
+- A "no body H1" rule must cover every form Markdown renders as the page H1: ATX with 0 to 3 spaces of indent and setext
+  (`Foo` over `===`), not only `# ` at column 0; fenced lines and 4-space indent stay code. Likewise a box parser that keeps
+  only the last fenced block per entry hides a second one: keep all of them and count.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).

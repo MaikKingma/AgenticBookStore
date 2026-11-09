@@ -37,4 +37,17 @@ Rule: re-verify a pinned table with generated per-line removal probes plus a "lo
 **How to apply:** also mutate entries' fg/bg/kind (not only remove them): non-pinned entries survive content edits, report that as an observation. After a probe run `diff -r` against the snapshot can show `Only in ...: components`: the runner's `mkdirSync` leaves an empty dir after the file is removed, `rmdir` it, re-check, then run the final gates.
 - Regex block-comment stripping (`/\/\*[\s\S]*?\*\//`) over a test file undercounts when a string literal holds `/*` (a title `scripts/**` swallows tests up to the next `*/`): compare the guard's count with a naive line count per file. Direction is safe (never a vacuous pass) but the printed "N test cases" is only a lower bound.
 
+Rule: for a Markdown/MDX structure checker, probe the syntax variants the renderer accepts, then confirm survivors in the built HTML.
+
+**Why:** a rule written for the common form misses equivalent forms that render the same. A column-0 `^#` H1 rule passed `   # Foo` and setext `Foo` / `===`, and Docusaurus then made "Foo" the page `<h1>` in place of the frontmatter title. A box parser that attached "any fenced block to the current label" accepted a bogus extra catch-up block, which rendered.
+**How to apply:**
+- Witness set: ATX with 1 to 3 leading spaces, setext `===`, four-colon `::::type Title`, a second fenced block per label, a fence under a label that should have none, text after a label that should be bare, CRLF, the marker inside a fence. Check each survivor in a probe build (`docusaurus build --out-dir <SP dir>`) before calling it a defect: `check:built` caught the four-colon form, so that one was covered by the gate chain.
+- Declarative tables (anchor ids, header values): one removal mutant per entry. The value edits died against an independent fixture copy, but the anchor-id removals mostly survived, because fixtures that contain every anchor never show a missing requirement.
+- Explicit heading ids: when the auto slug equals the id (`## Stretch {/* #stretch */}`), removing the id keeps a link-probe build green. A build-level "remove one anchor" probe needs an id whose slug differs (`I am far behind` -> `#far-behind`).
+- The offline config (hash router) renders no route at build time. A component that throws on bad props, and a broken anchor, both pass `build:offline`. Only the Pages build guards them.
+- Built HTML is minified (`aria-current=step` without quotes), and Prism splits code into token spans, so grep for a word, not a whole command line.
+- Never run `npm --prefix guide exec -- node ...`: npm resolves `node` as a registry package (it fetched node@27 alpha) and runs 0 tests. Run node from a script that `cd`s into guide/.
+- Summaries: `grep ... | paste - -` pairs each result with the NEXT probe header. Have the runner print `id exit` on one line instead.
+- On `file://`, axe injection triggers Docusaurus preload console errors in Chromium and WebKit. Tag console messages with the current step and replay fresh loads and a real hover and click before blaming the app.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
