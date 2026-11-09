@@ -55,7 +55,7 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      assertion, not only fixtures whose test title claims an order (spec 12 T5 lost two rework rounds to that).
      Name more witnesses at strategy time (spec 12 T6 lost a round): a displayed enum needs a value with an underscore
      (`SCIENCE_FICTION`) or humanising survives; an unknown route needs a valid id after an unknown first segment
-     (`#/basket/x`); a decode needs a double-escape (`%2541`); a stale-answer guard needs a late success AND a late failure.
+     (`#/basket/x`); a decode needs a double-escape (`%2541`); a stale-answer guard needs a late success AND a late failure; a single-flight ref guard needs a next send after EACH answer kind, or a reset dropped from one branch survives (fix-12 T2 lost a round).
      Heterogeneous objects (unknown-shape details) are swept by flat value, reverse and entry order; a per-key sort over
      objects lacking the key is no order mutant.
      A trailing-zero money witness ("12.50", "10.00") goes on EVERY site a price string passes through (display and the
