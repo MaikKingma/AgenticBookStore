@@ -2,7 +2,7 @@
 bug: fix-06-distributor-review
 severity: S3
 path: lite
-status: open
+status: fixed
 closes: [spec 06 review finding: ean not compared with the requested ISBN, finding: cause dropped, finding: CR/LF in logged distributor values]
 ---
 # Bug: a distributor answer for another title is imported under the requested ISBN
@@ -30,7 +30,8 @@ closes: [spec 06 review finding: ean not compared with the requested ISBN, findi
 - Status: reproduced
 - Recipe:
   1. On `factory` b12443f run
-     `./mvnw -pl bookstore -am test -Dtest=DistributorImportIntegrationTest#importWithAPriceAboveTheRecommendedOneAndAHyphenatedIsbnStoresTheOverrideAndTheNormalisedRequestIsbn+CatalogueFlowTest#importsATitleWithTheRecommendedPriceBuiltFromTheRequestedIsbn -Dsurefire.failIfNoSpecifiedTests=false`.
+     `./mvnw -pl bookstore -am test -Dtest='DistributorImportIntegrationTest#importWithAPriceAboveTheRecommendedOneAndAHyphenatedIsbnStoresTheOverrideAndTheNormalisedRequestIsbn,CatalogueFlowTest#importsATitleWithTheRecommendedPriceBuiltFromTheRequestedIsbn' -Dsurefire.failIfNoSpecifiedTests=false`
+     (a comma between classes; qa-final found that the `+` form first recorded here runs only one of the two tests).
   2. Both pass. The first stubs the port to answer a request for 9780141439518 with a title whose isbn is
      9789900010050 ("The Last Man", 1826, SCIENCE_FICTION) and asserts that 9780141439518 is stored as "The Last Man".
      The second does the same at the flow layer.

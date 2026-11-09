@@ -1,12 +1,13 @@
 ---
 spec: fix-06-distributor-review
 source: docs/spec-pack/specs/06-distributor-acl.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-09T03:14:15Z
 origin: spec 06 review (main session), defect confirmed at 824af83 with the decision on the behaviour, plus two review findings in the same adapter
 gate1: 2026-11-09T03:18:09Z
 qa-lead: on
+gate2: 2026-11-09T05:32:23Z
 base: factory
 branch: sdd/fix-06-distributor-review/spec
 module-vocabulary: [root, bookstore, distributor]
@@ -376,4 +377,16 @@ pre-existing test line deleted.
   `title-9789900010050.json`. They are green on the current code (the T1 fix is merged) and pin the T1 criterion; the
   T3 verifier runs `isbn.startsWith(title.ean())` and `isbn.endsWith(title.ean())` (and the rest of the FF4 operator
   family) against `toTitleDTO` as must-fail probes. T3's fileScope is unchanged. Consequence: none on production;
-  the T1 test grows from eight to ten cases. Gate 1 re-run self-accepted.
+  the T1 test grows from eight to ten cases. Gate 1 re-run self-accepted. (The implementer inserted the two rows
+  before the last two rows instead of appending, to keep 0 deletions; verifier and QA lead accepted it.)
+
+## Final sweep and Gate 2
+
+- qa-final (opus): PASS over `origin/factory...origin/sdd/fix-06-distributor-review/spec` at 71d40ed (referee 972 +
+  190, 0 failures, 16.6 s; the reproduction no longer reproduces; branch-level negative controls exact; real-ACL
+  end-to-end scratch 202 on factory, 503 on each single fix). QA lead final review: ENDORSE, Gate 2 confidence high.
+- Gate 2 self-accepted by the orchestrator (Maik delegated gates): every task PR merged (#90, #93, #95), no
+  stragglers, the diff is confined to the task file scopes, their tests, this spec folder and agent memory.
+- Follow-ups for the owner (not blockers): the FF5 test-only rows (ISO-control boundaries, `details()` stays empty;
+  scratch sources from qa-final), a committed real-ACL HTTP import test, the D7 restock `ean` echo, the D7 deferred list
+  of the brief, and the bug.md §Prevention items.
