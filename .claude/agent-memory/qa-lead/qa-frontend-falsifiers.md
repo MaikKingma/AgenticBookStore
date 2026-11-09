@@ -25,7 +25,7 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
 - Callbacks that decide on the rendered state and then dispatch to a reducer that re-decides need two actions inside one `act` (a line at 9 plus two adds; 19 lines plus two new books; two adds both counted), or the reducer's refusal branch is dead to the tests. A corrupt-storage list needs `null` alone and between valid lines.
 - A browser mirror of a server length cap on an untrimmed field needs boundary rows with edge whitespace on each side (`'a'.repeat(1000) + ' '`, `' ' + 'a'.repeat(1000)`, and 999 plus a space enabled) and one astral character (`String.fromCodePoint(0x1f4d6)`, length 2) at cap and cap + 1, or trimmed-length, one-sided trim and code-point counters survive (spec 12 T9 lost a round).
 - A list keyed by index needs two identical entries under the console trap, or `key={text}` survives (T8 A-key, T9 F2).
-- "Show our own text, not the server's" is untestable with the realistic fixture when the server sends that same text (the bookstore's `assistant-unavailable` detail IS the spec 12 text): the fixture detail and title must differ from the page text, or rendering `problem.detail` survives (fix-08 T2).
+- "Show our own text, not the server's" is untestable with the realistic fixture when the server sends that same text (the bookstore's `assistant-unavailable` detail IS the spec 12 text): the fixture detail and title must differ from the page text, and the `details` list must be non-empty, or rendering `problem.detail` or keeping `details: problem.details` survives (fix-08 T2 lost a round on the list).
 
 ## Contrast and style-guard tests
 
