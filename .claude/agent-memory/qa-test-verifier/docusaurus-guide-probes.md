@@ -57,4 +57,14 @@ Rule: on a re-verification, prove carry-forward by tree ids and extracted artifa
 **Why:** two CI runs over byte-identical inputs give the offline zip a different `digest` (zip timestamps), so the digest alone suggests a change that is not there.
 **How to apply:** `git rev-parse <r1>:guide/docs` against `HEAD:guide/docs` (and src, static) for rendered inputs; `gh run download <id> -n <name> -D <fresh dir>` for each run, `unzip` each into its own fresh dir, then `diff -rq` the two trees. Re-adapt mutant strings that the rework changed before re-running a mutant file (a stale `from` string shows as SETUP ERROR, not as a kill).
 
+Rule: for a rehype/remark plugin or built-HTML guard, probe through the real pipeline in a scratch copy, and keep controls structural.
+
+**Why:** hast fixtures are hand-built, so they cannot show what MDX really emits. A probe page showed `<kbd>Ctrl</kbd>` (an `mdxJsxTextElement`, no `element` type) is invisible to a text walk over `type === 'element'` nodes, while a nested ordered list and a loose item were handled. Unit mutants never see that.
+**How to apply:**
+- Scratch copy: `rsync -a --exclude node_modules --exclude build --exclude build-offline --exclude .docusaurus guide <dir>/`, symlink `node_modules`, drop in an extra docs page, build with `docusaurus build`, read attributes back with `grep -o`. A probe image needs a remote URL (a missing local file fails the build).
+- Negative controls as copies: delete the registration line (Pages and offline), and for "offline inherits via spread" clone the presets in a copy of the offline config with the plugin list emptied. Run the same rendered script in modes real/neg/negoffline so the violations appear only where intended.
+- Console: tag messages by phase (load, DOM reads, axe). axe on `file://` makes Chromium and WebKit log XHR/CORS errors in the axe phase only, and the WebKit offline XHR pair at load (about 200 per page) is identical in the no-plugin control, so compare with the control, not with zero.
+- Equivalent survivors seen for a text-walk plugin: `find(isCheckbox)` vs first child, and counting a closing `</input>` tag. A real survivor class: branches only reachable by `ol` or by an unreferenced default path (`check-built` default dir).
+- Entity-encoded blank names (`aria-label="&#32;"`) pass a scanner that does not decode entities; report as a documented limit, not a defect, when the card's wording is "non-empty".
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

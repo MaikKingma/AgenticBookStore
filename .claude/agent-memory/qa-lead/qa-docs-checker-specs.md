@@ -51,5 +51,11 @@ contrast), the checker is production code AND the oracle for every later task. T
     framework violation an owning task (a local rehype plugin needs no dependency, but sits in the config, outside
     content and checker scopes). Line-level H1 rules miss JSX `<h1>` and H1s nested in a blockquote or list: pair
     them with a rendered `h1` count per page.
+13. **Rehype label plugins and built-HTML guards** (spec 11 T4a): a text walk over `element` nodes drops the text
+    of inline MDX JSX (`mdxJsxTextElement`); name the witness at strategy time (`<kbd>` in an item) or judge the gap
+    on reachability through other frozen rules (checklists pinned to pack text). A built-HTML guard passes
+    vacuously with zero matches and a wrong default dir; when earlier CLI tests and `package.json` are pinned, an
+    in-checker floor breaks them, so require a quoted exact tail line (`N html files, M checkboxes`) in every later
+    verifier instead.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).
