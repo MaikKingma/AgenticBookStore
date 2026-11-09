@@ -178,8 +178,43 @@ for all three tracks is a manual check for Maik.
 
 ## QA feed-forward
 
-(none yet)
+- FF-T1-a (from T1; impl and QA directives of every task with a bash script or test harness, starting with T8):
+  failure-injection tests up front (a shim first on PATH failing one exact call; one test per "could not X" branch
+  asserting that message present and the success message absent); mode-only and content-only changes as separate
+  rows; a shim pattern never catches a cleanup call another assertion of the same run checks; run the harness on
+  bash 5 and on macOS `/bin/bash` 3.2 (`env PATH=/bin:/usr/bin:/usr/sbin:/sbin /bin/bash`) and quote both; an
+  "equivalent mutant" claim needs an input run on original and mutant, never an argument.
+- FF-T1-b (from T1; QA directives of all remaining tasks): a survivor that twins an already killed class (same
+  reachability, same harm) is in scope and can FAIL; a survivor reachable only in an abnormal environment (closed or
+  failing descriptors, concurrent writers, double faults) with harm outside the criterion's protected property is info
+  plus a follow-up; verbatim pack code (T8 hooks, T7 skill files) is never a rework target, a defect there is a
+  product finding for the orchestrator.
+- FF-T1-c (from T1; every rework round): re-mutate only the production lines the round changed; earlier results for
+  unchanged lines carry over when production is hash-equal to the last baseline, the test diff is insertion-only
+  (proved by deleting the added lines from a copy and comparing with the earlier original) and the earlier logs are on
+  disk; re-run the batch whose killing cases gained assertions; an escalated round gets a closed Required Actions list
+  and named FAIL bounds.
+- Follow-ups from T1 for qa-final: FU-T1-1 (closed-stderr test of the three exit handlers; qa-final greps that each
+  keeps `set +e`); F13 (README cut-procedure prose carries no push line, reading check); J12/F14 (backup removed on an
+  incomplete rollback: residual for Maik).
 
 ## Amendments
 
-(none)
+- A1 (2026-11-09, orchestrator, from Maik's decision D9 on factory f5a0e17, merged into the spec branch as 726adf4):
+  T7's `.claude/settings.json` follows the updated pack block, so the commit hook handler carries
+  `"onFailure": "block"`. T7 verifies at build time that the field exists in the hooks schema of the Claude Code
+  version in use (2.1.319 here; docs and a headless probe under HR1); if it does not, the pack's earlier block is
+  staged without it, the gap is recorded in `S/records/level-3.md` as a note for the guide and reported.
+  T8's Windows note states that Windows participants need Git for Windows (Git Bash) and that no `PowerShell(...)`
+  handlers or rules are added; the `.ps1` variants stay as the pack says. T10 adds one probe: a hook that times out
+  blocks the commit (only if the field exists). Gate 1 re-run and self-accepted: consequences are confined to T7, T8
+  and T10 text, no new task.
+- HR1 (2026-11-09, coordinator): no probe, scenario run or rehearsal changes anything outside the worktree and the
+  session scratchpad; every headless `claude` and framework tool runs with an isolated `HOME` and XDG dirs under the
+  scratchpad; every `mktemp` call (scripts, tests, README recipes, verifier runs) uses an explicit template under
+  `$TMPDIR` or the scratchpad; every `./mvnw` run sets `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>` (the macOS
+  JVM ignores TMPDIR); sandboxes use free ports; J10 allows sandbox Maven builds to read the shared `~/.m2` cache and Docker.
+- HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
+  T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
+  plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
+  turns that scenario into a manual check.
