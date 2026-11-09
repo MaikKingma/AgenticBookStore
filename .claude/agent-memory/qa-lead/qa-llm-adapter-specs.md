@@ -1,6 +1,6 @@
 ---
 name: qa-llm-adapter-specs
-description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes, EPP pipeline order; read before the strategy of any model or tool-calling spec
+description: QA strategy traps for specs that add an LLM adapter (Spring AI ChatClient, tools, chat memory, offline mode, shared API key, rate limit, JS client length limits); keyed referee, environment-reading unit tests, framework-default-equivalent mutants, network-safe probes, EPP pipeline order, catch-all tool error helpers (NPE kills, parser catch behind a guard); read before the strategy of any model or tool-calling spec
 metadata:
   type: feedback
 ---
@@ -59,6 +59,17 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     property source sits after every `application*.yml` config source (index comparison, with non-vacuity on both
     names). Put it in the strategy's falsifier list for the EPP task.
     The key blank guard (`isBlank`) needs the U+2003 witness too, like every other blank guard.
+
+12. **Tool adapters with a catch-all error helper.** Two blind spots recur:
+    - A mutant (a cap of 11, an eager lookup) can be "killed" only because an unstubbed mock returns null, the
+      resulting NPE becomes the generic text, and that text fails the test. The kill is real but fragile. Demand
+      lenient stubs on the boundary row so the asserting line kills it.
+    - A parse guard in front of a library parser (`length != 36` before `UUID.fromString`) hides the parser's catch.
+      Every row fails the guard first, so no row enters the catch. Ask for a row that passes the guard and fails the
+      parser (36 characters, not hex).
+    For rejections, an empty `details` list is the natural default and lets a defensive filter survive. Ask for a
+    non-empty foreign-key witness at strategy time. Before accepting an "unreachable" claim, read the flow methods the
+    tool actually calls, not the whole flow class (spec 08 T2).
 
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is

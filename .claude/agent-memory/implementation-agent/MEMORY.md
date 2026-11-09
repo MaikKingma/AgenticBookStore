@@ -13,3 +13,4 @@
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
 - [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
+- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse
