@@ -17,6 +17,13 @@ Rule: run every probe as `./mvnw -B -ntp -pl bookstore clean test -Dtest=<Class>
 - Compose activity in tests should be 0 lines ("Using Docker Compose file"), because Boot skips Compose in tests by default.
 - Web-slice advice probes: a sort "by A then B" needs its own tiebreak probe (drop only `thenComparing`). A test whose input already arrives in B order lets the field-only sort survive; prove the fix with a temporary witness class (fails on the mutant, passes on real code), then rm it under the snapshot rule.
 - Advice handlers: besides status, title, code, probe each handler's `details` argument separately (pass `List.of()` instead of `exception.details()`). Tests that only throw exceptions with empty details let that survive for the 404 and 409 handlers; the witness is a temporary web-slice test that builds the exception with the four-argument constructor (details non-empty) and asserts `$.details[0]...`; run it on real code, on each mutant, then `rm`.
+- Forwarding handlers (`return exception.getBody()` for an `ErrorResponseException`, a details list built from a nested
+  exception's message that names a configured limit): slice tests run with the production defaults, and the unit test
+  of the producer stops at the exception, so a handler that hard-codes the default text survives everything. Probe it
+  (`ProblemDetail.forStatusAndDetail(<status>, "<default text>")`); the witness passes a non-default exception through
+  the handler (direct call or standalone MockMvc with the advice).
+- Nested `@WebMvcTest` classes: Surefire puts their testcases in the outer class's XML and the summary names only the
+  outer helper (`AssistantCommandsTest.problem:549`); take method names from the `<<< FAILURE!` lines of the log.
 - Handler pass-through fix tasks enumerate handlers by the plan's list; count the DISTINCT codes the tests feed each handler yourself, including the sibling 503 (`UnavailableException`) handlers. Probe each with its code and title hard-coded (title-only variant too, to prove `$.title` is load-bearing); a handler fed one code only survives.
 - The Edit tool strips trailing whitespace from `new_string`: a probe that ends in a space (`String.join(", ", ` to `String.join(",", `) silently changes the text. Include a non-space tail in old and new strings, and re-`shasum` after every restore.
 - `rg` works in the Bash tool but not inside scripts run with `bash <file>` (command not found; it is a zsh function around the Claude binary). In a script define `rg() { ( exec -a rg "${CLAUDE_CODE_EXECPATH:-$HOME/.local/bin/claude}" "$@" ); }` and print `rg --version` as proof.
