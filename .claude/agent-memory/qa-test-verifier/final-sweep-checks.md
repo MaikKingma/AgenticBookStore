@@ -29,4 +29,8 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 - "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
 - Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a recipe; use a comma between classes.
 - Per-task hash baselines into one integrity check: a python script reads the gate files in task order, keeps only `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>` extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
-Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]
+- Warning inventory against a reference referee log: per module section grep both logs, normalize timestamps, PIDs, thread names (`[...-exec-N]`), `Time elapsed: X s` and logback `HH:MM:SS,mmm` prefixes, sort, `diff`. Without the thread and elapsed-time filters every run differs.
+- PR body "ASCII only" checks: the prescribed attribution footer carries U+1F916. `rg -n '[^\x00-\x7F]'` on the saved body shows it; report it as the footer, not as prose, and let the lead rule.
+- Jars from `spring-boot:repackage` carry the reproducible 1980 mtime: cite the `Building jar` log line of the run that built them, never `stat`.
+- A directive that says a mutated control "fails at check X" is about order: the driver's first FAIL can be an earlier witness (a log check) for the same cause. Quote the first FAIL and the X lines both.
+Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[readme-and-live-jar-probes]]
