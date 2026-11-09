@@ -31,7 +31,7 @@ gate and green checks.
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | #81 | sdd/12-storefront/T5 | PASS r3 | ENDORSE |
 | T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | #85 | sdd/12-storefront/T6 | PASS r2 | ENDORSE |
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | #88 | sdd/12-storefront/T7 | PASS r2 | ENDORSE |
-| T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | | | | |
+| T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | #92 | sdd/12-storefront/T8 | PASS r1 | ENDORSE |
 | T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | | | | |
 | T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | | | | |
 
@@ -125,6 +125,17 @@ Never fable.
   event handler; checkout calls `clear()` once after the 202. After the 202 the key is null, the header badge shows "0"
   and the order page shows; on 409 the stored basket text is unchanged; error helpers live in T8's own files. T9 adds
   one constant to limits.ts with no removed line. T10: badge updates without reload, basket survives a reload.
+- FF-T8 (qa-lead, T8 r1; applies to T9, T10 and qa-final; full text QA ledger "FF-T8" 1 to 7): Vitest baseline 19
+  files, 549 tests (547 passed + 2 expected fail). T8 files frozen except App.tsx, App.test.tsx, global.css (T9);
+  ProblemDetailAlert.tsx and its test unchanged; T9 removes the last `PagePending` (grep empty after T9). T9 chat form:
+  `defaultPrevented` `[true]` from a document listener (probes: removal, late `setTimeout` cancel); pending guard proven
+  by `fireEvent.submit` past the disabled button (one POST) and by the disabled state, as two separate must-fail
+  probes; after a failure the input keeps its text and the button is enabled again; the alert clears when the next send
+  starts. Fixture tables also cover values the page derives and displays (counters, formatted text) in text and number
+  order. T9 and T10 verifiers report each strategy.md decision their files implement as met (file:line) or a disclosed
+  deviation. T10 walk-through: at 390 px the order page has `scrollWidth <= 390` while `.table-scroll` scrolls; the
+  placed time equals `placedAt` cut to `YYYY-MM-DD HH:MM:SS UTC`; the shortage alert uses basket titles; after checkout
+  the badge reads 0 and `openbook.basket` is null.
 
 ## Amendments
 
@@ -188,6 +199,16 @@ Never fable.
   `b6ac2e72aa9032f8299a3e92882f97831b8946e229e67d9a286102ad9c55ac2c` (comment-only change; FF-T2's P10, P10c, P11
   trigger applies to code edits of setupTests.ts only). T8's fileScope gains `frontend/src/state/basket.test.tsx` for
   one insertion-only `['null', null]` row in the mixed-list table (closes survivor N-P9i3). Gate re-run self-accepted.
+- A9 (2026-11-09, orchestrator, on the QA lead's T8 r1 recommendation): accepted T8 implementer decisions inside the
+  card: instants shown as `2026-06-15 10:00:00 UTC` from the string (fraction dropped, non-instants shown as sent);
+  e-mail inputs are `type="text"` with `inputMode="email"` so the address is sent exactly as typed; the orders list
+  shows a fixed EUR (OrderSummaryView has no currency, spec 02 money is EUR); the estimated total uses the first line's
+  currency; a blank e-mail is sent and the server's answer shown; `ProblemDetailAlert` gains an optional `titleOf`
+  prop (id fallback, index keys kept). F1: strategy decision 10's `<time dateTime>` wrapper is struck; plain-text
+  instants are accepted (the pack spec does not ask for `<time>`; cheap to add later). The T8 card's
+  `navigate('/orders/' + id)` reads `+ encodeURIComponent(id)`. Residual R15 (a 202 that arrives after the visitor left
+  the checkout still clears the basket, and re-opening the checkout while a request is in flight allows a second
+  order) goes to Gate 2 as a follow-up. Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 
