@@ -8,8 +8,13 @@ import {asciiErrors, labErrors, dependencyErrors} from './rules/hygiene.mjs';
 import {testGlobs, countTestCases, zeroTestErrors} from './rules/zero-tests.mjs';
 import {cssColorErrors, styleColorErrors} from './rules/colors.mjs';
 import {siteRules} from './lib/site.mjs';
+import {structureRules} from './lib/structure.mjs';
+import {SKELETON_MARKER} from './rules/structure.mjs';
 
-const SKELETON_MARKER = '{/* guide-skeleton */}';
+// The pack folder that holds the workshop plan and the SDD framework guide, found
+// relative to this file so the checker passes from any working directory. guide/ lives
+// on the factory branch, where the pack exists.
+const WORKSHOP_DIR = fileURLToPath(new URL('../../docs/spec-pack/workshop/', import.meta.url));
 const LOCKFILE = 'package-lock.json';
 const CUSTOM_CSS = 'src/css/custom.css';
 
@@ -51,8 +56,11 @@ function zeroTestRule(root) {
 }
 
 // Runs every source rule against the tree under root. Returns the report lines and
-// the flat error list; the caller decides the exit code.
-export function runChecks(root) {
+// the flat error list; the caller decides the exit code. The structure rules (the eleven
+// pages, the level page grammar, the checklists against the workshop plan) describe the
+// real guide, so they run only when options.structure is set; the command line sets it
+// for the default root. options.workshopDir overrides the pack folder (self-tests).
+export function runChecks(root, options = {}) {
   const files = collectTextFiles(root);
   const lines = [];
   const errors = [];
@@ -105,6 +113,11 @@ export function runChecks(root) {
   report('brand', site.brand.errors, 0, site.brand.summary);
   report('fonts', site.fonts.errors, 0, site.fonts.summary);
 
+  if (options.structure) {
+    const structure = structureRules(root, options.workshopDir ?? WORKSHOP_DIR);
+    report('structure', structure.errors, 0, structure.summary);
+  }
+
   const pending = files
     .filter(({file, text}) => file.startsWith('docs/') && text.includes(SKELETON_MARKER))
     .map(({file}) => file);
@@ -114,9 +127,15 @@ export function runChecks(root) {
   return {lines, errors};
 }
 
+// Usage: node scripts/check.mjs [guide-root] [--structure]. Without a root the real guide
+// is checked, structure rules included. With a root (the self-tests build scratch trees),
+// the structure rules run only when --structure is given.
 function main() {
-  const root = process.argv[2] ?? fileURLToPath(new URL('..', import.meta.url));
-  const {lines, errors} = runChecks(root);
+  const args = process.argv.slice(2);
+  const positional = args.filter((arg) => !arg.startsWith('--'));
+  const root = positional[0] ?? fileURLToPath(new URL('..', import.meta.url));
+  const structure = positional.length === 0 || args.includes('--structure');
+  const {lines, errors} = runChecks(root, {structure});
   for (const line of lines) console.log(line);
   for (const error of errors) console.error(error);
   if (errors.length > 0) {

@@ -45,5 +45,11 @@ contrast), the checker is production code AND the oracle for every later task. T
     links and crashing pages), so only the browser build is evidence; a missing `.md` link failing the hash build too
     proves `markdown.hooks.onBrokenMarkdownLinks: 'throw'` survived a config spread. Pointer: res-1 report copied
     into the spec 11 folder.
+12. **Docusaurus markup traps for a page grammar**: `{#id}` heading ids do not compile under `future.v4` (use
+    `{/* #id */}`, spec 11 plan.md A3); `- [ ]` task lists render bare disabled checkboxes that fail axe `label`
+    (critical). At strategy time say whether "axe" means color-contrast only or the full ruleset, and give every
+    framework violation an owning task (a local rehype plugin needs no dependency, but sits in the config, outside
+    content and checker scopes). Line-level H1 rules miss JSX `<h1>` and H1s nested in a blockquote or list: pair
+    them with a rendered `h1` count per page.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).
