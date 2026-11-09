@@ -6,7 +6,7 @@ Research reports (cycle comms, passed to agents by path):
   defaults; ids are app-generated UUIDs; `version` NOT NULL; genre and status stored as enum names; restore rules
   (ISBN-13 checksum, price in (0, 500], publication year 1450 to next year, 1 to 5 authors, on hand at least reserved,
   1 to 20 lines of quantity 1 to 10, lower-case e-mails); every book needs a stock row; low stock means
-  `on_hand - reserved <= reorder_level`; `GET /books` returns up to 100 books ordered by title and ISBN; the 20 shared
+  `on_hand - reserved <= reorder_level`; `GET /books` returns up to 100 books ordered by title and ISBN (200 after T7, decision D12); the 20 shared
   titles and authors; `http/` ISBNs that collide with the seed.
 - res-2 docs inputs: `.claude/comms/mailboxes/res-2/outbox/research-docs-inputs.md`. Endpoint census, run facts
   (ports 8080, 8090, 5173; Compose service `postgres`), spec 08 assistant facts from its branch, module map, spec 07

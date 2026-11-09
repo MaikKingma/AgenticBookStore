@@ -47,6 +47,10 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      same mapper, rule 7 of [[review-calibration]]). Annotation-declared requiredness (Spring AI `@McpToolParam`)
      is enforced at runtime and readable from `inputSchema().get("required")`: a falsifier, never inspection
      (spec 05 T3 lost a rework round to both).
+     A result cap a flow only hands to the port (`books.search(..., LIMIT)`) is pinned by the mocked flow test as an
+     argument only; order and cut-off need an integration test in two phases: exactly LIMIT rows (all back), then one
+     row that sorts FIRST, inserted last (the old last row gone; kills LIMIT+1, no limit and an insertion-order cut).
+     Secondary keys get a non-monotone permutation: ids assigned in reverse insertion order equal title order under `desc`.
    - Profile-split config (seed locations per profile, spec 09): `Environment.getProperty` of a YAML list key returns
      null (only `[0]`, `[1]` exist), so assert the resolved bean (`flyway.getConfiguration().getLocations()`). A census
      test that runs plain Flyway with hard-coded locations leaves the DEFAULT profile's value unfalsified: read it from
