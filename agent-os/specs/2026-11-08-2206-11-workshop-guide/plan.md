@@ -38,8 +38,9 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T1 | scaffold docs-only 3.10.2 TS site, two configs, five npm scripts, check harness with self-tests, hygiene rules, README, root ignore for `guide/build-offline/` | guide | [] | B1 | elevated | sonnet | sonnet | PASS r1 | #71 | sdd/11-workshop-guide/T1 | ENDORSE |
 | T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | PASS r1 | #73 | sdd/11-workshop-guide/T2 | ENDORSE |
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | PASS r2 | #76 | sdd/11-workshop-guide/T3 | ENDORSE r2 |
-| T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | verifying | #79 | sdd/11-workshop-guide/T4 | |
-| T5 | pack-anchored coverage manifest and content rules | guide | [T4] | B5 | critical | opus | sonnet | pending | | | |
+| T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | PASS r2 | #79 | sdd/11-workshop-guide/T4 | ENDORSE r2 |
+| T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | pending | | | |
+| T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | pending | | | |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
@@ -133,6 +134,31 @@ From the T3 meta-review (qa-lead ENDORSE r2, after one rework round for unpinned
 - C0-12 freeze: the checker freezes at T5's gated baseline (copied into the ledger at the checkpoint after T5), not
   at T3.
 
+From the T4 meta-review (qa-lead ENDORSE r2, after one rework round for box fences, H1 forms, unpinned anchors and
+untested rules):
+
+- FF-15 (T5 criterion, A5): insertion-only tests in `structure.test.mjs` for a fenced block under the Start branch
+  line and a setext heading with `=` and `==`; the T5 verifier shows mutants M-07g4 and M-15k killed.
+- FF-16 (T5 implementer and verifier): rule (d) does not flag the contractual anchor `feature-briefs`, with an
+  exemption no wider than that. Pass: the L4 heading `{/* #feature-briefs */}`, the link
+  `./05-level-4-spec-driven-development.mdx#feature-briefs`, `#feature-briefs` on L4. Fail: `level-4-feature-briefs.md`,
+  `feature-briefs.md`, prose `feature-briefs` without `#`, `#workshop-plan`, `#spec-pack`. Mutants: an exemption for
+  any `#`-prefixed term, an exemption matching `feature-briefs` anywhere. The built-text deny-list grep (C0-8a) reads
+  text content only, or counts the `id` and `href` hits exactly.
+- FF-17 (T4a and T5 verifiers): `rules/structure.mjs`, `rules/plan.mjs`, `lib/structure.mjs`,
+  `lib/structure-fixtures.mjs` keep the T4 r2 hashes unless the card names a change; the three T4 test files only
+  gain lines; a `check.mjs` change re-runs W-1..W-13 and SW-1..SW-11; the test-count floor is 258.
+- FF-18 (T6 to T11 verifiers, qa-final): every page has exactly one rendered `h1` in both builds, equal to the
+  frontmatter title.
+- FF-19 (content implementers): anchors as `## Heading {/* #id */}`; any line starting with `#` outside a fenced block
+  fails the checker, so rephrase; after the freeze a checker false positive is a question, never a checker edit.
+- FF-20 (T11 and qa-final; T6 to T10 under the same expectation): the full axe ruleset reports 0 violations once T4a
+  has landed.
+- FF-21 (T4a and T5 implementers): never edit a file outside the fileScope, not even temporarily, including
+  `docs/spec-pack/**`; pack edits and mutation probes of pack files are the verifier's job.
+- Gate 2 owner note: O2, the offline (hash router) build renders nothing at build time, so the Pages build that runs
+  first is the guard for broken anchors and bad `current` values.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -146,6 +172,23 @@ From the T3 meta-review (qa-lead ENDORSE r2, after one rework round for unpinned
   `## Heading {/* #id */}` instead of `{#id}`, which does not compile under the template's `future.v4` (MDX acorn
   error, build exit 1). The ids are unchanged; the checker accepts only the working form and a test pins that `{#id}`
   fails. Consequence: T6 to T11 write anchors in the comment form; strategy.md's page grammar reads accordingly.
-- Known issue raised by T4 (for the QA lead to route): axe reports a WCAG `label` violation on every task-list
-  checkbox, because Docusaurus renders `- [ ]` as a bare disabled input. A fix needs a swizzle or a local remark
-  plugin, outside T4's scope.
+- A4 (2026-11-09, orchestrator, on the QA lead's T4 recommendation): new task T4a, run after T4 and before T5 (T5
+  now depends on T4a). axe reports a critical WCAG `label` violation on every task-list checkbox, because Docusaurus
+  renders `- [ ]` as a bare disabled input; the QA lead does not accept it as a residual and it would hit every later
+  verifier. Card T4a (elevated, sonnet verifier, module guide):
+  - fileScope: `guide/src/plugins/**`, `guide/docusaurus.config.ts`, `guide/scripts/**`.
+  - AC1: a local rehype plugin (Node built-ins only, no new dependency; first check whether Docusaurus 3.10.2 already
+    offers an option) gives every task-list checkbox an accessible name equal to its item text; the offline config
+    inherits it by spreading the main config.
+  - AC2: in both builds, `getByRole('checkbox', {name: <item text>, exact: true})` resolves exactly once for every
+    checklist item.
+  - AC3: the full axe ruleset reports 0 violations on the five level pages, both colour modes, both builds, three
+    engines; negative control: a build copy without the plugin shows the violations.
+  - AC4: `check:built` fails when a checkbox has no accessible name (self-tests and a strip probe).
+  - AC5: plugin self-tests on a fixture, including an item with inline code.
+  - AC6: `guide/docs/**` stays hash-equal to the T4 baseline; `package.json` and the lockfile stay equal to T1's;
+    FF-13 and FF-17 hold.
+  Consequence: one more task PR; the checker freeze baseline (C0-12) is taken at T5 after T4a.
+- A5 (2026-11-09, orchestrator): FF-15 is an added T5 acceptance criterion (two insertion-only tests in
+  `structure.test.mjs`: a fenced block under the Start branch line fails; a setext heading with `=` and `==` fails),
+  and FF-16 constrains T5's rule (d). strategy.md's page grammar now prints the A3 anchor form.

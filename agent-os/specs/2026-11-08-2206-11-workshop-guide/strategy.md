@@ -170,10 +170,11 @@ Level page (`0N-level-N-*.mdx`), in order:
    - `**Time:** <plan minutes> minutes`;
    - `**Compare:**` `solution/level-N` (L1 to L3 only).
 5. While unfinished, the marker `{/* guide-skeleton */}`.
-6. Body sections. These H2 anchors are contractual so other pages can link to them before the body exists:
-   - L2: `## Part A: LSP {#part-a-lsp}`, `## Part B: MCP {#part-b-mcp}`, `## Stretch {#stretch}`;
-   - L3: `{#part-a-permissions}`, `{#part-b-hooks}`, `{#optional-stop-hook}`, `{#part-c-skill-and-command}`, `{#stretch}`;
-   - L4: `{#tracks}`, `{#feature-briefs}`.
+6. Body sections. These H2 anchors are contractual so other pages can link to them before the body exists (written
+   in the MDX comment form `{/* #id */}` per plan.md amendment A3; `{#id}` does not compile under `future.v4`):
+   - L2: `## Part A: LSP {/* #part-a-lsp */}`, `## Part B: MCP {/* #part-b-mcp */}`, `## Stretch {/* #stretch */}`;
+   - L3: `{/* #part-a-permissions */}`, `{/* #part-b-hooks */}`, `{/* #optional-stop-hook */}`, `{/* #part-c-skill-and-command */}`, `{/* #stretch */}`;
+   - L4: `{/* #tracks */}`, `{/* #feature-briefs */}`.
 7. `## Level cleared when` followed by a Markdown task list (`- [ ] ...`). The items equal the plan's bullets after whitespace normalisation, in the same order and count. Nothing follows the list.
 
 Header values (settled):
@@ -189,7 +190,7 @@ Header values (settled):
 Other pages:
 - Frontmatter title, plus the marker while unfinished. `index.md` has `slug: /` and the first `sidebar_position`.
 - `reference/_category_.json` sets the label "Reference" after Wrap-up.
-- Troubleshooting anchors are contractual: `{#windows-hooks}`, `{#jdtls-not-starting}`, `{#usage-limits}`, `{#mcp-not-connecting}`, `{#anthropic-api-key}`, `{#offline-copy-blank-page}`, `{#docker-not-running}`, `{#far-behind}`.
+- Troubleshooting anchors are contractual (comment form, A3): `{/* #windows-hooks */}`, `{/* #jdtls-not-starting */}`, `{/* #usage-limits */}`, `{/* #mcp-not-connecting */}`, `{/* #anthropic-api-key */}`, `{/* #offline-copy-blank-page */}`, `{/* #docker-not-running */}`, `{/* #far-behind */}`.
 
 Tabs:
 - `groupId="os"` with labels `macOS/Linux` and `Windows PowerShell`. Use it only where the pack states the Windows form.

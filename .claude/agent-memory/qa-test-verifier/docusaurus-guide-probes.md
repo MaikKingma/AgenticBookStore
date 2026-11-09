@@ -49,5 +49,12 @@ Rule: for a Markdown/MDX structure checker, probe the syntax variants the render
 - Never run `npm --prefix guide exec -- node ...`: npm resolves `node` as a registry package (it fetched node@27 alpha) and runs 0 tests. Run node from a script that `cd`s into guide/.
 - Summaries: `grep ... | paste - -` pairs each result with the NEXT probe header. Have the runner print `id exit` on one line instead.
 - On `file://`, axe injection triggers Docusaurus preload console errors in Chromium and WebKit. Tag console messages with the current step and replay fresh loads and a real hover and click before blaming the app.
+- Markdown H1 rules (ATX plus setext) never see a JSX `<h1>` in MDX: it passes and renders a second H1 next to the title. Probe it and route it to the rendered "exactly one H1" check.
+- Mutants for a reworked "one fenced block per box line" rule: first-block-wins vs last-block-wins is equivalent while a count check exists; also try a label-specific exemption per label (tests often cover 3 of 4 labels) and a quantifier tightening (`=+` to `={3,}`, tests rarely use a single `=`). A `!flags[index - 1]` mutant on a setext rule is equivalent: a flagged `===` line always has a flagged predecessor.
+
+Rule: on a re-verification, prove carry-forward by tree ids and extracted artifacts, not by zip digests.
+
+**Why:** two CI runs over byte-identical inputs give the offline zip a different `digest` (zip timestamps), so the digest alone suggests a change that is not there.
+**How to apply:** `git rev-parse <r1>:guide/docs` against `HEAD:guide/docs` (and src, static) for rendered inputs; `gh run download <id> -n <name> -D <fresh dir>` for each run, `unzip` each into its own fresh dir, then `diff -rq` the two trees. Re-adapt mutant strings that the rework changed before re-running a mutant file (a stale `from` string shows as SETUP ERROR, not as a kill).
 
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
