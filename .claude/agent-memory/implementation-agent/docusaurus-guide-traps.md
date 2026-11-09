@@ -70,6 +70,16 @@ metadata:
   fail-open. Also text in MDX: `\<Tag>`, `\{/*`, `{'...'}` strings (tags and comment openers) and `` \\` `` opens a span.
   Fences after `>`/list markers need container-aware body lines and an implicit end. Check every refactor against the pack
   with a git-object compare (`.claude/comms/tmp/impl-t5-r3-packspans.mjs`), and drop redundant guards: each one survives its mutant.
+- Built Tabs HTML (3.10.2, minified): tab `<li role=tab>` without `</li>`, `</p>` dropped before a block, `.token-line` is a
+  `div` with a trailing `<br/>`, the PowerShell panel is the hidden second `[role=tabpanel]` of a `.tabs-container`. A tree
+  builder needs pop-to-matching end tags plus "new li closes the open li of the same ul/ol" (bounded by the nearest list, or
+  tabs inside a list item break). MDX `<pre>` over lines renders `<pre><p>a\nb</pre>`; a blank line inside makes `<p>a<p>b`
+  with no newline (text content joins). Only `<` is entity-encoded in code text, `&` and `>` stay raw.
+- Probe builds without touching the repo: copy guide/ minus node_modules/build/.docusaurus into the scratchpad, symlink
+  node_modules, `npm --prefix <copy> run build` (about 2 s warm). Capture fixtures as the `<article>` slice (ASCII check:
+  real pages carry U+200B in hash links, so slice a smaller fragment there).
+- The Edit/Write tools turn a ` ` escape in the text into the literal character (ascii rule fails, and Edit cannot
+  match it back): write `String.fromCharCode(0xa0)` instead, and fix a stray one by rewriting the file with Write.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
