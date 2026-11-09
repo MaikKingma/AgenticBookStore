@@ -25,13 +25,147 @@ git stash -u && git switch solution/level-1
 
 :::
 
-{/* guide-skeleton */}
+Start from your Level 1 result, or from `solution/level-1`. Levels 0 and 1 ran without the language server plugin. You install it now, in Part A.
+
+:::info[Sync moment]
+
+Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`). Then he runs `claude mcp add` for the distributor and asks one MCP question in the chat. (3 minutes)
+
+:::
 
 ## Part A: LSP {/* #part-a-lsp */}
 
+About 8 minutes.
+
+Claude Code has a built-in, read-only LSP tool. With a code intelligence plugin installed, it gives go to definition, find references, type info, document and workspace symbols, implementations and call hierarchy. Claude Code also reports diagnostics automatically after every edit.
+
+### 1. Check the binary
+
+```bash
+which jdtls
+```
+
+Windows: inside WSL. If the binary is missing, install it as in the [setup check](./00-setup-check.md#install-jdtls).
+
+### 2. Install the plugin
+
+Run this inside Claude Code:
+
+```text
+/plugin install jdtls-lsp@claude-plugins-official
+```
+
+If the marketplace is missing, add it first and then repeat the install:
+
+```text
+/plugin marketplace add anthropics/claude-plugins-official
+```
+
+Choose a scope: user scope keeps the plugin out of the repository, and project scope writes it to `.claude/settings.json`. Confirm the plugin on the **Installed** tab of `/plugin`.
+
+### 3. Use it
+
+Ask Claude:
+
+```text
+Find all references to `Money.of`.
+```
+
+The answer comes from the language server, not from a text search. It spans several layers: domain, flows and mappers, and tests.
+
+### 4. Make one deliberate type error
+
+Ask Claude to break the code on purpose:
+
+:::tip[Checkpoint]
+
+```text
+In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch the callers yet.
+```
+
+Expected: Claude Code prints `Found N new diagnostic issues ...` under the edit.
+
+:::
+
+Then ask Claude to repair it:
+
+```text
+Fix the new diagnostics.
+```
+
+Watch the agent read the diagnostics and repair the code.
+
+### 5. Nothing appears?
+
+Check `/plugin` (tab **Errors**) and start Claude Code with debug output:
+
+```bash
+claude --debug
+```
+
+The error `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes: watch the demo and continue with Part B.
+
 ## Part B: MCP {/* #part-b-mcp */}
 
+About 7 minutes.
+
+### 1. Start the distributor
+
+```bash
+./mvnw -pl distributor spring-boot:run
+```
+
+Or run `java -jar distributor.jar`. Leave the distributor running while you work through Part B.
+
+### 2. Register it for the project
+
+```bash
+claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+```
+
+This writes `.mcp.json`. If Claude Code asks you to approve the project MCP server, approve it. Restart Claude Code if needed.
+
+:::tip[Checkpoint]
+
+```text
+/mcp
+```
+
+Expected: `/mcp` shows `distributor` connected with 4 tools.
+
+:::
+
+### 3. Ask one question
+
+```text
+Which science-fiction titles does the distributor have that we do not sell yet?
+```
+
+The tools show up as `mcp__distributor__*`.
+
+### 4. Use it as development context
+
+Ask Claude:
+
+```text
+Using the distributor MCP, find a title that has a translator or illustrator among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payload shape and prove that only authors end up in our catalogue.
+```
+
+The existing tests deliberately do not cover this case. Run `./mvnw verify` to see your new test green.
+
+### 5. See how little code a tool is
+
+An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java`. It holds the four tools `search_titles`, `get_title`, `list_subjects` and `check_availability`.
+
 ## Stretch {/* #stretch */}
+
+Add an MCP tool `list_new_releases(days)` to the distributor and use it from Claude Code.
+
+## Before you move on
+
+What did the agent see this time that it had to guess before? Compiler diagnostics right after an edit, references by symbol, real payloads instead of invented ones?
+
+When you are done, compare your result with the branch [solution/level-2](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-2).
 
 ## Level cleared when
 
