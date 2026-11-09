@@ -48,7 +48,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
-| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1 | #124 | sdd/11-workshop-guide/T11 | ENDORSE |
+| T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
 | T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | pending | | | |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
@@ -440,9 +440,11 @@ From the T11 meta-review (qa-lead ENDORSE r1; hashes in `t11-hashes.txt`, checke
 
 - O-1 ruling (QA lead): the two "pair up" sentences on the troubleshooting page stay; the WP:334-347 risk table is the
   page's designated source (S11:38, res-3 section 3 and 2.11), not a facilitator-only range for this page.
-- FF-49 (T12 verifier and qa-final; freeze): `shasum -a 256 -c t11-freeze-baseline-hashes.txt` prints 92 OK,
-  `git ls-files guide/scripts | wc -l` prints 92, `git rev-parse HEAD:guide/scripts` prints 7795f0ec; any FAILED
-  entry, extra file or tree change is a FAIL. node:test floor 513 with every T11 title present. Hash chain: `t6`
+- FF-49 (T12 verifier and qa-final; freeze; values as updated by the T11 r2 meta-review):
+  `shasum -a 256 -c t11-freeze-baseline-hashes.txt` (file sha256 b62c68ca963e63014d102854e76602036aa2d68d98fd5abb716319c3101867e8)
+  prints 92 OK, `git ls-files guide/scripts | wc -l` prints 92, `git rev-parse HEAD:guide/scripts` prints
+  b4886ba38f649593c357c8fe5834283036f9254c; any FAILED entry, extra file or tree change is a FAIL. node:test floor 514
+  (`ok tests (23 test files, 457 test cases)`) with every T11 r2 title present. Hash chain: `t6`
   (except the setup page in T12), `t7`, `t10`, `t11` (except L3 and the cheat sheet in T12). `t11-freeze` replaces
   `t5c-freeze` and `t11-hashes.txt` replaces `t8`/`t9` for L2 and L3 from the T11 merge on.
 - FF-50 (T12 and later, after the `origin/factory` merge): decision D9 shifts S10 line numbers (old to new): 253-272
@@ -475,6 +477,22 @@ From the T11 meta-review (qa-lead ENDORSE r1; hashes in `t11-hashes.txt`, checke
 - Gate 2 owner notes from T11: O-5 the two CLI copy tests keep titles that say "passes" while asserting exit 1 (FF-2
   forbids renames in the cycle; rename after it); O-6 an explicit root skips the ban by design (FF-34 (c), pinned);
   the first CI run on PR #124 failed at startup with 0 jobs and was re-run without a code change.
+- T11 rework (red Guide check on PR #124, run 42679728806): `check.mjs` ends a failing run with `process.exit(1)`
+  right after `console.error`, so on Linux the tail of a long stderr read through a pipe can be lost; the T11 test
+  `skeleton-ban.test.mjs` "one marker put back" lost its last line in 6 to 23 of 200 Linux runs. Fixed in the test only
+  (output captured through files, asserting lines unchanged, one witness test; qa-t11 PASS r2, QA lead ENDORSE r2).
+  Follow-up F15 (post-cycle): in `check.mjs:166` and `check-built.mjs:12` set `process.exitCode = 1` and return
+  instead of `process.exit(1)`, pinned by a static test that no entry script under `guide/scripts` calls
+  `process.exit(`, then re-baseline the freeze. Standards proposal for Gate 2: Node CLI entry points never call
+  `process.exit` after writing output.
+- FF-54 (T12 verifier and qa-final; interim until F15): a red `npm run check` or `check:built` on Linux may lose the
+  tail of stderr, including the `check failed with N error(s)` line; a missing error line in a Linux log is never
+  evidence that the error is absent. A scratch probe that asserts on the stderr of a failing run with more than about
+  100 error lines reads the output through files (`stdio: ['ignore', fd, fd]`) or asserts on the exit status only. A
+  Linux-only red on a test that is green locally is reproduced in a Linux container on the CI Node before any re-run
+  or ruling; one green CI run is no evidence against a 5 to 20 percent race.
+- Process note (all agents, from the T11 r2 meta-review): `updated` in an outbox is written from `date -u`, never as
+  an estimate ahead of the clock; a future heartbeat hides a dead agent from the staleness rule.
 
 ## Amendments
 
