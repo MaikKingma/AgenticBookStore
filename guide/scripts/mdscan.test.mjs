@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {collapse, proseOf, scanMarkdown, tabGroups} from './lib/mdscan.mjs';
+import {markupOf} from './lib/mdscan.mjs';
 
 const fences = (text) => scanMarkdown(text).lines.map((line) => line.fence);
 
@@ -219,4 +220,216 @@ test('tabGroups: nested groups keep the item spans apart', () => {
       ['os', [['macOS/Linux', 3, 5]]],
     ],
   );
+});
+
+// The paragraph model of the span recogniser (escalated round, RA-A): an inline code span runs
+// over a line break only inside one paragraph, as MDX parses it.
+const spanTexts = (text) => {
+  const scan = scanMarkdown(text);
+  const prose = proseOf(scan);
+  return scan.spans.map(([start, end]) => prose.slice(start, end));
+};
+
+test('mdscan: a code span does not continue onto a line that starts a block of its own (B10, B11 and the other block starts)', () => {
+  for (const next of [
+    '- then ` done',
+    '+ then ` done',
+    '* then ` done',
+    '1. then ` done',
+    '2) then ` done',
+    '123456789. then ` done',
+    '  - then ` done',
+    '# Then ` done',
+    '## Then ` done',
+    '###### Then ` done',
+    '> then ` done',
+    '| then ` |',
+    '<b>then ` done</b>',
+    '</TabItem> then ` done',
+    '{name} then ` done',
+    ':::note then ` done',
+  ]) {
+    const text = `Press the \` key {/* hidden */}\n${next}`;
+    assert.deepEqual(spanTexts(text), [], next);
+    assert.equal(collapse(proseOf(scanMarkdown(text))), collapse(`Press the \` key\n${next}`), next);
+  }
+});
+
+test('mdscan: a setext underline, a thematic break, an empty list item or a tag line between two backticks ends the paragraph', () => {
+  for (const middle of ['===', '=', '---', '--', '***', '* * *', '___', '- - -', '-', '1.', '<TabItem value="win" label="Windows PowerShell">', '</TabItem>', '{/* note */}', ':::']) {
+    const text = `Press the \` key {/* hidden */}\n${middle}\nthen \` done`;
+    assert.deepEqual(spanTexts(text), [], middle);
+    assert.ok(!proseOf(scanMarkdown(text)).includes('hidden'), middle);
+  }
+  // A tilde fence may hold a backtick in its info string: it is a fence, so the span ends before it.
+  assert.deepEqual(spanTexts('Press the ` key\n~~~ a ` b\nthen ` done\n~~~'), []);
+});
+
+test('mdscan: a line that only looks like a block start continues the paragraph, and so does a plain or indented line', () => {
+  for (const next of ['then ` done', '    then ` done', '#then ` done', '1.5 then ` done', '-then ` done', '1234567890. then ` done', '**then** ` done', '=then ` done', 'a <b>then</b> ` done']) {
+    assert.equal(spanTexts(`Press the \` key\n${next}`).length, 1, next);
+  }
+  // The controls of the round: three plain lines, the indented and the lazy continuation of a
+  // list item, and the one span of the pack that runs over a line break.
+  assert.deepEqual(spanTexts('Run `a\nb\nc` here'), ['a\nb\nc']);
+  assert.deepEqual(spanTexts('- Run `a\n  b` here'), ['a\n  b']);
+  assert.deepEqual(spanTexts('- Run `a\nb` here'), ['a\nb']);
+  assert.deepEqual(spanTexts('Sync (`which jdtls`, `/plugin install\njdtls-lsp@claude-plugins-official`, x)'), ['which jdtls', '/plugin install\njdtls-lsp@claude-plugins-official']);
+});
+
+test('mdscan: in a block quote a span continues on the next quoted or lazy line, its quote markers are no span content, a deeper quote ends it', () => {
+  assert.deepEqual(spanTexts('> Type `{/*\n> ` to start a comment.'), ['{/*\n  ']);
+  assert.equal(collapse(proseOf(scanMarkdown('> Type `{/*\n> ` to start a comment.\n\nVisible {/* hidden */} end'))), '> Type `{/* ` to start a comment. Visible end');
+  assert.deepEqual(spanTexts('> Run `a\nb` here'), ['a\nb']);
+  assert.deepEqual(spanTexts('> > Run `a\n> b` here'), ['a\n  b']);
+  assert.deepEqual(spanTexts('> - Run `a\n>   b` here'), ['a\n    b']);
+  assert.deepEqual(spanTexts('> Run `a {/* x */}\n> > b` here'), []);
+  assert.deepEqual(spanTexts('> Run `a {/* x */}\n>\n> b` here'), [], 'a quote line with nothing after the marker is a blank line');
+  assert.deepEqual(spanTexts('> Run `a {/* x */}\n> - b` here'), [], 'a list marker after the quote marker');
+});
+
+test('mdscan: a span opened in a heading, a table row, a tag or expression line or an admonition line ends on that line', () => {
+  for (const first of [
+    '## Press the ` key {/* hidden */}',
+    '- ## Press the ` key {/* hidden */}',
+    '> ## Press the ` key {/* hidden */}',
+    '| Press the ` key {/* hidden */} |',
+    '<b>Press the ` key</b> {/* hidden */}',
+    '{name} Press the ` key {/* hidden */}',
+    ':::note[Press the ` key] {/* hidden */}',
+  ]) {
+    const text = `${first}\nthen \` done`;
+    assert.deepEqual(spanTexts(text), [], first);
+    assert.ok(!proseOf(scanMarkdown(text)).includes('hidden'), first);
+  }
+});
+
+test('mdscan: in a table row a span ends inside its cell, an escaped pipe stays in the span (B12, FI7)', () => {
+  assert.deepEqual(spanTexts('| a | `b | c` |'), []);
+  assert.deepEqual(spanTexts('| a | `b \\| c` |'), ['b \\| c']);
+  assert.deepEqual(spanTexts('| a | `b \\\\| c` |'), [], 'two backslashes: the pipe is a cell border');
+  assert.deepEqual(spanTexts('| `a` | `b` |'), ['a', 'b']);
+  assert.deepEqual(spanTexts('> | `a | b` |'), []);
+  assert.deepEqual(spanTexts('a | `b | c`'), ['b | c'], 'one line without a leading pipe and no delimiter row is a paragraph');
+  assert.equal(collapse(proseOf(scanMarkdown('| Press ` | {/* Use WSL and install as on Linux there. */} | then ` |'))), '| Press ` | | then ` |');
+  assert.equal(collapse(markupOf(scanMarkdown('| ` | <img src="https://example.com/x.png" alt="x" /> | ` |'))), '| ` | <img src="https://example.com/x.png" alt="x" /> | ` |');
+  // A table without leading pipes: the header row before the delimiter row and the rows after it.
+  assert.deepEqual(spanTexts('x `a | b` y\n--|--\nc `d | e` f'), []);
+  assert.deepEqual(spanTexts('a | b\n- | -\nPress ` | key\nx {/* hidden */} | then `'), []);
+  assert.deepEqual(spanTexts('Text `a\nx | y`\n--|--'), [], 'the header row of a table ends the paragraph before it');
+  assert.deepEqual(spanTexts('x `a | b` y\n|--|--|\nz'), [], 'a delimiter row with outer pipes');
+  // A table ends at a blank line or a fence: the paragraph after it has its spans again.
+  assert.deepEqual(spanTexts('a | b\n--|--\nc | d\n\nx `e | f` g'), ['e | f']);
+  assert.deepEqual(spanTexts('a | b\n--|--\nc | d\n```\ncode\n```\nx `e | f` g'), ['e | f']);
+  // No delimiter row below: a line of pipes without a dash, dashes without a pipe (a setext
+  // underline) and a row with a cell that is not dashes.
+  assert.deepEqual(spanTexts('Run `a | b` x\n| |'), ['a | b']);
+  assert.deepEqual(spanTexts('Run `a | b` x\n|'), ['a | b']);
+  assert.deepEqual(spanTexts('Run `a | b` x\n---'), ['a | b']);
+  assert.deepEqual(spanTexts('Run `a | b` x\n| a | - |'), ['a | b']);
+});
+
+test('mdscan: a backtick after an odd number of backslashes is escaped, after an even number it opens a span (K8, E9)', () => {
+  assert.deepEqual(spanTexts('Close with \\\\`</TabItem>` later.'), ['</TabItem>']);
+  assert.deepEqual(spanTexts('Run \\\\`export ANTHROPIC_API_KEY` now.'), ['export ANTHROPIC_API_KEY']);
+  assert.deepEqual(spanTexts('Not \\`code` here.'), []);
+  assert.deepEqual(spanTexts('Not \\\\\\`code` here.'), []);
+  assert.deepEqual(spanTexts('a \\``b` c'), ['b'], 'the escaped backtick is text, the backtick after it opens');
+  assert.equal(collapse(markupOf(scanMarkdown('Close with \\\\`</TabItem>` later.'))), 'Close with \\\\` ` later.');
+});
+
+test('mdscan: a fence after a block quote or list marker is a fenced block, its body without the container markers (RA-D)', () => {
+  const quoted = '> ```powershell\n> Remove-Item -Recurse inventedfolder\n> ```\nafter';
+  assert.deepEqual(scanMarkdown(quoted).blocks, [{lang: 'powershell', open: 0, close: 2, body: ['Remove-Item -Recurse inventedfolder']}]);
+  assert.deepEqual(fences(quoted), ['open', 'body', 'close', null]);
+  const listed = '- ```powershell\n  Remove-Item -Recurse inventedfolder\n  ```\nafter';
+  assert.deepEqual(scanMarkdown(listed).blocks, [{lang: 'powershell', open: 0, close: 2, body: ['Remove-Item -Recurse inventedfolder']}]);
+  assert.deepEqual(fences(listed), ['open', 'body', 'close', null]);
+  for (const [opener, body, closer] of [
+    ['1. ```powershell', '   x', '   ```'],
+    ['* ~~~ps1', '  x', '  ~~~'],
+    ['> > ```bash', '> > x', '> > ```'],
+    ['> - ```bash', '>   x', '>   ```'],
+    ['- > ```bash', '  > x', '  > ```'],
+    ['>```bash', '>x', '>```'],
+    ['  - ```bash', '    x', '    ```'],
+  ]) {
+    const scan = scanMarkdown(`${opener}\n${body}\n${closer}\nafter`);
+    assert.deepEqual(scan.blocks.map((b) => [b.open, b.close, b.body]), [[0, 2, ['x']]], opener);
+  }
+});
+
+test('mdscan: a fence in a block quote or a list item ends with its container, the line outside is prose again (RA-D)', () => {
+  const quote = scanMarkdown('> ```text\n> x\n<img src="/x.png">\n> more\n```');
+  assert.deepEqual(quote.blocks[0], {lang: 'text', open: 0, close: 1, body: ['x']});
+  assert.equal(proseOf(quote).split('\n')[2], '<img src="/x.png">');
+  assert.deepEqual(scanMarkdown('> ```text\n> x\n\n> y').blocks, [{lang: 'text', open: 0, close: 1, body: ['x']}]);
+  const item = scanMarkdown('- ```text\n  x\n\n  y\nz\n  ```');
+  assert.deepEqual(item.blocks, [
+    {lang: 'text', open: 0, close: 3, body: ['x', '', 'y']},
+    {lang: '', open: 5, close: 5, body: []},
+  ]);
+  assert.equal(proseOf(item).split('\n')[4], 'z');
+});
+
+test('tabGroups: a tag MDX renders as text, after an odd number of backslashes or in a string literal of an expression, is no tag (K3, K4)', () => {
+  const items = (windows) => {
+    const text = `<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\nx\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n${windows}\n\`\`\`bash\nRemove-Item -Recurse inventedfolder\n\`\`\`\n</TabItem>\n</Tabs>\n`;
+    const {groups, errors} = tabGroups(scanMarkdown(text));
+    return [errors, groups.map((g) => g.items.map((i) => [i.label, i.line, i.end]))];
+  };
+  const whole = [[], [[['macOS/Linux', 1, 3], ['Windows PowerShell', 4, 9]]]];
+  for (const windows of [
+    'Close with \\</TabItem> later.',
+    'Close with \\\\\\</TabItem> later.',
+    "Close with {'</TabItem>'} later.",
+    'Close with {"</TabItem>"} later.',
+    "Close with {'a' + \"</TabItem>\" + 'b'} later.",
+    "Close with {'it\\'s </TabItem>'} later.",
+    'Close with {`</TabItem>`} later.',
+  ]) {
+    assert.deepEqual(items(windows), whole, windows);
+  }
+  // Two backslashes are one escaped backslash, and an escaped brace opens no expression: the tag after them is a tag.
+  const early = [[], [[['macOS/Linux', 1, 3], ['Windows PowerShell', 4, 5]]]];
+  assert.deepEqual(items('Close with \\\\</TabItem> later.'), early);
+  assert.deepEqual(items("Close with \\{'</TabItem>'} later."), early);
+  // A tag inside an expression but outside its strings is still read, its attributes untouched.
+  const inside = tabGroups(scanMarkdown('Use {<Tabs groupId="os"><TabItem value="a" label="macOS/Linux">x</TabItem></Tabs>} here.\n'));
+  assert.deepEqual(inside.groups.map((g) => [g.groupId, g.items.map((i) => i.label)]), [['os', ['macOS/Linux']]]);
+  // An expression ends at its closing brace: a tag after it is a tag.
+  assert.deepEqual(items("Close {'x'} with </TabItem> later."), early);
+  // A brace or quote inside an attribute string of a tag opens nothing: the tag stays whole, and
+  // an escaped tag after it is still text.
+  const quoted = tabGroups(scanMarkdown('<Tabs groupId="os">\n<TabItem value="{" label="macOS/Linux">\nx\n</TabItem>\n</Tabs>\n'));
+  assert.deepEqual(quoted.groups.map((g) => g.items.map((i) => i.label)), [['macOS/Linux']]);
+  const titled = `<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\nx\n</TabItem>\n<TabItem value="b" label="Windows PowerShell" title="{">\nClose with \\</TabItem> later.\n\`\`\`bash\nRemove-Item -Recurse inventedfolder\n\`\`\`\n</TabItem>\n</Tabs>\n`;
+  assert.deepEqual(tabGroups(scanMarkdown(titled)).groups.map((g) => g.items.map((i) => [i.label, i.line, i.end])), [[['macOS/Linux', 1, 3], ['Windows PowerShell', 4, 9]]]);
+});
+
+test('mdscan: a comment opener after an odd number of backslashes is text, as MDX renders it, after an even number it opens a comment', () => {
+  assert.equal(collapse(proseOf(scanMarkdown('Type \\{/* to start a comment.\n<Tabs groupId="os">'))), 'Type \\{/* to start a comment. <Tabs groupId="os">');
+  assert.equal(collapse(proseOf(scanMarkdown('Type \\<!-- as text.\nnext'))), 'Type \\<!-- as text. next');
+  assert.equal(collapse(proseOf(scanMarkdown('Type \\\\{/* hidden */} shown'))), 'Type \\\\ shown');
+});
+
+test('mdscan: an expression that closes on its line is its value: a comment opener or backticks in its strings are text', () => {
+  assert.equal(collapse(proseOf(scanMarkdown("Type {'{/*'} to start a comment.\n<Tabs groupId=\"os\">"))), "Type {'{/*'} to start a comment. <Tabs groupId=\"os\">");
+  assert.equal(collapse(proseOf(scanMarkdown('Type {"{/*"} and {/* hidden */} shown'))), 'Type {"{/*"} and shown');
+  assert.deepEqual(spanTexts('Run {`export ANTHROPIC_API_KEY`} now and `x` too.'), ['x']);
+  assert.deepEqual(spanTexts("Use {'}'} and `x`."), ['x'], 'a brace in a string does not close the expression');
+  assert.equal(collapse(proseOf(scanMarkdown("Type {'}{/*'} shown"))), "Type {'}{/*'} shown");
+  // What comes first on the line comes first: a comment before an expression is a comment, a span before one a span.
+  assert.equal(collapse(proseOf(scanMarkdown('{/* hidden */} {name} shown'))), '{name} shown');
+  assert.deepEqual(spanTexts('`{` and {name}'), ['{']);
+  // A brace that does not close on its line, or an escaped one, opens nothing: the comment after it is a comment.
+  assert.equal(collapse(proseOf(scanMarkdown('Open { here {/* hidden */} shown'))), 'Open { here shown');
+  assert.equal(collapse(proseOf(scanMarkdown("Type \\{'{/* hidden */}'} shown"))), "Type \\{' '} shown");
+});
+
+test('mdscan: inside a span a ``` line with a backtick in its info string is no fence, the span runs over it (K7)', () => {
+  const scan = scanMarkdown('Close with `</TabItem>\n``` no fence ` later.');
+  assert.deepEqual(scan.blocks, []);
+  assert.deepEqual(spanTexts('Close with `</TabItem>\n``` no fence ` later.'), ['</TabItem>\n``` no fence ']);
+  assert.ok(!markupOf(scan).includes('</TabItem>'));
 });

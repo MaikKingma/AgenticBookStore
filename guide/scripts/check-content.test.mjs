@@ -269,3 +269,86 @@ test('cli: the real guide passes the coverage and content rules from any working
     assert.match(result.stdout, new RegExp(`^pending coverage entries: ${ENTRIES.length} on 10 skeleton pages`, 'm'));
   }
 });
+
+// Escalated round, through the whole checker: the paragraph model of the span recogniser, the
+// tag reader, container fences, <pre> in a Windows tab, the Env:\ form and the allow-list pins.
+const SU13 = 'Use WSL and install as on Linux there.';
+const su13Errors = (body) => check({[SETUP]: replaceOnce(REAL[SETUP], SKELETON_MARKER, body)}).errors.filter((e) => e.startsWith('coverage: SU-13: '));
+const windowsTab = (windows) =>
+  `<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\n${windows}\n\n</TabItem>\n</Tabs>`;
+const INVENTED_FENCE = '```bash\nRemove-Item -Recurse inventedfolder\n```';
+const oneContentError = (result, pattern) => {
+  assert.equal(result.errors.length, 1, result.errors.join('\n'));
+  assert.match(result.errors[0], pattern);
+  assert.ok(result.lines.includes('FAIL content (1 errors)'), result.lines.join('\n'));
+};
+const SETUP_INVENTED = /^content: docs\/00-setup-check\.md: line \d+: the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line/;
+
+test('runChecks with content: a comment between two lone backticks across a list item, a heading or a table cell is hidden text (B10, B11, B12)', () => {
+  const missing = [`coverage: SU-13: ${SETUP}: the text "${SU13}" is not on the page`];
+  assert.deepEqual(su13Errors(`- Press the \` key {/* ${SU13} */}\n- then \` done`), missing, 'B10');
+  assert.deepEqual(su13Errors(`Press the \` key {/* ${SU13} */}\n## Then \` done`), missing, 'B11');
+  assert.deepEqual(su13Errors(`| Press \` | {/* ${SU13} */} | then \` |`), missing, 'B12');
+  assert.deepEqual(su13Errors(`| Key | Note |\n| - | - |\n| Press \` | {/* ${SU13} */} | then \` |`), missing, 'B12 in a table');
+  // The same sentence as visible text is on the page: the comment alone decides.
+  assert.deepEqual(su13Errors(`- Press the \` key ${SU13}\n- then \` done`), []);
+});
+
+test('runChecks with content: lone backticks, a ``` line in a span and an escaped backslash end no Windows tab early (K5, K7, K8)', () => {
+  const k5 = '<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\nUse the ` key\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\nand the ` key.\n```bash\nRemove-Item -Recurse inventedfolder\n```\n</TabItem>\n</Tabs>';
+  oneContentError(check(page(SETUP, k5)), SETUP_INVENTED);
+  oneContentError(check(page(SETUP, windowsTab(`Close with \`</TabItem>\n\`\`\` no fence \` later.\n\n${INVENTED_FENCE}`))), SETUP_INVENTED);
+  oneContentError(check(page(SETUP, windowsTab(`Close with \\\\\`</TabItem>\` later.\n\n${INVENTED_FENCE}`))), SETUP_INVENTED);
+});
+
+test('runChecks with content: a closing tag MDX renders as text, escaped or in a string literal, ends no Windows tab (K3, K4, K4b)', () => {
+  for (const text of ['Close with \\</TabItem> later.', "Close with {'</TabItem>'} later.", 'Close with {"</TabItem>"} later.']) {
+    oneContentError(check(page(SETUP, windowsTab(`${text}\n\n${INVENTED_FENCE}`))), SETUP_INVENTED);
+  }
+});
+
+test('runChecks with content: a comment opener MDX renders as text, escaped or in a string of an expression, hides no Windows line', () => {
+  for (const intro of ['Type \\{/* to start a comment.', "Type {'{/*'} to start a comment."]) {
+    oneContentError(check(page(SETUP, `${intro}\n\n${windowsTab(INVENTED_FENCE)}`)), SETUP_INVENTED);
+  }
+});
+
+test('runChecks with content: a fence after a block quote or a list marker in the Windows tab is checked (RA-D)', () => {
+  for (const fence of ['> ```powershell\n> Remove-Item -Recurse inventedfolder\n> ```', '- ```powershell\n  Remove-Item -Recurse inventedfolder\n  ```']) {
+    oneContentError(check(page(SETUP, windowsTab(fence))), SETUP_INVENTED);
+  }
+});
+
+test('runChecks with content: a raw <pre> element in the Windows tab is checked, a pack line in it passes (RA-E)', () => {
+  oneContentError(check(page(SETUP, windowsTab('<pre>Remove-Item -Recurse inventedfolder</pre>'))), SETUP_INVENTED);
+  assert.deepEqual(check(page(SETUP, windowsTab('<pre>Get-Command jdtls</pre>'))).errors, []);
+});
+
+test('the allow-list of the real pack holds the collapsed form of its one span over a line break (PK-3)', () => {
+  const pack = Object.values(SOURCE_FILES).map((rel) => readFileSync(new URL(`../../docs/spec-pack/${rel}`, import.meta.url), 'utf8'));
+  assert.ok(packCommandLines(pack).has('/plugin install jdtls-lsp@claude-plugins-official'));
+});
+
+test('runChecks with content: Set-Item -Path Env:\\ANTHROPIC_API_KEY fails on the setup page as the Env: form (RA-F)', () => {
+  oneContentError(check(page(SETUP, '```bash\nSet-Item -Path Env:\\ANTHROPIC_API_KEY -Value x\n```')), /^content: docs\/00-setup-check\.md: line \d+: ANTHROPIC_API_KEY in a \$env: or Env: form/);
+});
+
+test('runChecks with content: a list item ends a span and an escaped backslash does not escape the backtick after it (E8, E9)', () => {
+  assert.deepEqual(check(page(SETUP, '- Press the ` key\n- Never set ANTHROPIC_API_KEY, really `')).errors, []);
+  oneContentError(check(page(SETUP, 'Run \\\\`export ANTHROPIC_API_KEY` now.')), /^content: docs\/00-setup-check\.md: line \d+: ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+});
+
+test('runChecks with content: a real <img> between two lone backticks across a heading, a list item or table rows fails (FI4 to FI7)', () => {
+  const img = '<img src="https://example.com/x.png" alt="x" />';
+  for (const extra of [
+    `Press the \` key.\n## Keys ${img} and \``,
+    `- Press the \` key\n- ${img} then \``,
+    `| a | b |\n| - | - |\n| Press \` | key |\n| ${img} | then \` |`,
+    `| \` | ${img} | \` |`,
+  ]) {
+    const result = check(page(LEVEL2, extra));
+    assert.equal(result.errors.length, 1, `${extra}\n${result.errors.join('\n')}`);
+    assert.ok(result.errors[0].startsWith(`content: ${LEVEL2}: line `) && result.errors[0].endsWith('a raw <img> tag, use Markdown image syntax'), result.errors[0]);
+    assert.ok(result.lines.includes('FAIL content (1 errors)'), result.lines.join('\n'));
+  }
+});

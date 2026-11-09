@@ -3,7 +3,7 @@
 // PowerShell lines (c) and the Level 0 observation card (h). Pure functions on text; the
 // file reads are in lib/content.mjs. The rules (c) to (h) read every page, a skeleton
 // included, except (h), which waits for the Level 0 page to lose its marker.
-import {codeOf, collapse, markupOf, proseOf, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
+import {HTML_CODE, codeOf, collapse, markupOf, proseOf, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
 import {isSkeleton} from './coverage.mjs';
 
 export const LEVEL0_PAGE = 'docs/01-level-0-break-the-agent.mdx';
@@ -60,12 +60,13 @@ export function denyListErrors(file, text) {
 // The words export, set, setx and unset are ordinary English in a warning ("Never set
 // ANTHROPIC_API_KEY: ..."), so that form (with its flags: set -gx, setx /M) and the YAML
 // key form (the warning's colon) are read in code only: a fenced block line, an inline
-// code span or a raw <code> or <pre> element. The other forms (an assignment, $env:, a
-// SetEnvironmentVariable call, a quoted settings key) are no English and fail anywhere.
+// code span or a raw <code> or <pre> element. The other forms (an assignment, $env: or the
+// Env: drive, also as the path Env:\, a SetEnvironmentVariable call, a quoted settings key)
+// are no English and fail anywhere.
 const KEY = 'ANTHROPIC_API_KEY';
 const KEY_FORMS = [
   ['an export, set, setx or unset command', new RegExp(`\\b(?:export|set|setx|unset)(?:\\s+(?:-{1,2}|/)[A-Za-z]*)*\\s+${KEY}`, 'gi'), true],
-  ['a $env: or Env: form', new RegExp(`(?:\\$env:|\\bEnv:)\\s*${KEY}`, 'gi'), false],
+  ['a $env: or Env: form', new RegExp(`(?:\\$env:|\\bEnv:)[\\\\/]?\\s*${KEY}`, 'gi'), false],
   ['a SetEnvironmentVariable call', new RegExp(`SetEnvironmentVariable\\s*\\(\\s*["']${KEY}["']`, 'gi'), false],
   ['an assignment', new RegExp(`${KEY}\\s*=`, 'gi'), false],
   ['a settings or JSON key', new RegExp(`["']${KEY}["']\\s*:`, 'gi'), false],
@@ -89,8 +90,9 @@ export function apiKeyErrors(file, text) {
   return errors;
 }
 
-// (f) No raw <img>: Markdown image syntax only. The tag is read in the markup, like the tab
-// tags: an <img> written in inline code, a fenced block or a comment is text, not a tag.
+// (f) No raw <img>: Markdown image syntax only. The tag is read in the markup: an <img>
+// written in inline code, a fenced block or a comment is text, not a tag. An escaped \<img or
+// one in a string of an expression is still reported: a literal tag belongs in inline code.
 export function imgErrors(file, text) {
   const markup = markupOf(scanMarkdown(text.replace(/\r\n/g, '\n')));
   return [...markup.matchAll(/<img\b/gi)].map((m) => `${file}: line ${lineOf(markup, m.index)}: a raw <img> tag, use Markdown image syntax`);
@@ -156,8 +158,9 @@ export function packCommandLines(packTexts) {
 }
 
 // (c) Every line of a Windows PowerShell code block (a fenced block inside a tab labelled
-// PowerShell, or a fenced block in a PowerShell language) equals, as a whole, a pack
-// command line or inline code span. A substring of one does not count.
+// PowerShell, or a fenced block in a PowerShell language, or a raw <pre> element inside a tab
+// labelled PowerShell) equals, as a whole, a pack command line or inline code span. A
+// substring of one does not count.
 export function powershellErrors(file, scan, allowed) {
   const errors = [];
   const {groups} = tabGroups(scan);
@@ -170,6 +173,24 @@ export function powershellErrors(file, scan, allowed) {
       const trimmed = line.trim();
       if (trimmed !== '' && !allowed.has(trimmed)) {
         errors.push(`${file}: line ${block.open + index + 2}: the PowerShell line "${trimmed}" is not a command line or inline code span of the pack, a Windows variant needs a pack source`);
+      }
+    });
+  }
+  // A raw <pre> element (read in the markup: not in inline code, a fenced block or a comment)
+  // whose innermost tab is labelled PowerShell: each line of its content, as the page has it.
+  const markup = markupOf(scan);
+  const prose = proseOf(scan);
+  for (const m of markup.matchAll(HTML_CODE)) {
+    if (m[1].toLowerCase() !== 'pre') continue;
+    const first = lineOf(markup, m.index) - 1;
+    const last = lineOf(markup, m.index + m[0].length - 1) - 1;
+    const enclosing = items.filter((item) => item.line <= first && last <= item.end).sort((a, b) => b.line - a.line)[0];
+    if (enclosing === undefined || !/powershell/i.test(enclosing.label ?? '')) continue;
+    const start = m.index + m[0].indexOf('>') + 1;
+    prose.slice(start, start + m[2].length).split('\n').forEach((line, index) => {
+      const trimmed = line.trim();
+      if (trimmed !== '' && !allowed.has(trimmed)) {
+        errors.push(`${file}: line ${lineOf(prose, start) + index}: the PowerShell line "${trimmed}" is not a command line or inline code span of the pack, a Windows variant needs a pack source`);
       }
     });
   }

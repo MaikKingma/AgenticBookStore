@@ -449,3 +449,101 @@ test('contentErrors: the card rule waits for the marker, every other rule applie
   fails(contentErrors({pages: {[OTHER]: `${skeleton}${psTab(['Remove-Item x'])}`}, packTexts: PACK}).errors, /PowerShell line/);
   fails(contentErrors({pages: {[OTHER]: `${skeleton}${tabs('os', ['macOS/Linux'])}`}, packTexts: PACK}).errors, /the os group has no/);
 });
+
+// Escalated round: what MDX keeps apart, or renders as text, the rules keep apart too.
+const osTab = (windows) =>
+  `<Tabs groupId="os">\n<TabItem value="mac" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="win" label="Windows PowerShell">\n\n${windows}\n\n</TabItem>\n</Tabs>\n`;
+const INVENTED = '```bash\nRemove-Item -Recurse inventedfolder\n```';
+const pageErrors = (text, file = OTHER) => contentErrors({pages: {[file]: text}, packTexts: PACK}).errors;
+const onlyInventedAt = (errors, line) => {
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], new RegExp(`^content: ${OTHER}: line ${line}: the PowerShell line "Remove-Item -Recurse inventedfolder" is not a command line`));
+};
+const exactly = (errors, count, pattern) => {
+  assert.equal(errors.length, count, errors.join('\n'));
+  for (const error of errors) assert.match(error, pattern);
+};
+
+test('powershell and tabs: lone backticks in two tab items make no span over the tags between them (K5)', () => {
+  const k5 = '<Tabs groupId="os">\n<TabItem value="mac" label="macOS/Linux">\nUse the ` key\n</TabItem>\n<TabItem value="win" label="Windows PowerShell">\nand the ` key.\n```bash\nRemove-Item -Recurse inventedfolder\n```\n</TabItem>\n</Tabs>\n';
+  onlyInventedAt(pageErrors(k5), 8);
+});
+
+test('powershell: a span over a ``` line with a backtick in its info string, or after an escaped backslash, keeps its tag text (K7, K8)', () => {
+  onlyInventedAt(pageErrors(osTab(`Close with \`</TabItem>\n\`\`\` no fence \` later.\n\n${INVENTED}`)), 15);
+  onlyInventedAt(pageErrors(osTab(`Close with \\\\\`</TabItem>\` later.\n\n${INVENTED}`)), 14);
+});
+
+test('powershell: a closing tag MDX renders as text, escaped or in a string literal of an expression, ends no Windows tab (K3, K4, K4b)', () => {
+  for (const text of ['Close with \\</TabItem> later.', "Close with {'</TabItem>'} later.", 'Close with {"</TabItem>"} later.']) {
+    onlyInventedAt(pageErrors(osTab(`${text}\n\n${INVENTED}`)), 14);
+  }
+  // Two backslashes: the tag is real, the item ends there, and the fence after it is in no tab.
+  passes(pageErrors(osTab(`Close with \\\\</TabItem> later.\n\n${INVENTED}`)));
+});
+
+test('powershell and tabs: a comment opener MDX renders as text, escaped or in a string of an expression, hides no Windows line', () => {
+  for (const intro of ['Type \\{/* to start a comment.', "Type {'{/*'} to start a comment.", 'Type {"{/*"} to start a comment.']) {
+    onlyInventedAt(pageErrors(`${intro}\n\n${osTab(INVENTED)}`), 14);
+  }
+});
+
+test('powershell: a fence after a block quote or a list marker in the Windows tab is checked like any fence (RA-D)', () => {
+  for (const fence of [
+    '> ```powershell\n> Remove-Item -Recurse inventedfolder\n> ```',
+    '- ```powershell\n  Remove-Item -Recurse inventedfolder\n  ```',
+    '> ```bash\n> Remove-Item -Recurse inventedfolder\n> ```',
+  ]) {
+    onlyInventedAt(pageErrors(osTab(fence)), 12);
+    passes(pageErrors(osTab(fence.replace('Remove-Item -Recurse inventedfolder', 'Get-Command jdtls'))));
+  }
+});
+
+test('powershell: each line of a raw <pre> element in the Windows tab is checked like a fenced line (RA-E)', () => {
+  onlyInventedAt(pageErrors(osTab('<pre>Remove-Item -Recurse inventedfolder</pre>')), 11);
+  passes(pageErrors(osTab('<pre>Get-Command jdtls</pre>')));
+  onlyInventedAt(pageErrors(osTab('<PRE className="x">\nGet-Command jdtls\nRemove-Item -Recurse inventedfolder\n</PRE>')), 13);
+  // A <pre> in the macOS tab, outside any tab, in inline code or in a comment is no Windows block.
+  passes(pageErrors(osTab('Get-Command jdtls').replace('```bash\nls\n```', '<pre>Remove-Item -Recurse inventedfolder</pre>')));
+  passes(pageErrors('<pre>Remove-Item -Recurse inventedfolder</pre>\n'));
+  passes(pageErrors(osTab('Write `<pre>Remove-Item -Recurse inventedfolder</pre>` as text.')));
+  passes(pageErrors(osTab('{/* <pre>Remove-Item -Recurse inventedfolder</pre> */}')));
+  // An inline <code> element is no code block, like an inline code span in prose.
+  passes(pageErrors(osTab('Run <code>Remove-Item -Recurse inventedfolder</code> by hand.')));
+  // A <pre> on the line of its TabItem tags belongs to that tab, and the innermost tab decides.
+  const oneLine = '<Tabs groupId="os">\n<TabItem value="mac" label="macOS/Linux">x</TabItem>\n<TabItem value="win" label="Windows PowerShell"><pre>Remove-Item -Recurse inventedfolder</pre></TabItem>\n</Tabs>\n';
+  onlyInventedAt(pageErrors(oneLine), 3);
+  onlyInventedAt(pageErrors(`<Tabs groupId="track">\n<TabItem label="Track A: OpenSpec">\n${osTab('<pre>Remove-Item -Recurse inventedfolder</pre>')}</TabItem>\n<TabItem label="Track B: Spec Kit">\nx\n</TabItem>\n<TabItem label="Track C: Agent OS">\nx\n</TabItem>\n</Tabs>\n`), 13);
+});
+
+test('powershell: packCommandLines adds the collapsed form of a span wrapped over two lines, and a span with an inner run of spaces in both forms (PK-3, PK-4)', () => {
+  const lines = packCommandLines(['Run `a\nb` and `c  d`.']);
+  assert.ok(lines.has('a b'), 'the wrapped span, collapsed');
+  assert.ok(lines.has('c  d'), 'the span as written, trimmed');
+  assert.ok(lines.has('c d'), 'the span collapsed');
+});
+
+test('api key: the PowerShell drive path Env:\\ANTHROPIC_API_KEY is the Env: form and fails anywhere (RA-F)', () => {
+  const env = /in a \$env: or Env: form/;
+  exactly(apiKeyErrors(SETUP, '```bash\nSet-Item -Path Env:\\ANTHROPIC_API_KEY -Value x\n```'), 1, env);
+  exactly(apiKeyErrors(TROUBLE, 'Run `Remove-Item Env:\\ANTHROPIC_API_KEY` once.'), 1, env);
+  exactly(apiKeyErrors(SETUP, 'Never run Get-Item env:/ANTHROPIC_API_KEY here.'), 1, env);
+});
+
+test('api key: a list item ends a span, an escaped backslash does not escape the backtick after it, quote markers are no code (E8, E9)', () => {
+  passes(apiKeyErrors(SETUP, '- Press the ` key\n- Never set ANTHROPIC_API_KEY, really `'));
+  exactly(apiKeyErrors(SETUP, 'Run \\\\`export ANTHROPIC_API_KEY` now.'), 1, /line 1: ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+  exactly(apiKeyErrors(SETUP, '> Run `export\n> ANTHROPIC_API_KEY` now.'), 1, /line 1: ANTHROPIC_API_KEY in an export, set, setx or unset command/);
+});
+
+test('img: a real <img> between two lone backticks across a heading, a list item or table rows fails, and in one table row too (FI4 to FI7)', () => {
+  const img = '<img src="https://example.com/x.png" alt="x" />';
+  exactly(imgErrors(OTHER, `Press the \` key.\n## Keys ${img} and \``), 1, /line 2: a raw <img> tag/);
+  exactly(imgErrors(OTHER, `- Press the \` key\n- ${img} then \``), 1, /line 2: a raw <img> tag/);
+  exactly(imgErrors(OTHER, `| a | b |\n| - | - |\n| Press \` | key |\n| ${img} | then \` |`), 1, /line 4: a raw <img> tag/);
+  exactly(imgErrors(OTHER, `| \` | ${img} | \` |`), 1, /line 1: a raw <img> tag/);
+  // FI2 stays: an <img> in inline code, a fenced block or a comment is text.
+  passes(imgErrors(OTHER, `Write \`${img}\`.\n\n\`\`\`html\n${img}\n\`\`\`\n\n{/* ${img} */}`));
+  // An escaped tag or one in a string of an expression is still reported: a literal tag belongs in inline code.
+  exactly(imgErrors(OTHER, `Write \\${img} and {'${img}'} as text.`), 2, /line 1: a raw <img> tag/);
+});
