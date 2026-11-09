@@ -65,6 +65,12 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      values per field still let "keep the higher", "zero means absent" and "use only when different" survive. List
      data below, equal to and above the counterpart, the zero value and both range ends (spec 06 T4 spent both
      rework rounds on it). Equal needs a counterpart in another currency to be visible.
+   - A catch of a port's final exception types can be widened to their concrete use-case base classes
+     (`UnavailableException`, `NotFoundException`, `InvalidInputException` here): an `IllegalStateException` witness
+     does not kill that; list one base-class instance per caught type, asserted as propagating (`isSameAs`).
+   - JSON "key present with null" (always-serialised optional component): Spring `jsonPath(..).doesNotExist()`
+     passes for an absent key AND for null, `exists()` fails for null; ask for `hasKey`, the key count, or a parsed
+     map, plus a `@JsonInclude(NON_NULL)` must-fail probe (spec 07 D1).
    - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the
      local answer (409); a call would have produced the remote's 503 (spec 06 qa-final plan).
      Live read-timeout default: chaos latency above the timeout, a direct-call witness taking at least that latency,

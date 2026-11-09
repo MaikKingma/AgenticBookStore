@@ -56,4 +56,16 @@ so verify them there and in the code before relying on them.
   **Why:** re-validating a validated copy only adds untranslatable restore failures. Instants go to views as
   `Instant.toString()` strings, truncated to micros in the domain (PostgreSQL rounds nanos; Linux clocks give nanos).
 
+Spec 07 proposals (lead-1 strategy outbox, 2026-11-09; verify in the spec 07 plan and code):
+- **Arity changes:** an aggregate `restore` stays one total factory (update its call sites); a DTO may keep an older
+  arity as a documented convenience constructor when the sites are many and spread over unrelated tests. **Why:** a
+  `restore` overload has no production caller and invites state loss; round-trip tests prove production uses the
+  full form.
+- **Invariant plus pre-check:** a business rule stays a domain exception even when the flow pre-checks it before a
+  remote call; the unreachable exception is not translated (comment at the call). An unusable port answer that fails
+  value-object validation becomes the port's "unavailable" exception in the flow.
+- **Process layer:** no catch in processor or delegate; the flow catches named port exceptions around the port call
+  only. **Why:** a caught exception that crossed the flow proxy already marked the transaction rollback-only.
+- **Dates in views are `LocalDate.toString()` strings**, like instants, so no Jackson date setting matters.
+
 Related: [[strategy-constraints]], [[test-context-cost-model]].

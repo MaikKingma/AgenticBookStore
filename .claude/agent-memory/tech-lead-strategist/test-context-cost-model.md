@@ -22,6 +22,9 @@ Rule: one PostgreSQL container per test JVM and one Spring context for all books
 - A port `@MockitoBean` on the base replaces the real adapter bean in every full-context test, so none of them proves
   the adapter still wires (starter present, properties registered). Pair it with an `ApplicationContextRunner` test
   (auto-config plus the adapter as user configuration): sub-second, no new cached context (spec 06 strategy).
+- A default answer for a base `@MockitoBean` goes in the base `@BeforeEach` (mocks reset after every test);
+  relative dates come from the context `Clock`, captured once per test in a field so stub and assertion agree.
+  Subclasses override with `doThrow/doAnswer(...).when(mock)`.
 - Never `@DirtiesContext`: closing a context stops the shared container under the other cached contexts.
 - Gate in task cards: the bookstore Surefire output shows one "Creating container for image" line and one Spring
   "Started ... in" line per distinct context; review any new context deliberately.

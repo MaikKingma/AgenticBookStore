@@ -38,4 +38,10 @@ carries the process to `*Event` exception); never `onlyBeAccessed()`; never `DoN
 fixtures stay a sibling package of `nl.openvalue.bookstore` (Spring scanning) and never match Surefire includes.
 
 Skill vs standard: the `clean-hexagonal-onion` skill dates the Event exception to spec 07; the standard (section 2
-item 9) puts it in spec 01's scope. The standard wins; spec 07 only verifies it. Related: [[test-context-cost-model]].
+item 9) puts it in spec 01's scope. The standard wins; spec 07 only verifies it.
+
+Rule 9 mutation map (spec 07 strategy): `LeakyDelegate.entity` only kills dropping the `Event` predicate. Widenings
+that survive it need their own isolating fixture under rule 1: a domain class whose name contains but does not end
+with `Event`, a domain exception (the tempting widening when process code wants to catch one), and a non-process origin
+(a `*Queries` fixture holding a domain event). Adding violators to an existing rule leaves `hasSize(N)` unchanged.
+Related: [[test-context-cost-model]].
