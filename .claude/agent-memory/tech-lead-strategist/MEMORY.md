@@ -1,7 +1,6 @@
-- [ArchUnit referee design](archunit-referee-design.md) — rule-3 split rationale, anti-vacuity guards, isolating fixtures per rule half, rule 9 mutation map, description pins, traps
-- [Test context cost model](test-context-cost-model.md) — one container, one Spring context; what splits contexts; test-only beans and default mock answers on the base; 60 s budget levers
-- [Strategy constraints](strategy-constraints.md) — module batching, bean, data and pin order, view before behaviour, failure devices for transactional claims, QA-rework criteria rules, escape trap, stripped paths, DoD greps
-- [Distributor design decisions](distributor-design-decisions.md) — spec 05 rationale (advice scope, REST 400 vs MCP clamp, seed reader, shared ISBNs) and spec 06 ACL: catch-all failure mapping, input-first order, derived contract files
-- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422 split, port shape, events, DTO-derived values, save order, snapshots, spec 07 arity, invariant plus pre-check, process catch rule
-- [Storefront design decisions](storefront-design-decisions.md) — spec 12 rationale: in-house router, no oxlint, resources, no Maven edge, styling contract tests, frontend input and lockfile traps
-- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422 split, port shape, events, DTO-derived values, multi-aggregate save order, payload subset for normalised strings, snapshots
+- [ArchUnit referee design](archunit-referee-design.md) — rule-3 split, anti-vacuity guards, fixtures per rule half, rule 9 mutation map, traps
+- [Test context cost model](test-context-cost-model.md) — one container and Spring context; what splits contexts; 60 s budget levers
+- [Strategy constraints](strategy-constraints.md) — module batching, bean and pin order, failure devices, QA-rework criteria, escape trap, stripped paths
+- [Distributor design decisions](distributor-design-decisions.md) — spec 05 advice scope, 400 vs clamp, seed reader; spec 06 ACL failure mapping
+- [Slice pattern decisions](slice-pattern-decisions.md) — static mappers, 400 vs 422, port shape, events, save order, snapshots, process catch rule
+- [Storefront design decisions](storefront-design-decisions.md) — spec 12: in-house router, no oxlint, no Maven edge, styling tests, lockfile traps
