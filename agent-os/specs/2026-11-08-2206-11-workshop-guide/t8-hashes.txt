@@ -1,0 +1,1 @@
+8fa375cd120a3f8ff0092c174ca45ee0e886dd8b036da10e37f067cc628ca361  guide/docs/03-level-2-give-your-agent-eyes.mdx
