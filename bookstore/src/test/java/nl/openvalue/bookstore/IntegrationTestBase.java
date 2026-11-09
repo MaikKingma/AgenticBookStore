@@ -38,6 +38,9 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  * taken once per test). A test replaces that answer with {@code doThrow(...)} or {@code doAnswer(...)} on the mock.
  * Because every committed dip of a book's stock asks the distributor for a restock, a stock view taken after such a
  * dip shows the pending restock of that answer; {@link #withDefaultPendingRestock} builds the expected view.
+ *
+ * <p>The one deliberate fork of this context is the assistant integration test, which adds a scripted chat model and
+ * its own rate limit; this context stays offline for the assistant, so no test through it can reach a model.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureRestTestClient

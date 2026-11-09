@@ -3,4 +3,5 @@
 - [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout and live-browser witnesses; read before a UI task falsifier list
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, caches; read before a CI spec strategy
 - [Git-script specs](qa-git-script-specs.md) — bash scripts that rewrite or push git refs: commit-tree determinism, lease witnesses, reuse precedence, the `"$BASH"` interpreter trap; read before such a strategy or review
+- [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI/model specs: keyed referee, env-reading unit tests, network-safe probes, default-equivalent mutants, EPP order, memory window, tool double, catch-all tool helpers; read first
 - [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review

@@ -32,9 +32,5 @@ Rule: replay the files' own bytes with a driver you have shown can fail; give ev
 - Count-based oracles (`low-stock list has N items`) must come from psql over all rows, not from the seed count: earlier
   files of an in-order run add low-stock books and a hard-coded 8 fails there while the file is right.
 
-Traps:
-- In this environment `rg -E` means encoding (config error, exit 2, looks like "no output"); use `rg -ni "a|b"`.
-- The worktree guard refuses a command whose argument is a shell variable path or a heredoc; use literal absolute paths
-  and script files in `.claude/comms/tmp/`. Compound `cd x && git ...` is refused as well.
-- Mailbox for a new QA instance may not exist at spawn; the first outbox Write creates it.
-Related: [[contract-capture-verification]], [[spring-runtime-probes]], [[shell-traps]]
+Trap: in this environment `rg -E` means encoding (config error, exit 2, looks like "no output"); use `rg -ni "a|b"`.
+Related: [[readme-and-live-jar-probes]], [[spring-runtime-probes]], [[shell-traps]]

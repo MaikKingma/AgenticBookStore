@@ -6,12 +6,15 @@
 - [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
 - [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
 - [Bean validation traps](bean-validation-traps.md) — trimmed-length rule needs a nested custom constraint (regex counts code points), JSON control-char test data, U+2003 is not padding
-- [Mapper test witnesses](mapper-test-witnesses.md) — test data that makes mapper, factory and flow-translator mutations observable (rejected values, second literals, threshold twins)
+- [Mapper test witnesses](mapper-test-witnesses.md) — test data that makes mapper, factory and flow-translator mutations observable (rejected values, second literals, threshold twins, U+2003 blank)
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
+- [Spring environment tests](spring-environment-tests.md) — yml/EPP tests without system sources, YamlPropertySourceLoader, Binder placeholders, Boot 4.1.2 old EPP key fails startup, applicationInfo source after EPPs
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
 - [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
 - [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, pin config-overriding flags, date-varied idempotency, absent-sha lease, hook and shim witnesses, perl mutants, guard refuses bash -c
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files: driver with node handler shim, Expected status grammar, run-mode runs, seeded-state traps
 - [Docs task techniques](docs-task-techniques.md) — README census: two-way scripts with negative control, fake older DB for reset claim, jar has no compose, anonymous volume trap, rg only in Bash tool
+- [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
+- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse, ChatClient without a context

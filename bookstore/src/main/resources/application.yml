@@ -16,6 +16,24 @@ spring:
     # The schema migrations plus the demo data. Keep this a single comma separated value: the test profile replaces it
     # with the schema location only, so tests never see the demo data.
     locations: classpath:db/migration,classpath:db/seed
+  ai:
+    anthropic:
+      # The key comes only from BOOKSTORE_AI_API_KEY. Without it the assistant is offline and the application still
+      # starts: the chat model is switched off and the assistant endpoint answers 503.
+      api-key: ${BOOKSTORE_AI_API_KEY:}
+      # Pinned on purpose: without this line the client library takes the API address from a shell variable, which
+      # could send the workshop key to another host.
+      base-url: https://api.anthropic.com
+      chat:
+        model: ${BOOKSTORE_AI_MODEL:claude-haiku-5-5}
+        max-tokens: 1024
+        # No sampling setting (temperature and the like) on purpose: current Claude models reject a request that
+        # sets one with a 400, and leaving it out keeps the model's own default.
+
+bookstore:
+  assistant:
+    max-requests-per-minute: 20
+    max-message-length: 1000
 
 server:
   address: 127.0.0.1

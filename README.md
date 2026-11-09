@@ -1,19 +1,18 @@
 # AgenticBookStore
 
+## The app
+
 An online bookstore built as a clean hexagonal onion: a Spring Boot REST backend on PostgreSQL, the OpenBook storefront
-(React) and a small distributor service that supplies the stock. Customers search the catalogue and place orders, and
-the bookstore asks the distributor to restock a book when its stock runs low.
+(React) and a small distributor service. When a book's stock runs low, the bookstore asks the distributor to restock it.
 
 ## Prerequisites
 
-- Java 25 (the Maven wrapper `./mvnw` does the rest).
+- Java 25 (the Maven wrapper `./mvnw` does the rest) and no Node.js: the build installs its own into `frontend/node/`.
 - Docker, running: the tests and the local run of the bookstore start PostgreSQL in a container.
-- No Node.js: the build installs its own into `frontend/node/`.
 
 ## Run
 
-Build once from the repository root (this also builds the storefront into the bookstore), then start the bookstore and,
-in a second terminal, the distributor:
+Build once from the repository root (this also builds the storefront), then start the two services in two terminals:
 
     ./mvnw verify
     ./mvnw -pl bookstore spring-boot:run
@@ -25,9 +24,9 @@ at http://localhost:8080/shop/. The database keeps running when the bookstore st
 
 ### The jar against an existing PostgreSQL
 
-`./mvnw verify` also builds `bookstore/target/bookstore-0.0.1-SNAPSHOT.jar` and `distributor/target/distributor.jar`. To run
-the bookstore jar against a PostgreSQL you already have, set the datasource (your own URL, user and password) and start it
-from the repository root. The migrations create the schema in that database, and the demo data is loaded too.
+`./mvnw verify` also builds `bookstore/target/bookstore-0.0.1-SNAPSHOT.jar`. To run it against a PostgreSQL you already
+have, set the datasource (your own URL, user and password) and start it from the repository root. The migrations create
+the schema, and the demo data is loaded too.
 
     SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/bookstore \
     SPRING_DATASOURCE_USERNAME=bookstore SPRING_DATASOURCE_PASSWORD=bookstore \
@@ -44,7 +43,7 @@ too when the bookstore fails at startup because an older local database already 
 
 | Folder | What it is |
 |---|---|
-| `bookstore/` | The application: REST API, domain, PostgreSQL with Flyway migrations, the demo data |
+| `bookstore/` | The application: REST API, domain, PostgreSQL with Flyway migrations, the assistant, the demo data |
 | `distributor/` | A fictional book distributor with a REST API and MCP on port 8090, see `distributor/README.md` |
 | `frontend/` | The OpenBook storefront (React, TypeScript, Vite), see `frontend/README.md` |
 | `http/` | Request files in the JetBrains HTTP Client format, for the bookstore and the distributor |
@@ -59,8 +58,7 @@ The bookstore has eight packages. Dependencies only point inwards, and ArchUnit 
                            domain          (aggregates, value objects, events)
     outbound <---  data | acl
 
-[docs/architecture.md](docs/architecture.md) has the rules, the naming suffixes, the testing per layer and the trade-off
-of the synchronous restock.
+[docs/architecture.md](docs/architecture.md) has the rules, the suffixes, the testing per layer and the restock trade-off.
 
 ## Endpoints
 
@@ -79,8 +77,7 @@ Distributor, port 8090: `GET /api/titles`, `GET /api/titles/{ean}`, `GET /api/su
 
 ## Storefront
 
-The bookstore serves the built storefront at `/shop/`. To work on it with hot reload, start the bookstore and run the
-Vite dev server from `frontend/`, with the Node.js that Maven installed on the PATH:
+For hot reload, start the bookstore and run the Vite dev server from `frontend/` with the Maven-installed Node.js on the PATH:
 
     PATH="$PWD/node:$PATH" node/npm run dev
 
@@ -89,17 +86,25 @@ http://127.0.0.1:8080. Windows commands are in `frontend/README.md`.
 
 ## Assistant
 
-The chat assistant calls a language model with the key in the environment variable `BOOKSTORE_AI_API_KEY`, which you set
-before you start the bookstore. Without a key the bookstore starts in offline mode, and `POST /assistant/chat` answers
-503 with the error code `assistant-offline`. A message has at most 1000 characters and the bookstore answers at most 20
-chat requests a minute (429 beyond that). Set the key under this name only: do not use `ANTHROPIC_API_KEY`, which this
-app does not read and which other tools on your machine pick up.
+The assistant answers questions about the catalogue with read-only tools. Use the Assistant page of the storefront
+(http://localhost:8080/shop/#/assistant) or send `POST /assistant/chat` with a `conversationId` (a UUID you choose) and a
+`message`. The reply holds that `conversationId` and a `reply`; the last 20 messages of a conversation are kept.
+
+The key comes only from `BOOKSTORE_AI_API_KEY`, set in the shell where you start the bookstore. In bash that is
+`export BOOKSTORE_AI_API_KEY="..."`, in PowerShell `$env:BOOKSTORE_AI_API_KEY = "..."`. Warning: never set
+`ANTHROPIC_API_KEY` for the bookstore. The app does not read it, and Claude Code offers to use that variable instead of
+your own subscription, so your usage there would be billed to the workshop key.
+
+The model is `claude-haiku-5-5` unless `BOOKSTORE_AI_MODEL` names another one. The base URL is fixed to
+https://api.anthropic.com, and no temperature or other sampling setting is configured. Without a key the bookstore
+still starts, in offline mode, and `POST /assistant/chat` answers 503 with the code `assistant-offline`. A message has at
+most 1000 UTF-16 code units (an emoji counts as two). A longer, blank or missing message, or a missing `conversationId`,
+answers 400. At most 20 chat requests a minute per running instance reach the model; the rest answer 429.
 
 ## Tests
 
-`./mvnw verify` runs all tests and needs Docker: the database tests use PostgreSQL in a Testcontainers container, and
-there is no in-memory database. Maven activates the `test` profile. When you run a test from your IDE, add
-`-Dspring.profiles.active=test` to the run configuration, so the demo data stays out and the assistant stays offline.
+`./mvnw verify` needs Docker: tests use PostgreSQL in Testcontainers, never an in-memory database. Maven activates the
+`test` profile; in an IDE add `-Dspring.profiles.active=test`, so no demo data loads and the assistant stays offline.
 
 ## Demo data
 
@@ -110,6 +115,5 @@ A local run starts with 40 books, their stock and 6 orders for 3 customers. Ever
 - The other 20 books, their authors, the customers, their e-mail addresses and the orders are invented.
 - Sense and Sensibility (9789900010029) is left out on purpose, because `http/inventory.http` adds it.
 
-Run the files in `http/` on the demo data, in this order on one database: `catalogue.http`, `inventory.http`,
-`orders.http`, `distributor.http` and `demo-flow.http`. Run each file once per database, except `distributor.http`, which
-can run again. `demo-flow.http` walks from a search to a restock and needs the distributor.
+Run the files in `http/` in this order on one database: `catalogue.http`, `inventory.http`, `orders.http`,
+`distributor.http`, `demo-flow.http` (which needs the distributor). Run each once, except `distributor.http`.

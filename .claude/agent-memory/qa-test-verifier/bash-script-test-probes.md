@@ -18,7 +18,6 @@ Rule: before you accept a "green on macOS /bin/bash 3.2" claim, find out which b
 - Idempotency of `commit-tree` (same tree, message and dates give the same SHA): prove the date-variation witness with a negative control. A test copy with pinned dates must let the "always commit" mutant survive.
 - Push witnesses: an `update` hook in the bare remote that rejects the tag (atomic push). A PATH `git` shim that moves the remote ref right before `push` (lease). `GIT_TRACE=1` greps for `built-in: git push|ls-remote` (exact argv, plus "no network in default mode", with the `--push` trace as positive control).
 - A hostile-config positive control with a failing `reference-transaction` hook breaks even `git init`. That still proves the config bites.
-- actionlint has no `-color=never`; use `-no-color`. The image bundles shellcheck, so `run:` blocks are linted too.
 - A run with only some jobs created and conclusion `failure`: the jobs API shows nothing. Download the public run page and grep the annotation (`Internal server error. Correlation ID`). Compare with other branches' runs in the same window before you blame the workflow file.
 
 Related: [[shell-traps]], [[ci-workflow-verification]], [[env-switch-mutant-runner]]
