@@ -160,6 +160,42 @@ function blueTextSelectors(css: string): string[] {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
+// ob-on claims on descendant selectors: ".footer a { color: ...; /* ob-on: --ob-navy */ }" says that the link text sits on
+// the surface of ".footer". The claim must equal the background token of a rule for ".footer". A class without a
+// background of its own (a list inside the header) is listed with the class of the ancestor that carries the surface.
+// ---------------------------------------------------------------------------------------------------------------------
+
+const ANCESTOR_SURFACE_OWNERS: Readonly<Record<string, string>> = Object.freeze({ '.site-nav': '.site-header' })
+
+function backgroundTokenOf(rule: Rule): string | undefined {
+  const declaration = rule.declarations.find(([name]) => name === 'background' || name === 'background-color')
+  return declaration === undefined ? undefined : tokenIn(declaration[1])
+}
+
+// The surface a class sits on: the background of its own rule, else the background of its listed ancestor.
+function surfaceOf(rules: Rule[], base: string, owners: Readonly<Record<string, string>>): string | undefined {
+  const surfaceOfSelector = (selector: string) => rules.filter((rule) => rule.selector === selector).map(backgroundTokenOf).find((token) => token !== undefined)
+  return surfaceOfSelector(base) ?? (owners[base] === undefined ? undefined : surfaceOfSelector(owners[base]))
+}
+
+// Every ob-on claim of a rule whose selector is ".X" followed by a descendant or child part, with what is wrong with it.
+function descendantClaimProblems(css: string, owners: Readonly<Record<string, string>>): string[] {
+  const rules = parseRules(css)
+  const problems: string[] = []
+  for (const rule of rules) {
+    for (const part of rule.selector.split(',').map((selector) => selector.trim())) {
+      const base = /^(\.[\w-]+)[\s>+~]/.exec(part)?.[1]
+      if (base === undefined) continue
+      const surface = surfaceOf(rules, base, owners)
+      for (const claimed of rule.surfaces) {
+        if (claimed !== surface) problems.push(`${part}: claims ${claimed}, but ${base} sits on ${surface ?? 'no known surface'}`)
+      }
+    }
+  }
+  return problems
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Production data
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -410,5 +446,94 @@ describe('the focus ring', () => {
   it('would fail on mist and on teal, which the ring must stay away from', () => {
     expect(ratioOfTokens(FOCUS_RING, '--ob-mist')).toBeLessThan(MIN_NON_TEXT_RATIO)
     expect(ratioOfTokens(FOCUS_RING, '--ob-teal')).toBeLessThan(MIN_NON_TEXT_RATIO)
+  })
+})
+
+describe('the wordmark colour', () => {
+  it('is the only blue text rule in the stylesheets', () => {
+    expect(productionSheets.flatMap(([, css]) => blueTextSelectors(css))).toEqual(['.wordmark-book'])
+  })
+})
+
+describe('ob-on claims on descendant selectors', () => {
+  const footer = '.footer { color: var(--ob-white); background: var(--ob-navy); }'
+  const footerLink = (surface: string) => `.footer a { color: var(--ob-white); /* ob-on: ${surface} */ }`
+  const none = Object.freeze({})
+
+  it('accepts a claim that equals the background of the base rule', () => {
+    expect(descendantClaimProblems(`${footer} ${footerLink('--ob-navy')}`, none)).toEqual([])
+  })
+
+  it('flags a claim that differs from the background of the base rule', () => {
+    expect(descendantClaimProblems(`${footer} ${footerLink('--ob-white')}`, none)).toEqual([
+      '.footer a: claims --ob-white, but .footer sits on --ob-navy',
+    ])
+  })
+
+  it('flags one wrong surface among several claimed', () => {
+    expect(descendantClaimProblems(`${footer} ${footerLink('--ob-navy, --ob-snow')}`, none)).toEqual([
+      '.footer a: claims --ob-snow, but .footer sits on --ob-navy',
+    ])
+  })
+
+  it('flags a claim when the base rule is gone, so that no surface backs it', () => {
+    expect(descendantClaimProblems(footerLink('--ob-navy'), none)).toEqual([
+      '.footer a: claims --ob-navy, but .footer sits on no known surface',
+    ])
+  })
+
+  it('flags a claim when the base rule has no background token', () => {
+    const css = `.footer { color: var(--ob-white); background: transparent; } ${footerLink('--ob-navy')}`
+    expect(descendantClaimProblems(css, none)).toEqual(['.footer a: claims --ob-navy, but .footer sits on no known surface'])
+  })
+
+  it('reads the background of any rule of the base class, also one in a media query', () => {
+    const css = `.footer { margin: 0; } @media (min-width: 40rem) { ${footer} } ${footerLink('--ob-navy')}`
+    expect(descendantClaimProblems(css, none)).toEqual([])
+  })
+
+  it('reads a child combinator and every selector of a list', () => {
+    const css = `${footer} .footer > p, .footer span { color: var(--ob-white); /* ob-on: --ob-snow */ }`
+    expect(descendantClaimProblems(css, none)).toEqual([
+      '.footer > p: claims --ob-snow, but .footer sits on --ob-navy',
+      '.footer span: claims --ob-snow, but .footer sits on --ob-navy',
+    ])
+  })
+
+  it('follows the listed ancestor for a class without a background of its own', () => {
+    const css = '.header { background: var(--ob-white); } .nav { margin: 0; } .nav a { color: var(--ob-navy); /* ob-on: --ob-white */ }'
+    expect(descendantClaimProblems(css, { '.nav': '.header' })).toEqual([])
+    expect(descendantClaimProblems(css.replace('ob-on: --ob-white', 'ob-on: --ob-snow'), { '.nav': '.header' })).toEqual([
+      '.nav a: claims --ob-snow, but .nav sits on --ob-white',
+    ])
+    expect(descendantClaimProblems(css, none)).toEqual(['.nav a: claims --ob-white, but .nav sits on no known surface'])
+  })
+
+  it('leaves alone the claims of rules that are not a descendant of one class', () => {
+    expect(descendantClaimProblems('a { color: var(--ob-teal); /* ob-on: --ob-snow, --ob-white */ }', none)).toEqual([])
+    expect(descendantClaimProblems('.wordmark { color: var(--ob-navy); /* ob-on: --ob-white */ }', none)).toEqual([])
+    expect(descendantClaimProblems('.footer a:hover { color: var(--ob-white); }', none)).toEqual([])
+  })
+
+  it('holds for every stylesheet of the app', () => {
+    for (const [file, css] of productionSheets) {
+      expect(descendantClaimProblems(css, ANCESTOR_SURFACE_OWNERS), file).toEqual([])
+    }
+  })
+
+  it('catches the footer links turning unbacked when the footer rule is deleted from the real stylesheet', () => {
+    const withoutFooter = globalCss.replace(/\.site-footer \{[^}]*\}/, '')
+    expect(withoutFooter).not.toBe(globalCss)
+    expect(descendantClaimProblems(withoutFooter, ANCESTOR_SURFACE_OWNERS)).toEqual([
+      '.site-footer a: claims --ob-navy, but .site-footer sits on no known surface',
+    ])
+  })
+
+  it('lists only ancestors that carry a background in the real stylesheet', () => {
+    const rules = parseRules(globalCss)
+    for (const [className, owner] of Object.entries(ANCESTOR_SURFACE_OWNERS)) {
+      expect(rules.some((rule) => rule.selector === className), `${className} has a rule`).toBe(true)
+      expect(surfaceOf(rules, owner, none), `${owner} has a background`).toBeDefined()
+    }
   })
 })
