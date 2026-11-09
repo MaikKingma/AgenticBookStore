@@ -17,7 +17,7 @@ static chat page that spec 08 originally planned.
 - Backend: `StorefrontConfig` in the root package of the bookstore redirects `/` to `/shop/` and serves the
   storefront's `index.html` for `/shop/`.
 - Pages: catalogue (browse and search), book detail with stock level, basket, checkout, order status, order
-  history by e-mail, assistant chat.
+  history by e-mail, and the assistant as a chat widget on every page (decision D13).
 
 ## Out of scope
 - Authentication, accounts, payments, addresses, discounts (Level 0), cancelling orders (Level 3).
@@ -74,9 +74,9 @@ static chat page that spec 08 originally planned.
 ```
 main.tsx, App.tsx (HashRouter, routes)
 api/            client.ts (fetch wrapper, same-origin paths, ProblemDetail parsing), books.ts, inventory.ts, orders.ts, assistant.ts
-pages/          CataloguePage, BookDetailPage, BasketPage, CheckoutPage, OrderPage, OrdersPage, AssistantPage
-components/     SearchForm, BookCard, StockBadge, BasketSummary, ProblemDetailAlert, ChatMessageList
-state/          basket.tsx (React context, sessionStorage), conversation.ts (assistant conversation id)
+pages/          CataloguePage, BookDetailPage, BasketPage, CheckoutPage, OrderPage, OrdersPage
+components/     SearchForm, BookCard, StockBadge, BasketSummary, ProblemDetailAlert, ChatMessageList, AssistantWidget
+state/          basket.tsx (React context, sessionStorage), conversation.tsx (assistant conversation id and messages)
 ```
 The storefront keeps UI state only: the basket before an order is placed, the last search, the assistant
 conversation id. Quantities, totals and availability shown before checkout are presentation; the bookstore decides
@@ -90,7 +90,7 @@ at `POST /orders/commands/place`.
 | Checkout | `POST /orders/commands/place` (`PlaceOrderPayload`), then `GET /orders/{id}` |
 | Order status | `GET /orders/{id}` (`OrderView`) |
 | Order history | `GET /orders?customerEmail=` (`OrderSummaryView[]`) |
-| Assistant | `POST /assistant/chat` (`ChatPayload`, `AssistantReplyView`) |
+| Assistant widget | `POST /assistant/chat/stream` (`ChatPayload`, Server-Sent Events, spec 08 decision D13) |
 
 No new endpoint is needed at the time of writing. If implementation finds one missing, it is added to this spec as
 a backend task in the right inbound adapter (`query` for reads, `command` for writes), following the architecture
@@ -99,7 +99,7 @@ standard and the `hexagonal-slice` skill, before any frontend code depends on it
 ### Errors
 Every non-2xx response is parsed as RFC 9457 `ProblemDetail` and shown by `ProblemDetailAlert` with `title`,
 `detail` and the `details` list (for example the shortages of `insufficient-stock` or the `{field, message}` pairs of
-`validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline", `503
+`validation-failed`). The assistant widget shows `503 assistant-offline` as "The assistant is offline", `503
 assistant-unavailable` as "The assistant is unavailable right now, try again later" (decision D10) and `429` as
 "Too many requests, try again in a minute".
 
@@ -240,18 +240,52 @@ The storefront SHALL place the basket as one order with the customer's e-mail ad
 - **WHEN** the storefront calls `GET /orders?customerEmail=reader@example.com`
 - **THEN** it lists the orders newest first with status, date, item count and total, each linking to its order page
 
-### Requirement: Assistant chat
-The storefront SHALL provide the chat page for `POST /assistant/chat` with one conversation id per browser session.
+### Requirement: Assistant chat widget (decision D13, Maik 2026-11-09)
+The storefront SHALL offer the assistant as a classic chat widget: a round launcher button with a chat icon, fixed in
+the lower right corner of every page, opens a chat panel above it. There is no assistant page and no assistant link
+in the navigation; `#/assistant` is not a route. The widget streams answers from `POST /assistant/chat/stream`, with
+one conversation id per browser session.
 
-#### Scenario: Chat round trip
-- **GIVEN** a conversation id in `sessionStorage`
+- Launcher: a `button` with the accessible name "Open the assistant" and an inline SVG chat icon (no icon library,
+  no new npm dependency). When the panel is open it reads "Close the assistant".
+- Panel: `role="dialog"` with the label "OpenBook assistant", a header with a close button, the message list, the
+  input with its length counter and the send button. On a phone the panel takes the full width; from tablet width
+  it is a card of about 24rem wide. Escape and the close button close it; focus moves to the input on open and back
+  to the launcher on close.
+- The conversation (id and messages) lives in a React context backed by `sessionStorage`, so it survives navigation
+  between pages and a reload, and starts fresh in a new browser session.
+- Streaming: the storefront reads the event stream with `fetch` and a stream reader (`EventSource` cannot post);
+  each `delta` is appended to the assistant message as it arrives. While an answer streams, the send button is
+  disabled and the message list announces "The assistant is typing" once through a polite live region, not every
+  chunk. The finished answer is announced once.
+- The launcher and the open panel never hide the footer text or the last content for good: the page leaves room at
+  the bottom for the launcher (decision D11 still holds).
+- Colours come from the tokens and every pair meets WCAG 2.2 AA (the launcher is teal with a white icon).
+
+#### Scenario: Open and close
+- **GIVEN** any page of the storefront
+- **WHEN** the user activates "Open the assistant", then presses Escape
+- **THEN** the dialog "OpenBook assistant" opens with focus in the input, then closes with focus back on the launcher
+
+#### Scenario: Streamed chat round trip
+- **GIVEN** a conversation id in `sessionStorage` and a server that streams three `delta` events and a `done` event
 - **WHEN** the user sends "Do you have anything by Austen?"
-- **THEN** the storefront posts `ChatPayload { conversationId, message }`, shows the user message and the `reply` of `AssistantReplyView`, and reuses the same conversation id for the next message
+- **THEN** the storefront posts `ChatPayload { conversationId, message }` to `/assistant/chat/stream`, shows the user message, shows the assistant message growing with each chunk, and reuses the same conversation id for the next message
+
+#### Scenario: Conversation survives navigation
+- **GIVEN** a conversation with one answered question in the widget
+- **WHEN** the user navigates from the catalogue to a book detail page and opens the widget
+- **THEN** the question and the answer are still shown
 
 #### Scenario: Assistant offline
 - **GIVEN** the server answers 503 with `code` `assistant-offline`
 - **WHEN** the user sends a message
-- **THEN** the page shows "The assistant is offline" and the input stays usable
+- **THEN** the widget shows "The assistant is offline" and the input stays usable
+
+#### Scenario: Failure mid-stream
+- **GIVEN** the server streams one `delta` event and then an `error` event with `code` `assistant-unavailable`
+- **WHEN** the user sends a message
+- **THEN** the widget keeps the partial text, marks the answer as incomplete and shows "The assistant is unavailable right now, try again later"
 
 #### Scenario: Message length
 - **WHEN** the user types more than 1000 characters
@@ -298,7 +332,8 @@ Frontend (Vitest + React Testing Library, `fetch` mocked):
 - `basket.test.tsx`: add, merge, quantity bounds, sessionStorage persistence, clear after order.
 - `CheckoutPage.test.tsx`: payload shape, navigation after 202, insufficient-stock details, validation details.
 - `OrderPage.test.tsx` and `OrdersPage.test.tsx`: rendering of `OrderView` and `OrderSummaryView[]`.
-- `AssistantPage.test.tsx`: round trip, conversation id reuse, 503 and 429 messages, length limit.
+- `AssistantWidget.test.tsx`: open and close with focus, streamed round trip, conversation id reuse, survives
+  navigation, 503 and 429 messages, failure mid-stream, length limit (decision D13).
 - `client.test.ts`: ProblemDetail parsing for 400, 404, 409, 422, 503.
 
 Bookstore:
@@ -324,13 +359,13 @@ Frontend tasks (follow this spec and `product/tech-stack.md`):
 5. API client with ProblemDetail parsing and its tests.
 6. Catalogue and book detail pages with tests.
 7. Basket state, basket page, checkout page, order page, orders page with tests.
-8. Assistant page with tests.
+8. Assistant chat widget with tests (decision D13 replaced the assistant page).
 9. `./mvnw clean verify` from a clean clone without a global Node.js; record the time in
    `docs/spec-pack/orchestrator/progress.md`; manual walk through every page against the running bookstore.
 
 ## Definition of done
-- OpenBook branding: screenshots of the catalogue, book detail, basket, checkout, order, orders and assistant pages
-  (desktop and phone width) are committed in the spec folder's `visuals/` and linked from the spec PR.
+- OpenBook branding: screenshots of the catalogue, book detail, basket, checkout, order and orders pages and the
+  open assistant widget (desktop and phone width) are committed in the spec folder's `visuals/` and linked from the spec PR.
 - `./mvnw clean verify` green from the repo root, including the frontend tests and build; time recorded.
 - `GET /` redirects to `/shop/`; every page of this spec works in a browser against the running bookstore.
 - The REST paths of specs 02 to 08 are byte-for-byte unchanged (diff of the `*Commands` and `*Queries` classes is
