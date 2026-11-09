@@ -45,7 +45,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
-| T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
+| T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
@@ -351,6 +351,25 @@ From the T7 meta-review (qa-lead ENDORSE r1; T7 page hashes in `t7-hashes.txt`):
   FF-36 target check: on the Pages build `#level-cleared-when` is a single `h2` with text "Level cleared when"
   followed directly by the task list; T8 also checks that `#part-a-lsp` is on the "Part A: LSP" `h2` and that the
   setup page link lands there.
+From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
+
+- FF-41 (T9, T10, T11 verifiers and qa-final, built meta descriptions): (a) quote the built
+  `<meta name="description">` of each page in the task; on a level page it reads `Goal: ` plus the pinned Goal
+  sentence with no words dropped, on other pages the page's first sentence; it never contains `{/` or `*/`; T11 and
+  qa-final list all eleven pages. (b) The L2 fix per A11: the only change to the L2 page is one added frontmatter
+  line; the T11 verifier shows `git diff` on that file is exactly that line, the file with the line removed hashes to
+  the `t8-hashes.txt` value, and the built L2 description equals the Goal sentence. Author rule (T9 to T11): add a
+  `description:` only where (a) fails; ASCII, quoted, the source sentence verbatim.
+- FF-42 (T9, T10 verifiers, whole-line commands): every fenced command line equals a pack command line after trim, or
+  is listed with its source as a forced form; a line that only contains a pack command is a finding; backed by one
+  must-fail mutant (a token appended to a fenced command) that the checker passes and this check fails.
+- FF-43 (T9, T10 verifiers; qa-final on the merge result, names the page relies on): check every repo path or class
+  name the page names, prompts included, with `git ls-files` or `git grep` on HEAD; if absent there, check
+  `origin/factory` and say which spec creates it; a name absent from both must be a spec 10 solution-branch artifact
+  the page presents as one (for T9: `.githooks/`, `tests-before-commit.sh`); otherwise it is a finding. qa-final
+  checks `DistributorAppServiceImpl` and `contracts/distributor/README.md:16` on the spec PR merge result.
+- Process note: only the FF-38 retitle mutant needs a build; other page mutants need only the frozen
+  `node scripts/check.mjs`.
 - Gate 2 owner note from T7: Level 1 step 2 says "Try both" (import and path) before the checkpoint expects
   `docs/architecture.md` not to be loaded; a participant who kept the `@` import sees it loaded. The page follows the
   pack.
@@ -467,6 +486,12 @@ From the T7 meta-review (qa-lead ENDORSE r1; T7 page hashes in `t7-hashes.txt`):
     baseline `t5c-freeze-baseline-hashes.txt` replaces it for FF-32 (a).
   - AC5: no new dependency; no product file outside `guide/scripts/**`; no test is removed or weakened; node:test total
     unchanged or larger, every title kept.
+
+- A11 (2026-11-09, orchestrator, on the QA lead's T8 recommendation): the built meta description of the Level 2 page
+  drops the span between the two colons of its Goal line (the only Goal with a second colon). T11's fileScope gains
+  exactly one added frontmatter line on `guide/docs/03-level-2-give-your-agent-eyes.mdx`:
+  `description: "Goal: Let the agent see what you see: the code through a language server, and real external data through our own MCP server, instead of guessing."`
+  (the WP:177-178 Goal verbatim). Checked under FF-41 (b). Consequence: one line; no other change to the L2 page.
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 
