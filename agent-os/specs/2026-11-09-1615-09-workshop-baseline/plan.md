@@ -62,8 +62,8 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | (see PR list) | sdd/09-workshop-baseline/T5 | (see PR list) |
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
 | T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
-| T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | todo | | | | | | |
-| T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | (QA strategy) | | | todo | | | | | | |
+| T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | elevated | sonnet | sonnet | todo | | | | | | |
+| T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | standard | sonnet | sonnet | todo | | | | | | |
 
 Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
 
@@ -298,7 +298,21 @@ Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
      must-kill seeds of T6 (a seed holding 9780141439792 or 9789900010791 fails); the rerun, edit-survives and ASCII
      tests stay; referee green within 60 s; ArchitectureTest unchanged.
   7. Live on an isolated PostgreSQL: `GET /books` returns 103 (under the 200 cap), every genre filter shows 10
-     AVAILABLE books, and `/shop/` renders every card.
+     AVAILABLE books (MYSTERY, HISTORY and SCIENCE return 11 with one discontinued, G26), and `/shop/` renders every
+     card.
+- qaDirective: ledger C0 plus T8-A to T8-G, must-kill probes N1 to N21.
+- Gate findings folded in (ledger "T8 and T9 strategy"): G19 every old non-comment line byte-identical except three
+  lines that gain a trailing comma, orders statements byte-identical (diff script); G20 the new rows go into the five
+  existing INSERT statements, gate grep INSERT 5, `ON CONFLICT DO NOTHING` 5, `DO UPDATE` 0; G21 bookstore-only range
+  means prefix `978990003`, asserted for all 83; G22 the seven-ISBN check is its own test over all 103 ISBNs so the
+  range check cannot shadow it; G23 one map check of AVAILABLE per genre equal to 10, the exact set of 3 discontinued
+  ISBNs, 103 in total; G24 above the level means available above the reorder level, reserved 0, signal false, no
+  pending restock (count of items above the level 33 becomes 96); G25 (b) picked by the orchestrator: titles
+  distinct and none matching a distributor title or author, plus a census test pinning `austen` -> {9780141439518,
+  9789900010012} (FICTION only the first) and `treasure` -> {9789900010715}; G27 only the census lines A5 supersedes
+  change, new counts exact literals; G28 the SQL header states the new counts, lines 15 to 19 stay true.
+- New books per genre (no existing row changes): FICTION 1, ROMANCE 5, SCIENCE_FICTION 5, FANTASY 6, MYSTERY 7,
+  TECHNOLOGY 7, POETRY 8, CHILDREN 8, HISTORY 8, SCIENCE 8 (63).
 
 ## T9 Count and wording updates for the new seed (D12) and the guide link (G11 settled)
 
@@ -313,6 +327,12 @@ Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
      ae2a5f2).
   3. Only those sentences change (word diff); README at most 120 lines; ASCII, no em dash; `ANTHROPIC_API_KEY` once;
      request bytes of the http files unchanged; T3 claims elsewhere unchanged.
+- qaDirective: ledger C0 plus T9-A to T9-E.
+- Gate findings folded in: G29 `docs/architecture.md` and `http/demo-flow.http` hold no seed count and stay
+  byte-identical; the sentences that change are README:112, README:116 and line 2 of catalogue, inventory and orders
+  http; G30 every number equals the T8 census; G31 the link is exactly https://maikkingma.github.io/AgenticBookStore/
+  (Docusaurus url plus baseUrl of spec 11), no `guide/` folder named; it answers 404 until spec 11 deploys (residual
+  R16); G32 a word diff per file against the baselines.
 
 ## Amendments
 
