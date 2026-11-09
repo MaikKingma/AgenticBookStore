@@ -83,17 +83,19 @@ describe('BookDetailPage content', () => {
     ])
     expect(screen.getByText('2016')).toBeInTheDocument()
     expect(screen.getByText('19.99 EUR')).toBeInTheDocument()
-    expect(screen.getByText('TECHNOLOGY')).toBeInTheDocument()
+    expect(screen.getByText('Technology')).toBeInTheDocument()
+    expect(screen.queryByText('TECHNOLOGY')).not.toBeInTheDocument()
     expect([...mock.calls.map((call) => call.path)].sort()).toEqual([`/books/${BOOK_ID}`, `/inventory/${BOOK_ID}`])
   })
 
-  it('shows the price with the currency the bookstore sent, the genre as sent and the year', async () => {
+  it('shows the price with the currency the bookstore sent, the genre label and the year', async () => {
     mockFetch(routes(bookView({ price: '7.99', currency: 'GBP', genre: 'SCIENCE_FICTION', publicationYear: 1984 }), stockView()))
 
     render(page())
 
     expect(await screen.findByText('7.99 GBP')).toBeInTheDocument()
-    expect(screen.getByText('SCIENCE_FICTION')).toBeInTheDocument()
+    expect(screen.getByText('Science fiction')).toBeInTheDocument()
+    expect(screen.queryByText('SCIENCE_FICTION')).not.toBeInTheDocument()
     expect(screen.getByText('1984')).toBeInTheDocument()
     expect(screen.queryByText('EUR')).not.toBeInTheDocument()
   })
@@ -523,5 +525,25 @@ describe('BookDetailPage when the book in the address changes', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Neuromancer' })).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.getByText('3 available')).toBeInTheDocument()
+  })
+})
+
+describe('BookDetailPage genre labels', () => {
+  it('shows the genre label, not the enum name', async () => {
+    mockFetch(routes(bookView({ genre: 'SCIENCE_FICTION' }), stockView()))
+
+    render(page())
+
+    expect(await screen.findByText('Science fiction')).toBeInTheDocument()
+    expect(screen.queryByText('SCIENCE_FICTION')).not.toBeInTheDocument()
+  })
+
+  it('shows the genre label Technology for TECHNOLOGY', async () => {
+    mockFetch(routes(bookView({ genre: 'TECHNOLOGY' }), stockView()))
+
+    render(page())
+
+    expect(await screen.findByText('Technology')).toBeInTheDocument()
+    expect(screen.queryByText('TECHNOLOGY')).not.toBeInTheDocument()
   })
 })
