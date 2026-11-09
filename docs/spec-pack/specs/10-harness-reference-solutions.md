@@ -481,6 +481,15 @@ contradicts `CLAUDE.md`.
 - **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
 
 ## Tasks
+Decision D14 (Maik, 2026-11-09): no agent runs Claude Code headlessly for this spec. Maik rehearses every level
+himself (2026-11-10). Agents build every file of every branch directly and replace each "run its scenarios" and
+"rehearse" step below with a careful consistency check: every file matches this spec, the guide (spec 11) and the
+code on `main`; every path, command, skill, hook, agent and setting a scenario names exists and is spelled the same
+everywhere; `./mvnw clean verify` is green on each branch. Files that a Claude Code step would generate (the Spec Kit
+constitution, the Agent OS `/plan-product` output and the discovered and indexed standards) are written directly
+from this pack's product docs and listed for Maik's rehearsal review. The scenarios that need a Claude Code session
+(including the LSP rehearsal of task 3 and the "Rehearsed in time" scenario) become Maik's manual rehearsal checks.
+
 1. Create `solution/level-1` with the files above; run its scenarios.
 2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
    contract test with the distributor MCP; run its scenarios.
@@ -493,6 +502,7 @@ contradicts `CLAUDE.md`.
 6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
 
 ## Definition of done
-- All branches exist, verify green on each, every acceptance scenario above checked and recorded.
-- LSP rehearsal recorded for macOS (first-index time, multi-module result); Linux and Windows through WSL listed as a
+- All branches exist, verify green on each, every acceptance scenario above checked and recorded: by the consistency
+  check where no Claude Code session is needed, and listed as Maik's manual rehearsal check where it is (decision D14).
+- LSP rehearsal on macOS listed as Maik's manual rehearsal check (decision D14); Linux and Windows through WSL listed as a
   manual check for Maik (decision D8).

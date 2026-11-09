@@ -191,21 +191,28 @@ not by a separate agent.
 Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
 cap).
 
-## D13. Assistant as a chat widget with streamed answers
+Clarified by the main session on 2026-11-09 after the spec 09 orchestrator found a contradiction (10 genres times at
+least 10 AVAILABLE books leaves no room for discontinued books in exactly 100): the seed has 103 books, 100 AVAILABLE
+(exactly 10 per genre) plus the 3 discontinued bookstore-only books spec 09 already asks for. This keeps both of
+Maik's requirements and fits under the cap of 200.
 
-Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant,
-and answers must be streamed.
+## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
 
-- The storefront drops the assistant page and its navigation link. A round launcher button with a chat icon sits in
-  the lower right corner of every page and opens a chat panel. The conversation survives navigation and lasts for
-  the browser session.
-- The bookstore adds `POST /assistant/chat/stream`, which sends the reply as Server-Sent Events (`delta`, then
-  `done`; `error` when the model fails after the first chunk). Errors before the stream starts stay ProblemDetail,
-  the same as `POST /assistant/chat`. The JSON endpoint stays unchanged for the `.http` files, tests and workshop
-  exercises.
-- The D10 rule holds while streaming: a failed answer does not stay in the conversation memory.
+Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
+(a launcher in the lower right corner of every page instead of a page), and answers must be streamed over a new
+`POST /assistant/chat/stream`. Shortly after, Maik made it optional and deferred it to after the first release.
 
-Changed files: `specs/08-bookstore-assistant.md` (What changes, API, requirement "Streamed answers", tests),
-`specs/12-storefront.md` (structure, endpoints, requirement "Assistant chat widget", tests, tasks, definition of
-done). Built as one change cycle after `fix-08-assistant-review` and `fix-12-genre-labels-footer` are merged, because
-it touches the same files.
+The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
+12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.
+
+## D14. Spec 10: no headless Claude Code runs; Maik rehearses the levels
+
+Maik, 2026-11-09: the agents' headless Claude Code runs cannot log in under the isolated HOME that protects Maik's
+real `~/.claude`. Instead of a login workaround, Maik rehearses every level himself on 2026-11-10. The agents build
+every branch file directly and replace each scenario run and rehearsal with a careful consistency check against spec
+10, the guide and the code on `main`, with `./mvnw clean verify` green on every branch. Files a Claude Code step would
+generate (Spec Kit constitution, Agent OS product docs and standards) are written directly from the pack and listed
+for Maik's review. Scenarios that need a Claude Code session, the macOS LSP rehearsal and the timed Level 4 rehearsal
+are Maik's manual checks.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble, Definition of done).

@@ -81,6 +81,10 @@ metadata:
   new block; fixtures for a page that only reads some fields can omit the C0-6c words (isbn, onHand, reserved). Shared
   in-flight state (a request that outlives its page) belongs in the root provider with a `useRef` guard next to the
   state: only a same-tick hook test (`act(() => { place(); place() })`) kills a state-only guard.
+- CSS source-level contract tests (styleContract.test.ts): read the effective cascade (top-level rules only, source order, last
+  declaration wins; comments and media queries excluded) and put the real assertions in helpers that throw; run the helper on
+  the real file and, via `expect(() => helper(css)).toThrow()`, on one-mutation variants of a passing fixture. `Number(` and
+  `parseFloat` hit the C0-6c greps: use unary `+x`. DOM element arrays: `toEqual` is `isEqualNode`, compare identity with `toBe`.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.

@@ -13,11 +13,7 @@ around a shared API key. The assistant is an **inbound adapter** in the onion: i
 - System prompt as a resource: `src/main/resources/prompts/assistant-system.st`.
 - Chat memory per conversation (`MessageWindowChatMemory`, 20 messages, in-memory repository).
 - Offline mode when no API key is configured, and a rate limit that protects the shared workshop key.
-- Streamed answers (decision D13, Maik 2026-11-09): `POST /assistant/chat/stream` sends the reply as Server-Sent
-  Events while the model writes it. `POST /assistant/chat` (JSON) stays unchanged for the `.http` files, tests and
-  workshop exercises.
-- No UI in this spec. The chat widget is part of the React storefront (spec 12), which calls
-  `POST /assistant/chat/stream`.
+- No UI in this spec. The chat page is part of the React storefront (spec 12), which calls `POST /assistant/chat`.
   This spec delivers the endpoint only; `http/assistant.http` (spec 09) and curl are the manual clients until then.
 
 ## Out of scope
@@ -64,7 +60,6 @@ point the customer to the shop for orders; answer in the language of the custome
 | Method and path | Body | Success | Errors |
 |---|---|---|---|
 | `POST /assistant/chat` | `ChatPayload { conversationId (UUID), message }` | 200 `AssistantReplyView { conversationId, reply }` | 400 validation or message too long, 429 rate limit (`AssistantRateLimiter` throws Spring's `ErrorResponseException` with `TOO_MANY_REQUESTS`), 503 assistant offline (`UnavailableException`, code `assistant-offline`), 503 assistant unavailable when a live model call fails (`UnavailableException`, code `assistant-unavailable`, decision D10) |
-| `POST /assistant/chat/stream` (decision D13) | `ChatPayload { conversationId (UUID), message }` | 200 `text/event-stream`: one or more `delta` events (data `{"text": "..."}`, the reply in order), then one `done` event (data `{"conversationId": "..."}`) | Before the stream starts, exactly the errors of `POST /assistant/chat` as ProblemDetail (400, 429, 503 `assistant-offline`, 503 `assistant-unavailable` when the call fails before the first chunk). A failure after the first chunk ends the stream with one `error` event (data `{"code": "assistant-unavailable", "title": "Assistant unavailable", "detail": "..."}`) and no `done` event |
 
 ## Requirements
 
@@ -113,34 +108,6 @@ Implementation note: Spring AI's Anthropic auto-configuration may refuse an empt
 `OfflineChatModel` bean) and verify it at build time. The behaviour above is what matters. Class names must satisfy
 the `assistant` naming rule (the post-processor can be `AssistantModeConfig`).
 
-### Requirement: Streamed answers (decision D13, Maik 2026-11-09)
-`POST /assistant/chat/stream` SHALL stream the reply as Server-Sent Events with the same system prompt, tools,
-conversation memory, validation, rate limit, offline mode and failure rules as `POST /assistant/chat`. Use Spring
-AI's `ChatClient` streaming (`stream()`); the tool loop must still run, *verify at build time* that tool calls work
-while streaming in Spring AI 2.0.2. The concatenated `delta` texts are the reply that the memory stores. The SSE
-event and data shapes are records with an `assistant` suffix (for example `AssistantStreamEventView`). Spring AI and
-Reactor types stay inside `assistant`.
-
-#### Scenario: Streamed round trip
-- **GIVEN** a `ScriptedChatModel` that streams the reply "Pride and Prejudice is in stock." in three chunks
-- **WHEN** a client posts "Do you have anything by Austen?" to `/assistant/chat/stream`
-- **THEN** the response is `text/event-stream` with three `delta` events whose texts join to that reply, then one `done` event with the conversation id
-
-#### Scenario: Streamed follow-up uses memory
-- **GIVEN** conversation X received a streamed answer about "Frankenstein"
-- **WHEN** conversation X streams "Is it in stock?"
-- **THEN** the model receives the earlier question and the full streamed answer of X, and nothing of conversation Y
-
-#### Scenario: Failure mid-stream
-- **GIVEN** a `ScriptedChatModel` that streams one chunk and then throws
-- **WHEN** a client posts to `/assistant/chat/stream`
-- **THEN** the stream holds one `delta` event, then one `error` event with `code` `assistant-unavailable` and no `done` event, and the conversation memory holds no entry for that question (decision D10)
-
-#### Scenario: Errors before the stream
-- **GIVEN** no key is configured, or 20 requests in the current minute, or a message longer than 1000 characters
-- **WHEN** a client posts to `/assistant/chat/stream`
-- **THEN** the response is the same ProblemDetail as `POST /assistant/chat` gives (503 `assistant-offline`, 429, 400), not an event stream, and the model is not called
-
 ### Requirement: Shared-key guardrails
 The assistant SHALL reject messages longer than 1000 characters and SHALL limit requests to 20 per minute per application instance.
 
@@ -151,9 +118,7 @@ The assistant SHALL reject messages longer than 1000 characters and SHALL limit 
 
 ## Tests (required)
 - `BookstoreToolsTest` (mocked flows; caps and error strings).
-- `AssistantCommandsTest` (`@WebMvcTest`: validation, 429, 503), plus the stream endpoint's errors before the
-  stream (decision D13).
-- `ScriptedChatModel` also implements `stream()` with scripted chunks, so the streaming scenarios run offline.
+- `AssistantCommandsTest` (`@WebMvcTest`: validation, 429, 503).
 - `AssistantIntegrationTest` with `ScriptedChatModel` (a `ChatModel` implementation in test sources that returns
   scripted responses, including an `AssistantMessage` with a tool call) covering grounding and memory scenarios.
   In Spring AI 2.0 `ChatModel.call()` no longer executes tools; the tool loop runs in ChatClient's auto-registered
