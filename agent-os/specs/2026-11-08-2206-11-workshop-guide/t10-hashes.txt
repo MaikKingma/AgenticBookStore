@@ -1,0 +1,1 @@
+643726302e88c1043beafd654e1ffcea0a43f170130fcedc9c4aa59c15d89f79  guide/docs/05-level-4-spec-driven-development.mdx

@@ -47,7 +47,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
-| T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | in QA | #119 | sdd/11-workshop-guide/T10 | |
+| T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
@@ -409,6 +409,30 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   rehearsal; (R4) L3 line 55 "Two deny rules guard the escape hatches" also calls the `.env` rule an escape hatch,
   which the pack uses only for the `--no-verify` path (WP:266-268); loose wording, not a false claim. The T9 page hash
   is in `t9-hashes.txt`.
+
+- FF-47 (T11 verifier and qa-final; replaces the FF-32 (c) sum over `guide/docs`; orchestrator ruling from T10): the
+  three `track` group labels are exempt from the FF-31 (a) label alphabet as exactly these strings, not as "colon
+  allowed": `Track A: OpenSpec`, `Track B: Spec Kit`, `Track C: Agent OS` (page grammar strategy.md:198, frozen
+  `TAB_GROUPS.track`, rule (g) exact equality). The total `<TabItem` count equals the plain-alphabet count plus
+  `git grep -cE '<TabItem[^>]*label="(Track A: OpenSpec|Track B: Spec Kit|Track C: Agent OS)"' -- guide/docs`, which
+  is exactly 3, all on the L4 page; the `label=\{|label="[^"]*[&\\]` grep prints nothing. Authoring rule: no label
+  outside the `track` group contains a colon.
+- FF-38 full list (T11, qa-final): Checkpoint counts L0 0, L1 1, L2 2, L3 3, L4 0 (the T10 justification, ruled valid
+  by qa-t10 and the QA lead), with one must-fail mutant that adds or retitles a checkpoint.
+- FF-46 extension (qa-final): also re-run T10's `qa-t10-s11-sem.mjs`, `qa-t10-s11-mutants.mjs` and
+  `qa-t10-s11-ff39.mjs`; base sha 82227c4 and port 3310 are literals in them: re-point them to the spec PR base and
+  port 3399 and quote the edit. Re-check the assertions that pin decisions or page conventions rather than pack text:
+  SEM-18 (0 checkpoints), SEM-02 (the track-label ruling), SEM-06 (the one forced form), SEM-22 ("5 minutes"),
+  SEM-11 (the "built from" count). `t10-hashes.txt` is 1 OK at T11 and on the merge result.
+- FF-48 (T11 implementer and verifier): Level 4 command names on the cheat sheet match the L4 page (`/speckit-specify`
+  with a dash, `openspec validate --strict`, the `/opsx:` forms, `/inject-standards testing`). No reference page has
+  an OpenSpec install line, except the SDD:146-151 "after the workshop" table rows quoted word for word (F8).
+- Gate 2 owner notes from T10: the pack does not say where the OpenSpec CLI comes from (F8; the page states no install
+  step); `docs/architecture.md`, `.mcp.json`, `/ship` and the `start/level-4-*` branches with their framework files
+  exist only after specs 09 and 10 (the page names them as the pack does); "use your own change name" for briefs B
+  and C is card text, not pack text; the sync moment sits after the briefs (WP section 9 order); Level 4 has 0
+  checkpoints; optional wording: Track B step 2 says "Answer up to five questions" before the `/speckit-clarify`
+  fence, while SDD:119 gives the command first. The T10 page hash is in `t10-hashes.txt`.
 
 ## Amendments
 
