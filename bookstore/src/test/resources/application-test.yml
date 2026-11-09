@@ -1,2 +1,6 @@
 # Test-only overrides of application.yml. Surefire activates the test profile for every test.
 # Never add an application.yml to the test resources: it would shadow the main one.
+spring:
+  flyway:
+    # Schema only: the demo data under db/seed must never load in tests.
+    locations: classpath:db/migration
