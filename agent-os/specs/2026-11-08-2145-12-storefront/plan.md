@@ -34,7 +34,7 @@ gate and green checks.
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | #92 | sdd/12-storefront/T8 | PASS r1 | ENDORSE |
 | T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | #96 | sdd/12-storefront/T9 | PASS r2 | ENDORSE |
 | T10 | root | [T8, T9] | 10 | critical | opus | clean-state referee without global Node (cold and warm times), probes, live checks on a throwaway Postgres (GQ1, no `docker compose`), browser walk-through, GQ8 checks, 14 screenshots in `visuals/`, `verification-record.md` | #99 | sdd/12-storefront/T10 | PASS r1 | ENDORSE |
-| T11 | frontend | [T10] | 11 | elevated | sonnet | fix task (A11): order table keeps whole words and scrolls at 390 px, no `/favicon.ico` request, 14 screenshots retaken, record updated | | | | |
+| T11 | frontend | [T10] | 11 | elevated | sonnet | fix task (A11): order table keeps whole words and scrolls at 390 px, no `/favicon.ico` request, 14 screenshots retaken, record updated | #101 | sdd/12-storefront/T11 | PASS r1 | ENDORSE |
 
 Batches are sequential because tasks run one at a time; T1 and T2 are independent, T4 and T5 are independent, T8 and
 T9 are independent.
@@ -246,6 +246,13 @@ Never fable.
   quote both measurements (implementer 25.1 / 21.1 s, verifier 34.1 / 30.0 s under parallel load). origin/factory is
   merged again before qa-final; baselines then come from a base referee on the merged factory commit (FF-T10 3).
   Gate re-run self-accepted.
+- A12 (2026-11-09, orchestrator, after T11): accepted in T11 a second addition `.order-lines th, .order-lines td:not(:first-child)
+  { white-space: nowrap }` so the order table's header cells keep their 1280 px height at 390 px (the QA lead's T11 block
+  called nowrap optional; it has its own pin test and probes). Residuals for Gate 2: i01 (a later cascading rule would
+  pass the text pins; qa-final checks the live computed style), R19 (`/shop/index.html` is served with `Last-Modified`
+  1980 and no `Cache-Control`, so a returning browser can keep a stale page after a rebuild; recommended follow-up:
+  `Cache-Control: no-cache` for the storefront page via StorefrontConfig, through /sdd-bugfix), R20 (favicon fix proven in
+  Chromium only). Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 

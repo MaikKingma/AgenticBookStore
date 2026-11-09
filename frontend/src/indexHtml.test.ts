@@ -21,6 +21,10 @@ describe('index.html', () => {
     expect(indexHtml).toContain('<script type="module" src="/src/main.tsx"></script>')
   })
 
+  it('declares an empty icon once, so a fresh browser does not ask the server for a favicon file', () => {
+    expect(indexHtml.match(/<link\b[^>]*\brel="icon"[^>]*>/g)).toEqual(['<link rel="icon" href="data:," />'])
+  })
+
   it('loads nothing from another host', () => {
     expect(externalUrls(indexHtml)).toEqual([])
   })

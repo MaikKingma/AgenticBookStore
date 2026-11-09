@@ -71,6 +71,11 @@ metadata:
   origins) becomes the generic alert instead of a stuck pending state. A reply with edge whitespace cannot be awaited with
   `findByText` (it normalises); await the author label instead and compare `li.textContent` byte-exact. A counter is
   checked with `toHaveAccessibleDescription` when the textarea points at it with `aria-describedby`.
+- Live checks after a rebuild: the jar serves `index.html` with `Last-Modified` 1980, so a REUSED Playwright session can keep
+  the old `index.html` (old CSS hash) and measure the old build. Open a new session per build. `overflow-wrap: anywhere`
+  inherited from `.card` makes `th`/`td` min-content 1 char: `overflow-wrap: normal` alone still wraps headings at spaces
+  (taller on a phone); add `white-space: nowrap` for the short columns. A style test needs a non-colour property in CSS
+  fixtures (`color: red` trips the colour-literal scan).
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
