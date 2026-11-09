@@ -76,3 +76,9 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      Live read-timeout default: chaos latency above the timeout, a direct-call witness taking at least that latency,
      then the import's `time_total` inside [timeout, latency); one row-count query after all failure phases proves
      "nothing saved" for every mode at once. Held first time in spec 06 qa-final.
+   - "Every X clears/does Y" next to an unrelated comparison in the same method (receive: clear pending, reset the
+     signal only above the level): list one witness strictly inside each region the comparison splits, not only its
+     boundary; a test ending exactly at the level leaves the `>=` guard mutant alive (spec 07 T1 X1d, cost a round).
+   - Length bounds on a string kept as given: add a witness padded with a trailing space to n+1 (kills a length
+     measured on `strip()`). In a slice test the 65th character must not be a space: PostgreSQL silently truncates
+     excess trailing spaces in `varchar(n)` instead of failing.
