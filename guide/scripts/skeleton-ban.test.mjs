@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {readdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {closeSync, mkdtempSync, openSync, readdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {runChecks} from './check.mjs';
@@ -190,20 +190,57 @@ test('cli: no flag switches the ban off, the default root still fails with the s
   });
 });
 
+// The CLI ends a failing run with process.exit(1). Over a pipe (spawnSync's default, and the Linux CI runner) Node writes
+// asynchronously, so a long stderr that is still queued at that moment is cut off (seen on CI at byte 19555 of 33219, and
+// reproduced in a Linux container). A file write is synchronous, so a run captured through files always arrives whole.
+// Use it for any run whose output is long; the short runs above fit the pipe and stay on spawnSync.
+function runCliCaptured(script, cwd) {
+  const dir = mkdtempSync(join(tmpdir(), 'cli-capture-'));
+  const stdoutFile = join(dir, 'stdout');
+  const stderrFile = join(dir, 'stderr');
+  const stdoutFd = openSync(stdoutFile, 'w');
+  const stderrFd = openSync(stderrFile, 'w');
+  try {
+    const {status} = spawnSync(process.execPath, [script], {cwd, stdio: ['ignore', stdoutFd, stderrFd]});
+    return {status, stdout: readFileSync(stdoutFile, 'utf8'), stderr: readFileSync(stderrFile, 'utf8')};
+  } finally {
+    closeSync(stdoutFd);
+    closeSync(stderrFd);
+    rmSync(dir, {recursive: true, force: true});
+  }
+}
+
+// Strip every marker but one in a guide copy, as a finished guide with one relapse would look.
+function stripAllMarkersBut(guide, keepName) {
+  const docs = join(guide, 'docs');
+  for (const entry of readdirSync(docs, {recursive: true, withFileTypes: true})) {
+    if (!entry.isFile() || !/\.(md|mdx)$/.test(entry.name)) continue;
+    const abs = join(entry.parentPath, entry.name);
+    const text = readFileSync(abs, 'utf8');
+    if (!text.includes(SKELETON_MARKER)) continue;
+    writeFileSync(abs, entry.name === keepName ? text : replaceOnce(text, SKELETON_MARKER, ''));
+  }
+}
+
+test('cli: a failing run with hundreds of errors delivers its whole stderr, the last line is the failed count', () => {
+  withSkeletonGuideCopy((guide) => {
+    stripAllMarkersBut(guide, '06-wrap-up.md');
+    const result = runCliCaptured(join(guide, 'scripts', 'check.mjs'), guide);
+    const stderr = result.stderr.split('\n').filter(Boolean);
+    assert.equal(result.status, 1, result.stdout + result.stderr);
+    assert.ok(stderr.length > 200, `only ${stderr.length} stderr lines arrived`);
+    assert.match(stderr.at(-1), /^check failed with \d+ error\(s\)$/);
+    assert.equal(stderr.at(-1), `check failed with ${stderr.length - 1} error(s)`);
+  });
+});
+
 test('cli: one marker put back on one finished page fails the default root and names that page', () => {
   withSkeletonGuideCopy((guide) => {
     // The guide copy holds the skeleton snapshot: strip every marker but one to model a finished guide with one
     // relapse. The other rules judge the stripped pages as empty finished pages, so only the ban lines are asserted.
-    const docs = join(guide, 'docs');
-    for (const entry of readdirSync(docs, {recursive: true, withFileTypes: true})) {
-      if (!entry.isFile() || !/\.(md|mdx)$/.test(entry.name)) continue;
-      const abs = join(entry.parentPath, entry.name);
-      const text = readFileSync(abs, 'utf8');
-      if (!text.includes(SKELETON_MARKER)) continue;
-      const keep = entry.name === '06-wrap-up.md';
-      writeFileSync(abs, keep ? text : replaceOnce(text, SKELETON_MARKER, ''));
-    }
-    const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd: guide});
+    stripAllMarkersBut(guide, '06-wrap-up.md');
+    // Over 33 KB of stderr: read through files, see runCliCaptured.
+    const result = runCliCaptured(join(guide, 'scripts', 'check.mjs'), guide);
     const named = result.stderr.split('\n').filter((line) => line.startsWith('skeleton: '));
     assert.equal(result.status, 1, result.stdout + result.stderr);
     assert.equal(named.length, 1, result.stderr);
