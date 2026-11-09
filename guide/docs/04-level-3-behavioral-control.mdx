@@ -98,6 +98,8 @@ Add a PreToolUse hook to `.claude/settings.json` that runs before Bash commands 
 }
 ```
 
+The reference solution on `solution/level-3` also sets `"onFailure": "block"` on this commit hook. A hook that times out (180 s) or fails to run then blocks the commit instead of letting it through.
+
 ### 2. Write the script
 
 Create `.claude/hooks/tests-before-commit.sh` (make it executable with `chmod +x`, and save it with LF line endings). It runs `./mvnw -q verify`; on failure it prints the last 40 lines to **stderr** and exits **2**, which blocks the commit and feeds the reason back to Claude. Any other non-zero exit code would NOT block.
@@ -126,6 +128,8 @@ fi
 rm -f "$log"
 exit 2
 ```
+
+Windows participants need Git for Windows (Git Bash). The `Bash` matcher, the `if` field and the `Bash(...)` permission rules only apply when Claude Code runs commands through Bash. No PowerShell handlers or rules are added.
 
 On Windows, `solution/level-3` also holds a PowerShell variant of the hook with the same behaviour, `tests-before-commit.ps1`. How Windows participants point the hook command at it is not verified yet.
 

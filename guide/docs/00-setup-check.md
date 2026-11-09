@@ -20,6 +20,8 @@ Arrive with this installed:
 
 Node.js is not needed: the build installs its own copy.
 
+Windows participants also need Git for Windows (Git Bash). The `Bash` matcher, the `if` field and the `Bash(...)` permission rules of Level 3 only apply when Claude Code runs commands through Bash.
+
 ## Check your tools
 
 Run each command in a terminal.
