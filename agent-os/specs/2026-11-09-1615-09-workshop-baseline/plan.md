@@ -62,10 +62,10 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | (see PR list) | sdd/09-workshop-baseline/T5 | (see PR list) |
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
 | T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
-| T8 | Seed grows to 100 books, at least 10 AVAILABLE per genre (D12), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | needs-decision (Q1) | | | | | | |
-| T9 | Count updates "40" to the new seed count in README.md, http/demo-flow.http and docs (D12) | root | [T8] | 7 | (QA strategy) | | | todo | | | | | | |
+| T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | todo | | | | | | |
+| T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | (QA strategy) | | | todo | | | | | | |
 
-Execution order, one task at a time: T1, T4, T2, T3, T5, T7, then T8 and T9 once Q1 is answered.
+Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
 
 ## T1 Demo seed data and Flyway locations per profile
 
@@ -275,16 +275,44 @@ Execution order, one task at a time: T1, T4, T2, T3, T5, T7, then T8 and T9 once
   4. `./mvnw clean verify` green within 60 s, the same number of Spring contexts, the new test under 10 s;
      ArchitectureTest unchanged.
 
-## T8 Seed grows to 100 books (D12), plus FU-T2-1
+## T8 Seed grows to 103 books (D12, Q1 answer b), plus FU-T2-1
 
-Blocked on Q1 (amendment A3). Criteria are written once Q1 is answered; T1 criteria 3 to 6 apply with the D12
-counts, and the T6 criteria fold in.
+- fileScope: `bookstore/src/main/resources/db/seed/R__seed_demo_data.sql`;
+  `bookstore/src/test/java/nl/openvalue/bookstore/DemoSeedCensusIntegrationTest.java`; `SeedDatabase.java` only if
+  needed. `EmptyCatalogueAtStartIntegrationTest`, both yml files and every migration stay byte-identical (FF-10).
+- Acceptance criteria (draft, the QA strategy may sharpen them):
+  1. 103 books: the 20 shared ISBNs exactly as T1 seeded them (same rows, titles, authors, stock); 83 bookstore-only
+     books, of which the 20 existing ones keep their ISBNs; the 63 new ones are invented, with checksum-valid ISBNs
+     from the bookstore-only range, unique against the seed, the distributor catalogue (`titles.json`) and the seven
+     http ISBNs (9780141439792, 9789900010791, 9789900010050, 9780141439471, 9789900010029, 9780141439600,
+     9780141439563).
+  2. Exactly 100 AVAILABLE books, exactly 10 AVAILABLE per genre (all 10 genres); exactly 3 DISCONTINUED books, the
+     existing bookstore-only ones; every row meets the domain restore rules.
+  3. Every new book has a stock item above its reorder level (signal false), no pending restock. The T1 stock rules
+     hold unchanged: at least 5 at or below the level, all shared (the existing 7); exactly 3 with on hand 0, all
+     shared; the margin book Treasure Island unchanged.
+  4. Orders unchanged: 6 orders, 3 customers, 2 shipped; reserved equals the PLACED line sums.
+  5. Idempotent SQL (`ON CONFLICT DO NOTHING`, no `DO UPDATE`), ASCII only; the header comment states the new counts.
+  6. `DemoSeedCensusIntegrationTest` pins the new census (103, 100 AVAILABLE, 10 AVAILABLE per genre, 3 discontinued,
+     83 bookstore-only, new books above their level) and the FU-T2-1 constant of all seven http ISBNs, with the
+     must-kill seeds of T6 (a seed holding 9780141439792 or 9789900010791 fails); the rerun, edit-survives and ASCII
+     tests stay; referee green within 60 s; ArchitectureTest unchanged.
+  7. Live on an isolated PostgreSQL: `GET /books` returns 103 (under the 200 cap), every genre filter shows 10
+     AVAILABLE books, and `/shop/` renders every card.
 
-## T9 Count updates for the new seed (D12)
+## T9 Count and wording updates for the new seed (D12) and the guide link (G11 settled)
 
 - fileScope: `README.md`, `http/demo-flow.http`, `docs/architecture.md`, and line 2 of `http/catalogue.http`,
-  `http/inventory.http`, `http/orders.http` (count sentences only). Runs after T8. Covers every "40" or "forty" and
-  every derived count such as README "The other 20 books" (N3).
+  `http/inventory.http`, `http/orders.http` (count sentences only). Runs after T8.
+- Acceptance criteria (draft):
+  1. Every "40" or "forty" and every derived count (README "The other 20 books", http line 2 "40 books") states the
+     T8 census (103 books, 20 shared, 83 bookstore-only, 3 discontinued, 100 AVAILABLE with 10 per genre where a
+     count is stated), checked against the seed by a census.
+  2. README module map lists `frontend/` but no `guide/` row; the README links the workshop guide site on GitHub Pages
+     instead (URL taken from spec 11 and its Docusaurus config; spec 09 Human documentation as amended at factory
+     ae2a5f2).
+  3. Only those sentences change (word diff); README at most 120 lines; ASCII, no em dash; `ANTHROPIC_API_KEY` once;
+     request bytes of the http files unchanged; T3 claims elsewhere unchanged.
 
 ## Amendments
 
@@ -322,6 +350,14 @@ counts, and the T6 criteria fold in.
   `/shop/#/assistant` with its nav link, and there is no `/assistant/chat/stream`. No T3 change: the README sentence
   "part of the shop at http://localhost:8080/shop/" stays true (checked by qa-t3 r2 against today's frontend; QA lead
   agrees). The D13 bullet of A3 no longer applies. D12 stays in force.
+- A5 (2026-11-09, orchestrator, on the main session's answer to Q1; decisions.md D12 and spec 09 at factory ae2a5f2,
+  merged into the spec branch as 9ee052f): option (b). The seed has 103 books: 100 AVAILABLE, exactly 10 AVAILABLE per
+  genre, plus the 3 existing discontinued bookstore-only books; 20 shared, 83 bookstore-only. The catalogue scenario
+  reads "103 books are returned (100 AVAILABLE, 10 per genre, and 3 discontinued)". T1 criterion 3's genre rule (at
+  least 6 genres, none on more than 10 books) is superseded by the exact per-genre rule. G11 is settled by the spec
+  text: the README module map lists `frontend/` but not `guide/` (the guide is never on main); the README links the
+  guide site on GitHub Pages instead, folded into T9. Spec 02 line 105 now says 200 (residual closed). Main session:
+  `distributor/README.md` keeps its `claude mcp add` wording (documentation, not agent config).
 
 ## QA feed-forward
 
