@@ -43,7 +43,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | FAIL r4, human override (A7) | #87 | sdd/11-workshop-guide/T5 | AMEND r4, override: human |
 | T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
 | T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
-| T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | implemented, waiting for T5c | | sdd/11-workshop-guide/T6 | |
+| T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
@@ -306,6 +306,26 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   makes `npm run check` exit 1 naming that page, the ban and the exemption treat `{/*guide-skeleton*/}` alike, the real
   guide exits 0 with the 11 fixture markers present, and the diff against the T5c baseline is limited to the ban's rule
   and wiring files, the two copy tests and new tests.
+- FF-35 (from the T6 meta-review; refines C0-13 for T7 to T11 verifiers, qa-final and the implementers' source
+  tables): (a) before marking a clause embellished or invented, search the whole pack (`docs/spec-pack/**`: the three
+  workshop files, spec 11, the other specs, the product docs) and the res-3 inventory, and cite every source found; an
+  instruction that follows from a cited pack mechanism is faithful (T6: the app reads `BOOKSTORE_AI_API_KEY` at
+  startup, S08:29); a claim about Claude Code behaviour is never derived this way (C14). (b) A participant-directed
+  fact on a facilitator-range line may appear when a participant line or spec 11 states the same fact (cite both); a
+  fact found only in a facilitator range is a finding; the facilitator-only phrase greps stay (M-4).
+- FF-36 (T11 implementer and verifier; T7 to T10 verifiers for their own cross-page links): the T6 pages use the
+  skeleton troubleshooting headings as link texts ("Docker is not running", "jdtls not starting", "Usage limits",
+  "Offline copy shows a blank page", "the `ANTHROPIC_API_KEY` pitfall") and link `#part-a-lsp` and the five
+  `#level-cleared-when`. T11 keeps the eight troubleshooting heading texts as in the skeleton (a reword is a question
+  first); T11 and qa-final verifiers check on the rendered Pages build that every article link into
+  `reference/troubleshooting` has text equal to its target heading (case-insensitive, backticks and the hash-link
+  character stripped), listed per link; T7 to T10 keep `## Level cleared when {/* #level-cleared-when */}` and the L2
+  page keeps `{/* #part-a-lsp */}`. T7 to T10 verify on a tree that contains the T5c merge; node:test floor 496.
+  Process: when the orchestrator merges the spec tip into a task branch before spawning its verifier, the verifier
+  is told that the implementation outbox predates that merge.
+- Gate 2 owner note from T6: setup page line 90, "The plugin does not ship the binary" (WP:59 wording), comes before
+  the page first names the `jdtls-lsp` plugin (line 119); no later task's file scope covers this page. The T6 page
+  hashes are in `t6-hashes.txt`.
 - FF-33 (T6 to T11 verifiers and qa-final; orchestrator, for the T5 r4 case OA1b-f, a raw `<img>` hidden from source
   rule (f) behind an unclosed comment opener): the built article HTML of every page of the task holds no `<img`
   element (no images are expected, ground rule G4); quote the count (0).

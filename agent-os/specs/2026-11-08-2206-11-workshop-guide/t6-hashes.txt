@@ -1,0 +1,3 @@
+b6f2e3086f519abaed4c5de6e417b55293f4e24c199c24cfaa754fad915e65e7  guide/docs/index.md
+ca0f17aa336ea08de9ffb50e8af73776a8a5d9446b4f5183acf69c7e1e56ff3f  guide/docs/00-setup-check.md
+1c8152599d0ab230e15846a8e50a9989210658e4a18de78c73cc5a1b316c277e  guide/docs/06-wrap-up.md

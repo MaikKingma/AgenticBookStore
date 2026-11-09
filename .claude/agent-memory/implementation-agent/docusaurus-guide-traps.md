@@ -91,6 +91,10 @@ metadata:
 - An Edit whose old/new string ends in a space mid-line (`const x = `) can lose that space and silently change a
   committed line. End every Edit anchor at a line end, and read `git diff -U0 HEAD -- <test file>` before the gates
   when a test file "may only gain lines": the deletion count must equal the agreed edits.
+- Content tasks: five frozen self-tests (check-content, coverage-manifest) pin the REAL docs tree as all-skeleton, so removing
+  the first marker turns `npm run check` red while `node scripts/check.mjs` itself stays green. Run `node scripts/check.mjs`
+  directly to separate page defects from that pin, and ask the orchestrator early; never edit the frozen tests.
+- Docusaurus strips the numeric file prefix from routes (`00-setup-check.md` is `/setup-check`, `06-wrap-up.md` is `/wrap-up`).
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Self-tests needing a known page state read `scripts/fixtures/skeleton-docs/` (T5c), never live `guide/docs` (content
   tasks remove markers). A copied `check.mjs` run from `mkdtemp` prints nothing and exits 0 on macOS (tmpdir is a

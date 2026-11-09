@@ -84,4 +84,11 @@ contrast), the checker is production code AND the oracle for every later task. T
     opt-in the CLI sets on its default root, scope it to `<root>/docs` (fixtures carry markers), and let only the
     CLI copy tests change.
 
+16. **Semantic source reviews of content pages** (spec 11 T6): verifiers search only the main source file and flag
+    sourced clauses as embellishments; the content spec itself and app specs or product docs hold sources too. Direct
+    a whole-pack search before any "embellished" mark; a usage instruction derived from a cited mechanism is faithful,
+    a tool-behaviour claim never is. Facilitator-only ranges overlap participant facts: bar facilitator-only content,
+    accept a fact a participant line repeats (cite both). Cross-page link texts that quote another task's headings are
+    unpinned by anchor rules: give the owning task a heading-keep rule plus a rendered text check.
+
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).
