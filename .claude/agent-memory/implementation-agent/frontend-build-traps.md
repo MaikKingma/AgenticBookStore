@@ -66,6 +66,11 @@ metadata:
   examples without those numbers and name limits in words. Order-fixture search: when no permutation of three lines
   makes every attribute a peak or valley, change one price (a python brute force over candidate prices found
   `7.99, 12.50, 3.50` with quantities 2, 3, 1); a data-only test double may differ from the basket it answers.
+- Form pages that call an id helper inside the send path: make the send an `async` function with try/catch around
+  `await chat({ id: helper(), ... })`, so a throwing helper (`crypto.randomUUID` is absent on plain-http non-localhost
+  origins) becomes the generic alert instead of a stuck pending state. A reply with edge whitespace cannot be awaited with
+  `findByText` (it normalises); await the author label instead and compare `li.textContent` byte-exact. A counter is
+  checked with `toHaveAccessibleDescription` when the textarea points at it with `aria-describedby`.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
