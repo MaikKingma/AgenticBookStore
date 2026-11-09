@@ -78,4 +78,9 @@ metadata:
   `AtomicInteger`, records the max, then waits `CountDownLatch.await(50, ms)` on a latch nobody opens; two threads
   released from one start latch call the method.
 
+- Bulk data for a result-cap test: 200 HTTP adds cost about 2.7 s in the shared context, and the add command opens the
+  stock item itself. Title = prefix plus `%03d`; insertion order `(step * 73) % 200 + 1`; ISBN body
+  `900000000 + (n * 137) % 997` (137 coprime to the prime 997) plus a computed check digit. Assert in the test that the
+  ISBNs listed in title order are neither sorted nor reverse sorted, so an ISBN-sort mutant cannot pass.
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
