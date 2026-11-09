@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling, disclosed probe-restore slips, env-selected mutant schemas as probe evidence, asserting lines re-ordered in rework to follow a data edit, brief expectations refuted by evidence, survivors a gate grep already rejects, oracle-hardening gaps outside the criteria, criteria whose wording the orchestrator's own process breaks)
+description: Calibration rules settled in meta-reviews (when earlier probe evidence may carry into a rework round, null guards under the coverage item, which surviving mutations are REJECT versus inspection plus feed-forward, survivors whose kill contradicts a pinned criterion, strengthening-only survivors, edited killing assertions vs carry-forward, oracle helpers calling production code, required forms stated only as parentheticals, input-only rework edits, a missing red run, survivors equivalent on every reachable input, pass-through survivors found late in an endorsed sibling, disclosed probe-restore slips, env-selected mutant schemas as probe evidence, asserting lines re-ordered in rework to follow a data edit, brief expectations refuted by evidence, survivors a gate grep already rejects, oracle-hardening gaps outside the criteria, criteria whose wording the orchestrator's own process breaks, orchestrator deviations approved on a refuted premise)
 metadata:
   type: feedback
 ---
@@ -100,5 +100,12 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    the reachable forms. Record it as a follow-up (exhaustive test loop, then re-baseline). Before accepting a "reachable
    residual", check whether a hygiene gate rejects the probe source (spec 11 T5b: raw non-ASCII fails the ascii rule;
    only references and escapes reach a label).
+
+18. **Orchestrator-approved deviations on a refuted premise.** When the orchestrator approved a departure from a card
+   bullet for a factual reason a verifier then refutes (spec 11 T9: "no link to an anchor that does not exist", while
+   the skeleton had it), and every acceptance criterion still holds: ENDORSE. Return the decision with the refuted
+   premise and the cheapest restoring path, for example a later task's one-line fileScope amendment re-bound by
+   "the file with the line removed hashes to the stored value". Scope is the orchestrator's; declining is an owner residual.
+   Scratch-layer assertions that pin such a decision (not pack text) must be re-pointed before qa-final re-runs them.
 
 15. **Survivors killed by a gate grep.** Before judging a verifier's "informational survivor", check whether a common-directive gate check rejects the mutant (a clock grep that must print exactly one `Clock.system` line rejects a bean built with `Clock.systemUTC()`; a mapper grep rejects `JsonMapper.builder()` in main). Then it is gate-proven, not a survivor, as long as the grep runs in every later task and qa-final. Feed a test-pinned follow-up only if the clause is high-risk under rule 3. Verifiers miss this (spec 05 T1).
