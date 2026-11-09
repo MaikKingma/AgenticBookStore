@@ -55,7 +55,7 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | branch | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Demo seed, Flyway locations per profile, empty-catalogue guard, seed census test | bookstore | [] | 1 | elevated | sonnet | sonnet | todo | | | | | | |
+| T1 | Demo seed, Flyway locations per profile, empty-catalogue guard, seed census test | bookstore | [] | 1 | elevated | sonnet | sonnet | done | PASS | ENDORSE (r0 REJECT) | 1 | #121 | sdd/09-workshop-baseline/T1 | 7664a56 |
 | T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | todo | | | | | | |
 | T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | todo | | | | | | |
 | T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | todo | | | | | | |
@@ -227,4 +227,14 @@ Execution order, one task at a time: T1, T4, T2, T3.
 
 ## QA feed-forward
 
-(none yet)
+- FF-1 (T1): margin book Treasure Island 9789900010715 (on hand 8, reorder level 3, signal false; an order of 5 to 8
+  copies dips it, 9 or more exceeds what is available); the 7 items at or below their level carry signal true and
+  restock only through the manual request; sold out 9789900010043, 9789900010296, 9789900010777; discontinued
+  9789900030119, 9789900030140, 9789900030164; `q=austen&genre=FICTION` matches only Pride and Prejudice. A claim
+  that `demo-flow.http` can run again needs a run on a database already changed by a first run. README data claims are
+  checked against the same facts.
+- FF-2 (T1): more than one test class is selected with `-Dtest=A,B`, never `A+B` (that runs zero tests and still
+  reports BUILD SUCCESS); every targeted run shows `Tests run: N` with N above 0. Surefire XML has no timestamps; take
+  run order from the `Running` lines.
+- FF-3 (qa-final): on the tip seed `grep -c 'ON CONFLICT DO NOTHING'` is 5 and `grep -c 'DO UPDATE'` is 0 (R8); the
+  non-ASCII gate runs over every file of the spec diff; the seed SQL and census test hashes equal the T1 baseline.
