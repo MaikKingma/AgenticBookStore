@@ -99,7 +99,8 @@ standard and the `hexagonal-slice` skill, before any frontend code depends on it
 ### Errors
 Every non-2xx response is parsed as RFC 9457 `ProblemDetail` and shown by `ProblemDetailAlert` with `title`,
 `detail` and the `details` list (for example the shortages of `insufficient-stock` or the `{field, message}` pairs of
-`validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline" and `429` as
+`validation-failed`). The assistant page shows `503 assistant-offline` as "The assistant is offline", `503
+assistant-unavailable` as "The assistant is unavailable right now, try again later" (decision D10) and `429` as
 "Too many requests, try again in a minute".
 
 ### Visual design (decision D7, Maik 2026-11-08)
@@ -132,6 +133,12 @@ the OpenValue slides template).
   whitespace, cards with rounded corners and a soft shadow, a sticky header with the wordmark, navigation and a
   basket count badge, a prominent search bar on the catalogue page, clear in-stock and out-of-stock badges, visible
   keyboard focus, and `prefers-reduced-motion` respected for any transition.
+- Genre labels (decision D11, Maik 2026-11-09): the shop never shows a raw enum name. The genre select and the book
+  card show a readable label in sentence case, one per `Genre` value: Fiction, Science fiction, Fantasy, Mystery,
+  Romance, History, Science, Technology, Children, Poetry. The select still sends the enum name (`SCIENCE_FICTION`)
+  as the `genre` parameter. The unknown-genre alert keeps the list the bookstore sends.
+- Footer (decision D11): the footer sits at the bottom of the browser window when the page content is shorter than
+  the window, and below the content when it is longer. It never covers content.
 - Plain CSS only (one global stylesheet plus the tokens, or CSS modules, both built into Vite). No UI library, no CSS
   framework and no new npm dependency: `product/tech-stack.md` pins every frontend package.
 
@@ -163,7 +170,7 @@ The storefront SHALL list the catalogue and SHALL search it with the same criter
 #### Scenario: Catalogue listing
 - **GIVEN** `GET /books` returns three books
 - **WHEN** the catalogue page renders
-- **THEN** three book cards show title, authors, genre, price with "EUR" and an in-stock badge from `inStock`
+- **THEN** three book cards show title, authors, the genre label ("Science fiction", not `SCIENCE_FICTION`), price with "EUR" and an in-stock badge from `inStock`
 
 #### Scenario: Search
 - **GIVEN** the user enters "austen" in the search field and selects genre FICTION

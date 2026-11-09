@@ -4,3 +4,4 @@
 - [Spring web config probe](spring-web-config-probe-technique.md) — MockMvc vs real server, Boot error JSON vs ProblemDetail, Maven resources replacement
 - [Frontend Maven probe](frontend-maven-probe-technique.md) — frontend-maven-plugin sources jars, scratch Maven+npm probe, resources/PATH/-fae traps
 - [gh Actions measurement](gh-actions-measurement-technique.md) — step times, log greps, cache scoping check via gh, bash guard quirks
+- [Worktree shell guard](worktree-agent-shell-guard.md) — relative paths, git grep, referee wall time and Surefire totals, claude-api model table

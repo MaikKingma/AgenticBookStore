@@ -15,6 +15,5 @@ Rule: build seed-data mutants with one `python3 -I` generator that loads the `.o
 - Line-ending neutrality: a must-pass probe with CRLF copies of every seed file; prove the mutant really holds `\r\n` with `od -c` before trusting the green run.
 - Run the same runner (install mutant, `clean test -Dtest=...`, `cp -p` restore, hash check) as code probes: [[env-switch-mutant-runner]]. Add a CONTROL that installs the original bytes through the runner.
 - Read the seed for analysis scripts from the `.orig` copies while probes run; the live file is a mutant half of the time.
-- Author fact checks: grouped web queries ("death years A 1852, B 1744, ...") return one sourced answer for several well-known people; obscure ones need their own query. Grep the deny list case-insensitively and expect substring false positives (George Eliot for "Eliot").
 - `Map.copyOf(...)` and `List.copyOf(...)` reject null lookups: `get(null)` / `contains(null)` throw NPE. An `Optional findBy(key)` over a copied map throws on a null key instead of returning empty; flag it for the callers that can pass null (tool parameters, optional query values).
 Related: [[env-switch-mutant-runner]], [[shell-traps]]

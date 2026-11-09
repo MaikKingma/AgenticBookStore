@@ -145,3 +145,57 @@ Maik, 2026-11-09, on two questions from the spec 10 orchestrator:
 Changed file: `specs/10-harness-reference-solutions.md` (Level 3 settings and the PowerShell note). The guide (spec 11)
 carries the Git Bash prerequisite on the setup and Level 3 pages.
 
+## D10. Assistant: no temperature, and a 503 when a live call fails
+
+Maik, 2026-11-09, after the spec 08 review:
+
+- Spec 08 no longer configures `temperature: 0.2`. The Messages API rejects sampling parameters (`temperature`,
+  `top_p`, `top_k`) with a 400 on the current models and from API version 2026-10-21 on every model, so the setting
+  would break every live call. The code already sends none.
+- A failed live model call (authentication, spend or rate limit at Anthropic, an Anthropic error, a timeout or a
+  connection failure) answers 503 with code `assistant-unavailable` instead of Spring's generic 500, and the
+  unanswered question does not stay in the conversation memory. The storefront shows "The assistant is unavailable
+  right now, try again later".
+
+Changed files: `specs/08-bookstore-assistant.md` (configuration, API table, new requirement "Failed model call"),
+`specs/12-storefront.md` (assistant error messages). Implemented through /sdd-bugfix (`fix-08-assistant-review`).
+
+## D11. Storefront: readable genre labels and a footer at the bottom of the window
+
+Maik, 2026-11-09, during the live walk of the storefront:
+
+- The storefront showed the raw enum names (`SCIENCE_FICTION`) in the genre select and on the book cards. The shop
+  shows a readable label in sentence case instead ("Science fiction"); the select still sends the enum name to
+  `GET /books`. The label casing is my default; the spec did not name one.
+- The footer floated in the middle of the window on a short page. It now sits at the bottom of the window when the
+  content is short, and below the content when it is long.
+
+Changed file: `specs/12-storefront.md` (Visual design, catalogue scenario). Implemented through /sdd-bugfix
+(`fix-12-genre-labels-footer`).
+
+## D12. Seed data: at least 10 books per genre
+
+Maik, 2026-11-09, during the live walk of the storefront: the demo catalogue needs at least 10 books in every genre,
+so a genre filter never shows a near-empty page. The spec 09 seed grows from 40 to 100 books, with at least 10
+AVAILABLE books per genre. The 20 books shared with the distributor stay exactly as they are; the 60 new books are
+bookstore-only, invented, with ISBNs from the bookstore-only range, stocked above their reorder level, with no
+pending restock. The stock, order and reserved rules of spec 09 are unchanged.
+
+Spec 02 capped `GET /books` at 100 results without paging, so 100 seeded books plus one added in a demo would push a
+book off the unfiltered list. Maik chose to raise the cap to 200 results (still sorted by title, no paging). The
+assistant tools keep their own smaller limits.
+
+Both changes are built by the spec 09 orchestrator in its normal SDD cycle (default model policy, QA and QA lead),
+not by a separate agent.
+
+Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
+cap).
+
+## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
+
+Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
+(a launcher in the lower right corner of every page instead of a page), and answers must be streamed over a new
+`POST /assistant/chat/stream`. Shortly after, Maik made it optional and deferred it to after the first release.
+
+The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
+12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.

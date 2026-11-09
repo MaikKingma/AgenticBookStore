@@ -69,5 +69,13 @@ metadata:
   after a rejected command": `queryForMap("select * ...")` before and after, compared with `isEqualTo`. Run every
   "unchanged" claim from each start of the flag it could flip (`@ValueSource(booleans = {true, false})`): from one
   start, a reset-with-rollback-suppressed mutant changes nothing and survives (QA rule C0-17).
+- A forked full context off `IntegrationTestBase` (own `@TestPropertySource` plus `@Import(PlainTestDouble.class)` plus a
+  `@MockitoSpyBean` on a transactional flow) just works: the subclass annotations add to the base's, the spy on the
+  proxied flow keeps its transactions, and it costs one extra Started line. Drive the Spring AI tool loop from
+  `ScriptedChatModel` and read the tool result from the received prompt's `ToolResponseMessage.responseData()` (raw
+  JSON of the tool's return value, parse it with Jackson 3 `JsonMapper.readValue(json, TypeReference)`).
+- Deterministic "never two threads inside" witness for a synchronized method: a test `Clock` whose `instant()` bumps an
+  `AtomicInteger`, records the max, then waits `CountDownLatch.await(50, ms)` on a latch nobody opens; two threads
+  released from one start latch call the method.
 
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

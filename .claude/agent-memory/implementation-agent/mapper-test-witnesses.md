@@ -37,3 +37,6 @@ Domain rules "X happens regardless of threshold" (a delivery clears the pending 
 case strictly below the threshold, not only at it: `> level` and `>= level` guards are twin mutants, and a fixture ending
 at exactly the level kills only one (spec 07 T1 took a QA-lead REJECT for this). A length rule on a value kept as given
 needs a witness of max chars plus a trailing space, or a `strip().length()` mutant survives.
+
+An `isBlank()` check needs a key of only U+2003 (built as `Character.toString(0x2003)`, file stays ASCII) asserted as
+blank: spaces and `"\t\n"` are also stripped by `trim()`, so a `trim().isEmpty()` mutant survives them (spec 08 T1).

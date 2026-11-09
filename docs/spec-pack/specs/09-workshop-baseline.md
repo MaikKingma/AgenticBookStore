@@ -24,8 +24,9 @@ that Level 0 actually produces the failure modes the keynote promises.
   with the numbering of new migrations in `db/migration`). Every statement is idempotent PostgreSQL SQL
   (`INSERT INTO ... ON CONFLICT DO NOTHING` or `INSERT INTO ... SELECT ... WHERE NOT EXISTS (...)`). There is no
   other database to stay portable with.
-- 40 books. 20 of them are exactly the ISBNs in `distributor/src/main/resources/catalog/bookstore-shared-isbns.txt`
-  (spec 05), with the same titles and authors. The other 20 are bookstore-only. Mix genres; a few discontinued
+- 100 books, at least 10 AVAILABLE books per genre (decision D12). 20 of them are exactly
+  the ISBNs in `distributor/src/main/resources/catalog/bookstore-shared-isbns.txt`
+  (spec 05), with the same titles and authors. The other 80 are bookstore-only. Mix genres; a few discontinued
   (bookstore-only ones).
 - Stock: varied; at least 5 books at or below their reorder level, all of them among the 20 shared ISBNs (so
   `demo-flow.http` can show a restock), 3 with zero stock, none with a pending restock.
@@ -80,7 +81,7 @@ The application SHALL load the demo data when run locally and SHALL never load i
 
 #### Scenario: Local run
 - **WHEN** the bookstore starts with the default profile (PostgreSQL through Docker Compose support) and `GET /books` is called
-- **THEN** 40 books are returned, and the storefront at `/shop/` lists them
+- **THEN** 100 books are returned, at least 10 AVAILABLE per genre, and the storefront at `/shop/` lists them
 
 #### Scenario: Tests are unaffected
 - **WHEN** the test suite runs

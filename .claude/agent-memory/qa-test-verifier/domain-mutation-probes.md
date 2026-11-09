@@ -1,6 +1,6 @@
 ---
 name: domain-mutation-probes
-description: Mutation-probe techniques for bookstore domain value objects and aggregates (checksum/ASCII falsifiers, shared validating constructors, null guards masked by later NPEs) and flow-layer probes (counterpart probes per command, port-order column substitution)
+description: Mutation-probe techniques for bookstore domain value objects, aggregates, flow translators, port order, JSON view mappers and wrapped-cause detail pins
 metadata:
   type: feedback
 ---
@@ -14,8 +14,7 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 - Both factories sharing one private validating constructor: apply "factory B skips check K" as a constructor `boolean` flag (A passes true, B false). Only B's test should fail. That also proves A's path is still covered.
 - Null guards (`requireNonNull`) are C0-8 validation branches. Only the guards whose removal is not masked by a later NPE (`List.copyOf(null)`, `price.isGreaterThan`, `Year.now(null)`) need a pinning test. Name the unmasked ones by file:line.
 - Probes that add a moving part (mutating assignment order) are cheap extras: "assign the field before the checks" falsifies every "leaves X unchanged" clause at once.
-- Extra probes must run before the referee, because the referee runs last (C0-1). Anything thought of after the referee gets reported "by reasoning, not run".
-- Rework rounds: keep a sha256 list of the fileScope from round 1. If `diff` shows only test files changed, cite the round 1 probe logs instead of repeating them, and re-probe only the Required Actions. Also re-run every round 1 probe whose only killer was an edited test. When a rework adds an assertion after an existing one, prove the new line bites: use a mutant that passes the old line and breaks only the new one (for example catch, publish or save, then rethrow the same instance). The failure must then point at the new line number.
+- Rework rounds: keep a sha256 list of the fileScope from round 1. If `diff` shows only test files changed, cite the round 1 probe logs instead of repeating them, and re-probe only the Required Actions. Also re-run every round 1 probe whose only killer was an edited test. When a rework adds an assertion after an existing one, prove the new line bites: use a mutant that passes the old line and breaks only the new one (for example catch, publish or save, then rethrow the same instance). The failure must then point at the new line number. Before any rework probe, `cmp` production against the earlier round's `.orig` copies and `diff` the tests (only `>` lines); see [[scaffold-verification-techniques]] for the re-run rules.
 - Verify guard-pinning tests with one deletion per run, not the impl's combined run. A combined run cannot show which test depends on which guard, and the expected signature is "N run, 1 failure, that test only".
 - Pass-through `Clock` parameters: always probe "use `Clock.systemUTC()` instead of the parameter". A test whose year is rejected by both the fixed clock and the real one (for example 2028 against a 2026 clock) survives. The witness is a fixed clock in the past plus a year only the real clock accepts.
 - Parameterized per-class tests (several exception classes with no shared base): a one-class mutation must fail only index `[n]`. That proves the parametrisation binds every class.
@@ -25,11 +24,8 @@ Rule: a "rejects X" test only falsifies a clause if the input is rejected by THA
 - Probe edits on a shared helper (one guard used by the constructor and a behaviour method) blur which caller is pinned. Inline the mutated check in the one caller instead.
 - Exception payload witnesses: a "duplicate X" test with data A, B, A asserting `id() == A` cannot tell "the duplicated element" from "the first element". Probe "report `list.get(0)`" every time; the witness needs the duplicate in a non-first, non-adjacent position (B, A, C, A). Also probe "report `list.get(size - 1)`": B, A, C, A ends on the duplicate, so it needs a case where the second copy is not last (A, C, A, B).
 - Bound probes in a schema: change only the compared literal (keep the constant the exception reports), otherwise the accessor assertion (`max() == 10`) kills the mutant before the boundary input is ever exercised.
-
 - Aggregate state cleared inside a method that already has an `if` (for example `receive` clears a pending restock next to `if (available() > level) resetSignal()`): always probe "move the clear into the existing `if`" (and its else). Fixtures that start well above the level never cross it, so the mutant survives at 100 percent branch coverage. The witness leaves the item still low after the call (a partial delivery that stays at or below the level). Run it as a temporary witness test class (snapshot, run on real code and under the mutant, `rm`). Give the implementer a witness that ends strictly BELOW the level, not at it: a witness that ends exactly at the level kills `> level` but leaves the boundary twin `>= level` alive, which costs a second rework round.
-
 - Region witnesses (FF1): for a guard like `available() > level` probe thresholds at `>=`, `+1`, `-1` AND `-2`, plus `<`, `==`, `<=` families. A witness ending one below the level kills the `>=` twin but not `>= level - 1`; the level-4, ends-at-1 witness kills all of them (at level 3, `>= level - 2` is equivalent because `available() >= 1` after any receive). Padded-length guards: probe `strip`, `trim`, `stripTrailing`, `stripLeading`, `replace(" ", "")`; trailing-space and leading-space witnesses are complementary (each kills the variants the other leaves alive).
-- Rework r2 pattern: `cmp` the production files against the r1 `.orig` copies and `diff` the tests (only `>` lines) before any probe, reuse r1/r0 mutant files after printing their diff against the live file, and write the result of the lead's skeletons plus the twin run into the same batch.
 
 Flow-layer probes (mocked port and publisher):
 - "Returns the port result in order" tests: a stub that is "in neither id nor available order" can still be ascending in on hand or reserved, and a column that is constant across rows turns a stable sort into a no-op. Probe a sort by each DTO column, not only the one named in the list. Prove a survivor with a witness stub that is monotonic in no column.
@@ -50,9 +46,26 @@ Mapper hand-offs into validating factories (`Money.of(amount, code)`, `new Email
 - Money pass-throughs tested only with whole values (`12`, `12.00`): probe "truncate to whole units" (`new BigDecimal(x.toBigInteger())`); it needs a cents witness such as 12.49.
 - "Override replaces a default" (price override vs recommended price): list the override-vs-default relation in every test. When every override is above the default, the mutant "keep the higher of the two" survives; it needs an override below the default. Also probe "zero counts as absent" (`signum() == 0` treated like null) whenever the domain rejects zero only further downstream (exclusive lower bound in the aggregate, not in `Money`). A zero override witness kills both mutants. Run these families in round 0, not after the rework.
 - Before round 0 verdicts, build an input x relation matrix for the use case (each input against: null/non-null, above/below/equal to the value it replaces, zero, each domain bound just outside, element position, duplicates). Each empty cell is a mutant family: clamp to the bound (`min(500.00)`, `max(1450)`), `limit(MAX)`, `distinct()`, `dropWhile(blank)`, "use the override only when it differs". All survive unless a just-outside or equal-value witness exists.
-- Re-verification rounds: copy the runner and snapshot script with a new evidence prefix (sed the prefix) instead of reusing the old runner, or it overwrites the earlier round's logs; reuse the old mutant schemas when production is hash-equal, and pick test literals that differ from the mutants' hard-coded literals.
 
 Nested use-case exceptions (port-nested `final class X extends NotFound/InvalidInput/Conflict/UnavailableException`):
 - The four bases share one constructor shape, so a superclass swap compiles. Probe per class: swap superclass, one-letter code typo, title text change, detail without the ISBN or constant detail, `final` dropped. A parameterized test with two inputs fails both rows per probe.
-- One probe runner (perl exact-once guard, `.orig` restore, hash beside snap-before) makes ten probes about 4 s of Maven each. Take the heartbeat `updated` from `date -u`, never an estimate.
-Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]]
+
+## View mappers and wrapped-cause detail pins
+
+Rule: for a view record that copies an optional component, probe a guard on every DERIVED flag the DTO exposes, not only the null check.
+
+**Why:** a view mapping `pending == null || !stock.lowStock() ? null : ...` survived every witness because all pending-restock fixtures were low items (a fixture that sets the pending restock usually also sets stock low).
+**How to apply:**
+- Write the guard mutants in both polarities and at the boundary (`<`, `<=`, `>=`, `!=` on available vs reorder level), then check which region each existing witness sits in. A witness strictly above, one at, and one below the limit kills all of them.
+- Null-key forms: `jsonPath("$", hasKey(k))` plus `value(nullValue())`, never `doesNotExist()`. `@JsonInclude` NON_NULL, NON_EMPTY, NON_ABSENT on the class and on the component all die on `hasKey`, and NON_DEFAULT also dies on dropped zero/false keys. Run the class-level one once under the full referee to prove the IT pins (a Map `isEqualTo` with a null value is itself a presence check).
+- A list view needs element-index mutants: first, last, next and previous element's pending restock, plus a filter dropping null-pending items. The "pending only on the middle item" fixture kills all five.
+
+Rule: a wrapped-cause detail message is pinned by `isEqualTo(prefix + domainMessage)` plus a cause-message assertion, not `startsWith`.
+
+**Why:** `startsWith(prefix)` left the part after `": "` free, so `e.toString()`, an appended suffix and the class name all survived; a cause pinned only by `isExactlyInstanceOf` also let a different exception of the same type survive.
+**How to apply:** probe the suffix expression (`getMessage`, `toString`, `getClass().getSimpleName()`, appended text, upper-cased, substring, dropped) and the cause (dropped, `getCause()`, wrapped, same type with another message). For a parameterized test derive the expected domain message per case inside the test.
+
+Technique: verify a Required Action outline before offering it (FF1). Generate patched copies of the test classes from the `.orig` by exact replacement (`python3 -I`), install them with a wrapper script, run the survivors, the boundary twins and the earlier kills, restore with `cp -p` and compare hashes. A CONTROL run on the fix must be green with the new cases (old total plus the new tests).
+
+Technique: a test-only rework round reuses the earlier round's mutant directories unchanged. Prove production is byte-identical (live hash vs the earlier hash file and `cmp` against the `.orig`), re-snapshot `.orig` for the two changed test files (keep a copy of the old snapshot first), then run CONTROL, the named probes and ALL earlier probes against the new tests (100 runs took about 4 minutes). Expect failure counts to equal the earlier ones or rise, never fall; diff the test files against the old `.orig` (pure insertions plus the one named assertion) before re-snapping, because the re-snap erases that baseline.
+Related: [[env-switch-mutant-runner]], [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]
