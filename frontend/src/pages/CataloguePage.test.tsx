@@ -7,7 +7,7 @@ import { CataloguePage } from './CataloguePage'
 
 // The three books of the first listing. Every attribute differs between the books and is sorted in no direction over
 // the three (title, authors, genre, price as a string and as a number, currency, status, available, inStock, ids).
-// The genre of the second book has an underscore, so a card that rewrites the name (spaces, case) is caught.
+// The genre of the second book has an underscore, so a card that shows the enum name instead of its label is caught.
 // Two books are on purpose out of step: the first has no copies but is in stock, the second has copies but is not.
 const LISTING: readonly BookView[] = Object.freeze([
   {
@@ -115,9 +115,9 @@ describe('CataloguePage listing', () => {
     const cards = await screen.findAllByRole('listitem')
     expect(titlesShown()).toEqual(['Good Omens', 'Emma', 'Neuromancer'])
     const expected = [
-      { title: 'Good Omens', authors: 'Terry Pratchett, Neil Gaiman', genre: 'FANTASY', price: '12.50 EUR', badge: 'In stock' },
-      { title: 'Emma', authors: 'Jane Austen', genre: 'SCIENCE_FICTION', price: '7.99 GBP', badge: 'Out of stock' },
-      { title: 'Neuromancer', authors: 'William Gibson', genre: 'FICTION', price: '10.00 EUR', badge: 'In stock' },
+      { title: 'Good Omens', authors: 'Terry Pratchett, Neil Gaiman', genre: 'Fantasy', price: '12.50 EUR', badge: 'In stock' },
+      { title: 'Emma', authors: 'Jane Austen', genre: 'Science fiction', price: '7.99 GBP', badge: 'Out of stock' },
+      { title: 'Neuromancer', authors: 'William Gibson', genre: 'Fiction', price: '10.00 EUR', badge: 'In stock' },
     ]
     expect(cards).toHaveLength(expected.length)
     expected.forEach((book, index) => {
@@ -125,6 +125,7 @@ describe('CataloguePage listing', () => {
       expect(card.getByRole('heading', { level: 2 }).textContent).toBe(book.title)
       expect(card.getByText(book.authors)).toBeInTheDocument()
       expect(card.getByText(book.genre)).toBeInTheDocument()
+      expect(card.queryByText(LISTING[index].genre)).not.toBeInTheDocument()
       expect(card.getByText(book.price)).toBeInTheDocument()
       expect(card.getByText(book.badge)).toBeInTheDocument()
     })
@@ -193,7 +194,7 @@ describe('CataloguePage listing', () => {
 })
 
 describe('CataloguePage search', () => {
-  it('offers Any genre and the ten genre names in declaration order', async () => {
+  it('offers Any genre and the ten genre labels in declaration order', async () => {
     mockFetch([LISTING_ROUTE])
 
     render(<CataloguePage />)
@@ -201,16 +202,16 @@ describe('CataloguePage search', () => {
     await screen.findAllByRole('listitem')
     expect(within(genreSelect()).getAllByRole('option').map((option) => option.textContent)).toEqual([
       'Any genre',
-      'FICTION',
-      'SCIENCE_FICTION',
-      'FANTASY',
-      'MYSTERY',
-      'ROMANCE',
-      'HISTORY',
-      'SCIENCE',
-      'TECHNOLOGY',
-      'CHILDREN',
-      'POETRY',
+      'Fiction',
+      'Science fiction',
+      'Fantasy',
+      'Mystery',
+      'Romance',
+      'History',
+      'Science',
+      'Technology',
+      'Children',
+      'Poetry',
     ])
     expect(genreSelect()).toHaveValue('')
   })
@@ -492,5 +493,77 @@ describe('CataloguePage last search', () => {
     expect(searchBox()).toHaveValue('')
     expect(genreSelect()).toHaveValue('')
     expect(mock.calls.map((call) => call.path)).toEqual(['/books'])
+  })
+})
+
+describe('CataloguePage genre labels', () => {
+  it('offers the genre labels as option text and the enum names as option values', async () => {
+    mockFetch([LISTING_ROUTE])
+
+    render(<CataloguePage />)
+
+    await screen.findAllByRole('listitem')
+    const options = within(genreSelect()).getAllByRole('option')
+    expect(options.map((option) => option.textContent)).toEqual([
+      'Any genre',
+      'Fiction',
+      'Science fiction',
+      'Fantasy',
+      'Mystery',
+      'Romance',
+      'History',
+      'Science',
+      'Technology',
+      'Children',
+      'Poetry',
+    ])
+    expect(options.map((option) => (option as HTMLOptionElement).value)).toEqual([
+      '',
+      'FICTION',
+      'SCIENCE_FICTION',
+      'FANTASY',
+      'MYSTERY',
+      'ROMANCE',
+      'HISTORY',
+      'SCIENCE',
+      'TECHNOLOGY',
+      'CHILDREN',
+      'POETRY',
+    ])
+  })
+
+  it('shows the genre label on every card and no enum name', async () => {
+    mockFetch([LISTING_ROUTE])
+
+    render(<CataloguePage />)
+
+    const cards = await screen.findAllByRole('listitem')
+    expect(cards).toHaveLength(3)
+    const labels = ['Fantasy', 'Science fiction', 'Fiction']
+    cards.forEach((card, index) => {
+      expect(within(card).getByText(labels[index])).toBeInTheDocument()
+      labels.forEach((other, otherIndex) => {
+        if (otherIndex !== index) expect(within(card).queryByText(other)).not.toBeInTheDocument()
+      })
+      for (const rawName of ['FANTASY', 'SCIENCE_FICTION', 'FICTION']) {
+        expect(card.textContent).not.toContain(rawName)
+      }
+    })
+  })
+
+  it('sends the enum name of the genre chosen by its label', async () => {
+    const mock = mockFetch([
+      LISTING_ROUTE,
+      { method: 'GET', path: '/books?genre=SCIENCE_FICTION', respond: () => jsonResponse(SEARCH_RESULT) },
+    ])
+    const user = userEvent.setup()
+    render(<CataloguePage />)
+    await screen.findAllByRole('listitem')
+
+    await user.selectOptions(genreSelect(), 'Science fiction')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Northanger Abbey' })).toBeInTheDocument()
+    expect(mock.calls.map((call) => call.path)).toEqual(['/books', '/books?genre=SCIENCE_FICTION'])
   })
 })
