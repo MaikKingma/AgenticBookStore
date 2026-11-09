@@ -92,7 +92,7 @@ skipped; the reference §5 directives are the strategy, every task is `qaTier: e
 | id | summary | module | dependsOn | batch | qaTier | implModel | qaModel | closes | pr | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | The ACL treats a title answer whose `ean` is not the requested ISBN as unusable (503, one WARN) | bookstore | [] | 1 | elevated | sonnet | sonnet | ean finding (acl) | #90 (branch sdd/fix-06-distributor-review/T1) | ENDORSE (r1, verifier PASS; r0 REJECT) |
-| T2 | The import flow refuses a distributor title for another ISBN; fixtures aligned; e2e 503 with nothing stored | bookstore | [T1] | 2 | elevated | sonnet | sonnet | ean finding (flow, e2e) | | |
+| T2 | The import flow refuses a distributor title for another ISBN; fixtures aligned; e2e 503 with nothing stored | bookstore | [T1] | 2 | elevated | sonnet | sonnet | ean finding (flow, e2e) | #93 (branch sdd/fix-06-distributor-review/T2) | ENDORSE (r2, verifier PASS; r0 verifier FAIL, r1 REJECT) |
 | T3 | ACL keeps the caught exception as the cause and neutralises line breaks in logged distributor values | bookstore | [T2] | 3 | elevated | sonnet | sonnet | cause and CR/LF findings | | |
 
 All three tasks are in the one `bookstore` module and T1/T3 share a file, so they run one at a time in this order.
@@ -355,7 +355,19 @@ pre-existing test line deleted.
   only at the end (trailing space, a longer value with the expected one as prefix), not only at the start or middle.
 - FF3 (QA lead, rework rounds): a re-verification round voids carried-forward probe results when an asserting line
   changed; re-run the whole mutant set, and the named mutants must be red on the new cases.
+- FF4 (QA lead, T2 r1/r2): for any exact-equality check, witness rows cover both sides and both receiver orders
+  (leading pad, trailing pad, extension at the front, extension at the end, proper prefix, proper suffix, null), and
+  the mutant set includes `a.op(b)` and `b.op(a)` for op in startsWith/endsWith/contains, plus strip, stripLeading and
+  stripTrailing. Late finding on T1 (merged): no T1 case is a proper prefix or suffix of the requested EAN, so
+  `isbn.startsWith(title.ean())` and `isbn.endsWith(title.ean())` would survive; closed in T3 by amendment A1.
 
 ## Amendments
 
-(none)
+- A1 (2026-11-09, orchestrator, within authority: test fixtures inside a task, per the QA lead's T2 r1/r2
+  feed-forward): T3 also adds two additions-only cases to the T1 test
+  `DistributorAppServiceImplTest.aTitleAnswerForAnotherEanIsUnusableWithOneWarning`: `ean` `"978990001005"` (a
+  proper prefix of the request 9789900010050) and `"789900010050"` (a proper suffix), built with `variant(...)` of
+  `title-9789900010050.json`. They are green on the current code (the T1 fix is merged) and pin the T1 criterion; the
+  T3 verifier runs `isbn.startsWith(title.ean())` and `isbn.endsWith(title.ean())` (and the rest of the FF4 operator
+  family) against `toTitleDTO` as must-fail probes. T3's fileScope is unchanged. Consequence: none on production;
+  the T1 test grows from eight to ten cases. Gate 1 re-run self-accepted.
