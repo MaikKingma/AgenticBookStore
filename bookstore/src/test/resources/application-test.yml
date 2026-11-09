@@ -1,2 +1,8 @@
 # Test-only overrides of application.yml. Surefire activates the test profile for every test.
 # Never add an application.yml to the test resources: it would shadow the main one.
+spring:
+  ai:
+    anthropic:
+      # Tests stay offline even when the workshop key BOOKSTORE_AI_API_KEY is exported in the shell: a blank key
+      # switches the chat model off, so no test can send a request to the real API.
+      api-key: ""

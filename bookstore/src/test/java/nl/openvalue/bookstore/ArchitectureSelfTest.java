@@ -152,13 +152,13 @@ class ArchitectureSelfTest {
     static void importFixtures() {
         // No import options: the fixtures live in the test output, which DoNotIncludeTests would drop.
         fixtures = new ClassFileImporter()
-                .importPackages("nl.openvalue.archfixtures", "org.springframework.ai.archfixtures");
+                .importPackages("nl.openvalue.archfixtures");
     }
 
     @Test
     void fixtureImportContainsEveryNamedFixture() {
         Set<String> named = new TreeSet<>(List.of(EVENT_PROCESSOR, NESTED_CLASS, ANNOTATED_PACKAGE_INFO,
-                FIXTURES + "domain.BookAddedEvent", "org.springframework.ai.archfixtures.StubChatClient",
+                FIXTURES + "domain.BookAddedEvent",
                 PRICED_BOOK, PRICE_DTO, PRICE_PAYLOAD, PRICE_VIEW, TEMPERATURE_PROPERTIES, PRICE_TAG,
                 REPRICE_PAYLOAD, BOXED_PRICE_PAYLOAD, BOXED_PRICE_VIEW));
         EXPECTED_VIOLATORS.values().forEach(named::addAll);
@@ -319,6 +319,12 @@ class ArchitectureSelfTest {
     @Test
     void springAiOnlyInAssistant() {
         assertReportsExpectedViolators("SPRING_AI_ONLY_IN_ASSISTANT");
+    }
+
+    @Test
+    void springAiViolationNamesTheRealChatClient() {
+        assertReportsField("SPRING_AI_ONLY_IN_ASSISTANT", FIXTURES + "command.ChatCommands.chatClient",
+                "org.springframework.ai.chat.client.ChatClient");
     }
 
     @Test
