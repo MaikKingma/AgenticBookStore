@@ -58,6 +58,14 @@ metadata:
   A hook that throws outside its provider logs through `console.error`: `vi.mocked(console.error).mockClear()` after the
   `toThrow` assertion. A stale-answer test needs `await act(async () => { for (...) await Promise.resolve() })` after the
   body-read witness; probe it by forcing `if (true)` in the guard (both success and failure branch).
+- "Sent as typed" text fields (e-mail): `type="email"` makes the DOM (jsdom and browsers) trim edge whitespace in `value`,
+  so edge-whitespace witnesses never reach the payload. Use `type="text"` with `inputMode="email"`; keep `noValidate` on
+  the form anyway when the card names it. Controlled `type="number"` inputs reset to the state value after a refused
+  `fireEvent.change` (React restores it), which is what a "value stays 3" test needs.
+- C0-6c limit grep (`-w 10|20|1000`) also hits production COMMENTS and date examples ("10:00:00"): write comment
+  examples without those numbers and name limits in words. Order-fixture search: when no permutation of three lines
+  makes every attribute a peak or valley, change one price (a python brute force over candidate prices found
+  `7.99, 12.50, 3.50` with quantities 2, 3, 1); a data-only test double may differ from the basket it answers.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
