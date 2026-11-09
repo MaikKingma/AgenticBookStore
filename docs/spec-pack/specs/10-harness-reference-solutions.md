@@ -475,13 +475,15 @@ contradicts `CLAUDE.md`.
 1. Create `solution/level-1` with the files above; run its scenarios.
 2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
    contract test with the distributor MCP; run its scenarios.
-3. LSP rehearsal: run the LSP scenarios on macOS, on Linux, and on Windows through WSL against the real repository.
-   Per OS, record the first-index time and whether the Maven multi-module build resolves (references across
-   `bookstore` packages, no false diagnostics). If LSP fails on an OS, stop and ask Maik before writing a workaround.
+3. LSP rehearsal: run the LSP scenarios on macOS against the real repository (decision D8: macOS only for now; the
+   Linux and Windows-through-WSL runs are a manual check for Maik before the workshop). Record the first-index time
+   and whether the Maven multi-module build resolves (references across `bookstore` packages, no false
+   diagnostics). If LSP fails, stop and ask Maik before writing a workaround.
 4. Create `solution/level-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
 5. Create the three `start/level-4-*` branches; rehearse each.
 6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
 
 ## Definition of done
 - All branches exist, verify green on each, every acceptance scenario above checked and recorded.
-- LSP rehearsal recorded for macOS, Linux and Windows through WSL (first-index time, multi-module result).
+- LSP rehearsal recorded for macOS (first-index time, multi-module result); Linux and Windows through WSL listed as a
+  manual check for Maik (decision D8).

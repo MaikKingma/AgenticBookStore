@@ -124,3 +124,9 @@ Files changed: `specs/12-storefront.md` (Visual design notes, requirement "OpenB
 screenshots), `specs/11-workshop-guide-site.md` (Visual design section, requirement "OpenValue brand", task 1),
 `orchestrator/decisions.md` (D7), `orchestrator/progress.md` (decision log lines).
 
+## D8. LSP rehearsal on macOS only for now
+
+Maik, 2026-11-09: the spec 10 LSP rehearsal focuses on macOS for now. Spec 10 task 3 and its definition of done
+record the first-index time and the multi-module result on macOS only. The Linux and Windows-through-WSL runs are a
+manual check for Maik before the workshop, listed in progress.md. Changed file: `specs/10-harness-reference-solutions.md`
+(task 3, definition of done).
