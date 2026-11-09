@@ -123,7 +123,11 @@ Three findings of the read-only spec 12 review at 6c17253. Each is its own task 
 - [x] Persisted data already wrong: none. Duplicate orders from R15 would be real orders in a visitor's database; the
   workshop app has no production data -> deferred: nothing to remediate.
 - [x] Artifacts already produced: none.
-- [x] Docs, standards, ADRs or tests that encode the wrong assumption: `limits.ts` comments -> task T3. Spec 12
+- [x] Docs, standards, ADRs or tests that encode the wrong assumption: `limits.ts` comments -> task T3. The Javadocs
+  of `command/PlaceOrderPayload.java:23-24` and `command/OrderLinePayload.java:7-8` say the order flow owns the
+  quantity rule -> checked, consistent: layer wording (the use-case flow answers, so a bad quantity is a 422, not a
+  400) pinned by fix-04 criterion 4 (`agent-os/specs/2026-11-08-0932-fix-04-order-validation/plan.md`), and the flow
+  applies `OrderLine.quantityOf`; the rule lives in `OrderLine` (QA lead ruling, T3 r0). Spec 12
   "Routes and serving" says the static files are served by Boot's default handling; T1 adds a handler for the one entry
   document only and leaves the pack spec untouched (the main session forbids pack edits) -> recorded in plan.md
   Decisions.

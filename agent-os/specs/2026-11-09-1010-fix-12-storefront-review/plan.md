@@ -81,7 +81,7 @@ Bundled owner decisions: none. Open question the code does not settle in minutes
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | `/shop`, `/shop/` and `/shop/index.html` are revalidated on every load; assets unchanged | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #105 | sdd/fix-12-storefront-review/T1 |
 | T2 | the in-flight order lives in the basket context: one order per submit, back link held, late 202 removes only submitted lines | frontend | [] | 2 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #106 | sdd/fix-12-storefront-review/T2 |
-| T3 | `limits.ts` names `OrderLine` (spec 04 domain) as the enforcer of the 1 to 10 rule | frontend | [T2] | 3 | elevated | sonnet | pending | | | | |
+| T3 | `limits.ts` names `OrderLine` (spec 04 domain) as the enforcer of the 1 to 10 rule | frontend | [T2] | 3 | elevated | sonnet | done | PASS r0 | ENDORSE | (pending) | sdd/fix-12-storefront-review/T3 |
 
 T3 depends on T2 only for ordering (same module, one task at a time).
 
