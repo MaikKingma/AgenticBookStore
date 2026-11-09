@@ -108,7 +108,7 @@ class InventoryIntegrationTest extends IntegrationTestBase {
             assertThat(event.occurredAt()).isNotNull().isBetween(before, after);
         });
         assertThat(stockEvents.rolledBack()).isEmpty();
-        assertThat(getStock(id)).isEqualTo(stockView(id, 3, 0, 3, 3, true));
+        assertThat(getStock(id)).isEqualTo(withDefaultPendingRestock(stockView(id, 3, 0, 3, 3, true), 10));
     }
 
     @Test
@@ -124,7 +124,7 @@ class InventoryIntegrationTest extends IntegrationTestBase {
             assertThat(event.available()).isEqualTo(3);
             assertThat(event.reorderQuantity()).isEqualTo(10);
         });
-        assertThat(getStock(id)).isEqualTo(stockView(id, 2, 0, 2, 3, true));
+        assertThat(getStock(id)).isEqualTo(withDefaultPendingRestock(stockView(id, 2, 0, 2, 3, true), 10));
     }
 
     @Test
@@ -171,7 +171,7 @@ class InventoryIntegrationTest extends IntegrationTestBase {
             assertThat(event.reorderQuantity()).isEqualTo(10);
         });
         assertThat(stockEvents.rolledBack()).isEmpty();
-        assertThat(getStock(id)).isEqualTo(stockView(id, 3, 0, 3, 3, true));
+        assertThat(getStock(id)).isEqualTo(withDefaultPendingRestock(stockView(id, 3, 0, 3, 3, true), 10));
     }
 
     @Test

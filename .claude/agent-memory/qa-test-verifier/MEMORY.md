@@ -16,4 +16,5 @@
 - [Coverage and protocol checks](coverage-and-protocol-checks.md) — JaCoCo from the CLI without a POM change; impl heartbeat stamp vs file mtime
 - [Contract capture verification](contract-capture-verification.md) — replay captured files against a live service, comparator with mutated-copy controls
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, temporary QA test class, matrix index map, @Autowired falsifier
+- [After-commit listener probes](after-commit-listener-probes.md) — AFTER_COMMIT listener and REQUIRES_NEW delegate probes, IT-equivalent mutants, row-lock hang, log line attribution
 - [View and detail pin probes](view-and-detail-pin-probes.md) — derived-flag region guards on JSON views, null-key forms, startsWith vs exact detail, verifying an outline on patched test copies
