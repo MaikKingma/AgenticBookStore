@@ -44,6 +44,17 @@ metadata:
 - A "no body H1" rule must cover every form Markdown renders as the page H1: ATX with 0 to 3 spaces of indent and setext
   (`Foo` over `===`), not only `# ` at column 0; fenced lines and 4-space indent stay code. Likewise a box parser that keeps
   only the last fenced block per entry hides a second one: keep all of them and count.
+- Page-coverage rules over MDX (manifest in `scripts/coverage.mjs`, scanner `scripts/lib/mdscan.mjs`): scan fences and comments
+  in ONE pass (a fence inside `{/* */}` is not code, a comment inside a fence is; JSX comments may have spaces in the braces).
+  Leave the at a glance box, the "Level cleared when" checklist and the frontmatter out of the searched text, or the Catch-up
+  command and the checklist bullets satisfy entries. Compare after folding whitespace and the whitespace around `[ ] { }`
+  (JSON lines break differently), strip blockquote markers, and undo the pack's table escape `\|`.
+- Pack facts for a "Windows line must come from the pack" rule: `Get-Command jdtls` is an inline span (S10), the setup
+  `$env:...` line is a fenced line with a trailing `# comment`; `mvnw.cmd verify` sits inside a markdown fence of S10, so it is
+  no inline span and no allowed PowerShell line. Regexes over report lines must be anchored: "table of contents" matches `/content/`.
+- Frozen-file discipline: take `shasum -a 256` of every frozen checker file before the first edit, and apply mutants
+  through a runner that restores bytes and compares the sha (scratchpad `s11-t5-impl-mutate.mjs` pattern). Even `sed -i` is
+  refused by the worktree shell rules; use Edit.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
