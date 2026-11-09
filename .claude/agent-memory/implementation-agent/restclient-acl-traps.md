@@ -28,5 +28,11 @@ Framework facts behind these: res-3's `research-restclient-boot4.md` (spec 06 co
   (`contributors: [null]`, an AUTHOR without `name`). Validate those too, or an NPE leaves the public method. Test the
   broken element alone, first, last and in the middle (parameterized): a one-element list cannot kill
   `anyMatch`->`allMatch` or a getFirst/getLast-only check.
+- Log-forging tests: split captured output with `split("\\R")` (Java's `\R` includes U+2028, U+2029, U+0085, VT);
+  `String.lines()` does not. Write U+2028/U+2029 in source as the escape, but the Edit tool turns a typed
+  escape for those two into the raw char: `rg -n '[^\x00-\x7F]'` after every edit, fix by line with `perl -CSD`.
+  Expected escaped text in source is `"\\u2028"` (the doubled backslash is not a unicode escape).
+- "Additions only" on a `Stream.of(...)` source: appending after the last element rewrites its closing `)));`
+  line (1 deletion in numstat). Insert new rows before the last element instead.
 - Missing-key variants: load the committed contract file into a `LinkedHashMap` with a Jackson 3
   `TypeReference` (a raw `Map.class` read gives an unchecked warning), change one key, write it back.

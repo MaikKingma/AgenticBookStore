@@ -1,4 +1,4 @@
 - [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit vacuity, warnings, evidence files, hash baselines, tool escapes, .http replays, logback, claude -p, bugfix cycles, contract captures; read before writing a directive
-- [Test-data falsifiers](qa-test-data-falsifiers.md) — data and witnesses that can falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, unicode, HTTP timeouts, required keys; read before a falsifier list
+- [Test-data falsifiers](qa-test-data-falsifiers.md) — data and witnesses that can falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, unicode, HTTP timeouts, required keys, exact equality, log escapes; read before a falsifier list
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, warning greps; read before a CI spec strategy
 - [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, null guards, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review

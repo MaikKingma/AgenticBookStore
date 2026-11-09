@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import nl.openvalue.bookstore.domain.AuthorName;
 import nl.openvalue.bookstore.domain.Book;
 import nl.openvalue.bookstore.domain.Genre;
@@ -31,6 +32,9 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -460,8 +464,8 @@ class CatalogueFlowTest {
 
     @Test
     void importsATitleWithTheRecommendedPriceBuiltFromTheRequestedIsbn() {
-        // The distributor's own isbn differs on purpose: the book is built from the normalised request ISBN only.
-        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO("9789900010050",
+        // The request is hyphenated and the distributor answers for the normalised ISBN.
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(ISBN,
                 "The Last Man", List.of("Mary Shelley", "Jane Austen"), "SCIENCE_FICTION", new BigDecimal("11.99"),
                 "EUR", 1826, true)));
 
@@ -481,7 +485,7 @@ class CatalogueFlowTest {
 
     @Test
     void importsATitleWithThePriceOverrideInsteadOfTheRecommendedPrice() {
-        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO(ISBN,
+        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO("9789900010050",
                 "Pride and Prejudice", List.of("Jane Austen"), "FICTION", new BigDecimal("9.99"), "EUR", 1813, true)));
 
         UUID id = flow.importFromDistributor("9789900010050", new BigDecimal("12.00"));
@@ -495,6 +499,38 @@ class CatalogueFlowTest {
                 "FICTION", new BigDecimal("12.00"), "EUR", 1813, "AVAILABLE"));
         verify(stockItems).save(savedStockItem.capture());
         assertThat(savedStockItem.getValue()).isEqualTo(new StockItemDTO(id, 0, 0, 3, 10, false));
+    }
+
+    static Stream<Arguments> distributorTitlesForAnotherIsbn() {
+        return Stream.of(
+                Arguments.of("9789900010050", true),
+                Arguments.of("9789900010050", false),
+                Arguments.of("978-0-14-143951-8", true),
+                Arguments.of(null, true),
+                Arguments.of("97801414395180", true),
+                Arguments.of("9780141439518 ", true),
+                Arguments.of("09780141439518", true),
+                Arguments.of("978014143951", true),
+                Arguments.of(" 9780141439518", true),
+                Arguments.of("780141439518", true));
+    }
+
+    @ParameterizedTest(name = "answer isbn {0}, orderable {1}")
+    @MethodSource("distributorTitlesForAnotherIsbn")
+    void refusesADistributorTitleForAnotherIsbnAndSavesNothing(String answeredIsbn, boolean orderable) {
+        when(distributor.findTitle(ISBN)).thenReturn(Optional.of(new DistributorTitleDTO(answeredIsbn, "The Last Man",
+                List.of("Mary Shelley", "Jane Austen"), "SCIENCE_FICTION", new BigDecimal("11.99"), "EUR", 1826,
+                orderable)));
+
+        Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-0-14-143951-8", null));
+
+        assertThat(thrown).isExactlyInstanceOf(DistributorAppService.DistributorUnavailableException.class);
+        DistributorAppService.DistributorUnavailableException unavailable =
+                (DistributorAppService.DistributorUnavailableException) thrown;
+        assertThat(unavailable.code()).isEqualTo("distributor-unavailable");
+        assertThat(unavailable.getMessage()).isEqualTo("The distributor gave no usable answer for ISBN 9780141439518");
+        verify(distributor).findTitle(ISBN);
+        verifyNothingSaved();
     }
 
     @Test
@@ -790,7 +826,7 @@ class CatalogueFlowTest {
 
     @Test
     void rejectsAnotherTitleNoLongerSuppliedWithItsOwnIsbn() {
-        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO(ISBN,
+        when(distributor.findTitle("9789900010050")).thenReturn(Optional.of(new DistributorTitleDTO("9789900010050",
                 "Pride and Prejudice", List.of("Jane Austen"), "FICTION", new BigDecimal("9.99"), "EUR", 1813, false)));
 
         Throwable thrown = catchThrowable(() -> flow.importFromDistributor("978-99-0001-005-0", null));
@@ -928,7 +964,7 @@ class CatalogueFlowTest {
 
     private static DistributorTitleDTO lastMan(String genre, String recommendedPrice, String currency,
             int publicationYear, boolean orderable) {
-        return new DistributorTitleDTO("9789900010050", "The Last Man", List.of("Mary Shelley", "Jane Austen"), genre,
+        return new DistributorTitleDTO(ISBN, "The Last Man", List.of("Mary Shelley", "Jane Austen"), genre,
                 new BigDecimal(recommendedPrice), currency, publicationYear, orderable);
     }
 

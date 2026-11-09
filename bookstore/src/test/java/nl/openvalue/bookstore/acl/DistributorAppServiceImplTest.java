@@ -21,6 +21,7 @@ import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -55,7 +56,9 @@ import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ResponseActions;
 import org.springframework.test.web.client.ResponseCreator;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -594,7 +597,212 @@ class DistributorAppServiceImplTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    static Stream<ForeignAnswer> foreignTitleAnswers() {
+        return Stream.of(
+                new ForeignAnswer("another seed title", "9789900010050", contract("title-9780141439518.json")),
+                new ForeignAnswer("last digit differs", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "9789900010051"))),
+                new ForeignAnswer("leading space", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", " 9789900010050"))),
+                new ForeignAnswer("trailing space", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "9789900010050 "))),
+                new ForeignAnswer("EAN with add-on", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "978990001005090000"))),
+                new ForeignAnswer("hyphenated", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "978-99-0001-005-0"))),
+                new ForeignAnswer("proper prefix of the request", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "978990001005"))),
+                new ForeignAnswer("proper suffix of the request", "9789900010050", variant("title-9789900010050.json",
+                        body -> body.put("ean", "789900010050"))),
+                new ForeignAnswer("foreign and priced in USD", "9789900010050",
+                        contract("derived-title-usd-currency.json")),
+                new ForeignAnswer("foreign and unmapped subject code", "9780141439518",
+                        contract("derived-title-unmapped-subject.json")));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("foreignTitleAnswers")
+    void aTitleAnswerForAnotherEanIsUnusableWithOneWarning(ForeignAnswer answer, CapturedOutput output) {
+        stubTitleBody(answer.requested(), answer.body());
+
+        assertThatThrownBy(() -> distributor.findTitle(answer.requested()))
+                .isExactlyInstanceOf(DistributorUnavailableException.class)
+                .hasMessage("The distributor gave no usable answer for ISBN " + answer.requested());
+        List<String> warnings = Arrays.stream(output.getOut().split("\\R"))
+                .filter(line -> line.contains("WARN"))
+                .toList();
+        assertThat(warnings).hasSize(1);
+        assertThat(warnings.getFirst())
+                .contains("Distributor answer for EAN " + answer.requested() + " is unusable");
+        assertThat(output.getOut()).doesNotContain("No bookstore genre");
+    }
+
+    static Stream<CausedFailure> causedFailures() {
+        return Stream.of(
+                new CausedFailure("findTitle read timeout", Call.FIND_TITLE,
+                        withException(new SocketTimeoutException("Read timed out")),
+                        cause -> assertThat(cause).isExactlyInstanceOf(ResourceAccessException.class)
+                                .hasRootCauseInstanceOf(SocketTimeoutException.class)),
+                new CausedFailure("findTitle connection refused", Call.FIND_TITLE,
+                        withException(new ConnectException("Connection refused")),
+                        cause -> assertThat(cause).isExactlyInstanceOf(ResourceAccessException.class)
+                                .hasRootCauseInstanceOf(ConnectException.class)),
+                new CausedFailure("findTitle captured 503", Call.FIND_TITLE,
+                        withStatus(HttpStatus.SERVICE_UNAVAILABLE).contentType(MediaType.APPLICATION_JSON)
+                                .body(contract("unavailable-503.json")),
+                        cause -> assertThat(cause).isInstanceOf(RestClientResponseException.class)
+                                .satisfies(e -> assertThat(((RestClientResponseException) e).getStatusCode().value())
+                                        .isEqualTo(503))),
+                new CausedFailure("requestRestock captured 503", Call.REQUEST_RESTOCK,
+                        withStatus(HttpStatus.SERVICE_UNAVAILABLE).contentType(MediaType.APPLICATION_JSON)
+                                .body(contract("unavailable-503.json")),
+                        cause -> assertThat(cause).isInstanceOf(RestClientResponseException.class)
+                                .satisfies(e -> assertThat(((RestClientResponseException) e).getStatusCode().value())
+                                        .isEqualTo(503))),
+                new CausedFailure("findTitle releaseDate that is no date", Call.FIND_TITLE,
+                        withSuccess(variant("title-9780141439518.json", body -> body.put("releaseDate", "1813-13-45")),
+                                MediaType.APPLICATION_JSON),
+                        cause -> assertThat(cause).isExactlyInstanceOf(DateTimeParseException.class)),
+                new CausedFailure("findTitle fractional listPriceCents", Call.FIND_TITLE,
+                        withSuccess(variant("title-9780141439518.json", body -> body.put("listPriceCents", 999.5)),
+                                MediaType.APPLICATION_JSON),
+                        cause -> assertThat(cause).isExactlyInstanceOf(ArithmeticException.class)),
+                new CausedFailure("requestRestock fractional quantity", Call.REQUEST_RESTOCK,
+                        withStatus(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON)
+                                .body(variant("restock-confirmed-response.json", body -> body.put("quantity", 5.5))),
+                        cause -> assertThat(cause).isExactlyInstanceOf(ArithmeticException.class)),
+                new CausedFailure("requestRestock expectedDeliveryDate that is no date", Call.REQUEST_RESTOCK,
+                        withStatus(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON)
+                                .body(variant("restock-confirmed-response.json",
+                                        body -> body.put("expectedDeliveryDate", "2026-11-31"))),
+                        cause -> assertThat(cause).isExactlyInstanceOf(DateTimeParseException.class)),
+                new CausedFailure("guard: title without ean has no exception to keep", Call.FIND_TITLE,
+                        withSuccess(variant("title-9780141439518.json", body -> body.remove("ean")),
+                                MediaType.APPLICATION_JSON),
+                        cause -> assertThat(cause).isNull()));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("causedFailures")
+    void keepsTheCaughtExceptionAsTheCauseOfDistributorUnavailable(CausedFailure failure) {
+        expect(failure.call()).andRespond(failure.response());
+
+        assertThatThrownBy(() -> failure.call().invoke(distributor))
+                .isExactlyInstanceOf(DistributorUnavailableException.class)
+                .satisfies(e -> assertUnavailable((DistributorUnavailableException) e))
+                .satisfies(e -> failure.assertCause().accept(e.getCause()));
+    }
+
+    static Stream<LoggedValue> loggedDistributorValues() {
+        String requestedPride = "9780141439518";
+        String requestedLastMan = "9789900010050";
+        String answer = "Distributor answer for EAN";
+        String genre = "No bookstore genre for subject code";
+        return Stream.of(
+                new LoggedValue("restock status with CR LF", true, requestedPride,
+                        variant("restock-confirmed-response.json",
+                                body -> body.put("status", "SHIPPED\r\nWARN forged status")),
+                        true, answer, "SHIPPED\\r\\nWARN forged status"),
+                new LoggedValue("title releaseDate with LF", false, requestedPride,
+                        variant("title-9780141439518.json", body -> body.put("releaseDate", "1813\nWARN forged date")),
+                        true, answer, "1813\\nWARN forged date"),
+                new LoggedValue("restock expectedDeliveryDate with CR", true, requestedPride,
+                        variant("restock-confirmed-response.json",
+                                body -> body.put("expectedDeliveryDate", "2026\rWARN forged date")),
+                        true, answer, "2026\\rWARN forged date"),
+                new LoggedValue("subject code with LF", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\nWARN forged subject"))),
+                        false, genre, "XYZ\\nWARN forged subject"),
+                new LoggedValue("foreign ean with LF", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("ean", requestedPride + "\nWARN forged ean")),
+                        true, answer, requestedPride + "\\nWARN forged ean"),
+                new LoggedValue("subject code with U+2028 line separator", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\u2028forged subject"))),
+                        false, genre, "XYZ\\u2028forged subject"),
+                new LoggedValue("subject code with U+2029 paragraph separator", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\u2029forged subject"))),
+                        false, genre, "XYZ\\u2029forged subject"),
+                new LoggedValue("subject code with U+0085 next line", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\u0085forged subject"))),
+                        false, genre, "XYZ\\u0085forged subject"),
+                new LoggedValue("subject code with a vertical tab", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\u000Bforged subject"))),
+                        false, genre, "XYZ\\u000Bforged subject"),
+                new LoggedValue("subject code with an escape character", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\u001Bforged subject"))),
+                        false, genre, "XYZ\\u001Bforged subject"),
+                new LoggedValue("subject code with a tab", false, requestedLastMan,
+                        variant("title-9789900010050.json",
+                                body -> body.put("subjectCodes", List.of("XYZ\tforged subject"))),
+                        false, genre, "XYZ\\u0009forged subject"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("loggedDistributorValues")
+    void neutralisesLineBreaksInLoggedDistributorValues(LoggedValue value, CapturedOutput output) {
+        Runnable call;
+        if (value.restock()) {
+            expectRestockRequest("restock-confirmed-request.json").andRespond(withStatus(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON).body(value.body()));
+            call = () -> distributor.requestRestock(value.requested(), 10, "workshop-order-1");
+        } else {
+            stubTitleBody(value.requested(), value.body());
+            call = () -> distributor.findTitle(value.requested());
+        }
+
+        if (value.fails()) {
+            assertThatThrownBy(call::run).isExactlyInstanceOf(DistributorUnavailableException.class);
+        } else {
+            call.run();
+        }
+
+        List<String> lines = Arrays.asList(output.getOut().split("\\R"));
+        List<String> forged = lines.stream().filter(line -> line.contains("forged")).toList();
+        assertThat(forged).hasSize(1);
+        assertThat(forged.getFirst()).contains("WARN").contains(value.prefix()).contains(value.escaped());
+        assertThat(lines.stream().filter(line -> line.contains("WARN")).toList()).hasSize(1);
+    }
+
     // ---- helpers -------------------------------------------------------------------------------------------------
+
+    /** One failure whose caught exception must survive as the cause, and what that cause must look like. */
+    record CausedFailure(String name, Call call, ResponseCreator response, Consumer<Throwable> assertCause) {
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
+    /**
+     * A distributor answer with a marker ({@code forged}) in the value under test. {@code prefix} is the adapter's
+     * own wording that must share the one line the marker sits on, and {@code escaped} the value as it must be
+     * logged.
+     */
+    record LoggedValue(String name, boolean restock, String requested, String body, boolean fails, String prefix,
+            String escaped) {
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
+    /** A 200 title body whose {@code ean} is not the requested one, and the EAN the adapter is asked for. */
+    record ForeignAnswer(String name, String requested, String body) {
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
 
     /** The two port methods, each with the request it sends and the committed 2xx body it expects back. */
     enum Call {
