@@ -40,7 +40,7 @@ The bookstore gets an AI assistant as an inbound adapter in `assistant`: `POST /
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Starter, configuration (O1 to O3), test-profile key blank (D1), `AssistantProperties`, `AssistantModeConfig` in `spring.factories`, `OfflineChatModel`, first `AssistantConfig`, ArchUnit fixture uses the real `ChatClient` | bookstore | [] | 1 | critical | opus | opus | done (branch `sdd/08-bookstore-assistant/T1`) | PASS (r1) | ENDORSE | 1 | #113 | 76be904 |
-| T2 | `BookSuggestionView`, `BookDetailsView`, `AvailabilityView`, `BookstoreTools` with caps, ordering and curated error texts | bookstore | [T1] | 2 | elevated | sonnet | sonnet | todo | | | | | |
+| T2 | `BookSuggestionView`, `BookDetailsView`, `AvailabilityView`, `BookstoreTools` with caps, ordering and curated error texts | bookstore | [T1] | 2 | elevated | sonnet | sonnet | done (branch `sdd/08-bookstore-assistant/T2`) | PASS (r1) | ENDORSE | 1 | #116 | 699a8d9 |
 | T3 | `assistant-system.st`, `ChatMemory` (20), `ChatClient` bean, `ScriptedChatModel` with the silent tool-drop negative control | bookstore | [T2] | 3 | critical | opus | opus | todo | | | | | |
 | T4 | `AssistantCommands`, `ChatPayload`, `AssistantReplyView`, `AssistantRateLimiter`, `AssistantExceptionHandler`; slice, limiter and offline HTTP tests | bookstore | [T3] | 4 | critical | opus | opus | todo | | | | | |
 | T5 | `AssistantIntegrationTest` (grounding, memory, tool error, pending restock) and ArchUnit non-vacuity | bookstore | [T4] | 5 | elevated | sonnet | sonnet | todo | | | | | |
@@ -69,8 +69,8 @@ qaDirective of every task: C0 plus the task's T<n> block of the QA ledger (T6: t
 - Acceptance criteria: strategy card T4, plus Gate 1 finding G16 (the 429 and 503 cases also send the storefront's exact header `Accept: application/json, application/problem+json`).
 
 ### T5: Full-context integration tests and ArchUnit non-vacuity
-- fileScope: `T/AssistantIntegrationTest.java`; `T/IntegrationTestBase.java` (one Javadoc sentence); `T/ArchitectureSelfTest.java` (additions only); `T/assistant/ScriptedChatModel.java` (additions only).
-- Acceptance criteria: strategy card T5.
+- fileScope: `T/AssistantIntegrationTest.java`; `T/IntegrationTestBase.java` (one Javadoc sentence); `T/ArchitectureSelfTest.java` (additions only); `T/assistant/ScriptedChatModel.java` (additions only); `T/assistant/BookstoreToolsTest.java` (additions only, amendment A2).
+- Acceptance criteria: strategy card T5, plus F-T2-1 (amendment A2): in `BookstoreToolsTest.invalidInputWithoutAGenreListKeepsJustItsDetail`, `catalogue.search("long", null, null, null)` throws `new InvalidInputException("invalid-query", "Invalid query", "Query too long", List.of(Map.of("field", "q", "message", "Query too long")))` and the tool text is exactly `"Query too long"`; must-fail mutant for the verifier: `.filter(Objects::nonNull)` removed from `validGenres`.
 
 ### T6: README section "Assistant"
 - fileScope: `README.md`.
@@ -86,8 +86,13 @@ Self-accepted by the orchestrator (owner delegated gate approvals). Checklist: e
 - T1 FF2 (T3): Gate 1 finding G24, see task T3.
 - T1 FF3 (every later verifier): read the implementation outbox for in-place production edits and report them as a process finding with the file's hash check, never as evidence.
 - T1 FF4 (every agent): `updated` stamps come from `date -u`, never estimated.
-- T1 ship-gate baseline for T2 (plain log `s08-T1-orch-shipgate-plain.log` in the session scratchpad): BUILD SUCCESS 27.1 s, bookstore 1192, distributor 190, ArchitectureTest 22, ArchitectureSelfTest 63, 14 Started lines over the whole log (equal to the 0d67746 base).
+- T1 ship-gate baseline for T2 (plain log `s08-T1-orch-shipgate-plain.log` in the session scratchpad): BUILD SUCCESS 27.1 s, bookstore 1192, distributor 190, ArchitectureTest 22, ArchitectureSelfTest 63, Started lines unchanged from the 0d67746 base (10 in the bookstore section, 15 over the whole log with the FF5 regex; corrected after T2).
+- T2 FF5 (plan and every brief): count Started lines in the bookstore section only with `Started .* in .* seconds`: 10 for T1 to T3, 12 from T4, 13 from T5 (15 over the whole log through T3). Never `Started .*Test in`.
+- T2 FF6 (every verifier): every round writes its own `s08-T<n>-qa-r<k>-hashes.txt` and quotes the `stat -f '%Sm %N'` order line, even when production did not change.
+- T2 FF7 (implDirective T3 to T5): a test that feeds a rejection gives it non-empty `details` with keys other than the usual ones for that path, as well as the empty case.
+- T2 FF8 (every verifier): a kill that happens only because an unstubbed mock throws an NPE that a catch-all turns into the generic text is fragile; report it and ask for a lenient stub on the boundary row.
 
 ## Amendments
 
 - A1 (2026-11-09, orchestrator, on the main session's instruction): spec 07 merged into factory (776bf86). `origin/factory` (2fda3b6, with spec 12's `frontend` module and fix-12) was merged into the spec branch with a merge commit (0d67746) and into the T1 branch before its ship gate. Referee on 0d67746: 24.7 s, bookstore 1166, distributor 190. Consequence: the module vocabulary gains `frontend`; the QA lead re-baselined C0 (A1-5 in its ledger).
+- A2 (2026-11-09, orchestrator, after the T2 meta-review): the QA lead's test-only follow-up F-T2-1 (a non-genre rejection detail witness for `validGenres`) is added to T5 instead of a separate task, with `BookstoreToolsTest.java` (additions only) in T5's fileScope. Cheap, test-only, no production change; gate re-run self-accepted.
