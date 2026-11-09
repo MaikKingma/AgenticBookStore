@@ -199,3 +199,15 @@ Maik, 2026-11-09, during the live walk of the storefront: the assistant should f
 
 The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
 12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.
+
+## D14. Spec 10: no headless Claude Code runs; Maik rehearses the levels
+
+Maik, 2026-11-09: the agents' headless Claude Code runs cannot log in under the isolated HOME that protects Maik's
+real `~/.claude`. Instead of a login workaround, Maik rehearses every level himself on 2026-11-10. The agents build
+every branch file directly and replace each scenario run and rehearsal with a careful consistency check against spec
+10, the guide and the code on `main`, with `./mvnw clean verify` green on every branch. Files a Claude Code step would
+generate (Spec Kit constitution, Agent OS product docs and standards) are written directly from the pack and listed
+for Maik's review. Scenarios that need a Claude Code session, the macOS LSP rehearsal and the timed Level 4 rehearsal
+are Maik's manual checks.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble, Definition of done).
