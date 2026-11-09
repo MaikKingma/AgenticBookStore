@@ -44,7 +44,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T5b | rule (c) on the built pages: `check:built` checks every pre or code line inside a Windows PowerShell tab panel against the pack command list | guide | [T5] | B5b | critical | opus | opus | PASS r3 | #100 | sdd/11-workshop-guide/T5b | ENDORSE r3 |
 | T5c | frozen self-tests read a skeleton snapshot instead of the live docs tree (A10) | guide | [T5b] | B5c | critical | opus | opus | PASS r1 | #110 | sdd/11-workshop-guide/T5c | ENDORSE |
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
-| T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
+| T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | verifying | | sdd/11-workshop-guide/T7 | |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | pending | | | |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
@@ -319,8 +319,9 @@ From the T5b reviews (verifier FAIL r1 and r2, PASS r3; QA lead ENDORSE r3) and 
   `#level-cleared-when`. T11 keeps the eight troubleshooting heading texts as in the skeleton (a reword is a question
   first); T11 and qa-final verifiers check on the rendered Pages build that every article link into
   `reference/troubleshooting` has text equal to its target heading (case-insensitive, backticks and the hash-link
-  character stripped), listed per link; T7 to T10 keep `## Level cleared when {/* #level-cleared-when */}` and the L2
-  page keeps `{/* #part-a-lsp */}`. T7 to T10 verify on a tree that contains the T5c merge; node:test floor 496.
+  character stripped), listed per link; T7 to T10 keep the bare `## Level cleared when` heading exactly as the skeleton
+  and the checker pin it (Docusaurus derives the id `level-cleared-when`; corrected 2026-11-09 during T7, the skeleton
+  never carried a comment anchor there) and the L2 page keeps `{/* #part-a-lsp */}`. T7 to T10 verify on a tree that contains the T5c merge; node:test floor 496.
   Process: when the orchestrator merges the spec tip into a task branch before spawning its verifier, the verifier
   is told that the implementation outbox predates that merge.
 - Gate 2 owner note from T6: setup page line 90, "The plugin does not ship the binary" (WP:59 wording), comes before
