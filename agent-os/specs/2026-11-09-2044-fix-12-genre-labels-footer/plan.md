@@ -87,7 +87,7 @@ Open question the code does not settle in minutes: none.
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | the select, the card and the detail page show the sentence-case genre label; the select still sends the enum name | frontend | [] | 1 | elevated | sonnet | pending | | | | |
+| T1 | the select, the card and the detail page show the sentence-case genre label; the select still sends the enum name | frontend | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #133 | sdd/fix-12-genre-labels-footer/T1 |
 | T2 | the footer sits at the bottom of the window on a short page and below the content on a long one | frontend | [T1] | 2 | elevated | sonnet | pending | | | | |
 
 T2 depends on T1 only for ordering (same module, one task at a time).
@@ -181,8 +181,27 @@ T2 depends on T1 only for ordering (same module, one task at a time).
 
 ## QA feed-forward
 
-(none yet)
+- FF1 (qa-lead, T1 r0; applies to T2): (1) must-fail probes on the CSS contract parser, one run each with a hash
+  restore: `100dvh` before `100vh`; the `.app-shell` rule inside a comment; the rule inside
+  `@media (min-width: 9999px)`; a later `.app-shell { display: block; }`; a later `.app-shell > main { flex: 0 0 auto; }`;
+  `flex: 0 1 auto`, `flex: none` and `flex-grow: 0` fail while `flex: 1 0 auto` passes; the footer guard fails for
+  `position: sticky` in a second `.site-footer` rule, in a grouped selector (`.x, .site-footer`), in a compound
+  selector (`footer.site-footer`, `.app-shell > .site-footer`) and without a space (`position:fixed`). (2) DOM probes
+  that must fail criterion 4: the footer outside the shell, an extra element child, main and footer swapped, the shell
+  only on the catalogue route; the `#/basket` check runs after an awaited assertion that the basket page is shown.
+  (3) Live measurement on the built app in a fresh browser context at 1280x800 and 390x844: on a short page (empty
+  basket) the footer's bottom equals `innerHeight` within 1 px and `scrollHeight === innerHeight`; on a long page the
+  footer starts at or below the last card and does not overlap it; after scrolling the header's top is 0. (4)
+  `git diff <pr-base> --numstat -- frontend/src/styles/global.css frontend/src/App.tsx` with every deleted line quoted
+  and justified (expected: only App.tsx lines re-indented inside the shell); no colour literal; `contrast.test.ts`
+  unmodified; no console error or warning.
+- Q1 (qa-lead, T1 r0; applies to qa-final): `git grep -n "GENRE_LABELS\[" -- frontend/src` hits only `genres.ts` and
+  `genres.test.ts`, and `genreLabel(book.genre)` appears exactly once in each of `BookCard.tsx` and `BookDetailPage.tsx`.
 
 ## Amendments
 
-(none yet)
+- Residuals for Maik (not criteria of this cycle): R1 (qa-lead, T1 r0) the D4 fallback is pinned at the `genreLabel`
+  unit only; optional test-only follow-up: an unknown genre on a card and on the detail page shown as sent. R2 the title
+  of the pre-existing listing test in `CataloguePage.test.tsx` ("every value as the bookstore sent it") is slightly
+  stale; it is outside D3 and was left unchanged. Orchestrator decision: R1 not added to T1 (S4, the qa-final grep Q1
+  rules out the direct map read on the merged code; cheap to add later).
