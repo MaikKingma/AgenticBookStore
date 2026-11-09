@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doThrow;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -285,14 +286,15 @@ class InventoryIntegrationTest extends IntegrationTestBase {
         Map<String, Object> stock = getStock(id);
 
         assertThat(stock.keySet())
-                .containsExactlyInAnyOrder("bookId", "onHand", "reserved", "available", "reorderLevel", "lowStock");
-        assertThat(stock).isEqualTo(Map.of(
+                .containsExactlyInAnyOrder("bookId", "onHand", "reserved", "available", "reorderLevel", "lowStock",
+                        "pendingRestock");
+        assertThat(stock).isEqualTo(withNoPendingRestock(Map.of(
                 "bookId", id.toString(),
                 "onHand", 9,
                 "reserved", 2,
                 "available", 7,
                 "reorderLevel", 8,
-                "lowStock", true));
+                "lowStock", true)));
     }
 
     @Test
@@ -338,13 +340,23 @@ class InventoryIntegrationTest extends IntegrationTestBase {
     /** The stock view as JSON gives it: the book id as a string, the figures as numbers, the flag as a boolean. */
     private static Map<String, Object> stockView(UUID bookId, int onHand, int reserved, int available,
             int reorderLevel, boolean lowStock) {
-        return Map.of(
+        return withNoPendingRestock(Map.of(
                 "bookId", bookId.toString(),
                 "onHand", onHand,
                 "reserved", reserved,
                 "available", available,
                 "reorderLevel", reorderLevel,
-                "lowStock", lowStock);
+                "lowStock", lowStock));
+    }
+
+    /**
+     * The view with the key {@code pendingRestock} present and null, as JSON gives it when no restock is pending. A
+     * {@link Map#of} cannot hold a null value, so the copy is a {@link LinkedHashMap}.
+     */
+    private static Map<String, Object> withNoPendingRestock(Map<String, Object> figures) {
+        Map<String, Object> view = new LinkedHashMap<>(figures);
+        view.put("pendingRestock", null);
+        return view;
     }
 
     private static Map<String, Object> bookPayload(String isbn, String title) {
