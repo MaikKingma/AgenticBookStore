@@ -30,5 +30,12 @@ metadata:
   `check.mjs`/`lib/site.mjs` stays green. Pin the pair table by name plus a minimum count, and test each rule through
   `runChecks` on a temp tree. A node mutation runner (edit, spawn `node --test`, restore, sha check) beats shell loops
   under the worktree Bash guard; call helper scripts by absolute path, never `~`, `$VAR` args or `$?`.
+- With `future.v4` the heading id form `## Title {#id}` does not compile in MDX (acorn error, also in `.md`); the working
+  form is `## Title {/* #id */}`. Docusaurus renders `- [ ]` items as bare disabled checkboxes: axe reports `label`
+  (not colour contrast) on `.task-list-item > input`; fixing it needs a swizzle outside docs/components.
+- A checker rule that describes the whole guide (page set, plan comparison) cannot run in `runChecks(root)` by default:
+  older tests build minimal temp trees and may only gain lines. Gate it behind an option and set it in `main()` for the
+  default root (`--structure` for explicit roots); test it through `runChecks(root, {structure: true, workshopDir})`.
+- Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
