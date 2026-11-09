@@ -2,7 +2,9 @@
 # Tests scripts/publish-workshop-main.sh against temporary repositories only.
 # Every repository, including the bare remotes, lives under one mktemp directory that is removed on exit.
 # The test never runs git against the repository that holds this file and never pushes anywhere else.
-# Runs on macOS /bin/bash 3.2 with BSD tools and on Linux bash 5 with GNU tools.
+# Runs on macOS /bin/bash 3.2 with BSD tools and on Linux bash 5 with GNU tools. The script under test runs with
+# "$BASH", the interpreter that runs this test, so /bin/bash scripts/test-publish-workshop-main.sh tests the
+# script on bash 3.2 even when another bash comes first on PATH.
 set -euo pipefail
 
 script_dir=$(cd "$(dirname "$0")" && pwd -P)
@@ -93,7 +95,7 @@ run_in() {
   shift
   clock=$((clock + 3600))
   rc=0
-  (cd "$dir" && GIT_AUTHOR_DATE="$clock +0000" GIT_COMMITTER_DATE="$clock +0000" bash "$SCRIPT" "$@") \
+  (cd "$dir" && GIT_AUTHOR_DATE="$clock +0000" GIT_COMMITTER_DATE="$clock +0000" "$BASH" "$SCRIPT" "$@") \
     >"$root/out" 2>"$root/err" || rc=$?
   out=$(cat "$root/out")
   err=$(cat "$root/err")
@@ -315,6 +317,10 @@ expect_refusal 'a staged change' 'not clean'
 git -C "$work" reset --quiet --hard
 write_file "$work" untracked.txt 'untracked'
 expect_refusal 'an untracked file' 'not clean'
+# A repository config that hides untracked files from git status must not hide them from the script.
+git -C "$work" config status.showUntrackedFiles no
+expect_refusal 'an untracked file hidden by status.showUntrackedFiles=no' 'not clean'
+git -C "$work" config --unset status.showUntrackedFiles
 rm "$work/untracked.txt"
 git -C "$work" checkout --quiet --detach factory
 expect_refusal 'a detached HEAD at the factory commit' 'branch factory'
@@ -333,7 +339,7 @@ git -C "$work" commit --quiet -am 'real change'
 refs_before=$(refs_of "$work")
 rc=0
 (cd "$work" && env -u GIT_AUTHOR_NAME -u GIT_AUTHOR_EMAIL -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL \
-  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true bash "$SCRIPT") \
+  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=user.useConfigOnly GIT_CONFIG_VALUE_0=true "$BASH" "$SCRIPT") \
   >"$root/out" 2>"$root/err" || rc=$?
 out=$(cat "$root/out")
 show "$(cat "$root/err")"
@@ -430,6 +436,14 @@ check '--push rerun unchanged: exits 0' same "$rc" 0
 check '--push rerun unchanged: remote main unchanged' same "$(rev "$remote" refs/heads/main)" "$main4"
 check '--push rerun unchanged: remote tag unchanged' same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
 
+# Without a local main, the remote main is the baseline to reuse.
+git -C "$work" update-ref -d refs/heads/main
+run_in "$work" --push
+check '--push without a local main: exits 0' same "$rc" 0
+check '--push without a local main: reuses the remote main' same "$(rev "$work" refs/heads/main)" "$main4"
+check '--push without a local main: remote main unchanged' same "$(rev "$remote" refs/heads/main)" "$main4"
+check '--push without a local main: remote tag unchanged' same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
+
 # Local factory must equal the remote's factory: ahead, behind and diverged are all refused.
 write_file "$work" README.md 'ahead'
 git -C "$work" commit --quiet -am 'ahead'
@@ -485,6 +499,15 @@ check '--push --dry-run: bare remote unchanged' same "$(refs_of "$remote")" "$re
 check '--push --dry-run: no worktree left' same "$(worktrees)" "worktree $work"
 check '--push --dry-run: no temporary directory left' empty "$(tmp_left)"
 
+# An empty --remote value is a usage error, not origin: origin still points at the test remote here, so a
+# fallback to origin would push.
+remote_before=$(refs_of "$remote")
+refs_before=$(refs_of "$work")
+run_in "$work" --push --remote ''
+check '--push --remote with an empty name is a usage error' same "$rc" 2
+check '--push --remote with an empty name: bare remote unchanged' same "$(refs_of "$remote")" "$remote_before"
+check '--push --remote with an empty name: no local ref moved' same "$(refs_of "$work")" "$refs_before"
+
 # --remote: origin is broken, the named remote is used.
 git -C "$work" remote set-url origin "$root/no such remote.git"
 git -C "$work" remote add upstream "$remote"
@@ -500,6 +523,8 @@ check '--push --remote upstream: local tag is the new main' same "$(rev "$work" 
 
 run_in "$work" --remote upstream
 check '--remote without --push is a usage error' same "$rc" 2
+run_in "$work" --push --remote
+check '--remote without a name is a usage error' same "$rc" 2
 run_in "$work" --no-such-option
 check 'an unknown option is a usage error' same "$rc" 2
 run_in "$work" --help
@@ -530,5 +555,6 @@ check '--check HEAD from a subdirectory: names exactly .claude/settings.json' \
   same "$(reported_paths "$err")" .claude/settings.json
 
 finished=yes
-printf '%d assertions, %d failures\n' "$assertions" "$failures"
+printf '%d assertions, %d failures (script run with %s, bash %s)\n' "$assertions" "$failures" "$BASH" \
+  "$BASH_VERSION"
 [ "$failures" -eq 0 ]

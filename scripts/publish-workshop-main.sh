@@ -85,7 +85,11 @@ while [ $# -gt 0 ]; do
     --dry-run) dry_run=yes ;;
     --push) push=yes ;;
     --remote)
-      [ $# -ge 2 ] || die '--remote needs a remote name'
+      if [ $# -lt 2 ] || [ -z "$2" ]; then
+        printf '%s: --remote needs a remote name\n' "$PROGRAM" >&2
+        usage >&2
+        exit 2
+      fi
       remote=$2
       shift
       ;;
