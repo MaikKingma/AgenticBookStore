@@ -51,6 +51,11 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      null (only `[0]`, `[1]` exist), so assert the resolved bean (`flyway.getConfiguration().getLocations()`). A census
      test that runs plain Flyway with hard-coded locations leaves the DEFAULT profile's value unfalsified: read it from
      the main yml with `YamlPropertySourceLoader`. "Re-run changes no row count" misses DO UPDATE: compare contents.
+     Contents alone still miss the realistic upsert `DO UPDATE SET c = excluded.c` (equivalent on an unmodified
+     database; my `|| 'x'` probe was too easy to kill). The witness edits values in every seeded table before the rerun
+     (an app-like ship: status, shipped_at, on_hand, reserved) and compares all tables at once. Probe one full-row
+     upsert per table (spec 09 T1 r0 REJECT). Columns no edit touches stay single-column survivors: close them with a
+     gate grep (count of `ON CONFLICT DO NOTHING` = inserts, `DO UPDATE` = 0) in the strategy, not a later round.
    - Frontend witnesses (React, Vitest, RTL), contrast and style-guard tests, CSS layout and live-browser checks moved to [[qa-frontend-falsifiers]].
    - HTTP cache-policy criteria (fix-12 T1 held in one round): directive token parse (kills noStore, max-age=0), a GET with `If-Modified-Since` = now (classpath mtime is never newer, so a kept validator gives 304), an asset guard, a mutant per chained setter. Tests serve test-classes, not the jar (1980 dates): add a live `java -jar` header check, and run live checks of a new build in a brand-new browser context (see [[qa-frontend-falsifiers]]).
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).

@@ -95,6 +95,8 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    At a fetch-joined `order by`, an `@OrderColumn` position is a flat child column reachable only as `index(l)`. Its `asc` sort ties every root at position 0, so no data can force it: treat it as an inspection item next to the removed tiebreak, not a survivor.
 
 15. **Survivors killed by a gate grep.** Before judging a verifier's "informational survivor", check whether a common-directive gate check rejects the mutant (a clock grep that must print exactly one `Clock.system` line rejects a bean built with `Clock.systemUTC()`; a mapper grep rejects `JsonMapper.builder()` in main). Then it is gate-proven, not a survivor, as long as the grep runs in every later task and qa-final. Feed a test-pinned follow-up only if the clause is high-risk under rule 3. Verifiers miss this (spec 05 T1).
+   Exception: when a criterion says the test asserts criterion N ("the census asserts ... plus criterion 2"), N's
+   gate-grep properties (ASCII only) are test items. Fold them in as RAs when a rework round runs anyway (spec 09 T1).
 
 16. **"Covered one layer down" survivors in an integration-test task.** An IT over already endorsed layers often lets a flow mutant survive (an order or hand-off its data never makes visible). It counts as killed when its body equals a probe in the earlier gate's schema and the rule 1 carry holds (both hashes equal now, result line on disk). Diff the mutant against the `.orig`, find the case in the earlier schema, quote its result line. No re-run, no REJECT; a hash change makes it a qa-final re-run item (spec 06 T7).
 
