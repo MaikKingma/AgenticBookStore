@@ -107,7 +107,7 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | done | PASS r0 | ENDORSE | #134 | sdd/fix-08-assistant-review/T1 |
-| T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | pending | | | | |
+| T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | done | PASS r0 | ENDORSE | | sdd/fix-08-assistant-review/T4 |
 | T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | pending | | | | |
 | T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | pending | | | | |
 
@@ -315,6 +315,22 @@ From the QA lead's T1 r0 review (ENDORSE; ledger `.claude/comms/mailboxes/qa-lea
   and `catch (RuntimeException failure)` appears exactly once. Q2: the cause is passed (by reading, unless a test
   pins it). Q3: `AssistantCommands.java` at the spec tip has the hash of the T1 merge, or T1's branch-level negative
   control is re-run.
+From the QA lead's T4 r0 review (ENDORSE):
+- FF-T3-2 (T3): the bookstore baseline is 1336; `AssistantAnthropicContractTest` (3 tests, no Spring context, literal
+  key, loopback base URL) runs in every T3 run, plain and with the variables exported, stays 3/3 green, and T3 does
+  not touch it.
+- FF-LIVE (the main session's keyed re-check after the T4 merge, default model): (a) "Hello, what can you do?" then
+  "And what genres do you have?" in one conversation answers 200 twice; (b) a first turn that makes the model search
+  the catalogue (for example "Anything by Austen?") and a follow-up answer 200 twice (tool-loop reorder); (c) the
+  server log has no `BadRequestException` and no `Invalid signature`. With T1 merged, a 503 `assistant-unavailable`
+  on turn 2 means T4 is not working.
+- qa-final Q4: at the spec tip `git grep -c "thinkingDisabled()" -- bookstore/src/main` is 1; `AssistantConfig.java`
+  has the hash of the T4 merge or the T4 negative control is re-run; the contract test is 3/3 in the final module
+  run. Q5: the FF-LIVE result is quoted in the final verdict or marked pending; qa-final never makes a real call.
+- Residuals for Gate 2: R-d live acceptance of thinking disabled is docs-based until FF-LIVE runs; R-e thinking is
+  off for every model while the model is overridable through `BOOKSTORE_AI_MODEL` (checked for Haiku 5.5 only);
+  R-f the auto-configured `ChatClient.Builder` is not exercised offline (R17 deferred; FF-LIVE closes it); R-g the
+  Spring AI 2.0.2 replay reorder stays latent in the library, guarded by the contract test (keep it through upgrades).
 - Optional follow-up FU-1 (not in this cycle's criteria): a test asserting `hasCauseReference` on the
   `UnavailableException` and an `isNotNull()` before `AssistantCommandsTest.java:465` reads the throwable.
 
