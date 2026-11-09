@@ -23,4 +23,9 @@ For a prose task the tests are a claim census plus gate greps. What held:
   `lsof -nP -iTCP:<port> -sTCP:LISTEN` shows; the exit-143 task notifications that follow are the kill, not a failure.
 - **`rg` works in the Bash tool, not in script files.** Run the gate greps as separate Bash calls with a positive control
   file in the scratchpad (exit 0) next to each empty result (exit 1). `rg -ni 'a|b'`, never `-E`.
+- **A rate limit behind the offline check is not reachable offline.** To prove a 429 live, start a second instance with a
+  made-up key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub that answers a minimal
+  Messages JSON; the stub's request count shows rejected calls never reach the model.
+- **Port 8080 may belong to someone else** (another agent's bookstore): preflight with `lsof`, never kill it, run the jar
+  with `--server.port=<free>` and record it as the one deviation.
 - Keep a `README.md` under a line limit by unwrapping lines and inlining small code blocks, not by dropping sections.

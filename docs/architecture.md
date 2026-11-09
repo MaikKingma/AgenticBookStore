@@ -33,7 +33,7 @@ are exactly eight packages:
 | `command` | Inbound REST adapter for requests that change state. | `BookCommands`, `AddBookPayload` |
 | `query` | Inbound REST adapter for requests that read state. | `BookQueries`, `BookView` |
 | `process` | Inbound event adapter: reacts to domain events after the commit. | `EventProcessor`, `RequestRestockDelegate` |
-| `assistant` | Inbound conversational adapter. The only place where Spring AI types may appear. | see the suffixes in section 3 |
+| `assistant` | Inbound conversational adapter. The only place where Spring AI types may appear. | `AssistantCommands`, `BookstoreTools`, `AssistantRateLimiter`, `OfflineChatModel` |
 | `data` | Outbound persistence adapter. Implements the `*DataService` ports. | `BookDataServiceImpl`, `BookJPA`, `BookJPAMapper`, `BookRepository` |
 | `acl` | Outbound anti-corruption layer towards the distributor. Implements the `*AppService` ports. | `DistributorAppServiceImpl`, `DistributorProperties` |
 
@@ -134,14 +134,17 @@ The `domain` package has no suffix rule: name aggregates, value objects, events 
   of `{field, message}`.
 - `process`: `EventProcessor` has `@TransactionalEventListener(phase = AFTER_COMMIT)` methods that hand the event to a
   `*Delegate`. A delegate runs in `REQUIRES_NEW` and calls one flow method.
-- `assistant`: the chat adapter. It is the only package that may use Spring AI.
+- `assistant`: the chat adapter and the only package that may use Spring AI. `AssistantCommands` serves
+  `POST /assistant/chat` and calls the chat client. `BookstoreTools` gives the model read-only access to the bookstore
+  through `CatalogueFlow` and `InventoryFlow`, like any other inbound adapter. Its configuration, rate limiter and
+  offline chat model stay in the package.
 
 ### Outbound adapters
 
 - `data`: a `*DataServiceImpl` implements the port with a Spring Data `*Repository` and a `*JPAMapper`. The schema
   changes only through new Flyway migrations (`V{n}__{description}.sql` in `db/migration`); an existing migration is
-  never edited. JPA runs with `ddl-auto: validate`, so Hibernate never changes the schema. The demo data is a
-  repeatable migration in `db/seed`, which only the default profile loads (see the README).
+  never edited. The demo data is a repeatable migration in `db/seed`, which only the default profile loads (see the
+  README).
 - `acl`: an `*AppServiceImpl` implements the port with Spring `RestClient`. External payloads are private nested
   records. Every external failure becomes a port exception. The base URL comes from `distributor.base-url`.
 
@@ -164,7 +167,8 @@ changing the rule and this section in the same change, after the team agreed.
 |---|---|---|---|
 | `domain` | Pure unit test, no Spring | JUnit, AssertJ | `BookTest` |
 | `domaininteraction` | Unit test with mocked ports | JUnit, Mockito, AssertJ | `CatalogueFlowTest` |
-| `command`, `query`, `assistant` | Web slice test with mocked flows | `@WebMvcTest`, `@MockitoBean` | `BookCommandsTest` |
+| `command`, `query` | Web slice test with mocked flows | `@WebMvcTest`, `@MockitoBean` | `BookCommandsTest` |
+| `assistant` | Web slice test with a mocked chat client; unit test of the tools with mocked flows | `@WebMvcTest`, `@MockitoBean`, Mockito | `AssistantCommandsTest`, `BookstoreToolsTest` |
 | `data` | JPA slice test on PostgreSQL | `@DataJpaTest`, Testcontainers PostgreSQL, `@AutoConfigureTestDatabase(replace = NONE)` | `BookDataServiceImplTest` |
 | `acl` | HTTP contract test against a mocked server | `MockRestServiceServer` bound to the `RestClient.Builder` | `DistributorAppServiceImplTest` |
 | `process` | Unit test of processor and delegate | JUnit, Mockito | `EventProcessorTest` |
