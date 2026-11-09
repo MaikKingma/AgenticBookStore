@@ -23,7 +23,89 @@ git stash -u && git switch main
 
 :::
 
-{/* guide-skeleton */}
+You start on `main` with a clean checkout. No `CLAUDE.md`, no `.claude/`, no MCP. The app has a React storefront in `frontend/`. The task below is about the catalogue API, and the storefront is where you see the result.
+
+:::info[Sync moment]
+
+Look up, Maik demos this now. Maik opens the repo, shows the onion diagram and the `ArchitectureTest`, then gives the task below to Claude Code live without any context. The room sees the first minute of what it does. (3 minutes)
+
+:::
+
+## The task
+
+Paste this literally and do not add hints:
+
+> Add discounts to the bookstore. A book can get a discount percentage. Show the discounted price when people search the catalogue.
+
+## Steps
+
+### 1. Start a fresh session
+
+```bash
+claude
+```
+
+Notice that new sessions start in **auto** permission mode: the agent acts without asking. Leave it like that for this level.
+
+### 2. Paste the task
+
+Paste the task. Do not help. Do not answer questions with conventions, only with "you decide".
+
+### 3. Check the result yourself
+
+When Claude says it is done, check for yourself. First the build:
+
+```bash
+./mvnw verify
+```
+
+Green? Which tests fail? Does `ArchitectureTest` fail?
+
+Then what it changed:
+
+```bash
+git status
+git diff --stat
+```
+
+Which files did it touch? Any outside the catalogue?
+
+Then ask yourself these questions:
+
+- Did it add a Flyway migration, or change an existing one, or rely on Hibernate DDL?
+- What type did it use for money? (`double` is a finding.)
+- Where does the discount rule live: domain, flow, controller, JPA entity?
+- Did it write tests? Did it run them? Did it claim things it did not verify?
+
+### 4. Fill in the observation card
+
+Fill in the observation card: one row per failure mode you found, each with its evidence (the failing test, the ArchUnit output or the wrong file) and its debrief column (didn't know, didn't care, didn't check), plus one line on what went right.
+
+The three columns mean: didn't know is context, didn't care is behaviour, didn't check is verification. Levels 1 to 4 work through those columns, and the room collects its findings in the same three columns at the end of this level.
+
+Copy the card below with its copy button and save it as `notes/level-0.md`, which git ignores:
+
+```markdown
+| Failure mode | Evidence | Column |
+|---|---|---|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+What went right:
+```
+
+Add a row for every further failure mode you find. You need at least three rows.
+
+### 5. Reset
+
+Put the repository back to the start state:
+
+```bash
+git restore . && git clean -fd
+```
+
+Instead, you can press `Esc` twice or use `/rewind` to see checkpoints. Note that changes made through Bash are not tracked by checkpoints, which is why git is the real safety net.
 
 ## Level cleared when
 
