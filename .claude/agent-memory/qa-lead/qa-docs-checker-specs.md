@@ -99,7 +99,9 @@ contrast), the checker is production code AND the oracle for every later task. T
 18. **Shape rules are not count rules**: a frozen structure rule that validates a Checkpoint's shape passes a page
     with none (a retitled tip escapes). Put per-page block counts into the content verifiers' rendered assertions,
     with one must-fail retitle mutant. Before sending an anchor or markup form in a directive, read the skeleton and
-    the checker constant that pins it (spec 11 FF-36: bare `## Level cleared when`, no comment anchor).
+    the checker constant that pins it (spec 11 FF-36: bare `## Level cleared when`, no comment anchor). Run any author
+    alphabet over the grammar's pinned strings first (T10: a colon in exact track labels); exempt exact strings, never a
+    character. A count of 0 is valid when every candidate is a Gaps row or barred by the grammar; pin it by add-one.
 
 19. **Framework-derived and repo-relative text** (spec 11 T8): Docusaurus builds `<meta name="description">` from the
     first paragraph and dropped the span between two colons of a pinned Goal line; no source rule sees it. Grep the
