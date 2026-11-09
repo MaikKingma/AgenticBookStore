@@ -23,15 +23,9 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - The Edit tool trims trailing whitespace in `old_string` and `new_string`. A probe that ends in `, ` (for example `super("code", `) restores without the space, and a restore using the same trimmed string then fails with "String to replace not found". Anchor probe edits on text that does not end in a space (include the next token), and after the last restore compare the file hashes with the before-snapshot.
 - The Write tool turns U+2003 into a plain space even between other characters (`a<U+2003>b` landed as `61 20 62`), and trims a file whose only content is a U+2003, so the non-ASCII positive control silently fails. Build it with `printf 'a\xe2\x80\x83b\n' > <scratch file>`, check with `od -An -tx1`, then `rg -c`. The em dash (U+2014) survives Write. The reverse also happens: a backslash-u escape typed into Write or Edit lands as the
   real character (a verdict file went non-ASCII that way); describe escapes in words and `rg -c` every written file.
-- A snapshot file that holds porcelain status plus `shasum` lines: `grep " <path>$"` also matches the status line, so a hash lookup returns two lines and reports a false MISMATCH. Filter `grep -E '^[0-9a-f]{64}  '` first.
-- A multi-file `grep -h` (or `grep -c`) in the Bash tool did not print the files in argument order, so merged failure blocks got pinned to the wrong probe. Quote kill reasons per log, or from a script that labels each block with its probe id.
 - The worktree-isolation guard refuses `bash <script> git -C <other repo> ...` (git in the argv), but direct `git -C <scratch clone> ...` calls are allowed. Run git facts on a scratch clone directly; keep git out of script args. The same guard also refuses a bare `bash --version` ("cannot be shown not to run git"). `bash <abs script in the worktree>` works, and `git -C <worktree>` inside such a script ran fine.
 - Mutant generators: `grep -cF -- "$OLD"` with a newline in `$OLD` treats it as two patterns, and the empty second pattern can match every line, so an "exactly once" guard is unreliable (spotted by review before a run). Count with `OLD=... perl -0ne '$c = () = /\Q$ENV{OLD}\E/g; print $c'` and replace with `perl -0pe 's/\Q$ENV{OLD}\E/$ENV{NEW}/'`.
-- `curl -i -w ' time_total=%{time_total}'` appends the timing to the BODY line (no newline). A diff filter `grep -v time_total` then drops every body and the diff looks clean. Strip the suffix with `sed -E 's/ time_total=[0-9.]+$//'` and compare line and byte counts of both sides.
 - The worktree guard refuses a command whose path has backslash-escaped spaces (`.../OpenValue\ AI/...`) as "too complex"; the same path in double quotes runs. Prefer worktree-relative paths for `rg`/`grep` and double-quoted absolute paths for scripts.
-- A Maven log that captured a raw NUL (an escape mutant logging U+0000) makes ugrep print `Binary file ... matches` instead of lines, so a summary grep looks empty. Use `grep -a` on probe logs.
-- macOS `/bin/bash` is 3.2: `declare -A` (associative arrays) and `${!arr[@]}` fail in a runner script. Use a `case` function mapping names to paths.
-- A foreground `bash <wait script>` with a `sleep 10` loop (about 3 minutes per call) is the way to wait for a background probe batch; a bare `sleep` in a Bash call is blocked and a Monitor alone ends nothing for a subagent.
 - Ledger hash baselines are `shasum -a 256` (64 hex); plain `shasum` prints sha1 and will never match. Also, a path
   built from the repo root without the `.claude/worktrees/<id>` segment still exists (the main checkout), so a `printf >`
   there succeeds silently outside the worktree; use worktree-relative paths for scratch files.
@@ -41,11 +35,4 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - The JVM on macOS ignores TMPDIR too (`java -XshowSettings:properties` prints `java.io.tmpdir = /var/folders/...`
   with TMPDIR set). For HR1 runs of `./mvnw` (referee, sandboxes) export
   `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>`; Surefire forks inherit it.
-- `git ls-tree` rejects `:(exclude)` pathspec magic ("pathspec magic not supported by this command"); filter
-  `ls-tree -r --full-tree --name-only` output with awk instead.
-- Nested `$(basename "$(dirname "$(cat f)")")` inside a Bash call trips the built-in "could not be checked for dangerous
-  rm operations" refusal even with no rm in it. Write the literal path (read it from your own earlier output) instead.
-- Verbatim check of a staged settings-type file under a plugin-key guard: extract the pack fenced block with a
-  `python3 -I` script (heading text, block count asserted) and `cmp` on paths only; cross-check with `sed -n 'A,Bp'` pack
-  line numbers; negative control = one byte changed via `dd conv=notrunc`. No Bash text names the guarded keys.
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]], [[bash-script-qa-probes]]

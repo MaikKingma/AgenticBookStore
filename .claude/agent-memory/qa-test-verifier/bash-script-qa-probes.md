@@ -28,16 +28,10 @@ does not cover "every refusal path".
   `refs/remotes/origin/<base>` at the real sha), with the staging folder copied in and FIXTURE step folders. Use a
   scratch bare remote for fetch and push steps. Keep HOME real for Maven (J10) and isolate git only with
   `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_NOSYSTEM`.
-- Ref safety: snapshot for-each-ref, `worktree list --porcelain` and `tag --list` of the worktree repo before and
-  after every run, and of the scratch repo and bare remote around `--execute`.
-- Run each mutant suite with its cwd in a scratch folder: a mutant that drops a "not a repo" check falls back to
-  `.`, which would otherwise be the worktree.
 - Rollback under `set -e`: a failing command inside an EXIT-trap rollback aborts the rest of the handler silently
   (index restore, folder cleanup, backup removal, the "rolled back" line). Witness on the UNMUTATED script: an
   earlier row that stages (patch via `--3way`), then a write onto a `chmod 444` file. Check `git status`, empty
   folders and leftover backup folders. A mutant leaving a temp folder behind is a hint to look for this.
-- Multi-stage tools (cut: levels 1-3, then a second loop for level-4 tracks): tests often fail only an early stage.
-  Remove the failure check in EACH loop separately; the late-stage twin is the one that survives.
 - "Deleting `set +e` in the trap is equivalent, every command is guarded" is usually false: the `echo ... >&2`
   status lines are unguarded. Witness: run the failing case with stderr closed (`2>&-`); the mutant aborts the trap
   and leaks its backup/temp folder (or turns exit 0 into 1). Judge claimed-equivalent mutants with a witness, never
