@@ -2,7 +2,7 @@
 
 ## Assistant
 
-The bookstore has an AI assistant. It answers questions about the catalogue in plain English and uses the bookstore's own data to do it. It only reads: it cannot add books, change stock or place orders.
+The bookstore has an AI assistant. It answers questions about the catalogue in the language of the customer and uses the bookstore's own data to do it. It only reads: it cannot add books, change stock or place orders.
 
 ### Chat endpoint
 
