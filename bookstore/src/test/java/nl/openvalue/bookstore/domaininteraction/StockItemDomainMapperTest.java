@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 import nl.openvalue.bookstore.domain.BookId;
 import nl.openvalue.bookstore.domain.OnHandBelowReservedException;
+import nl.openvalue.bookstore.domain.PendingRestock;
 import nl.openvalue.bookstore.domain.Quantity;
 import nl.openvalue.bookstore.domain.StockItem;
 import nl.openvalue.bookstore.domain.StockRunningLowEvent;
@@ -22,6 +23,7 @@ class StockItemDomainMapperTest {
     private static final Instant OTHER_INSTANT = Instant.parse("2026-09-01T08:30:00Z");
     private static final Clock CLOCK = Clock.fixed(INSTANT, ZoneOffset.UTC);
     private static final Clock OTHER_CLOCK = Clock.fixed(OTHER_INSTANT, ZoneOffset.UTC);
+    private static final PendingRestock NO_PENDING_RESTOCK = null;
 
     private static final UUID ID = UUID.fromString("0b8f6a52-6d4e-4a53-9f43-2f1a8f3b7c10");
 
@@ -66,7 +68,7 @@ class StockItemDomainMapperTest {
 
     @Test
     void theDtoOfARestoredStockItemHoldsEveryFigureOfTheStockItem() {
-        StockItem item = StockItem.restore(new BookId(ID), 12, 4, 2, 9, true, CLOCK);
+        StockItem item = StockItem.restore(new BookId(ID), 12, 4, 2, 9, true, NO_PENDING_RESTOCK, CLOCK);
 
         StockItemDTO dto = new StockItemDTO(item);
 
@@ -80,7 +82,7 @@ class StockItemDomainMapperTest {
 
     @Test
     void theDtoOfARestoredStockItemKeepsAnUnsetSignalUnset() {
-        StockItem item = StockItem.restore(new BookId(ID), 12, 4, 2, 9, false, CLOCK);
+        StockItem item = StockItem.restore(new BookId(ID), 12, 4, 2, 9, false, NO_PENDING_RESTOCK, CLOCK);
 
         assertThat(new StockItemDTO(item).lowStockSignalled()).isFalse();
     }
@@ -133,7 +135,8 @@ class StockItemDomainMapperTest {
             int available, boolean expectedLowStock) {
         int onHand = available + reserved;
         StockItemDTO dto = new StockItemDTO(ID, onHand, reserved, level, 10, false);
-        StockItem item = StockItem.restore(new BookId(ID), onHand, reserved, level, 10, false, CLOCK);
+        StockItem item = StockItem.restore(
+                new BookId(ID), onHand, reserved, level, 10, false, NO_PENDING_RESTOCK, CLOCK);
 
         assertThat(dto.available()).isEqualTo(available);
         assertThat(dto.lowStock()).isEqualTo(expectedLowStock);

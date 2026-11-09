@@ -38,7 +38,7 @@ When stock runs low the bookstore asks the distributor for more. `StockItem` gai
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Domain pending restock: `PendingRestock`, `InvalidPendingRestockException`, `RestockAlreadyPendingException`, `restockRequested`, `hasPendingRestock`, `pendingRestock()`, `restockRequestFailed`, `receive` clears, `restore` takes the pending restock | bookstore | [] | 1 | elevated | sonnet | sonnet | todo | | | | | |
+| T1 | Domain pending restock: `PendingRestock`, `InvalidPendingRestockException`, `RestockAlreadyPendingException`, `restockRequested`, `hasPendingRestock`, `pendingRestock()`, `restockRequestFailed`, `receive` clears, `restore` takes the pending restock | bookstore | [] | 1 | elevated | sonnet | sonnet (r2 opus) | done (branch `sdd/07-restock-process/T1`) | PASS (r2) | ENDORSE | 2 | #94 | c8365c7 |
 | T2 | Persistence: `PendingRestockDTO`, `StockItemDTO` 7 components plus 6-argument convenience constructor, mapper both ways, `V4__add_pending_restock.sql`, `StockItemJPA`, `StockItemJPAMapper` | bookstore | [T1] | 2 | critical | opus | opus | todo | | | | | |
 | T3 | `InventoryFlow.requestRestock` and `handleStockRunningLow` (O1), WARN logs, port Javadoc, `IntegrationTestBase` default answer | bookstore | [T2] | 3 | critical | opus | opus | todo | | | | | |
 | T4 | `POST /inventory/{bookId}/commands/request-restock`, `PendingRestockView`, `StockView.pendingRestock`, 6 to 7 key pins | bookstore | [T3] | 4 | elevated | sonnet | sonnet | todo | | | | | |
@@ -87,11 +87,13 @@ Planned in the QA ledger section "Scenario-to-test traceability plan"; final met
 
 ## QA feed-forward
 
-(none yet)
+- FF1 (from T1 r1, every verifier T2 to T7): a test outline offered in a Required Action must also kill the boundary twin of the mutant it targets (`>` vs `>=`, `<` vs `<=`, +1/-1); run the twin against the witness before offering it. For a criterion of the form "every X does Y", use one witness from strictly inside each region that any comparison in the method (or a plausible mutant's guard) splits the input into, not only the boundary value.
+- FF2 (from T1 r1, T2 verifier): PostgreSQL truncates a string longer than a `varchar(n)` without error when the extra characters are all spaces; a length witness for `pending_restock_order_id varchar(64)` uses a 65th character that is not a space.
+- FF3 (from T1 r2, T2 implementer and verifier): (a) the `InventoryFlowTest` case "receive from a pending item saves a DTO with null pending" starts from onHand 0, reserved 0, reorderLevel 4, lowStockSignalled true, a pending restock, and receives 1; the saved DTO has onHand 1, signal true, pending null; the `StockItem` mutants X1m1 and X1m2 (`if (available() >= reorderLevel - 1)` or `- 2` around `pendingRestock = null;`) must fail against `InventoryFlowTest`. (b) The `StockItemDomainMapperTest` witness that the `PendingRestock` hand-off rejects uses the id `" " + "R".repeat(64)` and asserts `isExactlyInstanceOf(InvalidPendingRestockException.class)`; the `PendingRestock` mutant D8stripL must fail against `StockItemDomainMapperTest`.
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-09, orchestrator, from the T1 QA review): the strategy card's word "final" for the new domain exceptions is dropped; the repo's domain exceptions are plain `public class ... extends RuntimeException`, and T1 follows that style. No other consequence.
 
 ## Final sweep and Gate 2
 

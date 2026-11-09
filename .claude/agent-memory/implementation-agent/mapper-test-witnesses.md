@@ -32,3 +32,8 @@ Either-or hand-offs (an optional override against a default) need every relation
 the default, equal amount made distinguishable through another field (default in a rejected currency), zero, negative and
 null, plus both ends of each domain range for both inputs. QA mutants "keep the higher", "zero means none" and "use the
 override only when it differs" survive an all-higher fixture. Build a sweep table input x relation before the first QA round.
+
+Domain rules "X happens regardless of threshold" (a delivery clears the pending restock even when stock stays low) need a
+case strictly below the threshold, not only at it: `> level` and `>= level` guards are twin mutants, and a fixture ending
+at exactly the level kills only one (spec 07 T1 took a QA-lead REJECT for this). A length rule on a value kept as given
+needs a witness of max chars plus a trailing space, or a `strip().length()` mutant survives.
