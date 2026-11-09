@@ -27,7 +27,8 @@ import org.springframework.web.client.RestClientResponseException;
 /**
  * Talks to the distributor's REST API and translates its wire format into the port's DTOs and exceptions. Only the
  * three port exceptions or an empty result leave a public method: every failure the translation does not name
- * (another status or error code, an unreadable or incomplete body, a timeout, a refused connection) becomes
+ * (another status or error code, an unreadable or incomplete body, an answer about another EAN than the requested
+ * one, a timeout, a refused connection) becomes
  * {@link DistributorUnavailableException} with one warning that names the status or the exception class.
  */
 @Component
@@ -121,6 +122,9 @@ public class DistributorAppServiceImpl implements DistributorAppService {
             throw unusable(isbn, "no body");
         }
         require(isbn, title.ean(), "ean");
+        if (!title.ean().equals(isbn)) {
+            throw unusable(isbn, "ean " + title.ean() + " is not the requested EAN");
+        }
         require(isbn, title.titleName(), "titleName");
         require(isbn, title.contributors(), "contributors");
         require(isbn, title.listPriceCents(), "listPriceCents");

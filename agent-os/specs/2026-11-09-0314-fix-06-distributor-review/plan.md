@@ -91,7 +91,7 @@ skipped; the reference §5 directives are the strategy, every task is `qaTier: e
 
 | id | summary | module | dependsOn | batch | qaTier | implModel | qaModel | closes | pr | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | The ACL treats a title answer whose `ean` is not the requested ISBN as unusable (503, one WARN) | bookstore | [] | 1 | elevated | sonnet | sonnet | ean finding (acl) | | |
+| T1 | The ACL treats a title answer whose `ean` is not the requested ISBN as unusable (503, one WARN) | bookstore | [] | 1 | elevated | sonnet | sonnet | ean finding (acl) | #90 (branch sdd/fix-06-distributor-review/T1) | ENDORSE (r1, verifier PASS; r0 REJECT) |
 | T2 | The import flow refuses a distributor title for another ISBN; fixtures aligned; e2e 503 with nothing stored | bookstore | [T1] | 2 | elevated | sonnet | sonnet | ean finding (flow, e2e) | | |
 | T3 | ACL keeps the caught exception as the cause and neutralises line breaks in logged distributor values | bookstore | [T2] | 3 | elevated | sonnet | sonnet | cause and CR/LF findings | | |
 
@@ -345,7 +345,16 @@ pre-existing test line deleted.
 
 ## QA feed-forward
 
-(none yet)
+- FF1 (QA lead, T1 r0/r1, for T3): the T3 log test splits the captured output with `\R`, not `String.lines()`
+  (`lines()` does not split on U+2028, so the U+2028 case would test nothing); the T3 verifier runs the probe "escape
+  CR and LF only, keep U+2028", which must turn the U+2028 case red. T3 edits the T1 `ean` reason line: on T3's code,
+  re-run `aTitleAnswerForAnotherEanIsUnusableWithOneWarning` plus the T1 mutants M1 (`strip()`), M2 (check after the
+  currency check), M3 (check after `genreOf`), M4 (`startsWith`) and M11 (`stripTrailing`), regenerated against T3's
+  production file.
+- FF2 (QA lead, T1 r0): an identity or exact-equality criterion needs witnesses that differ from the expected value
+  only at the end (trailing space, a longer value with the expected one as prefix), not only at the start or middle.
+- FF3 (QA lead, rework rounds): a re-verification round voids carried-forward probe results when an asserting line
+  changed; re-run the whole mutant set, and the named mutants must be red on the new cases.
 
 ## Amendments
 
