@@ -22,6 +22,12 @@ See also the senior researcher's note `.claude/agent-memory/senior-research-agen
   unrelated root); read remote values with `git ls-remote` so no local ref moves (dry-run safe, no fetch).
 - **Atomic witness:** an `update` hook in the bare remote that rejects the tag; **lease witness:** a PATH shim `git`
   that moves the remote main when it sees `push`, and logs the push argv for exact flag assertions.
+- **Precedence between two valid candidates needs a case where both exist and differ** (remote vs local baseline:
+  a local `commit-tree` of the same tree with another date). Show the case's red on the swapped mutant and the old
+  test surviving that mutant, so the new case is the killer. One ordering is not enough: a "the older/newer one
+  wins" mutant passes whichever date order you picked, so add the other order too (local dated before the remote)
+  plus a sanity check that the dates really are in that order, and compare against the fixed expected id, not a
+  live ref the mutant may have moved.
 - **Mutants on copies:** `perl -0pe` (multi-line, same on BSD and GNU) into a scratch copy, run the test with its own
   TMPDIR. A mutant can abort the test in setup (`set -e`); an EXIT trap that prints "aborted" keeps that legible.
 - **shellcheck SC2016** fires on `printf '%s' '[ "$1" = x ]'`; write hook files with a quoted heredoc instead.

@@ -59,7 +59,7 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | #123 | sdd/09-workshop-baseline/T4 | cd354c6, 30303e6 |
 | T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T2 | 146efe0 |
 | T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | done | PASS (r0 BLOCKED by orchestrator, r1, r2) | ENDORSE | 2 | (see PR list) | sdd/09-workshop-baseline/T3 | d604307 |
-| T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | todo | | | | | | |
+| T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | (see PR list) | sdd/09-workshop-baseline/T5 | (see PR list) |
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
 | T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
 | T8 | Seed grows to 100 books, at least 10 AVAILABLE per genre (D12), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | needs-decision (Q1) | | | | | | |
@@ -317,6 +317,11 @@ counts, and the T6 criteria fold in.
     at /shop/. Applied in T3 round 2. `POST /assistant/chat` stays, so `http/assistant.http` is unchanged.
   - QA strategy for T7 to T9 comes from the QA lead before each task runs. Consequence: T5 runs as planned; qa-final
     waits for T8 and T9.
+- A4 (2026-11-09, orchestrator, on the main session's relay): Maik deferred D13 to after the first release (factory
+  9a07ce9, now `docs/spec-pack/specs/13-assistant-widget.md`). The storefront keeps its assistant page at
+  `/shop/#/assistant` with its nav link, and there is no `/assistant/chat/stream`. No T3 change: the README sentence
+  "part of the shop at http://localhost:8080/shop/" stays true (checked by qa-t3 r2 against today's frontend; QA lead
+  agrees). The D13 bullet of A3 no longer applies. D12 stays in force.
 
 ## QA feed-forward
 
@@ -354,3 +359,9 @@ counts, and the T6 criteria fold in.
   cap; asserting line numbers are copied from `grep -n`. qa-final: T7 file hashes equal the T7 baseline, `git grep -w
   100` on `CatalogueFlow.java` exits 1 and `-w 200` matches only line 37, the cap test green in the tip referee.
   Residual R13: the assistant's `recommendByGenre` candidate set follows the 200 cap, untested (intended by D12).
+- FF-11 (T5, qa-final): the test hash at the tip is
+  d2a88470732991bbe9e71f69760488eb1ceb3e58ffddae869c105c45d63c4a5b; `/bin/bash` with a logging shim gives 235/0 and 0
+  shim calls; the CI publish-script-test log prints 235; the http hashes equal the T5 values, or T9's with a diff of
+  count sentences only; optional R10 harness variant: a clone with a stale local main runs `--push`, remote main and tag
+  unchanged. Residual R10 is closed by the test. Precedence witnesses need two baselines, one dated before and one after
+  the remote.

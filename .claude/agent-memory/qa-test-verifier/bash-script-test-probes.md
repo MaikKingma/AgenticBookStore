@@ -18,6 +18,13 @@ Rule: before you accept a "green on macOS /bin/bash 3.2" claim, find out which b
 - Idempotency of `commit-tree` (same tree, message and dates give the same SHA): prove the date-variation witness with a negative control. A test copy with pinned dates must let the "always commit" mutant survive.
 - Push witnesses: an `update` hook in the bare remote that rejects the tag (atomic push). A PATH `git` shim that moves the remote ref right before `push` (lease). `GIT_TRACE=1` greps for `built-in: git push|ls-remote` (exact argv, plus "no network in default mode", with the `--push` trace as positive control).
 - A hostile-config positive control with a failing `reference-transaction` hook breaks even `git init`. That still proves the config bites.
+- Precedence tests ("remote baseline wins over a local one"): besides the plain order swap, build date-preference
+  mutants (prefer the newer / the older baseline by `%ct`). A single case with one date order kills the swap and one
+  date mutant but lets the other survive by construction; the falsifier needs both orders (local newer and local
+  older than the remote). Prove it with a QA-only test variant in SP, never the project file. Also run tag-first,
+  tag-agrees and object-id-order (`[[ a < b ]]`) mutants: two cases with different SHAs also pin id order. A setup
+  check ("dated before", "differs from") gets its own test-variant probe (flip the date, alias the commit) so it is
+  shown to bite; otherwise a fixture drift silently turns the case vacuous for one mutant.
 - A run with only some jobs created and conclusion `failure`: the jobs API shows nothing. Download the public run page and grep the annotation (`Internal server error. Correlation ID`). Compare with other branches' runs in the same window before you blame the workflow file.
 
 Related: [[shell-traps]], [[ci-workflow-verification]], [[env-switch-mutant-runner]]
