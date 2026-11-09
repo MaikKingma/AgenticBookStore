@@ -42,7 +42,7 @@ POST http://localhost:8080/books/{{bookId}}/commands/discontinue
 
 ###
 
-# The next two requests import a book from the distributor, so the distributor must be running (default port 8090).
+# The requests below import two books from the distributor and show them, so the distributor must be running (default port 8090).
 # Import A Study in Scarlet at the price the distributor recommends and remember the new book id.
 POST http://localhost:8080/books/commands/import-from-distributor
 Content-Type: application/json

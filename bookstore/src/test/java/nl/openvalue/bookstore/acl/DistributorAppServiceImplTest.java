@@ -219,12 +219,34 @@ class DistributorAppServiceImplTest {
     }
 
     @Test
+    void nullFirstSubjectCodeIsNotSkippedToTheNextOne(CapturedOutput output) {
+        stubTitleBody("9789900010050", variant("title-9789900010050.json",
+                body -> body.put("subjectCodes", Arrays.asList(null, "FIC028000"))));
+
+        DistributorTitleDTO title = distributor.findTitle("9789900010050").orElseThrow();
+
+        assertThat(title.genre()).isEqualTo("FICTION");
+        assertThat(output.getOut()).containsOnlyOnce(" WARN ")
+                .contains("No bookstore genre for subject code null of EAN 9789900010050, using FICTION");
+    }
+
+    @Test
     void roundPriceKeepsScaleTwo() {
         stubTitle("9780141439518", "derived-title-round-price.json");
 
         DistributorTitleDTO title = distributor.findTitle("9780141439518").orElseThrow();
 
         assertThat(title.recommendedPrice()).isEqualTo(new BigDecimal("12.00"));
+    }
+
+    @Test
+    void negativeListPriceCentsKeepTheirSign() {
+        stubTitleBody("9780141439518", variant("title-9780141439518.json",
+                body -> body.put("listPriceCents", -999)));
+
+        DistributorTitleDTO title = distributor.findTitle("9780141439518").orElseThrow();
+
+        assertThat(title.recommendedPrice()).isEqualTo(new BigDecimal("-9.99"));
     }
 
     @Test
@@ -258,6 +280,13 @@ class DistributorAppServiceImplTest {
         stubTitle("9789900010272", "title-9789900010272.json");
 
         assertThat(distributor.findTitle("9789900010272").orElseThrow().orderable()).isTrue();
+    }
+
+    @Test
+    void titleWithoutAvailabilityIsOrderable() {
+        stubTitleBody("9780141439518", variant("title-9780141439518.json", body -> body.remove("availability")));
+
+        assertThat(distributor.findTitle("9780141439518").orElseThrow().orderable()).isTrue();
     }
 
     @Test
