@@ -72,9 +72,11 @@ public class CatalogueFlow {
      * lookup or a remote call;</li>
      * <li>an ISBN already in the catalogue is rejected as a conflict, without calling the distributor;</li>
      * <li>the title is looked up at the distributor with the normalised ISBN; an unknown title is not found;</li>
+     * <li>a title whose ISBN is not the normalised requested ISBN is an answer about another title: it is refused as
+     * a distributor that gave no usable answer, before anything else is read from it;</li>
      * <li>a title the distributor no longer supplies is rejected as not orderable;</li>
-     * <li>the book is built from the requested ISBN and the distributor's title, authors, genre and publication year,
-     * then saved together with its empty stock item.</li>
+     * <li>the book is built from the requested ISBN (which equals the distributor's) and the distributor's title,
+     * authors, genre and publication year, then saved together with its empty stock item.</li>
      * </ol>
      * The remote call runs inside the use-case transaction, so a database connection stays open while the distributor
      * answers; the timeouts of the distributor client bound that time. Port exceptions pass through unchanged.
@@ -86,6 +88,10 @@ public class CatalogueFlow {
         rejectWhenInCatalogue(normalisedIsbn);
         DistributorTitleDTO title = distributor.findTitle(normalisedIsbn)
                 .orElseThrow(() -> new DistributorAppService.TitleNotFoundAtDistributorException(normalisedIsbn));
+        if (!normalisedIsbn.equals(title.isbn())) {
+            throw new DistributorAppService.DistributorUnavailableException(
+                    "The distributor gave no usable answer for ISBN " + normalisedIsbn);
+        }
         if (!title.orderable()) {
             throw new DistributorAppService.TitleNotOrderableException(normalisedIsbn);
         }

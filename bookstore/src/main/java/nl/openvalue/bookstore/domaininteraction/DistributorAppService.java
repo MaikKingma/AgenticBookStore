@@ -9,11 +9,13 @@ import java.util.Optional;
 public interface DistributorAppService {
 
     /**
-     * Looks up a title by ISBN. The result is empty when the distributor does not know the ISBN.
+     * Looks up a title by ISBN. The result is empty when the distributor does not know the ISBN. A present result
+     * carries the requested ISBN; an answer about another title is unusable.
      *
      * @throws TitleNotOrderableException when the distributor's data cannot be taken over, for example a price in a
      *         currency other than EUR
-     * @throws DistributorUnavailableException when the distributor cannot be reached or answers unusably
+     * @throws DistributorUnavailableException when the distributor cannot be reached or answers unusably, for example
+     *         with a title for another ISBN
      */
     Optional<DistributorTitleDTO> findTitle(String isbn);
 
@@ -49,6 +51,11 @@ public interface DistributorAppService {
 
         public DistributorUnavailableException(String detail) {
             super("distributor-unavailable", "Distributor unavailable", detail);
+        }
+
+        /** Keeps the failure that made the distributor unusable as the cause; the detail stays free of it. */
+        public DistributorUnavailableException(String detail, Throwable cause) {
+            super("distributor-unavailable", "Distributor unavailable", detail, cause);
         }
     }
 }
