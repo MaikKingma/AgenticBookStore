@@ -115,7 +115,7 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 | T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | done | PASS r0 | ENDORSE | #134 | sdd/fix-08-assistant-review/T1 |
 | T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | done | PASS r0 | ENDORSE | #138 | sdd/fix-08-assistant-review/T4 |
 | T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #141 | sdd/fix-08-assistant-review/T2 |
-| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | done | PASS r0 | ENDORSE | | sdd/fix-08-assistant-review/T3 |
+| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | done | PASS r0 | ENDORSE | #143 | sdd/fix-08-assistant-review/T3 |
 | T5 | the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (A3) | bookstore | [T3] | 5 | elevated | sonnet | pending | | | | |
 
 T1, T4, T3 and T5 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3,
