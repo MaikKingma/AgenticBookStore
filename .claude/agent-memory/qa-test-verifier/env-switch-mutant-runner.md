@@ -48,5 +48,8 @@ Rule: when a probe list has 20+ mutants on a few small classes, write one "mutan
 - Re-verification rounds (FF3) reuse the generator with a new prefix and add the reversed-receiver sibling of EVERY one-sided check (`endsWith` and `startsWith` both ways, `stripLeading` as well as `stripTrailing`) in the first round, so a later round does not discover a mirror mutant your own set lacked. Per-index kill table: grep the `[n]` of the new parameterized test from each probe log with a small script file (the Bash guard refuses long `for`/`git`-named one-liners).
 - Complete op set for an exact-equality check (QA lead rule): `a.op(b)` and `b.op(a)` for startsWith, endsWith AND contains, plus strip, stripLeading, stripTrailing, trim, a stripLeading().stripTrailing() chain, strip-then-op variants and either-direction ORs. Include `b.contains(a)` in round 1; a witness list of leading space, trailing space, longer, front-truncated and end-truncated answers kills all of them.
 - Trap: a Monitor on the shared results file started right after launching the runner reads the previous batch's `DONE` and ends at once; the runner truncates the file only after its guard. Re-arm the monitor after the first new line, or use distinct result file names per batch.
+- Give the runner a log-prefix env variable (`QA_LOG_PREFIX`) so a later proof run (patched test copy plus the same
+  probe ids) does not overwrite the batch logs it cites. A single pipe (`git diff ... | grep ...`) is one simple
+  command and is allowed; use it for the literal directive greps instead of dumping the whole diff.
 
 Related: [[domain-mutation-probes]], [[integration-test-probes]], [[shell-traps]]
