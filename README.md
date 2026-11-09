@@ -86,17 +86,18 @@ http://127.0.0.1:8080. Windows commands are in `frontend/README.md`.
 
 ## Assistant
 
-The assistant answers questions about the catalogue with read-only tools. Use the Assistant page of the storefront
-(http://localhost:8080/shop/#/assistant) or send `POST /assistant/chat` with a `conversationId` (a UUID you choose) and a
-`message`. The reply holds that `conversationId` and a `reply`; the last 20 messages of a conversation are kept.
+The assistant answers questions about the catalogue with read-only tools. It is part of the shop at
+http://localhost:8080/shop/, and `POST /assistant/chat` takes a `conversationId` (a UUID you choose) and a `message`.
+The reply holds that `conversationId` and a `reply`; the last 20 messages of a conversation are kept.
 
 The key comes only from `BOOKSTORE_AI_API_KEY`, set in the shell where you start the bookstore. In bash that is
 `export BOOKSTORE_AI_API_KEY="..."`, in PowerShell `$env:BOOKSTORE_AI_API_KEY = "..."`. Warning: never set
 `ANTHROPIC_API_KEY` for the bookstore. The app does not read it, and Claude Code offers to use that variable instead of
 your own subscription, so your usage there would be billed to the workshop key.
 
-The model is `claude-haiku-5-5` unless `BOOKSTORE_AI_MODEL` names another one. The base URL is fixed to
-https://api.anthropic.com, and no temperature or other sampling setting is configured. Without a key the bookstore
+The model is `claude-haiku-5-5` unless `BOOKSTORE_AI_MODEL` names another one. `application.yml` sets the base URL to
+https://api.anthropic.com (a Spring environment variable can still override it), and no temperature or other
+sampling setting is configured. Without a key the bookstore
 still starts, in offline mode, and `POST /assistant/chat` answers 503 with the code `assistant-offline`. A message has at
 most 1000 UTF-16 code units (an emoji counts as two). A longer, blank or missing message, or a missing `conversationId`,
 answers 400. At most 20 chat requests a minute per running instance reach the model; the rest answer 429.
