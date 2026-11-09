@@ -321,6 +321,76 @@ class AssistantIntegrationTest extends IntegrationTestBase {
         assertThat(memoryOf(oneTurn)).isEqualTo(before);
     }
 
+    /**
+     * Guard for the follow-up rule of the system prompt (amendment A3): the memory keeps only questions and answers,
+     * so on turn 2 a model that follows the rule looks the book up again by its title alone and then asks for its
+     * availability with the id that search returned. Green before and after the prompt change: the scripted model
+     * plays the rule, the test shows the tools, flows and memory support it.
+     */
+    @Test
+    void followUpFindsTheBookAgainByTitleThenChecksAvailability() {
+        UUID sense = addBook("9780141439662","Sense and Sensibility", "Jane Austen", "fiction", "9.50", 1811);
+        receive(sense, 3);
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenCallTool("searchCatalogue", "{\"query\":\"austen\"}")
+                .thenReply(prompt -> "I found " + firstTitleOf(toolContentOf(prompt.getInstructions())) + ".")
+                .thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility\"}")
+                .thenCallTool("checkAvailability", "{\"bookId\":\"" + sense + "\"}")
+                .thenReply(prompt -> {
+                    List<ToolResponseMessage> toolMessages = prompt.getInstructions().stream()
+                            .filter(ToolResponseMessage.class::isInstance)
+                            .map(ToolResponseMessage.class::cast)
+                            .toList();
+                    String availability = toolMessages.get(toolMessages.size() - 1).getResponses().get(0)
+                            .responseData();
+                    return "There are " + JSON.readValue(availability, JSON_MAP).get("available")
+                            + " copies in stock.";
+                });
+
+        Map<String, Object> first = chat(conversationId, "Anything by Austen?");
+        Map<String, Object> second = chat(conversationId, "Is it in stock, and is more on its way?");
+
+        assertThat(first).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "I found Sense and Sensibility."));
+        assertThat(second).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "There are 3 copies in stock."));
+        verify(catalogueFlow).search("austen", null, null, null);
+        verify(catalogueFlow).search("Sense and Sensibility", null, null, null);
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).as("turn 1: two model calls; turn 2: three").hasSize(5);
+        assertThat(withoutSystemMessage(received.get(2))).containsExactly("USER: Anything by Austen?",
+                "ASSISTANT: I found Sense and Sensibility.", "USER: Is it in stock, and is more on its way?");
+        assertThat(firstTitleOf(toolContentOf(received.get(3).messages())))
+                .as("the title-only search found the book").isEqualTo("Sense and Sensibility");
+    }
+
+    /**
+     * The spec 02 search contract the follow-up rule rests on, through the real tool and the real flow: the query
+     * matches a title or an author, so a title and an author together find nothing while the title alone finds the
+     * book. This is why the tool description and the system prompt ask for one fragment (amendment A3).
+     */
+    @Test
+    void combinedTitleAndAuthorQueryFindsNothingWhileTheTitleAloneFindsTheBook() {
+        UUID sense = addBook("9780141439662","Sense and Sensibility", "Jane Austen", "fiction", "9.50", 1811);
+        receive(sense, 1);
+        scripted.thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility Jane Austen\"}")
+                .thenReply(prompt -> "done")
+                .thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility\"}")
+                .thenReply(prompt -> "done");
+
+        chat(UUID.randomUUID(), "Is Sense and Sensibility by Jane Austen in stock?");
+        chat(UUID.randomUUID(), "Is Sense and Sensibility in stock?");
+
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(4);
+        assertThat(JSON.readValue(toolContentOf(received.get(1).messages()), JSON_LIST)).isEmpty();
+        List<Map<String, Object>> hits = JSON.readValue(toolContentOf(received.get(3).messages()), JSON_LIST);
+        assertThat(hits).hasSize(1);
+        assertThat(hits.get(0)).containsEntry("id", sense.toString()).containsEntry("title", "Sense and Sensibility");
+        verify(catalogueFlow).search("Sense and Sensibility Jane Austen", null, null, null);
+        verify(catalogueFlow).search("Sense and Sensibility", null, null, null);
+    }
+
     /** Posts a question whose model call fails and returns the problem, after its status, type and secrecy checks. */
     private Map<String, Object> failedChat(UUID conversationId, String message) {
         return unavailableProblem(send(conversationId, message));

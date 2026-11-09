@@ -792,7 +792,7 @@ class BookstoreToolsTest {
 
         assertThat(byName.keySet()).containsExactlyInAnyOrder("searchCatalogue", "getBookDetails",
                 "checkAvailability", "recommendByGenre");
-        assertThat(byName.get("searchCatalogue").getToolDefinition().description()).isEqualTo(
+        assertThat(byName.get("searchCatalogue").getToolDefinition().description()).startsWith(
                 "Search the bookstore catalogue by title or author, optionally filtered by genre. "
                         + "Use this before mentioning any book.");
         assertThat(byName.get("getBookDetails").getToolDefinition().description())
@@ -801,6 +801,32 @@ class BookstoreToolsTest {
                 .isEqualTo("Check how many copies are available and whether a restock is on its way.");
         assertThat(byName.get("recommendByGenre").getToolDefinition().description())
                 .isEqualTo("Recommend in-stock books of a genre, newest publication first. limit max 5.");
+    }
+
+    /**
+     * Spec 02 matches the query against title OR author, so a title and an author together find nothing. The tool says
+     * so in its description and in the description of the query parameter, after the unchanged spec 08 sentence.
+     */
+    @Test
+    void searchDescriptionKeepsTheSpecSentenceAndAddsTheOneTitleOrOneAuthorRule() {
+        ToolCallback search = callbacks().get("searchCatalogue");
+
+        String description = search.getToolDefinition().description();
+        assertThat(description).startsWith("Search the bookstore catalogue by title or author, optionally filtered "
+                + "by genre. Use this before mentioning any book.");
+        assertThat(description).isEqualTo("Search the bookstore catalogue by title or author, optionally filtered "
+                + "by genre. Use this before mentioning any book. "
+                + "The query is one title or one author name, or a fragment of one, "
+                + "never a title and an author together.");
+
+        Map<String, Object> schema = JSON.readValue(search.getToolDefinition().inputSchema(),
+                new TypeReference<Map<String, Object>>() {
+                });
+        @SuppressWarnings("unchecked")
+        Map<String, Object> query = (Map<String, Object>) ((Map<String, Object>) schema.get("properties"))
+                .get("query");
+        assertThat(query.get("description")).isEqualTo(
+                "One title or one author name, or a fragment of one; never a title and an author together.");
     }
 
     @Test

@@ -116,7 +116,7 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 | T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | done | PASS r0 | ENDORSE | #138 | sdd/fix-08-assistant-review/T4 |
 | T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #141 | sdd/fix-08-assistant-review/T2 |
 | T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | done | PASS r0 | ENDORSE | #143 | sdd/fix-08-assistant-review/T3 |
-| T5 | the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (A3) | bookstore | [T3] | 5 | elevated | sonnet | pending | | | | |
+| T5 | the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (A3) | bookstore | [T3] | 5 | elevated | sonnet | done | PASS r0 | ENDORSE | #145 | sdd/fix-08-assistant-review/T5 |
 
 T1, T4, T3 and T5 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3,
 T5 (amendments A2 and A3). T5 depends on T3 for ordering only. T4 depends on T1 because its red evidence names T1's 503 shape. T4 is critical with a sonnet
@@ -429,6 +429,25 @@ From the QA lead's T3 r0 review (ENDORSE):
   locally against `127.0.0.1:9` (4 of them bean or environment checks), nothing leaves the machine; R-j
   `AssistantConfigContextTest` still reads the process environment (deferred, R17).
 
+From the QA lead's T5 r0 review (ENDORSE):
+- LIVE-T5 (the main session's live check after the T5 merge, before qa-final; fresh conversation each; L1 and L4 three
+  times): L1 "Anything by Austen?" then "Is it in stock, and is more on its way?": turn 2 gives the stock figure and the
+  restock state, never "the search found nothing" (if tool arguments are visible, the turn-2 query holds the title
+  only); L2 no offer of a description, summary or review; L3 "What genres do you have?" names all 10 genres readably;
+  L4 "Do you have any science fiction?" and "Recommend a fantasy book": no `Unknown genre` rejection and no
+  `failed for a technical reason` line in the server log; L5 a Dutch question gets a Dutch answer, every reply at
+  most 120 words; L6 every answer 200, no `BadRequestException`, no `Invalid signature`, no 503. One miss in three is
+  evidence for residual R-k, three in three is a finding.
+- qa-final: Q8 the language assertion is now at `AssistantSystemPromptTest.java:36`. Q10 the T5 hashes hold at the spec
+  tip or T5's negative control is re-run there; grep counts 1 each for ", never title and author together" and "You do
+  not remember earlier search results." in the prompt, and 2 for "never a title and an author together" in
+  `BookstoreTools.java`. Q11 the LIVE-T5 results L1 to L6 are quoted in the final verdict or marked pending.
+- Residuals: R-k model obedience to the prompt rules is provable live only; R-l the prompt's genre list is a fixed copy
+  of `Genre` (the drift test turns red on an enum change, intended); R-m the two phrases of Q10 are not pinned by a
+  test; R-n a test pins that `Genre.parse` rejects a space.
+- Optional follow-up FU-T5-1 (test-only, not in this cycle): pin the two phrases of R-m; fix the missing space in
+  `addBook("9780141439662","Sense` at `AssistantIntegrationTest` lines 332 and 374.
+
 For T5 (orchestrator, from earlier lessons):
 - FF-T5-1: pin prompt statements by meaning-bearing phrases, not whole-file equality, so later wording edits fail only
   where a rule is lost; one assertion per rule; genre check derived from `Genre.values()`.
@@ -483,3 +502,14 @@ For T5 (orchestrator, from earlier lessons):
   main session's example mechanism: an exported `SPRING_AI_MODEL_CHAT=anthropic` still switches the shared context
   to the Anthropic model (by design, R17); those tests then fail locally against the loopback address instead of
   staying offline, and nothing reaches the API. Consequence: no pre-existing test changes.
+- A5 (2026-11-10, orchestrator, on impl-t5's report before QA; self-accepted, cheap and reversible): (1) T5 criterion 3
+  necessarily changes one pre-existing assertion: `BookstoreToolsTest.toolsCarryTheSpecDescriptions` compared the
+  whole `searchCatalogue` description with `isEqualTo`, which an appended rule cannot satisfy; it becomes `startsWith`
+  the unchanged spec 08 sentence (the other three tools stay `isEqualTo`). To keep the assertion strength, the new
+  test asserts the whole new description and the whole `query` `@ToolParam` description with `isEqualTo` (not only
+  `contains`). This is the single permitted change to a pre-existing test in T5. (2) New T5 criterion 1(d): listing
+  the genres in readable form ("science fiction") invites the model to pass that form as a tool argument, which
+  `Genre.parse` rejects (it accepts case, `-` and `_`, not a space). The prompt therefore says how to pass a genre to
+  a tool (capitals with underscores, for example SCIENCE_FICTION), pinned by a prompt test that also proves the named
+  form is accepted by the tools (`Genre.parse` or the tool's genre path) and the readable form with a space is not.
+  Consequence: one more prompt sentence; T5 goes back to its implementer before QA (not a QA rework round).

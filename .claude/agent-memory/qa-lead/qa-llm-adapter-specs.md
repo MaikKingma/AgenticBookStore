@@ -104,6 +104,13 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     value. Proof the URL binds: an information run with the model exported, per-host `Failed to connect` counts. Spring
     AI 2.0.2 has one URL property; `AnthropicSetup` reads `ANTHROPIC_BASE_URL` only when it is null.
 
+16. **Prompt and tool-text fixes (fix-08 T5).** Pin each rule by meaning-bearing `contains` phrases, the tool
+    description and `@ToolParam` text with `isEqualTo` (schema `properties.<p>.description`). Survivors are
+    usually restatements or motivation sentences: no RA when the remaining pinned text still carries the rule and the
+    rule is pinned where the model reads it at call time; gate-grep them at qa-final. A readable list in the prompt
+    ("science fiction") invites that form as a tool argument: check the parser's accepted forms (`Genre.parse`: case,
+    `-`, `_`, no space) and that the tool path really calls it. Behaviour stays live-only: sample a live check 3 times.
+
 10. **DoD grep over `target/` with a fat jar.** Check the dependency jars' raw bytes (`grep -c -a <literal> <jar>`) at
     strategy time: deflated entries do not match, so the repackaged jar is expected clean; the run after the build is
     still the evidence.

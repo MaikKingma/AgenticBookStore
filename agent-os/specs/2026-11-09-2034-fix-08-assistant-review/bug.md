@@ -189,6 +189,9 @@ cause for memory replay and tool loop alike without a beta header.
   look a book up again by title on a follow-up.
 - Finding 2: `assistant-system.st` does not say what the tools return, so the model offers fields that do not exist.
 - Finding 3: `assistant-system.st` does not name the genres and no tool lists them.
+- Finding 4 (plan.md A5, found while fixing finding 3): a readable genre list ("science fiction") invites the model to
+  pass that form as a tool argument, which `Genre.parse` (reached through `CatalogueFlow.search`) rejects because it
+  accepts case, `-` and `_` but not a space; the prompt therefore says to pass a genre in capitals with underscores.
 - Regression-test layer: prompt and tool-description statement tests (unit, `AssistantSystemPromptTest`,
   `BookstoreToolsTest`) plus a scripted end-to-end guard (`AssistantIntegrationTest`); model behaviour itself is
   live-only (spec 08 residual R5).
