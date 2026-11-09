@@ -90,7 +90,8 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
   sees why the live call failed (today Boot logs the unhandled exception; a handled 503 would otherwise be silent).
 - D4 (T2): `assistant-unavailable` is recognised by its code, like `assistant-offline`; the 429 check stays first.
   The page shows only the spec 12 text, as it does for offline (server title and detail are not shown).
-- D5 (T3b): offline mode is pinned with `@TestPropertySource(properties = {"spring.ai.model.chat=none",
+- D5 (T3b; superseded in part by amendment A4: the base pins the blank key and a loopback base URL, not the model):
+  offline mode is pinned with `@TestPropertySource(properties = {"spring.ai.model.chat=none",
   "spring.ai.anthropic.api-key="})` on `IntegrationTestBase`: inlined test properties outrank OS environment
   variables, and a subclass's own `@TestPropertySource` (`AssistantIntegrationTest`: `scripted`) still wins over the
   inherited value. `application-test.yml` stays (it also covers contexts outside the base); only its comment is made
@@ -269,34 +270,44 @@ verifier: the main session's model rule (opus only for T1, the QA lead and qa-fi
      `bookstore/src/main/resources/prompts/assistant-system.st:6`) instead of "in plain English"; `git diff <pr-base> --
      README.md` changes only that sentence; ASCII, no em dash. `git grep -n -i "plain English" -- README.md` prints
      nothing.
-  2. Regression test `bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestOfflineTest.java` (extends
-     `IntegrationTestBase`, no own property source) exists at the end-to-end integration layer and asserts: the
-     environment resolves `spring.ai.model.chat` to `none` and `spring.ai.anthropic.api-key` to the empty string; the
-     property source that supplies both values precedes `systemEnvironment` in the environment's property sources;
-     the only chat model is `OfflineChatModel` and there is no `AnthropicChatModel` bean.
-  3. `IntegrationTestBase` carries the pin as a test property source (`spring.ai.model.chat=none`,
-     `spring.ai.anthropic.api-key=`) and its class comment says why (environment variables outrank
-     `application-test.yml`); `AssistantIntegrationTest` still runs on `ScriptedChatModel` (its own property source
-     wins); the `application-test.yml` comment no longer claims more than the file does.
-  4. Exported proof, child shell only, dummy values: `SPRING_AI_ANTHROPIC_API_KEY=sk-ant-dummy-not-a-key
-     SPRING_AI_MODEL_CHAT=anthropic SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9 ./mvnw -pl bookstore test
+  2. (amended A4) Regression test `bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestOfflineTest.java`
+     (extends `IntegrationTestBase`, no own property source) exists at the end-to-end integration layer and asserts:
+     the environment resolves `spring.ai.anthropic.api-key` to the empty string and `spring.ai.anthropic.base-url` to
+     `http://127.0.0.1:9`, both from a property source that precedes `systemEnvironment` in the environment's property
+     sources; `spring.ai.model.chat` resolves to `none` from `AssistantModeConfig`'s own source (the production
+     offline switch still runs); the only chat model is `OfflineChatModel` and there is no `AnthropicChatModel` bean.
+  3. (amended A4) `IntegrationTestBase` carries the pin as a test property source (`spring.ai.anthropic.api-key=` and
+     `spring.ai.anthropic.base-url=http://127.0.0.1:9`; NOT `spring.ai.model.chat`, plan D5 as amended) and its class
+     comment says why (environment variables outrank `application-test.yml`; a blank key keeps the production offline
+     switch in charge; the loopback base URL means no request can leave the machine even when a developer exports a
+     model choice); `AssistantIntegrationTest` still runs on `ScriptedChatModel`; `AssistantModeIntegrationTest`
+     passes unmodified, `offlineSwitchComesAfterTheConfigurationFiles` included; the `application-test.yml` comment no
+     longer claims more than the file does.
+  4. (amended A4) Exported proof, child shell only, dummy values: (a) `SPRING_AI_ANTHROPIC_API_KEY=sk-ant-dummy-not-a-key
+     SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.2:9 ./mvnw -pl bookstore test
      -Dtest='IntegrationTestOfflineTest,AssistantModeIntegrationTest,AssistantIntegrationTest'
-     -Dsurefire.failIfNoSpecifiedTests=false` is green with the fix (offline, scripted); output in the outbox.
-  5. Negative control: with `IntegrationTestBase.java` restored from `git show <pr-base>:<file>` via copy-aside +
-     SHA-256 (never `git checkout --`, `git restore` or `git stash`), (a) plain `./mvnw -pl bookstore test
-     -Dtest=IntegrationTestOfflineTest -Dsurefire.failIfNoSpecifiedTests=false` FAILS on the property-source
-     assertion of criterion 2 (no test property source ahead of `systemEnvironment`); (b) the same three variables
-     exported as in criterion 4 with `-Dtest='IntegrationTestOfflineTest,AssistantModeIntegrationTest#startsOfflineWithoutAKey'`
-     (bean and environment checks only; no test in this selection posts to the chat endpoint) FAILS with
-     `expected: "none" but was: "anthropic"` (or an `AnthropicChatModel` bean where none is expected) - not with a
+     -Dsurefire.failIfNoSpecifiedTests=false` is green with the fix (offline, scripted; the pinned base URL wins over
+     the exported one), and its log holds zero `Failed to connect` lines; (b) information, not a green criterion: the
+     same run with `SPRING_AI_MODEL_CHAT=anthropic` added: report which tests fail and prove from the log that every
+     attempted connection went to `127.0.0.1:9` (count of `Failed to connect to /127.0.0.1:9` lines; zero lines naming
+     any other host). An explicitly exported model choice is honoured by design (spec 08 residual R17); the pin only
+     guarantees that nothing reaches the API.
+  5. (amended A4) Negative control: with `IntegrationTestBase.java` restored from `git show <pr-base>:<file>` via
+     copy-aside + SHA-256 (never `git checkout --`, `git restore` or `git stash`), (a) plain `./mvnw -pl bookstore test
+     -Dtest=IntegrationTestOfflineTest -Dsurefire.failIfNoSpecifiedTests=false` FAILS on the property-source or
+     base-URL assertion of criterion 2; (b) with the variables of criterion 4a exported and
+     `-Dtest='IntegrationTestOfflineTest,AssistantModeIntegrationTest#startsOfflineWithoutAKey'` (bean and environment
+     checks only; no test in this selection posts to the chat endpoint) FAILS with the key resolving to the dummy
+     value, `spring.ai.model.chat` not `none`, or an `AnthropicChatModel` bean where none is expected - not with a
      compile or context error. With the fix in place both PASS. Outputs verbatim under `## Red evidence` and
      `## Green evidence`.
   6. No behaviour change outside the root cause: `./mvnw -pl bookstore test` green; pre-existing test files unchanged
      except `IntegrationTestBase.java` (annotation and comment only) and the `application-test.yml` comment; no
      production file changes.
   7. `./mvnw clean verify` is green within 60 seconds, plain and with only `SPRING_AI_ANTHROPIC_API_KEY=sk-ant-dummy-not-a-key
-     SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9` exported in the child shell (`SPRING_AI_MODEL_CHAT` stays out of
-     the full run because of the deferred `AssistantConfigContextTest`, R17).
+     SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.2:9` exported in the child shell (amended A4; `SPRING_AI_MODEL_CHAT`
+     stays out of the full run because of the deferred `AssistantConfigContextTest`, R17); the exported run's log holds
+     zero `Failed to connect` lines.
 
 ### T5: the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (amendment A3)
 
@@ -440,3 +451,15 @@ For T5 (orchestrator, from earlier lessons):
   system prompt rules (bug.md "Amendment A3"). Decision D8. After T5 merges into the spec branch the orchestrator
   tells the main session and pauses before qa-final for its live check. Consequence: one more task PR; qa-final
   waits for the main session.
+- A4 (2026-11-09, orchestrator, on impl-t3's question; self-accepted, cheap and reversible, reported to the main
+  session): pinning `spring.ai.model.chat=none` in `IntegrationTestBase` (D5 as first written) makes
+  `AssistantModeConfig` skip in every shared integration context, so the pre-existing
+  `AssistantModeIntegrationTest.offlineSwitchComesAfterTheConfigurationFiles` (the integration witness of the
+  production offline switch, spec 08 residual R18) turns red and the switch is no longer exercised by any full-boot
+  test. Editing that test would weaken spec 08's offline-mode evidence. D5 amended: the base pins
+  `spring.ai.anthropic.api-key=` (blank, so an exported key never reaches a test context and the production switch
+  decides offline mode for real) and `spring.ai.anthropic.base-url=http://127.0.0.1:9` (so no request can leave the
+  machine, whatever model a developer exports). T3 criteria 2 to 5 and 7 amended accordingly. Deviation from the
+  main session's example mechanism: an exported `SPRING_AI_MODEL_CHAT=anthropic` still switches the shared context
+  to the Anthropic model (by design, R17); those tests then fail locally against the loopback address instead of
+  staying offline, and nothing reaches the API. Consequence: no pre-existing test changes.
