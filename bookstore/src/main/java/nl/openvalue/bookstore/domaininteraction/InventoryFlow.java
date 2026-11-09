@@ -160,7 +160,7 @@ public class InventoryFlow {
                     confirmation.expectedDeliveryDate(), confirmation.backordered());
         } catch (InvalidPendingRestockException e) {
             throw new DistributorUnavailableException("The distributor answered the restock request for book "
-                    + item.bookId().value() + " unusably: " + e.getMessage());
+                    + item.bookId().value() + " unusably: " + e.getMessage(), e);
         }
     }
 

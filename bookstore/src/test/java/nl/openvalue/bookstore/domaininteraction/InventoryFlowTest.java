@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
+import nl.openvalue.bookstore.domain.InvalidPendingRestockException;
 import nl.openvalue.bookstore.domain.Quantity;
 import nl.openvalue.bookstore.domain.StockRunningLowEvent;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
@@ -500,6 +501,16 @@ class InventoryFlowTest {
         UnavailableException unavailable = (UnavailableException) thrown;
         assertThat(unavailable.code()).isEqualTo("distributor-unavailable");
         assertThat(unavailable.title()).isEqualTo("Distributor unavailable");
+        // The rule the answer broke stays visible as the cause, and nothing is listed.
+        assertThat(thrown.getCause()).isExactlyInstanceOf(InvalidPendingRestockException.class);
+        assertThat(unavailable.details()).isEmpty();
+        // The whole detail stays as it was: the sentence plus the domain message of the broken rule.
+        String domainMessage = unusable.quantity() == 0
+                ? "A pending restock has at least 1 copy, not 0"
+                : "A pending restock needs a restock order id";
+        assertThat(unavailable.getMessage()).isEqualTo(
+                "The distributor answered the restock request for book " + BOOK_ID + " unusably: " + domainMessage);
+        assertThat(thrown.getCause().getMessage()).isEqualTo(domainMessage);
         verifyNothingSavedOrPublished();
     }
 

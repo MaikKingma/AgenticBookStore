@@ -1,12 +1,15 @@
 package nl.openvalue.bookstore.command;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 import nl.openvalue.bookstore.domaininteraction.ConflictException;
+import nl.openvalue.bookstore.domaininteraction.DistributorAppService;
 import nl.openvalue.bookstore.domaininteraction.InventoryFlow;
 import nl.openvalue.bookstore.domaininteraction.StockItemDataService;
 import org.junit.jupiter.api.Test;
@@ -24,6 +28,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 @WebMvcTest(InventoryCommands.class)
@@ -198,7 +203,94 @@ class InventoryCommandsTest {
                 .andExpect(jsonPath("$.details").isEmpty());
     }
 
+    // --- request restock ---
+
+    @Test
+    void requestRestockReturns202WithoutBodyAndPassesTheBookId() throws Exception {
+        postRequestRestock()
+                .andExpect(status().isAccepted())
+                .andExpect(content().string(""));
+
+        verify(flow).requestRestock(BOOK_ID);
+        verifyNoMoreInteractions(flow);
+    }
+
+    @Test
+    void requestRestockNeedsNeitherABodyNorAContentType() throws Exception {
+        // No Content-Type and no body at all: a required request body would answer 415 or 400 here.
+        MvcResult result = mockMvc.perform(post("/inventory/{bookId}/commands/request-restock", BOOK_ID))
+                .andExpect(status().isAccepted())
+                .andExpect(content().string(""))
+                .andReturn();
+
+        assertThat(result.getRequest().getContentType()).isNull();
+        verify(flow).requestRestock(BOOK_ID);
+        verifyNoMoreInteractions(flow);
+    }
+
+    @Test
+    void requestRestockMapsADistributorOutageTo503DistributorUnavailable() throws Exception {
+        doThrow(new DistributorAppService.DistributorUnavailableException("The distributor answered status 503"))
+                .when(flow).requestRestock(BOOK_ID);
+
+        ResultActions result = postRequestRestock();
+
+        expectProblem(result, 503, "distributor-unavailable", "Distributor unavailable")
+                .andExpect(jsonPath("$.detail").value("The distributor answered status 503"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void requestRestockMapsAnUnknownTitleTo404TitleNotFoundAtDistributor() throws Exception {
+        doThrow(new DistributorAppService.TitleNotFoundAtDistributorException("9780141439518"))
+                .when(flow).requestRestock(BOOK_ID);
+
+        ResultActions result = postRequestRestock();
+
+        expectProblem(result, 404, "title-not-found-at-distributor", "Title not found at distributor")
+                .andExpect(jsonPath("$.detail").value("The distributor has no title with ISBN 9780141439518"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void requestRestockMapsNotFoundTo404BookNotFound() throws Exception {
+        doThrow(new StockItemDataService.StockItemNotFoundException(BOOK_ID)).when(flow).requestRestock(BOOK_ID);
+
+        ResultActions result = postRequestRestock();
+
+        expectProblem(result, 404, "book-not-found", "Book not found")
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void requestRestockMapsARefusedTitleTo422TitleNotOrderable() throws Exception {
+        doThrow(new DistributorAppService.TitleNotOrderableException("9780141439518"))
+                .when(flow).requestRestock(BOOK_ID);
+
+        ResultActions result = postRequestRestock();
+
+        expectProblem(result, 422, "title-not-orderable", "Title not orderable")
+                .andExpect(jsonPath("$.detail")
+                        .value("The title with ISBN 9780141439518 cannot be ordered from the distributor"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void requestRestockNeverCallsTheEventPathUseCase() throws Exception {
+        postRequestRestock().andExpect(status().isAccepted());
+
+        verify(flow, never()).handleStockRunningLow(BOOK_ID);
+    }
+
     // --- helpers ---
+
+    private ResultActions postRequestRestock() throws Exception {
+        return mockMvc.perform(post("/inventory/{bookId}/commands/request-restock", BOOK_ID));
+    }
 
     private ResultActions postReceive(String body) throws Exception {
         return mockMvc.perform(post("/inventory/{bookId}/commands/receive", BOOK_ID)

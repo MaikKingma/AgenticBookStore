@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,13 +68,13 @@ class DistributorImportIntegrationTest extends IntegrationTestBase {
                 Map.entry("publicationYear", 1813),
                 Map.entry("available", 0),
                 Map.entry("inStock", false)));
-        assertThat(getStock(id)).isEqualTo(Map.of(
+        assertThat(getStock(id)).isEqualTo(withNoPendingRestock(Map.of(
                 "bookId", id.toString(),
                 "onHand", 0,
                 "reserved", 0,
                 "available", 0,
                 "reorderLevel", 3,
-                "lowStock", true));
+                "lowStock", true)));
         assertRowCounts(1, 1, 1);
         verify(distributorAppService).findTitle(PRIDE_ISBN);
         verifyNoMoreInteractions(distributorAppService);
@@ -356,6 +357,16 @@ class DistributorImportIntegrationTest extends IntegrationTestBase {
         Integer rows = jdbcTemplate.queryForObject("select count(*) from " + table, Integer.class);
         assertThat(rows).isNotNull();
         return rows;
+    }
+
+    /**
+     * The stock view with the key {@code pendingRestock} present and null, as JSON gives it when no restock is
+     * pending. A {@link Map#of} cannot hold a null value, so the copy is a {@link LinkedHashMap}.
+     */
+    private static Map<String, Object> withNoPendingRestock(Map<String, Object> figures) {
+        Map<String, Object> view = new LinkedHashMap<>(figures);
+        view.put("pendingRestock", null);
+        return view;
     }
 
     private RestTestClient.ResponseSpec importBook(Map<String, Object> payload) {

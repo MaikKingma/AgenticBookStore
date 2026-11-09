@@ -633,13 +633,23 @@ class OrderIntegrationTest extends IntegrationTestBase {
     /** The stock view as JSON gives it, with the default reorder level 3. */
     private static Map<String, Object> stockView(UUID bookId, int onHand, int reserved, int available,
             boolean lowStock) {
-        return Map.of(
+        return withNoPendingRestock(Map.of(
                 "bookId", bookId.toString(),
                 "onHand", onHand,
                 "reserved", reserved,
                 "available", available,
                 "reorderLevel", 3,
-                "lowStock", lowStock);
+                "lowStock", lowStock));
+    }
+
+    /**
+     * The view with the key {@code pendingRestock} present and null, as JSON gives it when no restock is pending. A
+     * {@link Map#of} cannot hold a null value, so the copy is a {@link LinkedHashMap}.
+     */
+    private static Map<String, Object> withNoPendingRestock(Map<String, Object> figures) {
+        Map<String, Object> view = new LinkedHashMap<>(figures);
+        view.put("pendingRestock", null);
+        return view;
     }
 
     /** The order view as JSON gives it; the shipped time may be null, so the map allows a null value. */
