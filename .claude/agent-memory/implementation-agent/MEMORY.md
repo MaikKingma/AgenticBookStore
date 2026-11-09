@@ -9,4 +9,6 @@
 - [Mapper test witnesses](mapper-test-witnesses.md) — test data that makes mapper, factory and flow-translator mutations observable (rejected values, second literals, threshold twins)
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
+- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
+- [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
