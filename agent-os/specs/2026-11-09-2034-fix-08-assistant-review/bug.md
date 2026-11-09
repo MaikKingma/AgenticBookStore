@@ -96,8 +96,9 @@ Chosen: (a), because the boundary is the one place that knows both the conversat
 ## Prevention
 - Gap: spec 08 left the live failure unspecified; offline-by-construction tests never exercise a failing model; the
   test configuration relied on a file that environment variables outrank.
-- Action: T1 adds a failing-model test double and tests; T3 pins offline mode in `IntegrationTestBase` with a test
-  property source (outranks the environment). Follow-up for Maik: a standards line "a test configuration that must
+- Action: T1 adds a failing-model test double and tests; T3 pins a blank key and the loopback base URL
+  `http://127.0.0.1:9` in `IntegrationTestBase` with a test property source (outranks the environment), so the
+  production offline switch decides offline mode and no request can leave the machine (plan.md amendment A4). Follow-up for Maik: a standards line "a test configuration that must
   hold whatever the shell exports belongs in `@TestPropertySource`, not in `application-test.yml`".
 
 ## Amendment A2 (2026-11-09): every second message of a conversation fails live (task T4, S2)

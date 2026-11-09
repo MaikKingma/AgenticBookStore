@@ -115,7 +115,7 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 | T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | done | PASS r0 | ENDORSE | #134 | sdd/fix-08-assistant-review/T1 |
 | T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | done | PASS r0 | ENDORSE | #138 | sdd/fix-08-assistant-review/T4 |
 | T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #141 | sdd/fix-08-assistant-review/T2 |
-| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | pending | | | | |
+| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | done | PASS r0 | ENDORSE | | sdd/fix-08-assistant-review/T3 |
 | T5 | the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (A3) | bookstore | [T3] | 5 | elevated | sonnet | pending | | | | |
 
 T1, T4, T3 and T5 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3,
@@ -408,6 +408,26 @@ From the QA lead's T2 r1 review (ENDORSE):
 - qa-final Q7: both T2 hashes unchanged at the spec tip, or T2's negative control re-run at branch level;
   `git grep -c "assistant-unavailable" <tip> -- frontend/src/pages/AssistantPage.tsx` is 2.
 - Residual R-h: the real T1 answer reaching the page in a browser is unproven until Q6 runs.
+
+From the QA lead's T3 r0 review (ENDORSE):
+- FF-T5-T3-1 (T5): T5 does not touch `IntegrationTestBase.java` (73d25c10...97e2), `IntegrationTestOfflineTest.java`
+  (dd8a2443...0442) or `application-test.yml` (375f393d...a97961); module baseline 1340 plus T5's new tests;
+  `IntegrationTestOfflineTest` 4/4 and `AssistantAnthropicContractTest` 3/3 in every T5 run; Vitest 605 + 2 expected
+  fail.
+- FF-T5-T3-2 (T5): `README.md:5` relies on `assistant-system.st` "Answer in the language of the customer.", pinned by
+  `AssistantSystemPromptTest.java:28`; that sentence and its assertion stay unmodified; after T5
+  `git grep -c "language of the customer" -- README.md bookstore/src/main/resources/prompts/assistant-system.st`
+  prints 1 for each file.
+- FF-T5-T3-3 (T5): no T5 run needs exported variables; if a verifier exports anything, only the dummy key plus
+  `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.2:9`; never `ANTHROPIC_*`, never `SPRING_AI_MODEL_CHAT` in a full run.
+- qa-final Q8: both T3 test-file hashes unchanged at the spec tip, or T3's negative control (a) re-run at branch level;
+  no "plain English" in README; "language of the customer" once each in README and the prompt. Q9: one referee run
+  with only the dummy key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.2:9` exported: green under 60 s, same
+  totals as the plain run, 0 `Failed to connect` lines, `IntegrationTestOfflineTest` 4/4, the `env` line quoted. Q5 is
+  answered by A3 (7 of 7 answered 200).
+- Residuals: R-d and R-f closed (A3); R-i an exported `SPRING_AI_MODEL_CHAT=anthropic` makes 7 tests in 2 classes fail
+  locally against `127.0.0.1:9` (4 of them bean or environment checks), nothing leaves the machine; R-j
+  `AssistantConfigContextTest` still reads the process environment (deferred, R17).
 
 For T5 (orchestrator, from earlier lessons):
 - FF-T5-1: pin prompt statements by meaning-bearing phrases, not whole-file equality, so later wording edits fail only
