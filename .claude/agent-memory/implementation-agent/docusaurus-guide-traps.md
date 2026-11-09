@@ -29,7 +29,9 @@ metadata:
 - Checker self-tests that only call rule functions miss the wiring: a dropped `errors` spread or `report(..., [], ...)` in
   `check.mjs`/`lib/site.mjs` stays green. Pin the pair table by name plus a minimum count, and test each rule through
   `runChecks` on a temp tree. A node mutation runner (edit, spawn `node --test`, restore, sha check) beats shell loops
-  under the worktree Bash guard; call helper scripts by absolute path, never `~`, `$VAR` args or `$?`.
+  under the worktree Bash guard; call helper scripts by absolute path, never `~`, `$VAR` args or `$?`. In the
+  runner's mutant table a search text holding `${...}` must be a plain quoted string: a String.raw template interpolates it.
+  When a rule edit changes a line other mutants search for, adapt those mutants (same mutation) and log it, never drop silently.
 - With `future.v4` the heading id form `## Title {#id}` does not compile in MDX (acorn error, also in `.md`); the working
   form is `## Title {/* #id */}`. Docusaurus renders `- [ ]` items as bare disabled checkboxes: axe reports `label`
   (not colour contrast) on `.task-list-item > input`. Fix that held: a local rehype plugin (hast walk, `ariaLabel`
@@ -80,6 +82,11 @@ metadata:
   real pages carry U+200B in hash links, so slice a smaller fragment there).
 - The Edit/Write tools turn a ` ` escape in the text into the literal character (ascii rule fails, and Edit cannot
   match it back): write `String.fromCharCode(0xa0)` instead, and fix a stray one by rewriting the file with Write.
+  The same holds for any backslash-u escape inside a regex literal (a class of invisible characters): build it with
+  `new RegExp` from `String.fromCharCode` codes, and grep every edited file for non-ASCII before the suite.
+- An Edit whose old/new string ends in a space mid-line (`const x = `) can lose that space and silently change a
+  committed line. End every Edit anchor at a line end, and read `git diff -U0 HEAD -- <test file>` before the gates
+  when a test file "may only gain lines": the deletion count must equal the agreed edits.
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).

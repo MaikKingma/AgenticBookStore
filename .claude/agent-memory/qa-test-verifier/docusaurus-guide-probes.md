@@ -87,4 +87,13 @@ Rule: verify a pack-anchored coverage manifest with your own section-aware sweep
 - "Ending a paragraph too early is fail-closed" is false for a tag reader and a comment blanker: a missed span that holds `</TabItem>` ends the item, one that holds an unclosed `{/*` blanks the rest. Witnesses where CommonMark continues but a block-start list ends: a `2. ` line, an empty `*`/`+`/`1.` line, a line starting with inline JSX or `{expr}` then text, a `|` paragraph with no delimiter row, `- >` continued by `  >`. Build each; a silent unmatched `</TabItem>` makes them pass.
 - Span oracle without a build: `mdast-util-from-markdown` + `micromark-extension-gfm` + `mdast-util-gfm` in guide/node_modules give CommonMark inlineCode nodes; compare collapsed values with the scanner's spans per file (import by absolute path from a scratch script).
 
+Rule: for a built-HTML tab reader (tab label -> panel lines), probe the Tabs props Docusaurus really emits differently.
+
+**Why:** `<Tabs lazy>` renders only the selected panel (theme-classic TabItem returns null), so a container has more tabs than panels. A fail-closed "count mismatch" error that tests pin only for more panels than tabs lets a `!==` -> `<` mutant survive, and on a real lazy build it maps the shown PowerShell panel to tab 0 and passes.
+**How to apply:**
+- Probe page set in a scratch copy (one page per probe, `docusaurus build --out-dir`), checked by the repo's real CLI: label case/extra words, `values` prop, value-only item, `default`, `queryString`, `lazy` (selected and not), nested Tabs, details, MDX component wrapper, table cell, admonition, `<pre><code>`, `<pre>{expr}`, `<br/>` in pre, showLineNumbers, title + `{1}`, magic comment, entities and real NBSP. Run the source rule on the same text to see which escape both.
+- Combined escapes: prefix a probe with an A7-style unclosed `{/*` span opener; then a `powershell` fence outside tabs, a soft-hyphen label and a `token-line` span plus stray text in a raw pre all pass both rules.
+- Fixture provenance: CSS-module class suffixes (`tabList_xxxx`) depend on the build path, so byte equality fails; compare articles with `name_[A-Za-z0-9_-]{4}` normalised.
+- The offline (hash router) build writes only index.html; panel text lives in a JS chunk, so check:built on it is vacuous by construction.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
