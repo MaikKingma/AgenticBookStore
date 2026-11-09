@@ -246,3 +246,17 @@ T1 and T3 share the bookstore module and run one after the other; the batches fi
 ## QA feed-forward
 
 ## Amendments
+
+- A1 (2026-11-09, orchestrator, on impl-t1's question; self-accepted, cheap and reversible): (1) T1 criterion 1:
+  `org.springframework.ai.retry.*` is not on the Spring AI 2.0.2 classpath (no spring-ai-retry module; adding it is a
+  POM change). The witness types are `com.anthropic.errors.AnthropicIoException` (connection or timeout),
+  `com.anthropic.errors.AnthropicRetryableException`, `java.lang.IllegalStateException` and
+  `java.io.UncheckedIOException` (two outside the Anthropic hierarchy, so a catch of `AnthropicException` alone
+  dies). (2) D1 refined: the four use-case exceptions (`NotFoundException`, `ConflictException`,
+  `InvalidInputException`, `UnavailableException`) thrown from the chat call are not a failed model call: they pass
+  through unchanged (the existing `useCaseExceptionsMapToTheirStatus` rows stay green and unmodified), after the
+  memory restore, without the WARN line. Every other `RuntimeException` is restored, logged once at WARN and
+  translated to `assistant-unavailable`. New T1 criterion 6a: an integration test with `ScriptedChatModel` throwing
+  a use-case exception (for example `NotFoundException`) answers its own status and code and leaves that
+  conversation's memory exactly as before; a slice test finds no WARN line from `AssistantCommands` for a
+  pass-through. Consequence: none outside T1.
