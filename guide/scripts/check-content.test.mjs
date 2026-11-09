@@ -10,9 +10,13 @@ import {ENTRIES, MANUAL_ROWS, PAGE_FILES, SOURCE_FILES} from './coverage.mjs';
 import {packCommandLines} from './rules/content.mjs';
 import {SKELETON_MARKER} from './rules/structure.mjs';
 import {replaceOnce, withSiteTree} from './lib/test-fixtures.mjs';
+import {SKELETON_DOCS, withSkeletonGuideCopy} from './fixtures/skeleton-docs.mjs';
 
 // The coverage and content rules through the whole checker (runChecks and the command line),
 // on temp trees that hold the real docs plus the change under test. The pack is the real one.
+// The real docs are the skeleton snapshot (guide/docs at 05e58a2, every page a skeleton), so
+// these tests hold while the content tasks fill in the live pages. Only the "live guide" test of
+// the command line reads guide/docs.
 const CHECK_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check.mjs');
 const GUIDE_ROOT = join(dirname(CHECK_SCRIPT), '..');
 const SETUP = PAGE_FILES.SU;
@@ -21,13 +25,13 @@ const LEVEL2 = PAGE_FILES.L2;
 const LEVEL4 = PAGE_FILES.L4;
 
 function realDocs() {
-  const docs = join(GUIDE_ROOT, 'docs');
+  const docs = SKELETON_DOCS;
   return Object.fromEntries(
     readdirSync(docs, {recursive: true, withFileTypes: true})
       .filter((entry) => entry.isFile())
       .map((entry) => {
         const abs = join(entry.parentPath, entry.name);
-        return [relative(GUIDE_ROOT, abs).split(sep).join('/'), readFileSync(abs, 'utf8')];
+        return [relative(dirname(docs), abs).split(sep).join('/'), readFileSync(abs, 'utf8')];
       }),
   );
 }
@@ -261,12 +265,49 @@ test('cli: an explicit root without --content skips the coverage and content rul
 });
 
 test('cli: the real guide passes the coverage and content rules from any working directory', () => {
+  // A copy of the guide with the skeleton snapshot as docs/ and the pack next to it, checked by
+  // the copy's own check.mjs without a root (the default root, as `npm run check` runs it).
+  withSkeletonGuideCopy((guide) => {
+    for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
+      const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
+      assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+      assert.match(result.stdout, new RegExp(`^ok {3}coverage \\(anchored ${ENTRIES.length}/${ENTRIES.length}`, 'm'));
+      assert.match(result.stdout, /^ok {3}content \(11 pages/m);
+      assert.match(result.stdout, new RegExp(`^pending coverage entries: ${ENTRIES.length} on 10 skeleton pages`, 'm'));
+    }
+  });
+});
+
+// The live guide, skeleton or finished page by page: the command line on the default root reports
+// exactly what runChecks finds with every rule on, from any working directory, and the pending
+// entries are those of the pages that still carry the marker. Whether the live pages pass is
+// the second half of `npm run check` (node scripts/check.mjs), not this test.
+test('cli: the live guide gets the coverage and content rules from any working directory, its pending entries follow its skeleton markers', () => {
+  const live = runChecks(GUIDE_ROOT, {structure: true, content: true});
+  const skeletons = Object.entries(PAGE_FILES).filter(([, file]) => readFileSync(join(GUIDE_ROOT, file), 'utf8').includes(SKELETON_MARKER));
+  const pending = skeletons
+    .map(([code, file]) => [file, ENTRIES.filter((e) => e.page === code).map((e) => e.id).sort()])
+    .filter(([, ids]) => ids.length > 0)
+    .sort(([a], [b]) => (a < b ? -1 : 1));
+  const count = pending.reduce((sum, [, ids]) => sum + ids.length, 0);
+  const at = live.lines.indexOf(`pending coverage entries: ${count} on ${pending.length} skeleton pages`);
+  assert.ok(at !== -1, live.lines.join('\n'));
+  assert.deepEqual(
+    live.lines.slice(at + 1).filter((line) => line.startsWith('  pending entries ')),
+    pending.map(([file, ids]) => `  pending entries ${file}: ${ids.length} (${ids.join(', ')})`),
+  );
+  for (const [, file] of skeletons) {
+    assert.deepEqual(live.errors.filter((e) => e.startsWith('coverage: ') && e.includes(`: ${file}: `)), [], `${file} still carries the marker`);
+  }
+  for (const rule of ['coverage', 'content', 'structure']) {
+    assert.ok(live.lines.some((line) => line.startsWith(`ok   ${rule} (`) || line.startsWith(`FAIL ${rule} (`)), rule);
+  }
+  const stderr = live.errors.length === 0 ? [] : [...live.errors, `check failed with ${live.errors.length} error(s)`];
   for (const cwd of [tmpdir(), join(GUIDE_ROOT, '..'), GUIDE_ROOT]) {
     const result = run([], cwd);
-    assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
-    assert.match(result.stdout, new RegExp(`^ok {3}coverage \\(anchored ${ENTRIES.length}/${ENTRIES.length}`, 'm'));
-    assert.match(result.stdout, /^ok {3}content \(11 pages/m);
-    assert.match(result.stdout, new RegExp(`^pending coverage entries: ${ENTRIES.length} on 10 skeleton pages`, 'm'));
+    assert.equal(result.status, live.errors.length === 0 ? 0 : 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+    assert.deepEqual(result.stdout.trimEnd().split('\n'), live.lines, `cwd ${cwd}`);
+    assert.deepEqual(result.stderr.split('\n').filter(Boolean), stderr, `cwd ${cwd}`);
   }
 });
 

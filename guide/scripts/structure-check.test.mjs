@@ -8,6 +8,8 @@ import {fileURLToPath} from 'node:url';
 import {runChecks} from './check.mjs';
 import {FIXTURE_LEVELS, fixturePlan, goodDocs, levelPage, withStructureTree} from './lib/structure-fixtures.mjs';
 import {replaceOnce} from './lib/test-fixtures.mjs';
+import {SKELETON_DOCS, withSkeletonGuideCopy} from './fixtures/skeleton-docs.mjs';
+import {SKELETON_MARKER} from './rules/structure.mjs';
 
 const CHECK_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check.mjs');
 const GUIDE_ROOT = join(dirname(CHECK_SCRIPT), '..');
@@ -109,15 +111,17 @@ test('runChecks with structure: a plan change reaches the pages (the pages are c
   assert.match(errors[0], /03-level-2.*the Time is 20 minutes, the plan heading says 21/);
 });
 
-// The docs of the real guide as {path relative to guide/: text}, for a temp tree.
+// The docs of the real guide as {path relative to guide/: text}, for a temp tree: the skeleton
+// snapshot (guide/docs at 05e58a2, every page a skeleton), so these tests hold while the content
+// tasks fill in the live pages. Only the "live guide" test of the command line reads guide/docs.
 function realDocs() {
-  const docs = join(GUIDE_ROOT, 'docs');
+  const docs = SKELETON_DOCS;
   return Object.fromEntries(
     readdirSync(docs, {recursive: true, withFileTypes: true})
       .filter((entry) => entry.isFile())
       .map((entry) => {
         const abs = join(entry.parentPath, entry.name);
-        return [relative(GUIDE_ROOT, abs).split(sep).join('/'), readFileSync(abs, 'utf8')];
+        return [relative(dirname(docs), abs).split(sep).join('/'), readFileSync(abs, 'utf8')];
       }),
   );
 }
@@ -146,9 +150,37 @@ test('cli: an explicit root without --structure skips the structure rules', () =
 });
 
 test('cli: the real guide passes the structure rules from any working directory', () => {
+  // A copy of the guide with the skeleton snapshot as docs/ and the pack next to it, checked by
+  // the copy's own check.mjs without a root (the default root, as `npm run check` runs it).
+  withSkeletonGuideCopy((guide) => {
+    for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
+      const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
+      assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+      assert.match(result.stdout, /^ok {3}structure \(11 pages/m);
+    }
+  });
+});
+
+// The live guide, skeleton or finished page by page: the command line on the default root reports
+// exactly what runChecks finds with every rule on, from any working directory, and the pending
+// skeleton pages are the docs files that still carry the marker. Whether the live pages pass is
+// the second half of `npm run check` (node scripts/check.mjs), not this test.
+test('cli: the live guide gets the structure rules from any working directory, its pending pages follow its skeleton markers', () => {
+  const live = runChecks(GUIDE_ROOT, {structure: true, content: true});
+  const docs = join(GUIDE_ROOT, 'docs');
+  const marked = readdirSync(docs, {recursive: true, withFileTypes: true})
+    .filter((entry) => entry.isFile() && readFileSync(join(entry.parentPath, entry.name), 'utf8').includes(SKELETON_MARKER))
+    .map((entry) => relative(GUIDE_ROOT, join(entry.parentPath, entry.name)).split(sep).join('/'))
+    .sort();
+  const at = live.lines.indexOf(`pending skeleton pages: ${marked.length}`);
+  assert.ok(at !== -1, live.lines.join('\n'));
+  assert.deepEqual(live.lines.slice(at + 1, at + 1 + marked.length), marked.map((file) => `  pending ${file}`));
+  assert.ok(live.lines.some((line) => /^(ok {3}structure \(11 pages|FAIL structure \(\d+ errors\))/.test(line)), live.lines.join('\n'));
+  const stderr = live.errors.length === 0 ? [] : [...live.errors, `check failed with ${live.errors.length} error(s)`];
   for (const cwd of [tmpdir(), join(GUIDE_ROOT, '..'), GUIDE_ROOT]) {
     const result = spawnSync(process.execPath, [CHECK_SCRIPT], {encoding: 'utf8', cwd});
-    assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
-    assert.match(result.stdout, /^ok {3}structure \(11 pages/m);
+    assert.equal(result.status, live.errors.length === 0 ? 0 : 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
+    assert.deepEqual(result.stdout.trimEnd().split('\n'), live.lines, `cwd ${cwd}`);
+    assert.deepEqual(result.stderr.split('\n').filter(Boolean), stderr, `cwd ${cwd}`);
   }
 });
