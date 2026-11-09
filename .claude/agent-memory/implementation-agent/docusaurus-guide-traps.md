@@ -32,7 +32,12 @@ metadata:
   under the worktree Bash guard; call helper scripts by absolute path, never `~`, `$VAR` args or `$?`.
 - With `future.v4` the heading id form `## Title {#id}` does not compile in MDX (acorn error, also in `.md`); the working
   form is `## Title {/* #id */}`. Docusaurus renders `- [ ]` items as bare disabled checkboxes: axe reports `label`
-  (not colour contrast) on `.task-list-item > input`; fixing it needs a swizzle outside docs/components.
+  (not colour contrast) on `.task-list-item > input`. Fix that held: a local rehype plugin (hast walk, `ariaLabel`
+  property) in the preset's `docs.rehypePlugins`; there is no built-in option, no swizzle needed.
+- The Pages build HTML is minified with unquoted attributes (`<input type=checkbox disabled/>`), so a built-HTML rule
+  needs a quote-aware tag scanner (`scripts/lib/html.mjs`), not a `type="checkbox"` regex. Loading
+  `docusaurus.config.ts` from a node:test prints a MODULE_TYPELESS warning (breaks the 0-warning `check` baseline), so
+  pin config wiring on the source text instead.
 - A checker rule that describes the whole guide (page set, plan comparison) cannot run in `runChecks(root)` by default:
   older tests build minimal temp trees and may only gain lines. Gate it behind an option and set it in `main()` for the
   default root (`--structure` for explicit roots); test it through `runChecks(root, {structure: true, workshopDir})`.
