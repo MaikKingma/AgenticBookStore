@@ -27,4 +27,5 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
   is served from the heuristic cache on a second `goto` (no access-log line) and answers `If-Modified-Since: now` with
   304, while a `no-cache` entry document shows a fresh `200` line per navigation. The asset 304 doubles as an
   in-run control that the date-validator branch is live on the same server.
+- Dev-mode console check WITHOUT a backend (change touches no server code): start Vite alone on a free `--port --strictPort` and mock `/books`, `/inventory` with `page.route` inside `run-code`. Any uncaught exception in a route handler (`new URL` is undefined there) kills the playwright daemon with "Session closed" and no message: parse the href by hand and wrap `route.fulfill` in try/catch, `unrouteAll` in `finally`. The catalogue remembers the last search in sessionStorage, so clear it before a second listing visit or the "first" page shows the searched subset. Select cards with `li:has(article)`, not `getByRole('listitem')` (header nav items count).
 Related: [[readme-and-live-jar-probes]], [[ci-workflow-verification]], [[shell-traps]]
