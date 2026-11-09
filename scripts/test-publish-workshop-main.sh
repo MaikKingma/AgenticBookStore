@@ -444,6 +444,46 @@ check '--push without a local main: reuses the remote main' same "$(rev "$work" 
 check '--push without a local main: remote main unchanged' same "$(rev "$remote" refs/heads/main)" "$main4"
 check '--push without a local main: remote tag unchanged' same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
 
+# A second machine made its own baseline locally: the published tree and the baseline message, but another date,
+# so another commit. With --push the remote baseline wins: public main and the tag stay, local main follows them.
+clock=$((clock + 3600))
+local_baseline=$(GIT_AUTHOR_DATE="$clock +0000" GIT_COMMITTER_DATE="$clock +0000" \
+  git -C "$work" commit-tree "$main4^{tree}" -m "$MESSAGE")
+check 'a local baseline of the published tree is another commit than the remote main' \
+  differ "$local_baseline" "$main4"
+git -C "$work" update-ref refs/heads/main "$local_baseline"
+git -C "$work" update-ref "refs/tags/$TAG" "$local_baseline"
+run_in "$work" --push
+check '--push with another local baseline: exits 0' same "$rc" 0
+check '--push with another local baseline: remote main unchanged' same "$(rev "$remote" refs/heads/main)" "$main4"
+check '--push with another local baseline: remote tag unchanged' \
+  same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
+check '--push with another local baseline: local main is the remote main' \
+  same "$(rev "$work" refs/heads/main)" "$main4"
+check '--push with another local baseline: local tag is the remote main' \
+  same "$(rev "$work" "refs/tags/$TAG")" "$main4"
+
+# The same with a local baseline that is older than the published one: the remote baseline still wins, so the
+# choice does not depend on which of the two baselines has the earlier date.
+older_clock=$((1767225600 - 86400))
+older_baseline=$(GIT_AUTHOR_DATE="$older_clock +0000" GIT_COMMITTER_DATE="$older_clock +0000" \
+  git -C "$work" commit-tree "$main4^{tree}" -m "$MESSAGE")
+check 'an older local baseline of the published tree is another commit than the remote main' \
+  differ "$older_baseline" "$main4"
+check 'the older local baseline is dated before the remote main' \
+  [ "$(git -C "$work" log -1 --format=%ct "$older_baseline")" -lt "$(git -C "$work" log -1 --format=%ct "$main4")" ]
+git -C "$work" update-ref refs/heads/main "$older_baseline"
+git -C "$work" update-ref "refs/tags/$TAG" "$older_baseline"
+run_in "$work" --push
+check '--push with an older local baseline: exits 0' same "$rc" 0
+check '--push with an older local baseline: remote main unchanged' same "$(rev "$remote" refs/heads/main)" "$main4"
+check '--push with an older local baseline: remote tag unchanged' \
+  same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
+check '--push with an older local baseline: local main is the remote main' \
+  same "$(rev "$work" refs/heads/main)" "$main4"
+check '--push with an older local baseline: local tag is the remote main' \
+  same "$(rev "$work" "refs/tags/$TAG")" "$main4"
+
 # Local factory must equal the remote's factory: ahead, behind and diverged are all refused.
 write_file "$work" README.md 'ahead'
 git -C "$work" commit --quiet -am 'ahead'
