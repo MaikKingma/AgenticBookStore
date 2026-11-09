@@ -402,6 +402,37 @@ class BookCommandsTest {
         assertThat(sent.getValue()).isEqualTo(isbn);
     }
 
+    static Stream<Arguments> priceStringsWithMoreThanTwoDecimalsOrDigits() {
+        return Stream.of(
+                Arguments.of("12.345", new BigDecimal("12.345")),
+                Arguments.of("123456.789", new BigDecimal("123456.789")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("priceStringsWithMoreThanTwoDecimalsOrDigits")
+    void importPassesAPriceWithManyDecimalsAndDigitsToTheFlowUnchanged(String sent, BigDecimal expected)
+            throws Exception {
+        when(flow.importFromDistributor(anyString(), any(BigDecimal.class))).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + sent + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<BigDecimal> price = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(flow).importFromDistributor(eq("9780141439518"), price.capture());
+        assertThat(price.getValue()).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ABC", "978014143951X"})
+    void importPassesAnUpperCaseIsbnToTheFlowUnchanged(String isbn) throws Exception {
+        when(flow.importFromDistributor(anyString(), isNull())).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"" + isbn + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+        verify(flow).importFromDistributor(sent.capture(), isNull());
+        assertThat(sent.getValue()).isEqualTo(isbn);
+    }
+
     @Test
     void importLeavesAnIsbnTheDomainRejectsToTheFlowAs422() throws Exception {
         when(flow.importFromDistributor("abc", null))
@@ -432,6 +463,29 @@ class BookCommandsTest {
     @ParameterizedTest
     @ValueSource(strings = {"abc", "", "12,50", "1e3", ".5", "12.", "-", " 12.00"})
     void importRejectsANonDecimalPriceWith400NamingOnlyThePrice(String price) throws Exception {
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"+5", "12.00 ", "5 "})
+    void importRejectsAPriceWithASignOrTrailingSpaceWith400NamingOnlyThePrice(String price) throws Exception {
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @Test
+    void importRejectsAnArabicIndicDigitPriceWith400NamingOnlyThePrice() throws Exception {
+        String price = Character.toString(0x0661) + Character.toString(0x0662);
+
         ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
 
         expectProblem(result, 400, "validation-failed", "Validation failed")

@@ -45,7 +45,7 @@ Add the outbound anti-corruption layer to the distributor (spec 05): the port `D
 | T5 | `ImportBookPayload`, `POST /books/commands/import-from-distributor`, `BookCommandsTest` | bookstore | [T4] | 5 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T5`) | PASS (r0) | ENDORSE | 0 | #80 | d6cd48a |
 | T6 | ArchUnit rule for nested `*AppServiceImpl` classes, fixtures, self-test registry | bookstore | [T3] | 6 | critical | opus | opus | done (branch `sdd/06-distributor-acl/T6`) | PASS (r1) | ENDORSE | 1 | #82 | 3bd96d2 |
 | T7 | `DistributorImportIntegrationTest` and import examples in `http/catalogue.http` | bookstore | [T5] | 7 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T7`) | PASS (r0) | ENDORSE | 0 | #84 | 1dd327f |
-| T8 | Test-only follow-ups FU-T3-1 to 3 in `DistributorAppServiceImplTest` and FU-T5-1 to 3 in `BookCommandsTest` plus one comment fix in `http/catalogue.http` (Amendments A1, A2, A4) | bookstore | [T3, T5, T7] | 8 | elevated | sonnet | sonnet | pending | | | | | |
+| T8 | Test-only follow-ups FU-T3-1 to 3 in `DistributorAppServiceImplTest` and FU-T5-1 to 3 in `BookCommandsTest` plus one comment fix in `http/catalogue.http` (Amendments A1, A2, A4) | bookstore | [T3, T5, T7] | 8 | elevated | sonnet | sonnet | done (branch `sdd/06-distributor-acl/T8`) | PASS (r0) | ENDORSE | 0 | #86 | 5e82a14 |
 
 Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7, T8. Pack task mapping: pack 1 = T1; pack 2 = T2; pack 3 = T3; pack 4 = T4 + T5; pack 5 = T6 + T7.
 
@@ -187,6 +187,10 @@ From the QA lead's T7 r0 review (full text in the QA ledger, FF-16 to FF-18):
 - FF-16 (T8 C0 baselines and qa-final): bookstore total after T7 is 920 (DistributorImportIntegrationTest 27); Started 10; ACL WARN 66; 1 DefaultHandlerExceptionResolver WARN in the bookstore section (T8 names any WARN its rows provoke on purpose and states the new count); `DistributorImportIntegrationTest.java` has an empty diff in T8; every later gate also runs `shasum -a 256 -c` on the scratchpad file `s06-T7-qa-hashes.txt` (T8 replaces the `http/catalogue.http` line, and the T3 and T5 test-file lines, with its own baseline).
 - FF-17 (T8 implDirective): never edit a file outside the fileScope, not even temporarily; mutation probes on production code are the verifier's job; describe each mutant in the outbox instead.
 - FF-18 (qa-final): T7 hash integrity; T7 survivors O4 and V6 are T4's F7 and F5 (re-run only if CatalogueFlow or CatalogueFlowTest changed); the `.http` replay needs an empty catalogue; a Testcontainers "Could not connect to Ryuk" start error is BLOCKED-with-diagnosis and one re-run.
+
+From the QA lead's T8 r0 review (full text in the QA ledger, FF-19):
+
+- FF-19 (qa-final): baselines on the tip: bookstore 931 (DistributorAppServiceImplTest 100, BookCommandsTest 81, CatalogueFlowTest 70, DistributorImportIntegrationTest 27, ArchitectureTest 22, ArchitectureSelfTest 58), distributor 190; ACL WARN exactly 67; 1 DefaultHandlerExceptionResolver WARN and 10 Started lines in the bookstore section. The T8 hash file `s06-T8-qa-hashes.txt` replaces the three lines T8 owns in the T3, T5 and T7 baselines; every other line stays OK (T2 33 included). If every hash holds, the follow-up probe evidence carries over.
 
 ## Amendments
 
