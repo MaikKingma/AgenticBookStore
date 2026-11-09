@@ -513,3 +513,25 @@ For T5 (orchestrator, from earlier lessons):
   a tool (capitals with underscores, for example SCIENCE_FICTION), pinned by a prompt test that also proves the named
   form is accepted by the tools (`Genre.parse` or the tool's genre path) and the readable form with a space is not.
   Consequence: one more prompt sentence; T5 goes back to its implementer before QA (not a QA rework round).
+
+## Live evidence
+
+- LIVE-T4 (main session, owner's key, Haiku 5.5, ref cc6d658): 7 of 7 messages answered 200 (1.4 to 3.8 s) with
+  follow-ups in three conversations; no `BadRequestException` (amendment A3).
+- LIVE-T5 (main session, owner's key, Haiku 5.5, 2026-11-10 about 00:45 local, spec tip ff4261a, code identical to
+  e97aff4, with factory 5fa5d19 merged locally): PASS. 13 of 13 messages answered 200 (0.9 to 3.4 s); the owner
+  confirmed the server log has no `BadRequestException`, no "Invalid signature", no "Unknown genre" and no "failed for a
+  technical reason" line.
+  - L1 3 of 3: "Anything by Austen?" then "Is it in stock, and is more on its way?": turn 1 Sense and Sensibility
+    (Fiction) 8.99 EUR in stock; turn 2 "in stock, with 3 copies available. A restock is also on its way, expected on
+    11 November 2026."
+  - L2 "What can you tell me about Dune?": author, genre, price 12.99, in stock; no description, summary or review
+    (40 words).
+  - L3 "What genres do you have?": all 10 genres in readable form (36 words).
+  - L4 3 of 3: five science fiction titles newest first with correct prices (60 to 69 words); "no fantasy in stock" is
+    correct for that database. Run 1 turn 2 added a false self-correction ("I listed those science fiction titles ...
+    without checking our catalogue first"): 1 of 3, residual R-k. Cause: the chat memory keeps the answer text, not
+    the tool calls, so the model cannot see it used a tool; keeping tool calls in memory is deferred to after the
+    first release (owner).
+  - L5: a Dutch question gets a Dutch answer (25 words); every reply at most 73 words.
+  - The owner also confirmed the storefront genre labels and the footer (factory fix-12 work).
