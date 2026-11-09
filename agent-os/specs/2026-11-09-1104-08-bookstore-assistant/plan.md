@@ -1,9 +1,10 @@
 ---
 spec: 08-bookstore-assistant
 source: docs/spec-pack/specs/08-bookstore-assistant.md
-status: in-progress
+status: ready-for-merge (owner live-key check pending)
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-09T11:51:45Z
+gate2: 2026-11-09T20:16:49Z
 qa-lead: on
 base: factory
 spec-branch: sdd/08-bookstore-assistant/spec
@@ -80,6 +81,10 @@ qaDirective of every task: C0 plus the task's T<n> block of the QA ledger (T6: t
 ## Gate 1 record
 
 Self-accepted by the orchestrator (owner delegated gate approvals). Checklist: every task has summary, criteria, fileScope, one module, dependsOn, qaTier, qaModel, qaDirective; the criteria the QA lead flagged untestable as written are rewritten (G1, G8, G22 in C0) or recorded as inspection items in the ledger (behavioural prompt rules go to the owner's live check); batches follow topological order; no decision outside the orchestrator's authority (O2 and O3 are cheap, reversible and flagged to the owner).
+
+## Gate 2 record
+
+Self-accepted by the orchestrator on 2026-11-09 (owner delegated gate approvals). qa-final (opus) PASS on tip fa6bf8c, endorsed by the QA lead, Gate 2 QA confidence high. All six task PRs merged into the spec branch (#113, #116, #120, #125, #126, #127), none dropped, no unattributed stragglers. `git diff origin/factory...fa6bf8c` is confined to the tasks' file scopes, their tests, `README.md`, this spec folder and agent memory. Every spec clause traces to a test except the manual live check, which is the owner's gate and still pending; `status` therefore says ready-for-merge, not done. Referee on the tip: bookstore 1314, distributor 190, 32.5 s (plain) and 32.2 s (fake key). Residuals for the owner: QA ledger section "Gate 2 QA assessment" (R1, R22, R2, R3, R4, R9, R10, R15, R19, R20, R23, R25, R7).
 
 ## QA feed-forward
 
