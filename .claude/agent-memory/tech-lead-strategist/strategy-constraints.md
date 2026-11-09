@@ -7,6 +7,10 @@ metadata:
 
 - **One module per task.** The orchestrator batches by disjoint modules (root, bookstore, distributor, later frontend).
   Check briefed file scopes for spillover (spec 01: distributor config sat inside a "bookstore" task) and split it.
+  A new Maven module: its own task builds it standalone (`./mvnw -f <module>/pom.xml verify`); adding it to the
+  root module list is a separate root task that depends on it (spec 12).
+- **Mid-shaping spec changes arrive as urgent directives.** Re-read the spec file before finalising the breakdown,
+  even when the brief restated it.
 - **`main` strips agent and pack paths** (spec 09 publish script: `docs/spec-pack/`, `agent-os/`, `.claude/`,
   `CLAUDE.md`). Code, comments, POMs, YAML and CI must never cite them; explanations go inline in plain words.
   Proposed as an `agent-os/standards/` rule in the spec 01 strategy outbox; delete this bullet once it is a standard.
@@ -25,6 +29,10 @@ metadata:
   The pack task lists put the flow before the data adapter; flip it and say why in `dependsOn`. The same holds for
   data existence (a query adapter that composes flows merges after the task that guarantees the composed rows exist)
   and for pins: a view change merges in the same task as the full-context tests that pin its key set.
+- **View before behaviour.** When a spec adds a view field and the behaviour that fills it, merge the view first
+  (its pin edits stay mechanical, e.g. `null`) and let the behaviour task update the pins it changes; the behaviour
+  task also owns the end-to-end test for its proxy or after-commit claims (spec 07 strategy). JSON pins with a null
+  value cannot use `Map.of` (it throws on null); name a null-tolerant builder in the card.
 - **Transactional claims need a failure device.** With `saveAndFlush` adapters, removing `@Transactional` is invisible
   on the happy path, so plan a behavioural proof per claim: a test-only `BEFORE_COMMIT` thrower plus an
   `AFTER_ROLLBACK` recorder for "events after commit, none on rollback", a `@MockitoSpyBean` on the shared base that

@@ -41,3 +41,15 @@ metadata:
   tabulate every order the constant appears in. Constant columns (every reorder level 3) also let a sort survive,
   because Java sorts are stable: vary them unless validation or an asserted literal pins them. Before-values derived
   from asserted after-values and quantities can be pinned; show another test kills that sort instead.
+- Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with
+  `perl -0pe` from a `cp -p` original in the scratchpad, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and
+  compares `shasum`; flag "MUTANT NOT APPLIED" when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.
+- An external-port DTO that carries its own key (distributor isbn) gets a stub value different from the request, so
+  a flow that builds from the DTO key fails the saved-record assertion.
+- Flow log assertions: `@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})` works in a plain unit
+  test. Logback's unconfigured pattern (`HH:mm:ss.SSS [main] WARN logger -- msg`) and Boot's pattern both contain
+  `" WARN "`, so `containsOnlyOnce(" WARN ").containsPattern(" WARN .*" + id)` pins level and id on one line without
+  filtering the output (QA forbids filtering). Put the id only in the log arguments of a witness whose exception
+  message lacks it, so a "WARN without the id" mutant cannot pass via `e.getMessage()`.
+- Two use cases sharing one implementation: a test-local `enum UseCase` holding `BiConsumer<Flow, UUID>` plus
+  `@EnumSource`/`@MethodSource` runs every shared claim against both without duplicated test bodies.

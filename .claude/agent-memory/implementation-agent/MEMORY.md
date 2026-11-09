@@ -2,13 +2,16 @@
 - [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist
 - [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps
 - [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
-- [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data, PER_CLASS hook guards
+- [Integration test techniques](integration-test-techniques.md) — RestTestClient type coercion, Map bodies for view shapes, AssertJ factories, probe-killing data, PER_CLASS hooks, OutputCapture accumulates per class
 - [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
 - [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
 - [Bean validation traps](bean-validation-traps.md) — trimmed-length rule needs a nested custom constraint (regex counts code points), JSON control-char test data, U+2003 is not padding
-- [Mapper test witnesses](mapper-test-witnesses.md) — validating-factory hand-offs need a rejected value; pass-throughs need a second literal; first/middle/last differ
+- [Mapper test witnesses](mapper-test-witnesses.md) — test data that makes mapper, factory and flow-translator mutations observable (rejected values, second literals, threshold twins)
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
 - [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
 - [Docusaurus guide traps](docusaurus-guide-traps.md) — pinned Node scripts, serve needs siteDir, MDX scanner paragraph model, scratch probe builds, built-HTML evasions, NBSP/Edit traps, skeleton snapshot and tmpdir symlink
 - [Node CLI pipe truncation](node-cli-pipe-truncation.md) — spawnSync over a pipe loses long stderr after process.exit on Linux CI only; capture through files, repro in a Linux container
 - [Guide print and ban traps](guide-print-and-ban-traps.md) — A4 row costs and PDF page counting, silent-pass rule for line-compared live tests, hash-link anchors in rendered link checks
+- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
+- [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
+- [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test

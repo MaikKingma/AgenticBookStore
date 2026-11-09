@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -34,6 +35,19 @@ public class StockItemJPA {
 
     @Column(name = "low_stock_signalled", nullable = false)
     private boolean lowStockSignalled;
+
+    // The pending restock: all four are null when there is none.
+    @Column(name = "pending_restock_order_id", length = 64)
+    private String pendingRestockOrderId;
+
+    @Column(name = "pending_restock_quantity")
+    private Integer pendingRestockQuantity;
+
+    @Column(name = "pending_restock_expected_delivery_date")
+    private LocalDate pendingRestockExpectedDeliveryDate;
+
+    @Column(name = "pending_restock_backordered")
+    private Boolean pendingRestockBackordered;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -71,6 +85,22 @@ public class StockItemJPA {
         return lowStockSignalled;
     }
 
+    public String getPendingRestockOrderId() {
+        return pendingRestockOrderId;
+    }
+
+    public Integer getPendingRestockQuantity() {
+        return pendingRestockQuantity;
+    }
+
+    public LocalDate getPendingRestockExpectedDeliveryDate() {
+        return pendingRestockExpectedDeliveryDate;
+    }
+
+    public Boolean getPendingRestockBackordered() {
+        return pendingRestockBackordered;
+    }
+
     void setOnHand(int onHand) {
         this.onHand = onHand;
     }
@@ -89,5 +119,21 @@ public class StockItemJPA {
 
     void setLowStockSignalled(boolean lowStockSignalled) {
         this.lowStockSignalled = lowStockSignalled;
+    }
+
+    void setPendingRestockOrderId(String pendingRestockOrderId) {
+        this.pendingRestockOrderId = pendingRestockOrderId;
+    }
+
+    void setPendingRestockQuantity(Integer pendingRestockQuantity) {
+        this.pendingRestockQuantity = pendingRestockQuantity;
+    }
+
+    void setPendingRestockExpectedDeliveryDate(LocalDate pendingRestockExpectedDeliveryDate) {
+        this.pendingRestockExpectedDeliveryDate = pendingRestockExpectedDeliveryDate;
+    }
+
+    void setPendingRestockBackordered(Boolean pendingRestockBackordered) {
+        this.pendingRestockBackordered = pendingRestockBackordered;
     }
 }

@@ -1,6 +1,6 @@
 ---
 name: qa-test-data-falsifiers
-description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs); read before writing the falsifier list of a qaDirective
+description: Test data that cannot falsify an acceptance criterion and the witnesses that can (combined filters, order and sort data, tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks, pass-through and default values, state-dependent rules, unicode whitespace and regex position witnesses, list-element reporting, output caps, random UUIDs, producer-shaped external ids, partial-row decode residuals, log-escape sets; frontend witnesses live in qa-frontend-falsifiers); read before writing the falsifier list of a qaDirective
 metadata:
   type: feedback
 ---
@@ -34,6 +34,10 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
    - Framework-behaviour premises in plan prose are claims, not facts: verify against the pinned jar (`javap -c` of the validator class) before they feed a criterion or a smoke item. Hibernate Validator 9.x `@NotBlank` calls `String.isBlank()`, so U+2003 is blank (400) and U+00A0 passes; the "trims only up to U+0020" premise was false and became a refuted qa-final expectation in spec 03. A "payload accepts a non-ASCII 3-character reason" witness is U+00A0, not U+2003. Also verified (HV 9.1.5, JDK 25): `@Pattern` uses `Matcher.matches()` and `@Size` counts `length()`, both null-valid; `\s` without `UNICODE_CHARACTER_CLASS` is ASCII-only; `toLowerCase(Locale.ROOT)` turns U+0130 into two chars (the one length-growth witness). JDK premises check in seconds with a jshell script in SP.
      An explicit `ResponseEntity` content type skips Accept negotiation (spring-webmvc 7.0.10, javap of `writeWithMessageConverters`), so removing it survives every test without an Accept header: list `Accept: application/problem+json` as the falsifier of any "error body is application/json" criterion (spec 05 T4).
    - A regex whose class or quantifier repeats needs one rejecting witness per position, like ArchUnit package strings (item 4 of [[qa-directive-traps]]): `[^@\s]+@[^@\s]+\.[^@\s]+` needs a space in each of the three parts (local, domain, top level) and an empty local, domain and top-level part (spec 04 plan G2a lists the literals). A negated class with a range (`[^@\x00-\x20]`) holds three properties per position: the excluded literal, the upper end (rejected space plus an accepted `!` per part) and the lower end (a tab per part). Spec 04 witnessed tabs and `!` only in the local part (T1 and T5), so a weakened lower end in the domain part survived and would turn a 400 into a 422 (inspection-proven, F31). List all three per position at strategy time.
+     A numeric-string price `-?\d+(\.\d+)?` needs `+5`, a trailing space (that mutant hands `"12.00 "` to
+     `new BigDecimal`: a 500), a non-ASCII digit built from code points (`BigDecimal` reads Unicode digits, so the
+     `\p{Nd}` mutant gives 202), and accepting rows past every plausible cap (`12.345`, `123456.789`, also kills an
+     added `@Size`). Unlisted in spec 06 T5, so they ended as inspection-proven survivors plus a follow-up.
    - A single production value (currency `EUR`, status `PLACED`) is a natural default too: every layer that passes it on without validating (DTO accessor, JPA mapper, view) needs one other value in its tests. A layer that hands it into a validating factory (`Money.of(amount, code)`, `valueOf`) needs a witness the factory REJECTS, asserted as the exception: an accepted value cannot tell the hand-off from a dropped argument (spec 04 T2 REJECT). Make C0-18 ask per field "plain pass-through or hand-off into a validator", and treat a missing C0-18 inventory in a verdict as a lens 1 finding. Flow translator branches HTTP cannot reach (duplicate lines, stored-data restore failures) are reachable in the flow test through a mocked port returning a corrupt stored DTO: name one case per caught type at strategy time.
    - A rule that reports one element of a list (the duplicated book, the first unknown book, the short books) needs a witness where that element is neither first nor last. My spec 04 G2d wrote A, B, A, which cannot tell the rule's choice from `get(0)`. A survivor found by the verifier cost a rework round. B, A, C, A kills `get(0)`; A, C, A, B kills `get(size - 1)`.
    - "Every rejection asserts no event" cannot be checked for a throwing factory: no instance survives, and events are per instance. Write it only for behaviour methods. For factories, give it to the publishing layer: a flow test whose rejection comes from the factory itself, with `verifyNoInteractions(events)`.
@@ -43,4 +47,61 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      same mapper, rule 7 of [[review-calibration]]). Annotation-declared requiredness (Spring AI `@McpToolParam`)
      is enforced at runtime and readable from `inputSchema().get("required")`: a falsifier, never inspection
      (spec 05 T3 lost a rework round to both).
+   - Frontend witnesses (React, Vitest, RTL), contrast and style-guard tests, CSS layout and live-browser checks moved to [[qa-frontend-falsifiers]].
+   - HTTP cache-policy criteria (fix-12 T1 held in one round): directive token parse (kills noStore, max-age=0), a GET with `If-Modified-Since` = now (classpath mtime is never newer, so a kept validator gives 304), an asset guard, a mutant per chained setter. Tests serve test-classes, not the jar (1980 dates): add a live `java -jar` header check, and run live checks of a new build in a brand-new browser context (see [[qa-frontend-falsifiers]]).
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).
+   - HTTP client timeouts (loopback JDK `HttpServer`, port 0): the handler returns a VALID body after its sleep, so a
+     missing timeout gives a success, not an error for another reason; connect and read timeouts differ and connect
+     is longer than the sleep (kills swapped arguments); elapsed has a lower bound (kills a zero or unit-truncated
+     timeout that fails at once) and an upper bound below the sleep; plus a no-sleep positive control through the
+     same public constructor (proves base URL and conversion). Connect timeout itself stays inspection-only.
+   - "A body missing a required key" is one case per key: a single-key test lets every other key's check be dropped
+     (null field in the DTO or an NPE escaping the port). Null and empty lists are two cases. Per-key alone cost
+     spec 06 T3 two rework rounds. Also list: a null or broken element alone, first, last and in the middle (one
+     position lets `getFirst`/`allMatch` checks survive); a float in EVERY integer component (cents and quantity);
+     every optional key absent with its decided default (else the receiver flip `x.equals("CONST")` survives and
+     would let an NPE escape); a negative in every value assumed unsigned.
+   - Year rules "clock year + 1 accepted, + 2 rejected" with a clock fixed in the current year match the real clock;
+     cards keep writing them (spec 06 T4). Rewrite to the past-year clock (2001 accepted, 2002 rejected).
+   - A choice between two values (override or recommended, given or default) is a relation, not a pass-through: two
+     values per field still let "keep the higher", "zero means absent" and "use only when different" survive. List
+     data below, equal to and above the counterpart, the zero value and both range ends (spec 06 T4 spent both
+     rework rounds on it). Equal needs a counterpart in another currency to be visible.
+   - A catch of a port's final exception types can be widened to their concrete use-case base classes
+     (`UnavailableException`, `NotFoundException`, `InvalidInputException` here): an `IllegalStateException` witness
+     does not kill that; list one base-class instance per caught type, asserted as propagating (`isSameAs`).
+   - JSON "key present with null" (always-serialised optional component): Spring `jsonPath(..).doesNotExist()`
+     passes for an absent key AND for null, `exists()` fails for null; ask for `hasKey`, the key count, or a parsed
+     map, plus a `@JsonInclude(NON_NULL)` must-fail probe (spec 07 D1).
+   - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the
+     local answer (409); a call would have produced the remote's 503 (spec 06 qa-final plan).
+     Live read-timeout default: chaos latency above the timeout, a direct-call witness taking at least that latency,
+     then the import's `time_total` inside [timeout, latency); one row-count query after all failure phases proves
+     "nothing saved" for every mode at once. Held first time in spec 06 qa-final.
+   - "Every X clears/does Y" next to an unrelated comparison in the same method (receive: clear pending, reset the
+     signal only above the level): list one witness strictly inside each region the comparison splits, not only its
+     boundary; a test ending exactly at the level leaves the `>=` guard mutant alive (spec 07 T1 X1d, cost a round).
+   - Length bounds on a string kept as given: add a witness padded with a trailing space to n+1 (kills a length
+     measured on `strip()`). In a slice test the 65th character must not be a space: PostgreSQL silently truncates
+     excess trailing spaces in `varchar(n)` instead of failing.
+   - An external id passed through copy paths needs one witness in the real producer's shape and case (the
+     distributor emits lowercase UUIDs, so one lowercase UUID literal with a-f letters): all-uppercase test ids
+     (`R-7781`) let a case-folding copy path survive every equality test (spec 07 T2). Name it in the strategy.
+   - A stored optional value object decoded by a guard on one column (all four columns or none) gives an NPE or a
+     silent ignore on hand-written partial rows. Accept it as a residual only after a grep shows a single writer
+     that writes all columns or none; name both behaviours in the residual text at strategy time.
+   - "Exact equality" with an expected identifier (answered `ean` vs requested ISBN): derive the witness set once
+     from the operator family, both sides and both receiver orders: leading pad, trailing pad, extension at front,
+     extension at end, proper prefix (truncated), proper suffix (front-truncated), plus null. The mutant set holds
+     `a.op(b)` and `b.op(a)` for op in startsWith/endsWith/contains, and strip/stripLeading/stripTrailing. Growing
+     the list only by the survivors just seen cost a REJECT or FAIL in three straight rounds (fix-06 T1 r0, T2 r0,
+     T2 r1). A reversed `expected.endsWith(answer)` also accepts the empty string. Case-folding mutants are equivalent
+     when the expected value is digits only. Stated to the verifier as "a.op(b) and b.op(a) for every op", it was
+     followed in full and left no survivor in one round. Line-count assertions over captured logs: `String.lines()` skips U+2028/U+2029/U+0085, so a log
+     test with those characters must split with `\R`.
+   - Log-escape sets named by a JDK predicate ("every `Character.isISOControl` char plus U+2028/U+2029"): list the
+     witnesses at strategy time, or hand-rolled ranges survive as inspection items. That means every `\R` member (LF, VT,
+     FF, CR, U+0085, U+2028, U+2029) and the predicate's edges: NUL, U+001F, U+007F, U+0080, U+009F. Add one hex digit
+     that is a letter (lowercase-hex probe) and one leading-zero code (width probe). A new exception constructor that
+     must leave a pass-through untouched (`details` empty, so the problem body is unchanged) needs that field asserted
+     in the new test. Otherwise "details filled from the cause" survives (fix-06 T3).

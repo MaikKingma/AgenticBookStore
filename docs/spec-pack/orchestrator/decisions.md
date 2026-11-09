@@ -124,3 +124,24 @@ Files changed: `specs/12-storefront.md` (Visual design notes, requirement "OpenB
 screenshots), `specs/11-workshop-guide-site.md` (Visual design section, requirement "OpenValue brand", task 1),
 `orchestrator/decisions.md` (D7), `orchestrator/progress.md` (decision log lines).
 
+## D8. LSP rehearsal on macOS only for now
+
+Maik, 2026-11-09: the spec 10 LSP rehearsal focuses on macOS for now. Spec 10 task 3 and its definition of done
+record the first-index time and the multi-module result on macOS only. The Linux and Windows-through-WSL runs are a
+manual check for Maik before the workshop, listed in progress.md. Changed file: `specs/10-harness-reference-solutions.md`
+(task 3, definition of done).
+
+## D9. Level 3 commit hook blocks on failure; Windows needs Git Bash
+
+Maik, 2026-11-09, on two questions from the spec 10 orchestrator:
+
+- The Level 3 commit hook gets `"onFailure": "block"`: a hook that times out (180 s) or fails to run blocks the
+  commit instead of letting it through. Verified against the hooks schema of the Claude Code version in use at build
+  time; if the field does not exist, the pack's behaviour stays, the gap goes into the guide and Maik is told.
+- Windows participants need Git for Windows (Git Bash). Without it the `Bash` matcher, the `if` field and the
+  `Bash(...)` rules do not apply. The setup check and the guide state the prerequisite; no `PowerShell(...)` handlers
+  or rules are added.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Level 3 settings and the PowerShell note). The guide (spec 11)
+carries the Git Bash prerequisite on the setup and Level 3 pages.
+

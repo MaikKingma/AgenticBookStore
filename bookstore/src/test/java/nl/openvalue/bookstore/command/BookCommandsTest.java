@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -21,14 +23,21 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
+import nl.openvalue.bookstore.domaininteraction.BookDataService;
 import nl.openvalue.bookstore.domaininteraction.CatalogueFlow;
 import nl.openvalue.bookstore.domaininteraction.ConflictException;
+import nl.openvalue.bookstore.domaininteraction.DistributorAppService;
 import nl.openvalue.bookstore.domaininteraction.InvalidInputException;
 import nl.openvalue.bookstore.domaininteraction.NotFoundException;
 import nl.openvalue.bookstore.domaininteraction.UnavailableException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.core.MethodParameter;
@@ -315,6 +324,332 @@ class BookCommandsTest {
                 .andExpect(jsonPath("$.code").value("sample-not-found"))
                 .andExpect(jsonPath("$.title").value("Sample not found"))
                 .andExpect(jsonPath("$.detail").value("No sample with that id"));
+    }
+
+    // --- import from distributor ---
+
+    private static final UUID IMPORTED_ID = UUID.fromString("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a");
+
+    private ResultActions postImport(String body) throws Exception {
+        return mockMvc.perform(
+                post("/books/commands/import-from-distributor").contentType(MediaType.APPLICATION_JSON).content(body));
+    }
+
+    @Test
+    void importReturns202WithTheNewBookIdAndPassesTheIsbnAsSent() throws Exception {
+        when(flow.importFromDistributor("9780141439518", null)).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\"}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a"));
+
+        verify(flow).importFromDistributor("9780141439518", null);
+    }
+
+    @Test
+    void importReturnsTheIdTheFlowReturnedForAnotherIsbn() throws Exception {
+        UUID otherId = UUID.fromString("c8f2d1ef-3b5a-4e7c-9d4b-7a6f5e4d3c2b");
+        when(flow.importFromDistributor("9780140449136", null)).thenReturn(otherId);
+
+        postImport("{\"isbn\":\"9780140449136\"}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("c8f2d1ef-3b5a-4e7c-9d4b-7a6f5e4d3c2b"));
+    }
+
+    @Test
+    void importWithAnExplicitNullPriceReachesTheFlowWithoutAnOverride() throws Exception {
+        when(flow.importFromDistributor("9780140449136", null)).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780140449136\",\"price\":null}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a"));
+
+        verify(flow).importFromDistributor("9780140449136", null);
+    }
+
+    static Stream<Arguments> priceStringsAndTheAmountTheFlowReceives() {
+        return Stream.of(
+                Arguments.of("12.00", new BigDecimal("12.00")),
+                Arguments.of("12.5", new BigDecimal("12.5")),
+                Arguments.of("0", new BigDecimal("0")),
+                Arguments.of("0.00", new BigDecimal("0.00")),
+                Arguments.of("-5", new BigDecimal("-5")),
+                Arguments.of("-0.50", new BigDecimal("-0.50")),
+                Arguments.of("1200", new BigDecimal("1200")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("priceStringsAndTheAmountTheFlowReceives")
+    void importPassesThePriceToTheFlowUnchangedInValueAndScale(String sent, BigDecimal expected) throws Exception {
+        when(flow.importFromDistributor(anyString(), any(BigDecimal.class))).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + sent + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<BigDecimal> price = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(flow).importFromDistributor(eq("9780141439518"), price.capture());
+        assertThat(price.getValue()).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"abc", "978-0-14-143951-8", " 9780141439518", "9780141439518 ", "0-14-143951-3"})
+    void importPassesAnyIsbnStringToTheFlowUnchanged(String isbn) throws Exception {
+        when(flow.importFromDistributor(anyString(), isNull())).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"" + isbn + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+        verify(flow).importFromDistributor(sent.capture(), isNull());
+        assertThat(sent.getValue()).isEqualTo(isbn);
+    }
+
+    static Stream<Arguments> priceStringsWithMoreThanTwoDecimalsOrDigits() {
+        return Stream.of(
+                Arguments.of("12.345", new BigDecimal("12.345")),
+                Arguments.of("123456.789", new BigDecimal("123456.789")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("priceStringsWithMoreThanTwoDecimalsOrDigits")
+    void importPassesAPriceWithManyDecimalsAndDigitsToTheFlowUnchanged(String sent, BigDecimal expected)
+            throws Exception {
+        when(flow.importFromDistributor(anyString(), any(BigDecimal.class))).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + sent + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<BigDecimal> price = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(flow).importFromDistributor(eq("9780141439518"), price.capture());
+        assertThat(price.getValue()).isEqualTo(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ABC", "978014143951X"})
+    void importPassesAnUpperCaseIsbnToTheFlowUnchanged(String isbn) throws Exception {
+        when(flow.importFromDistributor(anyString(), isNull())).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"" + isbn + "\"}").andExpect(status().isAccepted());
+
+        ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+        verify(flow).importFromDistributor(sent.capture(), isNull());
+        assertThat(sent.getValue()).isEqualTo(isbn);
+    }
+
+    @Test
+    void importLeavesAnIsbnTheDomainRejectsToTheFlowAs422() throws Exception {
+        when(flow.importFromDistributor("abc", null))
+                .thenThrow(new InvalidInputException("invalid-isbn", "Invalid ISBN", "The ISBN is not valid",
+                        List.of(Map.of("field", "isbn", "message", "must be 10 or 13 digits"))));
+
+        ResultActions result = postImport("{\"isbn\":\"abc\"}");
+
+        expectProblem(result, 422, "invalid-isbn", "Invalid ISBN")
+                .andExpect(jsonPath("$.details[0].field").value("isbn"));
+        verify(flow).importFromDistributor("abc", null);
+    }
+
+    @Test
+    void importLeavesANegativePriceToTheFlowAs422() throws Exception {
+        when(flow.importFromDistributor("9780141439518", new BigDecimal("-5")))
+                .thenThrow(new InvalidInputException("price-out-of-range", "Price out of range",
+                        "The price is out of range",
+                        List.of(Map.of("field", "price", "message", "must be between 0.01 and 500.00"))));
+
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"-5\"}");
+
+        expectProblem(result, 422, "price-out-of-range", "Price out of range")
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verify(flow).importFromDistributor("9780141439518", new BigDecimal("-5"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"abc", "", "12,50", "1e3", ".5", "12.", "-", " 12.00"})
+    void importRejectsANonDecimalPriceWith400NamingOnlyThePrice(String price) throws Exception {
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"+5", "12.00 ", "5 "})
+    void importRejectsAPriceWithASignOrTrailingSpaceWith400NamingOnlyThePrice(String price) throws Exception {
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @Test
+    void importRejectsAnArabicIndicDigitPriceWith400NamingOnlyThePrice() throws Exception {
+        String price = Character.toString(0x0661) + Character.toString(0x0662);
+
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":\"" + price + "\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @Test
+    void importRejectsAMissingIsbnWith400NamingOnlyTheIsbn() throws Exception {
+        ResultActions result = postImport("{}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("isbn"));
+        verifyNoInteractions(flow);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{\"isbn\":null}", "{\"isbn\":\"\"}", "{\"isbn\":\"   \"}",
+            "{\"isbn\":\"\",\"price\":\"12.00\"}"})
+    void importRejectsABlankOrNullIsbnWith400NamingOnlyTheIsbn(String body) throws Exception {
+        ResultActions result = postImport(body);
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("isbn"));
+        verifyNoInteractions(flow);
+    }
+
+    @Test
+    void importRejectsABadIsbnAndABadPriceTogetherListingBothFields() throws Exception {
+        ResultActions result = postImport("{\"isbn\":\" \",\"price\":\"abc\"}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details[*].field").value(contains("isbn", "price")));
+        verifyNoInteractions(flow);
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "9780141439518|The distributor has no title with ISBN 9780141439518",
+            "9780140449136|The distributor has no title with ISBN 9780140449136"})
+    void importMapsATitleUnknownAtTheDistributorTo404(String isbn, String detail) throws Exception {
+        when(flow.importFromDistributor(isbn, null))
+                .thenThrow(new DistributorAppService.TitleNotFoundAtDistributorException(isbn));
+
+        ResultActions result = postImport("{\"isbn\":\"" + isbn + "\"}");
+
+        expectProblem(result, 404, "title-not-found-at-distributor", "Title not found at distributor")
+                .andExpect(jsonPath("$.detail").value(detail))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "9780141439518|A book with ISBN 9780141439518 is already in the catalogue",
+            "9780140449136|A book with ISBN 9780140449136 is already in the catalogue"})
+    void importMapsAnIsbnAlreadyInTheCatalogueTo409(String isbn, String detail) throws Exception {
+        when(flow.importFromDistributor(isbn, null)).thenThrow(new BookDataService.IsbnAlreadyExistsException(isbn));
+
+        ResultActions result = postImport("{\"isbn\":\"" + isbn + "\"}");
+
+        expectProblem(result, 409, "isbn-already-exists", "ISBN already in catalogue")
+                .andExpect(jsonPath("$.detail").value(detail))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "9780141439518|The title with ISBN 9780141439518 cannot be ordered from the distributor",
+            "9780140449136|The title with ISBN 9780140449136 cannot be ordered from the distributor"})
+    void importMapsATitleTheDistributorCannotSupplyTo422(String isbn, String detail) throws Exception {
+        when(flow.importFromDistributor(isbn, new BigDecimal("12.00")))
+                .thenThrow(new DistributorAppService.TitleNotOrderableException(isbn));
+
+        ResultActions result = postImport("{\"isbn\":\"" + isbn + "\",\"price\":\"12.00\"}");
+
+        expectProblem(result, 422, "title-not-orderable", "Title not orderable")
+                .andExpect(jsonPath("$.detail").value(detail))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"The distributor does not answer within 2 seconds",
+            "The distributor answered with status 500"})
+    void importMapsAnUnavailableDistributorTo503(String detail) throws Exception {
+        when(flow.importFromDistributor("9780141439518", null))
+                .thenThrow(new DistributorAppService.DistributorUnavailableException(detail));
+
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\"}");
+
+        expectProblem(result, 503, "distributor-unavailable", "Distributor unavailable")
+                .andExpect(jsonPath("$.detail").value(detail))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    // --- import from distributor: how JSON scalars of the wrong type are read (observed, pinned) ---
+
+    @Test
+    void importReadsAJsonNumberPriceWithFractionAsItsDecimalText() throws Exception {
+        when(flow.importFromDistributor(anyString(), any(BigDecimal.class))).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\",\"price\":12.5}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a"));
+
+        verify(flow).importFromDistributor("9780141439518", new BigDecimal("12.5"));
+    }
+
+    @Test
+    void importReadsAJsonIntegerPriceAsItsDigits() throws Exception {
+        when(flow.importFromDistributor(anyString(), any(BigDecimal.class))).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":\"9780141439518\",\"price\":12}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a"));
+
+        verify(flow).importFromDistributor("9780141439518", new BigDecimal("12"));
+    }
+
+    @Test
+    void importReadsAJsonNumberIsbnAsItsDigits() throws Exception {
+        when(flow.importFromDistributor(anyString(), isNull())).thenReturn(IMPORTED_ID);
+
+        postImport("{\"isbn\":9780141439518}")
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.id").value("b7e1c0de-2a4f-4d6b-8c3a-6f5e4d3c2b1a"));
+
+        verify(flow).importFromDistributor("9780141439518", null);
+    }
+
+    @Test
+    void importReadsABooleanPriceAsTheTextTrueWhichFailsThePricePattern() throws Exception {
+        ResultActions result = postImport("{\"isbn\":\"9780141439518\",\"price\":true}");
+
+        expectProblem(result, 400, "validation-failed", "Validation failed")
+                .andExpect(jsonPath("$.details.length()").value(1))
+                .andExpect(jsonPath("$.details[0].field").value("price"));
+        verifyNoInteractions(flow);
+    }
+
+    @Test
+    void importReadsABooleanIsbnAsTheTextTrueAndLeavesItToTheFlow() throws Exception {
+        when(flow.importFromDistributor("true", null))
+                .thenThrow(new InvalidInputException("invalid-isbn", "Invalid ISBN", "The ISBN is not valid"));
+
+        ResultActions result = postImport("{\"isbn\":true}");
+
+        expectProblem(result, 422, "invalid-isbn", "Invalid ISBN");
+        verify(flow).importFromDistributor("true", null);
+    }
+
+    @Test
+    void importRejectsAnObjectPriceAsAnUnreadableBodyWith400() throws Exception {
+        postImport("{\"isbn\":\"9780141439518\",\"price\":{}}")
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(""));
+
+        verifyNoInteractions(flow);
     }
 
     // --- unavailable ---

@@ -79,3 +79,128 @@ Content-Type: application/json
   "ean": "9780141439518",
   "quantity": 0
 }
+
+###
+
+# The requests below were added for the bookstore contract files. Each one reads or orders a title whose contributors are all authors.
+
+# Show The Last Man by its EAN. Its first subject code is FIC028000.
+GET http://localhost:8090/api/titles/9789900010050
+
+###
+
+# Show A Connecticut Yankee in King Arthur's Court. Its first subject code is FIC009000.
+GET http://localhost:8090/api/titles/9789900010791
+
+###
+
+# Show A Study in Scarlet. Its first subject code is FIC022000.
+GET http://localhost:8090/api/titles/9789900010159
+
+###
+
+# Show Sense and Sensibility. Its first subject code is FIC027000.
+GET http://localhost:8090/api/titles/9789900010029
+
+###
+
+# Show Frankenstein. Its first subject code is FIC015000.
+GET http://localhost:8090/api/titles/9789900010043
+
+###
+
+# Show Utopia. Its subject code is HIS000000.
+GET http://localhost:8090/api/titles/9789900010616
+
+###
+
+# Show On the Origin of Species. Its subject code is SCI000000.
+GET http://localhost:8090/api/titles/9789900011163
+
+###
+
+# Show Passages from the Life of a Philosopher. Its subject code is COM000000.
+GET http://localhost:8090/api/titles/9789900011187
+
+###
+
+# Show Little Women. Its subject code is JUV000000.
+GET http://localhost:8090/api/titles/9789900010821
+
+###
+
+# Show The Raven and Other Poems. Its subject code is POE000000.
+GET http://localhost:8090/api/titles/9789900010210
+
+###
+
+# Show Pamela, which is out of print. The answer is still 200, with the availability OUT_OF_PRINT.
+GET http://localhost:8090/api/titles/9789900010678
+
+###
+
+# Show Bleak House, which is on backorder. The answer is 200, with the availability BACKORDER.
+GET http://localhost:8090/api/titles/9789900010272
+
+###
+
+# Show Patterns for Patient Systems, a title with two authors.
+GET http://localhost:8090/api/titles/9789900020080
+
+###
+
+# Ask for a path that does not exist. The answer is the default 404 body of the web framework, not the distributor error envelope.
+GET http://localhost:8090/api/no-such-resource
+
+###
+
+# Restock Bleak House again, this time with a retailer reference. The answer is 201 with the status BACKORDERED.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9789900010272",
+  "quantity": 5,
+  "retailerReference": "workshop-order-2"
+}
+
+###
+
+# Restock Pamela, which is out of print. The answer is 422 with the error code NOT_ORDERABLE.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9789900010678",
+  "quantity": 5,
+  "retailerReference": "workshop-order-3"
+}
+
+###
+
+# Restock an EAN that is not in the catalogue. The answer is 404 with the error code TITLE_NOT_FOUND.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9780000000002",
+  "quantity": 5,
+  "retailerReference": "workshop-order-4"
+}
+
+###
+
+# Restock a quantity of 0 with a retailer reference. The answer is 400 with the error code INVALID_REQUEST.
+POST http://localhost:8090/api/restock-orders
+Content-Type: application/json
+
+{
+  "ean": "9780141439518",
+  "quantity": 0,
+  "retailerReference": "workshop-order-5"
+}
+
+###
+
+# Start the distributor with --distributor.chaos.failure-rate=1.0 and ask for Pride and Prejudice. Every catalogue call then fails with 503 and the error code TEMPORARILY_UNAVAILABLE.
+GET http://localhost:8090/api/titles/9780141439518

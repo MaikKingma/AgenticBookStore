@@ -50,3 +50,71 @@ GET http://localhost:8080/inventory?lowStock=true
 
 # Show the details of the book, which now includes its available stock.
 GET http://localhost:8080/books/{{bookId}}
+
+###
+
+# The requests below ask the distributor (default port 8090) to restock books, so the bookstore needs a distributor to talk to.
+# Ask the distributor to restock Frankenstein now. Frankenstein (ISBN 9780141439471) is a bookstore-only title that the distributor does not list.
+# With the distributor running, the answer is 404 with the error code title-not-found-at-distributor and the stock row stays as it was.
+# With the distributor stopped, the answer is 503 with the error code distributor-unavailable and the stock and the low-stock signal stay as they were.
+# Either way no restock is recorded, so the stock of Frankenstein shows no pending restock.
+POST http://localhost:8080/inventory/{{bookId}}/commands/request-restock
+
+###
+
+# Add Sense and Sensibility, a title the distributor does list (ISBN 9789900010029), and remember the new book id for the requests below.
+# Run the requests from here to the end with the distributor running.
+# With the distributor stopped, the receive and the correct below still work, but the correct leaves no pending restock behind: it answers 202 as usual and the bookstore log shows a warning.
+POST http://localhost:8080/books/commands/add
+Content-Type: application/json
+
+{
+  "isbn": "9789900010029",
+  "title": "Sense and Sensibility",
+  "authors": ["Jane Austen"],
+  "genre": "fiction",
+  "price": "8.99",
+  "publicationYear": 1811
+}
+
+> {% client.global.set("senseBookId", response.body.id); %}
+
+###
+
+# Receive a delivery of 5 copies of Sense and Sensibility.
+POST http://localhost:8080/inventory/{{senseBookId}}/commands/receive
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+###
+
+# Correct the stock on hand to 3 after counting the shelf. This stocktake dips the stock to the reorder level of 3.
+# With the distributor running, the bookstore requests a restock from the distributor right after the commit, through the automatic path, so the restock is already pending when this answer arrives.
+# The answer to the correction itself is 202 with an empty body.
+POST http://localhost:8080/inventory/{{senseBookId}}/commands/correct
+Content-Type: application/json
+
+{
+  "onHand": 3,
+  "reason": "Stocktake after counting the shelf"
+}
+
+###
+
+# Show the stock of Sense and Sensibility. The stocktake above already created the pending restock: pendingRestock holds the restockOrderId from the distributor, a quantity of 10 (the reorder quantity), the expected delivery date and backordered false.
+# Note the restockOrderId in this answer, the last request of this file shows the same one.
+# With the distributor stopped, pendingRestock would be null here.
+GET http://localhost:8080/inventory/{{senseBookId}}
+
+###
+
+# Request a restock of Sense and Sensibility by hand. A restock is already pending, so the answer is 202 with an empty body and the bookstore places no second order with the distributor.
+POST http://localhost:8080/inventory/{{senseBookId}}/commands/request-restock
+
+###
+
+# Show the stock of Sense and Sensibility once more. The pendingRestock is the one from before the manual request, with the same restockOrderId.
+GET http://localhost:8080/inventory/{{senseBookId}}

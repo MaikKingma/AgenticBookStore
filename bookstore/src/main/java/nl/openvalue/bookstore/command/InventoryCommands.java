@@ -33,4 +33,14 @@ public class InventoryCommands {
     public void correct(@PathVariable UUID bookId, @Valid @RequestBody CorrectStockPayload payload) {
         inventory.correct(bookId, payload.onHand(), payload.reason());
     }
+
+    /**
+     * Asks the distributor to restock the book now. It takes no body. The distributor's failures are not hidden: an
+     * outage is 503, an unknown or refused title is 404 or 422, and a book without a stock item is 404.
+     */
+    @PostMapping("/{bookId}/commands/request-restock")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void requestRestock(@PathVariable UUID bookId) {
+        inventory.requestRestock(bookId);
+    }
 }

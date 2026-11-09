@@ -1,0 +1,24 @@
+/* OpenBook colour tokens. Every colour value of the app lives in this file and nowhere else. */
+:root {
+  /* Body text, headings, footer background */
+  --ob-navy: #1D252D;
+  /* Accents: wordmark, focus ring, active navigation. Never body-size text (4.2:1 on white). */
+  --ob-blue: #3D7DC9;
+  /* Primary buttons, links, in-stock badge */
+  --ob-teal: #014046;
+  /* Decorative only: icons and dividers. Never text. */
+  --ob-sage: #809FA2;
+  /* Borders and the out-of-stock badge background */
+  --ob-mist: #CBD9DA;
+  /* Page background */
+  --ob-snow: #F1F5F6;
+  /* Cards, inputs, header */
+  --ob-white: #FFFFFF;
+
+  /* Error alert: dark red text on a light red background (7:1) */
+  --ob-error-text: #9B1C1C;
+  --ob-error-bg: #FDECEC;
+
+  /* Soft card shadow, the navy colour at low opacity */
+  --ob-shadow: rgba(29, 37, 45, 0.12);
+}

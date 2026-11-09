@@ -15,6 +15,7 @@
   <name>agenticbookstore-parent</name>
 
   <modules>
+    <module>frontend</module>
     <module>bookstore</module>
     <module>distributor</module>
   </modules>

@@ -1,6 +1,6 @@
 ---
 name: qa-ci-config-specs
-description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit); read before the strategy or final brief of any workflow or CI spec
+description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit, actions/cache save lines and cache scope across PRs); read before the strategy or final brief of any workflow or CI spec
 metadata:
   type: feedback
 ---
@@ -32,3 +32,9 @@ Job summaries are not readable from the CLI. `gh run view --log` lacks them, and
    test-side fix reads the child's output through files (`stdio: ['ignore', fd, fd]`); the real fix is
    `process.exitCode = 1`, pinned by a static no-`process.exit(` test. A red Linux log missing an error line is no
    proof the error is absent.
+   `actions/cache` evidence: gate on the post step's `Cache saved with key:` line plus `Path Validation Error` count 0, never on
+   step success (a missing path only warns). A cache path literal in a card must be a directory the job itself creates or an
+   explicit tool setting (`npm_config_cache` on the step); a guessed tool default (`~\AppData\Local\npm-cache` on windows-latest)
+   saved nothing (spec 12 T3 r1). Cache-hit evidence across tasks: a pull_request run's caches are scoped to its merge ref, so a
+   later PR only restores what a push run on its base branch (or the default branch) saved: ask for that push run's save lines
+   plus the later run's restore lines, and whether the hit is on the primary key or a restore-key.

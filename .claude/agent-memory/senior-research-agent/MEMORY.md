@@ -1,4 +1,4 @@
-- [Spring tx event traps](spring-tx-event-traps.md) — listener order voids rollback proofs, BEFORE_COMMIT thrower, swallowed after-commit errors, test bean registration
+- [Spring tx event traps](spring-tx-event-traps.md) — listener order voids rollback proofs, BEFORE_COMMIT thrower, swallowed after-commit errors, REQUIRED delegate loses writes, rollback-only via joined proxies
 - [Spring MVC validation traps](spring-mvc-validation-traps.md) — Jackson 3 primitive nulls and float truncation, class-level @Validated, boolean params, 405/415 vs scoped advice, rethrow fallthrough
 - [Spring AI MCP traps](spring-ai-mcp-traps.md) — protocol property falls back to SSE, thrown tool errors duplicated, boxed optional params, destructive hint defaults, schema-validated args, curl round trip
 - [Deterministic regression test techniques](deterministic-regression-test-techniques.md) — thread-based midnight probe clock, shared @Primary clock without new context, unseedable randoms need a seam, pre-fix line as negative control
