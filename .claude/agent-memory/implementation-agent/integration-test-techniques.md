@@ -46,4 +46,9 @@ metadata:
 - Verifier greps `^\s*@` on integration classes allow only `@Test`/`@Autowired`: a generic varargs helper needs
   `@SafeVarargs` (or logs an unchecked note), so pass `List<Map<String, Object>>` instead.
 
+- QA greps `LocalDate(Time)?\.now\(` over `bookstore/src/test` and allows only the base's default-answer line. A
+  test that needs "today by the application Clock" autowires its own `Clock` and writes
+  `LocalDate.ofInstant(clock.instant(), clock.getZone())`. Stub the shared `@MockitoBean` default in the base
+  `@BeforeEach` with `doAnswer(...).when(mock)`; it causes no strict-stubbing failure in tests that never call it.
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
