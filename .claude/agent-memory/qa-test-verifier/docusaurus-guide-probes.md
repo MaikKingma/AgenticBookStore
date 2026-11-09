@@ -67,4 +67,14 @@ Rule: for a rehype/remark plugin or built-HTML guard, probe through the real pip
 - Equivalent survivors seen for a text-walk plugin: `find(isCheckbox)` vs first child, and counting a closing `</input>` tag. A real survivor class: branches only reachable by `ol` or by an unreferenced default path (`check-built` default dir).
 - Entity-encoded blank names (`aria-label="&#32;"`) pass a scanner that does not decode entities; report as a documented limit, not a defect, when the card's wording is "non-empty".
 
+Rule: verify a pack-anchored coverage manifest with your own section-aware sweep, not the implementer's sweep test.
+
+**Why:** a self-test that checks "every pack literal is a substring of some snippet" is section- and page-blind: short literals (`/clear`, `claude`, `name`) count as covered by snippets of other pages, and "drop the entry + lower the page floor + unpin it" stays green. An own sweep (fence tracker, span extractor, heading spans, same source, same section, same page) found real missing entries.
+**How to apply:**
+- Report three buckets per literal: carried in its section, only elsewhere, nowhere; then a page-aware pass (in-section literal carried only by cheat-sheet entries). Judge each leftover.
+- Comment-blanking scanners: an unclosed opener inside inline code (`` `{/*` ``) blanks the rest of the page, so later Tabs vanish from tab and PowerShell rules. Confirm with a probe build (page renders, checker green, control red).
+- Regex rules over prose: try the natural sentence on the page where the token is allowed ("Never set ANTHROPIC_API_KEY" hit a `set\s+KEY` form). Also try exotic forms (`set -gx`, `setx /M`, `SetEnvironmentVariable`, YAML key).
+- A mutant whose `tests N` drops below the baseline (266 of 391) broke a module's syntax: invalid evidence, redo it. Survivors often expose a mis-asserted test (`/not in/` also matched another rule's message).
+- In a checker whose ok-detail prints only without errors, "anchored N/N" can never show N-1: a mutant on that count is equivalent.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

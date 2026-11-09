@@ -55,6 +55,12 @@ metadata:
 - Frozen-file discipline: take `shasum -a 256` of every frozen checker file before the first edit, and apply mutants
   through a runner that restores bytes and compares the sha (scratchpad `s11-t5-impl-mutate.mjs` pattern). Even `sed -i` is
   refused by the worktree shell rules; use Edit.
+- MDX scanner traps (T5 rework): a comment opener inside an inline code span (`` `{/*` ``) must not start a comment or every
+  later rule is blind, so the scan skips spans (also across a line break inside one paragraph, never past a blank line or a
+  fence). Words like "set"/"export" are English in a warning: read command-shaped rules (e) on code only (fenced lines + span
+  interiors, see `codeOf`), the assignment/`$env:` forms on the whole text. An "independent sweep" of pack literals must
+  count coverage per pack section AND per page, else `/clear` is "covered" by the cheat sheet; a tiny snippet containing `#`
+  falsely covers the literal `#`. Reasons for the leftovers are keyed `source:line literal` (pack is frozen).
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
