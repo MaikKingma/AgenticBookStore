@@ -39,7 +39,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T2 | `guide.yml`: PR build plus offline zip artifact, gated deploy and release, SHA pins, timeouts | root | [T1] | B2 | critical | opus | sonnet | PASS r1 | #73 | sdd/11-workshop-guide/T2 | ENDORSE |
 | T3 | OpenValue brand in `custom.css` only, Montserrat with provenance and OFL, contrast check, no colour values elsewhere | guide | [T1, T2] | B3 | elevated | sonnet | sonnet | PASS r2 | #76 | sdd/11-workshop-guide/T3 | ENDORSE r2 |
 | T4 | LevelProgress, 11 page skeletons, sidebar, fixed anchors, structure checks reading the workshop plan at check time | guide | [T3] | B4 | critical | opus | sonnet | PASS r2 | #79 | sdd/11-workshop-guide/T4 | ENDORSE r2 |
-| T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | pending | | | |
+| T4a | accessible names for task-list checkboxes (local rehype plugin) and a `check:built` guard | guide | [T4] | B4a | elevated | sonnet | sonnet | PASS r1 | #83 | sdd/11-workshop-guide/T4a | ENDORSE |
 | T5 | pack-anchored coverage manifest and content rules | guide | [T4a] | B5 | critical | opus | sonnet | pending | | | |
 | T6 | index, setup check, wrap-up pages | guide | [T5] | B6 | elevated | sonnet | sonnet | pending | | | |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | pending | | | |
@@ -159,6 +159,26 @@ untested rules):
 - Gate 2 owner note: O2, the offline (hash router) build renders nothing at build time, so the Pages build that runs
   first is the guard for broken anchors and bad `current` values.
 
+From the T4a meta-review (qa-lead ENDORSE r1):
+
+- FF-22 (T5 criterion, A6): one insertion-only test in `task-list-labels.test.mjs`: a task item " Parent" with a
+  nested `ol` holding a task item " Child" yields the labels `['Parent', 'Child']`; the T5 verifier shows mutant P14
+  (`ol` removed from `isList`) killed.
+- FF-17 extension (T5 verifier): `check-built.mjs`, `lib/html.mjs`, `rules/built.mjs`, `built-checkbox.test.mjs`,
+  `task-list-labels.test.mjs` keep their T4a r1 hashes (QA ledger) unless T5's card names a change; the two new test
+  files only gain lines; `built.test.mjs` unchanged; test-count floor 289 with the T4a titles present; touching the
+  built rule re-runs the T4a strip probe and mutants R01-R24, L01-L03. The C0-12 freeze baseline at T5 includes all
+  T4a script files.
+- FF-23 (T5 to T11 verifiers, qa-final): quote the `check:built` tail on the Pages build; with the current pages it
+  reads `ok   built: 12 html files, no literal ":::", 14 checkboxes, all named` (the counts follow the pages; from
+  T6 on `guide/src/plugins/rehype-task-list-labels.mjs` and `guide/docusaurus.config.ts` keep their T4a r1 hashes
+  unless T11's card names a config change).
+- FF-24 (T6 to T11 implementers and verifiers, qa-final): task-list items are plain Markdown text, inline code,
+  emphasis and links only, never a JSX or HTML element; verifiers check on every page in both builds that the
+  checkbox count equals the task items in the source and every `aria-label` equals its item's visible text
+  (whitespace collapsed); a mismatch is a FAIL of the task that added the item, fixed by rewording, not by editing
+  the plugin.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -192,3 +212,8 @@ untested rules):
 - A5 (2026-11-09, orchestrator): FF-15 is an added T5 acceptance criterion (two insertion-only tests in
   `structure.test.mjs`: a fenced block under the Start branch line fails; a setext heading with `=` and `==` fails),
   and FF-16 constrains T5's rule (d). strategy.md's page grammar now prints the A3 anchor form.
+- A6 (2026-11-09, orchestrator, after the T4a meta-review): FF-22 is an added T5 acceptance criterion (one nested
+  `ol` fixture test in `task-list-labels.test.mjs`, insertion only). The plugin dropping the text of inline JSX
+  elements from a checkbox label is accepted without a fix: no checklist item in the pack contains an HTML or JSX
+  element, every level-page checklist item must equal a pack bullet, and FF-24 bars JSX in task items and checks
+  label-equals-visible-text on every page. Consequence: none for the pages; the plugin stays as gated.
