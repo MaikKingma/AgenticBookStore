@@ -91,6 +91,10 @@ metadata:
 - An Edit whose old/new string ends in a space mid-line (`const x = `) can lose that space and silently change a
   committed line. End every Edit anchor at a line end, and read `git diff -U0 HEAD -- <test file>` before the gates
   when a test file "may only gain lines": the deletion count must equal the agreed edits.
+- Content tasks: five frozen self-tests (check-content, coverage-manifest) pin the REAL docs tree as all-skeleton, so removing
+  the first marker turns `npm run check` red while `node scripts/check.mjs` itself stays green. Run `node scripts/check.mjs`
+  directly to separate page defects from that pin, and ask the orchestrator early; never edit the frozen tests.
+- Docusaurus strips the numeric file prefix from routes (`00-setup-check.md` is `/setup-check`, `06-wrap-up.md` is `/wrap-up`).
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
