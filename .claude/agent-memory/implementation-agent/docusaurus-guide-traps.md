@@ -96,5 +96,10 @@ metadata:
   directly to separate page defects from that pin, and ask the orchestrator early; never edit the frozen tests.
 - Docusaurus strips the numeric file prefix from routes (`00-setup-check.md` is `/setup-check`, `06-wrap-up.md` is `/wrap-up`).
 - Playwright: the page title sits in `.markdown > header`, so "first element of the article" is the header's next sibling.
+- Self-tests needing a known page state read `scripts/fixtures/skeleton-docs/` (T5c), never live `guide/docs` (content
+  tasks remove markers). A copied `check.mjs` run from `mkdtemp` prints nothing and exits 0 on macOS (tmpdir is a
+  symlink, its main() guard compares argv to the module URL): `realpathSync` the temp dir, and assert stdout too.
+- A "live guide" test cannot assert a pass if a probe removes all markers (structure wants a sync moment, content an
+  observation card): pin CLI output equal to in-process `runChecks` plus pending lines derived from the live markers.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).

@@ -1,0 +1,44 @@
+---
+title: "Level 3: Behavioral control"
+sidebar_position: 6
+---
+
+import LevelProgress from '@site/src/components/LevelProgress';
+
+<LevelProgress current={3} />
+
+:::note[At a glance]
+
+**Goal:** Turn the things that must happen every time into guarantees, and package repeatable work.
+
+**Start branch:** your Level 2 result, or `solution/level-2`
+
+**Catch-up:**
+
+```bash
+git stash -u && git switch solution/level-2
+```
+
+**Time:** 30 minutes
+
+**Compare:** `solution/level-3`
+
+:::
+
+{/* guide-skeleton */}
+
+## Part A: Permissions {/* #part-a-permissions */}
+
+## Part B: Hooks {/* #part-b-hooks */}
+
+## Optional: Stop hook {/* #optional-stop-hook */}
+
+## Part C: Skill and command {/* #part-c-skill-and-command */}
+
+## Stretch {/* #stretch */}
+
+## Level cleared when
+
+- [ ] A deliberately red commit is blocked by the hook (exit 2) and then fixed by the agent.
+- [ ] `git commit --no-verify` is denied.
+- [ ] The cancel-order use case built with the skill is committed through `/ship`.
