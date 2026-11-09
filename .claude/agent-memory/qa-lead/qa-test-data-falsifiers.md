@@ -70,9 +70,12 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      Live read-timeout default: chaos latency above the timeout, a direct-call witness taking at least that latency,
      then the import's `time_total` inside [timeout, latency); one row-count query after all failure phases proves
      "nothing saved" for every mode at once. Held first time in spec 06 qa-final.
-   - "Exact equality" with an expected identifier (answered `ean` vs requested ISBN) needs witnesses that differ
-     only at the end: trailing padding and an extension (EAN-13 plus a 5-digit add-on). Witnesses that all differ at
-     the start or in the middle (another title, a last digit, leading space, hyphens) let `startsWith` and
-     `stripTrailing()` survive (fix-06 T1 REJECT). Case-folding mutants are equivalent when the expected value is
-     digits only. Line-count assertions over captured logs: `String.lines()` skips U+2028/U+2029/U+0085, so a log
+   - "Exact equality" with an expected identifier (answered `ean` vs requested ISBN): derive the witness set once
+     from the operator family, both sides and both receiver orders: leading pad, trailing pad, extension at front,
+     extension at end, proper prefix (truncated), proper suffix (front-truncated), plus null. The mutant set holds
+     `a.op(b)` and `b.op(a)` for op in startsWith/endsWith/contains, and strip/stripLeading/stripTrailing. Growing
+     the list only by the survivors just seen cost a REJECT or FAIL in three straight rounds (fix-06 T1 r0, T2 r0,
+     T2 r1). A reversed `expected.endsWith(answer)` also accepts the empty string. Case-folding mutants are equivalent
+     when the expected value is digits only. Stated to the verifier as "a.op(b) and b.op(a) for every op", it was
+     followed in full and left no survivor in one round. Line-count assertions over captured logs: `String.lines()` skips U+2028/U+2029/U+0085, so a log
      test with those characters must split with `\R`.
