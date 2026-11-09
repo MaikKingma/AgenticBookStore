@@ -47,7 +47,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
-| T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
+| T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | in QA | #119 | sdd/11-workshop-guide/T10 | |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
