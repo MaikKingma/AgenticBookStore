@@ -57,4 +57,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - A script that exports `PATH=<pinned node>:/usr/bin:/bin` loses `lsof` (it lives in `/usr/sbin`): "lsof: command not found" looks like "port free".
   Run the port check directly in the Bash tool. The Bash guard also refuses `echo`/`git` after `;` and `$VAR` arguments to `find`/`git` as "cannot be shown not to be git"; put such sequences in a script file.
 
+- The worktree guard refused `bash -c '... "$HOME/..." ...'` while an identical `bash -c` without `$HOME` passed: put budgeted runs in a script file. While a background mutant runner edits the tree, the harness reports "modified files you've previously read": that is the runner, not you; touch no tree file until it ends.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]

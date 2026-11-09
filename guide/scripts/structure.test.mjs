@@ -377,6 +377,19 @@ test('structure: a setext H1 fails, a setext H2 and a === line inside a fence do
   assert.deepEqual(body('A paragraph.\n\n==='), []);
 });
 
+// T5 (plan.md A5, FF-15): the Start branch line and the shortest setext underlines
+
+test('structure: a fenced block under the Start branch line fails', () => {
+  const start = replaceOnce(page(1), '**Start branch:** `main`\n', '**Start branch:** `main`\n\n```bash\ngit reset --hard origin/main\n```\n');
+  assertErrors(run({[L(1)]: start}).errors, [/fenced block under the Start branch line/]);
+});
+
+test('structure: a setext H1 underlined with = or == fails, as ===', () => {
+  const body = (text) => run({[L(1)]: replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n${text}`)}).errors;
+  assertErrors(body('Foo\n='), [/setext H1/]);
+  assertErrors(body('Foo\n=='), [/setext H1/]);
+});
+
 // Rework round 1: every contractual anchor is pinned by page and exact id
 
 const ANCHORS = {

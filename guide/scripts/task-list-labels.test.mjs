@@ -92,6 +92,12 @@ test('task list labels: a nested list is not part of the parent label and its it
   assert.deepEqual(labels(run(tree)), ['Parent item', 'Child one', 'Child two', 'Sibling']);
 });
 
+// T5 (plan.md A6, FF-22): an ordered nested list is a nested list as well
+test('task list labels: a nested ordered list is not part of the parent label and its item names itself', () => {
+  const tree = root(list(item(checkbox(), text(' Parent'), el('ol', {}, [item(checkbox(), text(' Child'))]))));
+  assert.deepEqual(labels(run(tree)), ['Parent', 'Child']);
+});
+
 test('task list labels: every item of every list in the tree is labelled, in document order', () => {
   const tree = root(
     el('h2', {}, [text('Cleared when')]),
