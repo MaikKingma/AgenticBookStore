@@ -29,6 +29,17 @@ metadata:
 - Test sources are grepped for `https?://`, `.fails(`, module-level `const x = [`/`new`: write URL fixtures as
   `${'https'}://host`, keep fixtures inside `it`/`describe`, and use `as const` for module-level tables.
 - A pinned font licence text can trip the QA greps (`reserved`, `https?://`): strip only the URL schemes and say so.
+- A mocked `fetch` that rejects on an unmatched request is swallowed by a client that maps rejections to its own error, so
+  the test still passes. Record unmatched requests in the mock and check them in `onTestFinished` (a throw there fails the
+  test; verified); take injection of the registrar as a parameter so a plain test can prove the wiring. Plain `Response`,
+  `Headers` and `ReadableStream` work under the jsdom environment. Probe runners: a `python3 -I` script that replaces text,
+  runs `vitest run src/api`, restores from a copy and compares sha256 per probe.
+- Order pass-through fixtures (C0-16): at least three elements, and for every attribute the middle value strictly above
+  or below both neighbours (never ascending or descending). Numeric strings need this under string AND numeric
+  comparison ("12.50" sorts before "6.99" as text). Keep `inStock = available > 0`. A python sweep of sort mutants per
+  attribute and direction proves it. The rule covers EVERY array under a `toEqual`, not only lists named "in order":
+  arrays nested in a view (`authors`), sent payloads (`lines`), and a test helper's call log. One UUID per entity across
+  all test files (a not-found id is its own literal; a 404 or 409 detail must not reuse a live order or book id).
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
