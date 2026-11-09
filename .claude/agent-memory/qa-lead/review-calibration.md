@@ -1,6 +1,6 @@
 ---
 name: review-calibration
-description: Calibration rules settled in meta-reviews: carrying probe evidence into rework, null guards, REJECT versus inspection plus feed-forward for surviving mutations, pinned-criterion survivors, oracle helpers, parenthetical forms, pass-through survivors, probe-restore slips, refuted brief expectations, gate-grep survivors, boundary twins, out-of-scope product defects found by verification tasks, live checks that cannot discriminate, class vs layer wording in comment fixes
+description: Calibration rules settled in meta-reviews: carrying probe evidence into rework, null guards, REJECT versus inspection plus feed-forward for surviving mutations, pinned-criterion survivors, oracle helpers, parenthetical forms, pass-through survivors, probe-restore slips, refuted brief expectations, gate-grep survivors, boundary twins, out-of-scope product defects found by verification tasks, live checks that cannot discriminate, class vs layer wording in comment fixes, environment-only survivors and bounding an escalated rework round
 metadata:
   type: feedback
 ---
@@ -109,3 +109,10 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
 20. **A live check whose data cannot discriminate.** A final-sweep journey comparing page figures with the API proves nothing about "server figures, not the estimate" when the seeded data makes both equal (no discount exists at that level). ENDORSE when the verifier discloses it and names the unit witness that does discriminate (server total differs from the line sum), which I read. In a final-brief, ask for that witness by file:line rather than a live equality the data cannot break. Likewise write isolation premises as "the full `docker ps -a` listing is identical before and after", not as one named container that may not exist on the machine.
 21. **"Same wording elsewhere" in a comment-fix task.** Before calling a sibling sentence the same defect, tell a class claim (a code-formatted class named as the rule's holder, false) from a layer claim ("the flow owns it", meaning the flow answers 422, not the payload 400), and grep earlier cycles' plans for a criterion that pinned the wording (fix-04 criterion 4). A pinned, true layer claim is no blast-radius gap: ask for a "checked, consistent" line in bug.md, not a follow-up bug (fix-12 T3).
+22. **Environment-only survivors and bounding the escalated round (bash tooling).** A survivor that differs only when a
+   file descriptor itself fails (stderr closed), under a concurrent writer or a double fault, whose harm lies outside the
+   criterion's protected property (a temp folder leak vs "target tree unchanged"), is struck under AMEND to a follow-up
+   plus a final gate grep, not kept as a last-round RA; the `rm` twin of a killed `cp` restore failure stays (rule 18).
+   **Why:** each round's new code yields a narrower mutant class; without a bound the loop never closes (spec 10 T1 r2).
+   **How to apply:** the escalated round gets a closed RA list, production hash-pinned, insertion-only tests, a re-run
+   of only the batch whose cases changed, and FAIL grounds limited to unmet RAs, regressions, drift or a defect witness.

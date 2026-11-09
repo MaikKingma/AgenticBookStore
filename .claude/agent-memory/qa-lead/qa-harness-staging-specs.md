@@ -37,3 +37,8 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
 
 7. **Time-dependent paths in staged docs.** Exemplary paths and patch bases are checked against the simulated base
    at a recorded sha, and listed for re-check at the real cut (later specs may add or change them).
+
+8. **"Refs unchanged" in a shared repo.** Parallel spec runs move `sdd/*` refs and worktree HEADs during any
+   verifier run, so a whole-repo `for-each-ref` before/after diff is never clean. Write the check as "no ref the
+   scripts can name exists" (the branch and tag names from the step library) plus the suite's own ref checks on
+   TMPDIR repos; then a moved `sdd/<other spec>` ref is attributable, not a finding.
