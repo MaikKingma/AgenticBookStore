@@ -113,3 +113,6 @@ metadata:
   `` !`cmd` `` and bold inside the sentence but never inside a manifest snippet. Copy the previous task's scratch render
   script (`s11-tN-impl-render.mjs`) and change SPEC, checkpoint count and anchors. A worktree agent's `bash -c 'cd ...'` is
   refused by the guard; put such runs in a script under `.claude/comms/tmp/`.
+- Tab sets: frozen `TAB_GROUPS` in `rules/content.mjs` forces `groupId` and exact labels (`track`: "Track A: OpenSpec" ...),
+  so a colon label is mandatory although FF-31's label grep alphabet has no colon; flag it, do not block. Tracks recipe (T10):
+  numbered list, fence nested 3-space in each item, one command per fence, no admonition in a tab; green on the first check.
