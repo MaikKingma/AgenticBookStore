@@ -62,7 +62,6 @@ contrast), the checker is production code AND the oracle for every later task. T
     vacuously with zero matches and a wrong default dir; when earlier CLI tests and `package.json` are pinned, an
     in-checker floor breaks them, so require a quoted exact tail line (`N html files, M checkboxes`) in every later
     verifier instead.
-
 14. **Regex scanners of MDX** (spec 11 T5, four FAIL rounds): each fresh-probe round found one new construct where the
     scanner and MDX disagree about code, comments or tags. Neither a false span NOR a missed span is safe: a false span
     blanks or hides text, a missed span hands its literal `</TabItem>` or `{/*` to the tag reader and comment blanker
@@ -89,8 +88,9 @@ contrast), the checker is production code AND the oracle for every later task. T
     a tool-behaviour claim never is. Facilitator-only ranges overlap participant facts: bar facilitator-only content,
     accept a fact a participant line repeats (cite both); a range that is one page's designated source with named
     exclusions (risk table -> troubleshooting) is ruled by its exclusion list, not its label. Cross-page link texts
-    quoting another task's headings: heading-keep rule plus a rendered text check. Print criteria: `page.pdf` defaults
-    to margin 0, a browser dialog prints at about 10 mm and reflows; name the margin or check both (T11 O-4).
+    quoting another task's headings: heading-keep rule plus a rendered text check. Print: `page.pdf` is margin 0, a
+    dialog about 10 mm; check both. A trim-for-fit card must name what may not drop (optional/stretch, pack facts),
+    not only tokens; a literal ban (`PowerShell(...)`) needs replacement wording that keeps the referent (T12 REJECT).
 
 17. **axe on `file://`** (spec 11 T4a to T7): axe-core's CSSOM preload fetches stylesheets by XHR; on `file://` it
     fails and axe logs `Couldn't load preload assets:` (string only in `axe-core/axe.min.js`), Chromium adds a CORS
