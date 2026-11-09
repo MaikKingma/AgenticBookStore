@@ -1,6 +1,6 @@
 ---
 name: final-sweep-checks
-description: qa-final (PR readiness) traps in this repo - base branch moving under the spec branch, CI run ids that belong to task branches, running mvnw inside a scratch clone, bugfix negative-control ladder with cross controls in throwaway worktrees
+description: qa-final traps (base moved, CI run ids, scratch clones, bugfix negative-control ladder) plus JaCoCo from the CLI and heartbeat stamp checks
 metadata:
   type: feedback
 ---
@@ -11,7 +11,6 @@ Rule: verify every PR-readiness fact against the live remote yourself. Never cop
 **How to apply:**
 - Base check: `git ls-remote origin refs/heads/<base> refs/heads/<spec>` first, then `git merge-base --is-ancestor`. Exit 1 means "base moved, rebase required", which is a FAIL. CLAUDE.md forbids force-push, so the remedy to name is a merge of the base into the spec branch.
 - CI: `gh run list --commit <tip sha> --json databaseId,event,headSha,conclusion` gives the real tip runs. In the `pull_request` run log, the line `HEAD is now at <sha> Merge <tip> into <base>` shows which base the merged tree was built on. Quote it as risk evidence, never as a replacement for the ancestor check.
-- If the base commit adds a file that is untracked in the main checkout, compare `git hash-object <file>` to the base blob, and warn that a merge in the main checkout may refuse to overwrite it.
 - In a scratch clone, run `./mvnw` from a script that `cd`s into the clone. Calling `<clone>/mvnw` from the project root would resolve the main checkout's `.mvn`.
 - The session scratchpad is shared across specs: a previous final sweep's `final-qa-clone` blocks `git clone`. Move it aside (`mv` to `spec<NN>-final-qa-clone`), never delete it.
 - Surefire-vs-source class lists: ArchitectureTest holds `@ArchTest` fields and no `@Test`, so list `@(Test|ArchTest)` holders. A tr_TR run proves its argLine took effect when the PostgreSQL detail line prints in Turkish (`Ayrıntı:`).
@@ -29,8 +28,25 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 - "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
 - Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a recipe; use a comma between classes.
 - Per-task hash baselines into one integrity check: a python script reads the gate files in task order, keeps only `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>` extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
-- PR body "ASCII only" checks: the prescribed attribution footer carries U+1F916. `rg -n '[^\x00-\x7F]'` on the saved body shows it; report it as the footer, not as prose, and let the lead rule.
 - Jars from `spring-boot:repackage` carry the reproducible 1980 mtime: cite the `Building jar` log line of the run that built them, never `stat`.
 - A directive that says a mutated control "fails at check X" is about order: the driver's first FAIL can be an earlier witness (a log check) for the same cause. Quote the first FAIL and the X lines both.
-- Warning inventory (against a reference referee log, or a base referee in a throwaway worktree): a case-insensitive `warn` grep hits about 130 lines per referee here (app WARN logs that ACL, data and web tests provoke on purpose, Spring AI BeanPostProcessorChecker, npm `install-scripts` printed as `[ERROR]`), far beyond a directive's short "pre-existing" list. Prove ownership instead of arguing: `git reset --hard <base>` in the worktree, run the base referee, grep both logs per module section, classify by category in a python script and `diff` the sorted multisets after normalising timestamps, PIDs, thread names (`[...-exec-N]`), `Time elapsed: X s`, logback `HH:MM:SS,mmm` prefixes and the `.m2` path; "0 added at TIP" closes it. Without the thread and elapsed-time filters every run differs.
-Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[readme-and-live-jar-probes]]
+- Warning inventory (against a reference referee log, or a base referee in a throwaway worktree): a case-insensitive `warn` grep hits about 130 lines per referee here (app WARN logs that ACL, data and web tests provoke on purpose, Spring AI BeanPostProcessorChecker, npm `install-scripts` printed as `[ERROR]`), far beyond a directive's short "pre-existing" list. Prove ownership instead of arguing: `git reset --hard <base>` in the worktree, run the base referee, grep both logs per module section, classify by category in a python script and `diff` the sorted multisets after normalising timestamps, PIDs, thread names (`[...-exec-N]`), `Time elapsed: X s`, logback `HH:MM:SS,mmm` prefixes and the `.m2` path; "0 added at TIP" closes it. Without the thread and elapsed-time filters every run differs. Also normalise UUIDs (InventoryFlow WARN lines carry a random book id per run and show up as added AND removed) and count green Surefire summary lines separately (an `error` grep matches them through `Errors: 0`). A base referee needs no worktree: `git archive <base>` into the scratchpad, then a script that `cd`s there and runs `./mvnw -f <dir>/pom.xml clean verify`.
+- Directive expected counts are a dry run, not truth: recount each one from its source (`git diff --name-only --diff-filter=AM` for a hash-union size) and report an off-by-one as a calibration note with the binding property shown, never as a product finding.
+
+## Coverage from the CLI and impl heartbeat stamps
+
+Rule: measure coverage from the command line; never add JaCoCo to a POM (plans forbid POM changes).
+
+**Why:** the bookstore POM has no JaCoCo and its surefire config sets no `argLine`, so `prepare-agent` can inject the agent cleanly. Java 25 needs JaCoCo 0.8.14 or later.
+**How to apply:**
+- `./mvnw -pl bookstore org.jacoco:jacoco-maven-plugin:0.8.14:prepare-agent verify org.jacoco:jacoco-maven-plugin:0.8.14:report -l <scratch>/jacoco.log`, then grep `bookstore/target/site/jacoco/jacoco.csv` for the changed classes (columns: instr missed/covered, branch missed/covered, line missed/covered).
+- Run the plain `./mvnw -pl bookstore verify` too, as the gate run. The referee's `clean` removes the report.
+- When a stat-based order proof pins the referee's Surefire XML and jar (qa-final), run JaCoCo on a `git archive <tip>` extraction in the scratchpad (`-pl bookstore -am`, script that `cd`s there) so the worktree target stays the referee's.
+- For a constraint-only change (annotations on a record), line coverage is vacuous: prove each kept or removed annotation with a probe instead.
+
+Rule: treat an impl artifact's `updated` as a claim; compare it with the file's mtime.
+
+**Why:** an impl artifact once carried an `updated` stamp minutes in the future (estimated, not taken from `date -u`). It passes the literal heartbeat gate, but it hides a dead agent from the 15-minute rule.
+**How to apply:** `stat -f "%Sm" -t "%Y-%m-%dT%H:%M:%S%z" <artifact>` (local +0100, so convert it) against `date -u`. A future stamp is a process note in the verdict, not a FAIL, unless the gate's stated conditions fail.
+The same trap hits the verifier's own artifact: class-level probe batches and referees finish far faster than guessed, so take every `updated` from a fresh `date -u` call right before the bump, never from a guessed elapsed time.
+Related: [[shell-traps]], [[integration-test-probes]], [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[readme-and-live-jar-probes]]

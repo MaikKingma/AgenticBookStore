@@ -16,3 +16,6 @@ metadata:
   (`"\\t"` in Java source) and compare the flow's captured value with `email.replace("\\t", "\t")`.
 - A non-ASCII space (U+2003) is a legal local-part character for these patterns (`[^@\x00-\x20]`), so it is accepted and
   passed through; it can never be a "padding that stays 400" witness.
+- Hibernate Validator's `@NotBlank` does reject a U+2003-only string (400), unlike `String.trim()`. In a test that
+  pastes the value raw into JSON, write it as `"\\u2003"` in Java source: ASCII only, and the doubled backslash keeps
+  javac's unicode-escape preprocessing out (never put a bare backslash-u escape in a comment either).
