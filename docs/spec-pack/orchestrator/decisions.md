@@ -172,3 +172,30 @@ Maik, 2026-11-09, during the live walk of the storefront:
 
 Changed file: `specs/12-storefront.md` (Visual design, catalogue scenario). Implemented through /sdd-bugfix
 (`fix-12-genre-labels-footer`).
+
+## D12. Seed data: at least 10 books per genre
+
+Maik, 2026-11-09, during the live walk of the storefront: the demo catalogue needs at least 10 books in every genre,
+so a genre filter never shows a near-empty page. The spec 09 seed grows from 40 to 100 books, with at least 10
+AVAILABLE books per genre. The 20 books shared with the distributor stay exactly as they are; the 60 new books are
+bookstore-only, invented, with ISBNs from the bookstore-only range, stocked above their reorder level, with no
+pending restock. The stock, order and reserved rules of spec 09 are unchanged.
+
+Spec 02 capped `GET /books` at 100 results without paging, so 100 seeded books plus one added in a demo would push a
+book off the unfiltered list. Maik chose to raise the cap to 200 results (still sorted by title, no paging). The
+assistant tools keep their own smaller limits.
+
+Both changes are built by the spec 09 orchestrator in its normal SDD cycle (default model policy, QA and QA lead),
+not by a separate agent.
+
+Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
+cap).
+
+## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
+
+Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
+(a launcher in the lower right corner of every page instead of a page), and answers must be streamed over a new
+`POST /assistant/chat/stream`. Shortly after, Maik made it optional and deferred it to after the first release.
+
+The requirements live in their own spec, `specs/13-assistant-widget.md`, built after the first release. Specs 08 and
+12 stay as they were for the release (the amendment 3d467fc was reverted). The first release keeps the assistant page.
