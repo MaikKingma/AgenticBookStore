@@ -57,11 +57,12 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Demo seed, Flyway locations per profile, empty-catalogue guard, seed census test | bookstore | [] | 1 | elevated | sonnet | sonnet | done | PASS | ENDORSE (r0 REJECT) | 1 | #121 | sdd/09-workshop-baseline/T1 | 7664a56 |
 | T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | #123 | sdd/09-workshop-baseline/T4 | cd354c6, 30303e6 |
-| T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | todo | | | | | | |
+| T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T2 | 146efe0 |
 | T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | todo | | | | | | |
-| T5 | Test-only follow-up FU-T4-1: pin that a remote baseline `main` wins over a different local one | root | [T4] | 4 | critical | opus | opus | todo | | | | | | |
+| T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | todo | | | | | | |
+| T6 | Test-only follow-up FU-T2-1: the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | 4 | elevated | sonnet | sonnet | todo | | | | | | |
 
-Execution order, one task at a time: T1, T4, T2, T3, T5.
+Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
 
 ## T1 Demo seed data and Flyway locations per profile
 
@@ -222,17 +223,32 @@ Execution order, one task at a time: T1, T4, T2, T3, T5.
   guarded; none is tracked today). The optional refusal when `main` is checked out in a worktree is accepted into T4
   criterion 2.
 
-## T5 Test-only follow-up for the publish script (FU-T4-1)
+## T5 Follow-ups in root (FU-T4-1, http header comments)
 
-- fileScope: `scripts/test-publish-workshop-main.sh`.
-- qaDirective: ledger C0, T4 directive, review log "T4 r1" (FU-T4-1, R10).
+- fileScope: `scripts/test-publish-workshop-main.sh`; `http/catalogue.http`, `http/inventory.http`,
+  `http/orders.http` (header comment lines 2 and 4 only).
+- qaDirective: ledger C0, T4 directive, review log "T4 r1" (FU-T4-1, R10) and "T2 r0" (A1, A1b carry-over recipe).
 - Acceptance criteria:
+  0. In `catalogue.http`, `inventory.http` and `orders.http`, line 2 reads "Every ISBN these requests add or import is
+     one that the demo data leaves out." and line 4 reads "Run this file once per database: a second run is refused
+     with 409, because its ISBNs are in the catalogue by then." A diff against the T2 baseline shows only those lines
+     changed; the text gates are re-run with positive controls.
   1. A new test case after the existing reuse cases makes a local parentless commit with the published `main`'s tree,
      the baseline message and a different date, then runs `--push`: exit 0, remote `main` and tag unchanged, local
      `main` equal to the remote's.
   2. The case kills the mutant that swaps the remote-first reuse order (script:217-221) under `/bin/bash` 3.2 with a
      logging shim proving which bash ran; every earlier assertion stays green; no change to the script or workflows.
   3. Same safety rules as T4: scratch repositories only, GitHub's `main` and tags untouched.
+
+## T6 Test-only follow-up for the seed census (FU-T2-1)
+
+- fileScope: `bookstore/src/test/java/nl/openvalue/bookstore/DemoSeedCensusIntegrationTest.java`.
+- qaDirective: ledger C0, T1 directive, review log "T2 r0" (FU-T2-1, R12).
+- Acceptance criteria:
+  1. The constant of ISBNs the http collection adds or imports lists all seven: 9780141439792, 9789900010791,
+     9789900010050, 9780141439471, 9789900010029, 9780141439600, 9780141439563.
+  2. A seed copy that holds 9780141439792 (and one that holds 9789900010791) fails the census test; the real seed
+     stays green; no other test changes; referee green within 60 s.
 
 ## Amendments
 
@@ -243,6 +259,10 @@ Execution order, one task at a time: T1, T4, T2, T3, T5.
   second machine's run would force-move public `main` to an equal-tree commit). (3) T4 accepts `--remote` without a
   value or without `--push` as a usage error (exit 2). Consequence: none for T1 to T3; qa-final gains the T4 hash,
   shim, lint and R10 harness checks.
+- A2 (2026-11-09, orchestrator, after the T2 r0 ENDORSE): the false header comments of three `http/` files (A1, A1b)
+  join T5, which now also covers those comment lines; T6 added as a test-only follow-up (FU-T2-1, residual R12: the
+  census constant missed the two new http ISBNs). Consequence: none for T3; qa-final checks the http hashes against
+  the T5 baseline.
 
 ## QA feed-forward
 
@@ -264,3 +284,9 @@ Execution order, one task at a time: T1, T4, T2, T3, T5.
   clone of `factory` without local `main`, default run, then `--push`: remote `main` and tag unchanged) with the
   swapped-order script as a control that force-moves. Residual R9: CI runs the test on Linux bash 5 only, so bash 3.2
   stays a manual macOS check.
+- FF-6 (T2, T3 and qa-final): greps use `rg -ni 'a|b'`, never `rg -E` or `-niE` (`-E` is `--encoding`, exit 2);
+  "nothing found" is exit 1 with a positive control exiting 0. README claims about the http folder: the collection
+  adds or imports 9780141439792, 9789900010791, 9789900010050, 9780141439471, 9789900010029, 9780141439600,
+  9780141439563; documented order on one database: catalogue, inventory, orders, distributor, demo-flow; demo-flow
+  runs once per fresh database; distributor.http can run again. qa-final: http hashes equal the final baseline, a
+  collision check on the tip with a seeded control, demo-flow green on the published clone.

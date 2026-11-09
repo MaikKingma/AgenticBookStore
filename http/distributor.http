@@ -1,36 +1,47 @@
 # JetBrains HTTP Client format: run the requests top to bottom against a locally running distributor.
+# These requests talk to the distributor on port 8090 only. They do not touch the bookstore database, so the demo data does not matter here.
+# Run the files of this folder in this order on one database: catalogue.http, inventory.http, orders.http, distributor.http, demo-flow.http. This file also runs alone and can be run again.
+# Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
+# The distributor keeps its restock orders in memory, so they are gone when it restarts.
 
 # List the first page of the catalogue. The page holds up to 20 titles, and the total counts every title.
+# Expected status: 200.
 GET http://localhost:8090/api/titles
 
 ###
 
 # Search the catalogue for Austen. The match ignores case and looks at the title and at every contributor name.
+# Expected status: 200.
 GET http://localhost:8090/api/titles?q=austen
 
 ###
 
 # List science fiction titles, 5 per page. The subject is a code prefix, so FIC028 finds every FIC028 code, and the total counts all matches.
+# Expected status: 200.
 GET http://localhost:8090/api/titles?subject=FIC028&size=5
 
 ###
 
 # Show the details of Pride and Prejudice by its EAN. It is in stock.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9780141439518
 
 ###
 
 # Ask for an EAN that is not in the catalogue. The answer is 404 with the error code TITLE_NOT_FOUND.
+# Expected status: 404.
 GET http://localhost:8090/api/titles/9780000000002
 
 ###
 
 # List the subjects with their codes and labels, in code order.
+# Expected status: 200.
 GET http://localhost:8090/api/subjects
 
 ###
 
 # Restock 10 copies of Pride and Prejudice and remember the restock order id. The answer is 201 with the status CONFIRMED and a delivery date 2 working days out.
+# Expected status: 201.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -45,11 +56,13 @@ Content-Type: application/json
 ###
 
 # Show the restock order that was just placed.
+# Expected status: 200.
 GET http://localhost:8090/api/restock-orders/{{restockOrderId}}
 
 ###
 
 # Restock Bleak House, which is on backorder. The answer is 201 with the status BACKORDERED and a delivery date 14 days out.
+# Expected status: 201.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -61,6 +74,7 @@ Content-Type: application/json
 ###
 
 # Restock Rip Van Winkle, which is out of print. The answer is 422 with the error code NOT_ORDERABLE.
+# Expected status: 422.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -72,6 +86,7 @@ Content-Type: application/json
 ###
 
 # Restock a quantity of 0. The quantity must be between 1 and 500, so the answer is 400 with the error code INVALID_REQUEST.
+# Expected status: 400.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -85,76 +100,91 @@ Content-Type: application/json
 # The requests below were added for the bookstore contract files. Each one reads or orders a title whose contributors are all authors.
 
 # Show The Last Man by its EAN. Its first subject code is FIC028000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010050
 
 ###
 
 # Show A Connecticut Yankee in King Arthur's Court. Its first subject code is FIC009000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010791
 
 ###
 
 # Show A Study in Scarlet. Its first subject code is FIC022000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010159
 
 ###
 
 # Show Sense and Sensibility. Its first subject code is FIC027000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010029
 
 ###
 
 # Show Frankenstein. Its first subject code is FIC015000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010043
 
 ###
 
 # Show Utopia. Its subject code is HIS000000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010616
 
 ###
 
 # Show On the Origin of Species. Its subject code is SCI000000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900011163
 
 ###
 
 # Show Passages from the Life of a Philosopher. Its subject code is COM000000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900011187
 
 ###
 
 # Show Little Women. Its subject code is JUV000000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010821
 
 ###
 
 # Show The Raven and Other Poems. Its subject code is POE000000.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010210
 
 ###
 
 # Show Pamela, which is out of print. The answer is still 200, with the availability OUT_OF_PRINT.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010678
 
 ###
 
 # Show Bleak House, which is on backorder. The answer is 200, with the availability BACKORDER.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900010272
 
 ###
 
 # Show Patterns for Patient Systems, a title with two authors.
+# Expected status: 200.
 GET http://localhost:8090/api/titles/9789900020080
 
 ###
 
 # Ask for a path that does not exist. The answer is the default 404 body of the web framework, not the distributor error envelope.
+# Expected status: 404.
 GET http://localhost:8090/api/no-such-resource
 
 ###
 
 # Restock Bleak House again, this time with a retailer reference. The answer is 201 with the status BACKORDERED.
+# Expected status: 201.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -167,6 +197,7 @@ Content-Type: application/json
 ###
 
 # Restock Pamela, which is out of print. The answer is 422 with the error code NOT_ORDERABLE.
+# Expected status: 422.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -179,6 +210,7 @@ Content-Type: application/json
 ###
 
 # Restock an EAN that is not in the catalogue. The answer is 404 with the error code TITLE_NOT_FOUND.
+# Expected status: 404.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -191,6 +223,7 @@ Content-Type: application/json
 ###
 
 # Restock a quantity of 0 with a retailer reference. The answer is 400 with the error code INVALID_REQUEST.
+# Expected status: 400.
 POST http://localhost:8090/api/restock-orders
 Content-Type: application/json
 
@@ -202,5 +235,7 @@ Content-Type: application/json
 
 ###
 
+# This request depends on how the distributor was started. With the normal distributor it answers 200 like the first requests of this file.
 # Start the distributor with --distributor.chaos.failure-rate=1.0 and ask for Pride and Prejudice. Every catalogue call then fails with 503 and the error code TEMPORARILY_UNAVAILABLE.
+# Expected status: 200 (distributor running); 503 (chaos distributor).
 GET http://localhost:8090/api/titles/9780141439518
