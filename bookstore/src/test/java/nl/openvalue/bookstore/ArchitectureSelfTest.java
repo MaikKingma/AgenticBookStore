@@ -297,6 +297,44 @@ class ArchitectureSelfTest {
         assertThat(locations).noneMatch(location -> location.contains("/target/test-classes/"));
     }
 
+    /**
+     * The assistant rules (the layer rule, the Spring AI rule, the rest controller rule and the class name rule) judge
+     * the production import, so the production import must hold the assistant classes they are about; a rule whose
+     * subject is missing passes without checking anything.
+     */
+    @Test
+    void assistantRuleSubjectsExistInProduction() throws ReflectiveOperationException {
+        JavaClasses production = productionImportOfArchitectureTest();
+
+        List<String> assistantClasses = production.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals("nl.openvalue.bookstore.assistant"))
+                .map(JavaClass::getSimpleName)
+                .toList();
+
+        assertThat(assistantClasses).contains("AssistantConfig", "AssistantModeConfig", "AssistantProperties",
+                "OfflineChatModel", "BookstoreTools", "BookSuggestionView", "BookDetailsView", "AvailabilityView",
+                "AssistantCommands", "ChatPayload", "AssistantReplyView", "AssistantRateLimiter",
+                "AssistantExceptionHandler");
+    }
+
+    /** Rule 7 forbids Spring AI outside the assistant; its exempt side must hold a class that really uses it. */
+    @Test
+    void springAiIsUsedInsideAssistant() throws ReflectiveOperationException {
+        JavaClasses production = productionImportOfArchitectureTest();
+
+        List<String> springAiUsers = production.stream()
+                .filter(javaClass -> javaClass.getDirectDependenciesFromSelf().stream()
+                        .anyMatch(dependency -> dependency.getTargetClass().getPackageName()
+                                .startsWith("org.springframework.ai")))
+                .map(JavaClass::getName)
+                .toList();
+
+        assertThat(springAiUsers).isNotEmpty();
+        assertThat(springAiUsers).contains("nl.openvalue.bookstore.assistant.AssistantConfig",
+                "nl.openvalue.bookstore.assistant.AssistantCommands", "nl.openvalue.bookstore.assistant.BookstoreTools",
+                "nl.openvalue.bookstore.assistant.OfflineChatModel");
+    }
+
     @Test
     void everyArchitectureRuleHasAnExpectedViolator() {
         List<Field> ruleFields = Arrays.stream(ArchitectureTest.class.getDeclaredFields())
@@ -657,6 +695,17 @@ class ArchitectureSelfTest {
     void appServiceImplRuleDescriptionNamesTheExemptPackageAndTheNestingPredicate() {
         assertThat(rule("APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL").getDescription())
                 .isEqualTo(APP_SERVICE_IMPL_RULE_DESCRIPTION);
+    }
+
+    /** The classes ArchitectureTest analyses, imported with its own {@code @AnalyzeClasses} packages and options. */
+    private static JavaClasses productionImportOfArchitectureTest() throws ReflectiveOperationException {
+        AnalyzeClasses analyzeClasses = ArchitectureTest.class.getAnnotation(AnalyzeClasses.class);
+        assertThat(analyzeClasses).isNotNull();
+        List<ImportOption> importOptions = new ArrayList<>();
+        for (Class<? extends ImportOption> importOption : analyzeClasses.importOptions()) {
+            importOptions.add(importOption.getDeclaredConstructor().newInstance());
+        }
+        return new ClassFileImporter().withImportOptions(importOptions).importPackages(analyzeClasses.packages());
     }
 
     private static List<String> detailsOf(String ruleField) {
