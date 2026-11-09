@@ -19,6 +19,7 @@ public final class StockItemDomainMapper {
                 dto.reorderLevel(),
                 dto.reorderQuantity(),
                 dto.lowStockSignalled(),
+                null, // the stock item DTO does not carry a pending restock yet
                 clock);
     }
 }
