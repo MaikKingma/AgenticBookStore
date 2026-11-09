@@ -1,6 +1,10 @@
 import { BasketBadge } from './components/BasketBadge'
+import { BasketPage } from './pages/BasketPage'
 import { BookDetailPage } from './pages/BookDetailPage'
 import { CataloguePage } from './pages/CataloguePage'
+import { CheckoutPage } from './pages/CheckoutPage'
+import { OrderPage } from './pages/OrderPage'
+import { OrdersPage } from './pages/OrdersPage'
 import { HashRouter, Link, useRoute } from './router'
 import type { KnownRoute } from './router'
 import { BasketProvider } from './state/basket'
@@ -61,13 +65,13 @@ function Page({ route }: { route: KnownRoute }) {
     case 'book':
       return <BookDetailPage id={route.id} />
     case 'basket':
-      return <PagePending title="Basket" />
+      return <BasketPage />
     case 'checkout':
-      return <PagePending title="Checkout" />
+      return <CheckoutPage />
     case 'orders':
-      return <PagePending title="Orders" />
+      return <OrdersPage />
     case 'order':
-      return <PagePending title="Order" />
+      return <OrderPage id={route.id} />
     case 'assistant':
       return <PagePending title="Assistant" />
   }

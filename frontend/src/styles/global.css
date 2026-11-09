@@ -416,6 +416,91 @@ textarea {
   }
 }
 
+/* Basket, checkout and orders: a card per line or order, the estimate under the lines, forms as cards */
+
+.basket-lines,
+.basket-summary,
+.order-list {
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.basket-lines,
+.order-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.basket-summary li {
+  margin-bottom: 0.5rem;
+}
+
+.basket-line {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.basket-line h2,
+.basket-line p {
+  margin: 0;
+}
+
+.quantity-field input {
+  max-width: 8rem;
+}
+
+.basket-line .alert {
+  margin: 0;
+}
+
+.basket-line .button {
+  justify-self: start;
+}
+
+.basket-total {
+  margin: 0 0 1.5rem;
+}
+
+.basket-total p:first-child {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.checkout-form,
+.orders-form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 32rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-actions {
+  margin-top: 0.5rem;
+}
+
+/* The lines of an order are a table that scrolls inside its card on a narrow screen instead of widening the page. */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.order-lines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-lines th,
+.order-lines td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--ob-mist);
+}
+
+.order-lines th {
+  font-weight: 600;
+}
+
 /* Reduced motion: no transitions or animations for people who ask for none */
 
 @media (prefers-reduced-motion: reduce) {

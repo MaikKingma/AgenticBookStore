@@ -424,6 +424,7 @@ describe('the session storage', () => {
   })
 
   it.each([
+    ['null', null],
     ['a line without a title', { bookId: BOOK_C.id, price: '10.00', currency: 'USD', quantity: 1 }],
     ['a title that is a number', { bookId: BOOK_C.id, title: 5, price: '10.00', currency: 'USD', quantity: 1 }],
     ['a book id that is a number', { bookId: 7, title: 'Neuromancer', price: '10.00', currency: 'USD', quantity: 1 }],

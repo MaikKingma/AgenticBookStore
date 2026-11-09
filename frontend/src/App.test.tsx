@@ -103,9 +103,11 @@ describe('the navigation', () => {
   ])('opens the hash %j with the heading %s and the current mark on %s alone', (hash, heading, active) => {
     window.location.hash = hash
     // The book page asks for its book and its stock and gets no answer, so the test ends before anything changes.
+    // The order page asks for its order in the same way.
     mockFetch([
       { method: 'GET', path: `/books/${BOOK_ID}`, respond: () => new Promise<Response>(() => {}) },
       { method: 'GET', path: `/inventory/${BOOK_ID}`, respond: () => new Promise<Response>(() => {}) },
+      { method: 'GET', path: `/orders/${ORDER_ID}`, respond: () => new Promise<Response>(() => {}) },
     ])
 
     render(<App />)
