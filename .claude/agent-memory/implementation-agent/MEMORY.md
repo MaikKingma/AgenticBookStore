@@ -14,3 +14,4 @@
 - [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, pin config-overriding flags, date-varied idempotency, absent-sha lease, hook and shim witnesses, perl mutants, guard refuses bash -c
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files: driver with node handler shim, Expected status grammar, run-mode runs, seeded-state traps
+- [Docs task techniques](docs-task-techniques.md) — README census: two-way scripts with negative control, fake older DB for reset claim, jar has no compose, anonymous volume trap, rg only in Bash tool
