@@ -18,5 +18,8 @@ metadata:
   under the old key is not assignable to it: startup fails (source: `SpringFactoriesEnvironmentPostProcessorsFactory`).
 - To make `addFirst` vs `addLast` observable in an EPP test, assert the last property source holds the added value,
   and assert the source-name list is unchanged in the cases where nothing may be added.
+- Full-context EPP order check: Boot adds an `applicationInfo` source AFTER every EPP, so "after every source whose
+  name contains application" can never hold. Match the config files by `startsWith("Config resource")` instead
+  (names look like `Config resource 'class path resource [application.yml]' via location ...`).
 
 Related: [[maven-build-traps]].

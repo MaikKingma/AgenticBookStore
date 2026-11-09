@@ -1,6 +1,6 @@
 ---
 name: tool-adapter-probes
-description: Probing a Spring AI @Tool class with mocked flows - mutant families that matter, the parse-catch trap, NPE-masked kills, clean-run cost
+description: Probing Spring AI @Tool classes, ChatClient wiring and scripted chat-model doubles - mutant families, parse-catch trap, NPE-masked kills, memory-window snap trap
 metadata:
   type: feedback
 ---
@@ -34,5 +34,18 @@ the type-swap mutant stayed green. The fix is a row that passes the guard and fa
 - A `catch (RuntimeException e)` C0 grep prints exactly one line in the D5 helper; WARN events kept off the console
   (`additive=false` on the logger plus a `ListAppender`) leave no line in the referee log, so the C0-6 "one WARN per call"
   accounting is 0 console lines by design.
+
+ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
+- `MessageWindowChatMemory` moves its eviction cut forward to the next USER message, so with only complete Q/A turns a
+  window of N+1 behaves like N (exact-history tests kill N-1 only). Witness: a scripted step that throws after the memory
+  advisor stored the USER message (a failed model call), then N/2 more turns; the dangling question shows in N+1.
+- `ToolCallingChatOptions.builder().build()` has null tool callbacks when the client has no tools; a double that streams
+  `getToolCallbacks()` NPEs, and a "defaultTools dropped" mutant is then killed only by that NPE. Check the kill reason.
+  Once the double is null-safe, its guard-removal mutant may die by the NPE in a no-tools test (the NPE is the
+  defect), while the tools-dropped mutant must die on the tool-set assertion (Spring AI adds `No ToolCallback found`).
+- Removing a bean method breaks compilation of tests that call it (`-Dtest` still compiles every test); drop only the
+  `@Bean` to let the auto-configured bean take over, then pin the origin with `getFactoryBeanName()`.
+- Memory advisor order 200 vs tool-calling advisor 300: `.order(ToolCallingAdvisor.DEFAULT_ORDER + 1)` puts TOOL messages
+  into memory, a cheap advisor-order mutant. 2.0.2 has no default conversation id and no PromptChatMemoryAdvisor.
 
 Related: [[env-switch-mutant-runner]], [[shell-traps]]
