@@ -58,6 +58,11 @@ and the shaping decisions; it never changes a requirement, scenario, path, name 
   built, a pinned `--list-paths` contract, atomic apply, the frontend display of `CANCELLED` as a residual, the
   assistant row of `reference.md` re-checked at cut time.
 
+- J13 (Maik's decision D14, plan.md amendment A2): no agent runs Claude Code for this spec. Scenario runs and
+  rehearsals become consistency checks plus one rehearsal checklist for Maik (2026-11-10); the exercise references
+  are built directly by TDD; files a Claude Code step would generate are written directly from the pack. J5 and the
+  headless parts of J7 lapse.
+
 ## Spec 11 coordination
 
 Branch names are exactly the D6 names. The Windows hook note (`notes/windows-hooks.md` in the staging folder) and the

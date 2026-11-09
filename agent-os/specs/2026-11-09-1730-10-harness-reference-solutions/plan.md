@@ -18,9 +18,9 @@ full per-task qaDirectives: `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-10
 (comms, not committed; the summaries below are the record).
 
 Every task runs alone, in order T1 to T13 (batch = position; one worktree, one task at a time). Sandboxes live in the
-session scratchpad, are built only with the T1 scripts, and are kept on disk until the task's gate passes. Headless
-Claude Code runs follow J7 (`--setting-sources project,local`, `ENABLE_CLAUDEAI_MCP_SERVERS=false`, `--settings` for
-the allow list, own `COMPOSE_PROJECT_NAME` and ports, no user-scope writes, never `ANTHROPIC_API_KEY`). Evidence
+session scratchpad, are built only with the T1 scripts, and are kept on disk until the task's gate passes. No agent
+runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run under HR1 isolation, with their own
+`COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
 ## Tasks
@@ -29,14 +29,14 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | staging layout, scripts, self-test, branch-cut tool | root | [] | 1 | critical | opus | opus | #135 | sdd/10-harness-reference-solutions/T1 | ENDORSE (r3) |
 | T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | #139 | sdd/10-harness-reference-solutions/T2 | ENDORSE (r0) |
-| T3 | Level 1 scenarios run and recorded | root | [T2] | 3 | elevated | sonnet | sonnet | | | |
-| T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | | | |
-| T5 | Level 2 multi-role ACL contract test from MCP data | bookstore | [T4] | 5 | elevated | sonnet | sonnet | | | |
-| T6 | Level 2 scenarios and macOS LSP rehearsal | root | [T5] | 6 | elevated | sonnet | sonnet | | | |
+| T3 | Level 1 consistency check and rehearsal rows (A2) | root | [T2] | 3 | elevated | sonnet | sonnet | | | |
+| T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | #142 | sdd/10-harness-reference-solutions/T4 | ENDORSE (r0) |
+| T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | | | |
+| T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | | | |
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | | | |
 | T8 | Level 3 hooks (sh, ps1, git hook), harness, Windows note | root | [T7] | 8 | critical | opus | opus | | | |
-| T9 | Level 3 cancel order built with the skill, committed via `/ship` | bookstore | [T8] | 9 | critical | opus | opus | | | |
-| T10 | Level 3 scenarios run and recorded | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
+| T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | opus | opus | | | |
+| T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | | | |
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | | | |
 | T13 | Level 4 Agent OS track | root | [T10] | 13 | elevated | sonnet | sonnet | | | |
@@ -200,6 +200,16 @@ for all three tracks is a manual check for Maik.
   (`git ls-tree level-0-start -- <path>` non-empty); a Level 0 run that tries to read either file and finds it
   missing is a side effect of the base, not a run failure; the verifier quotes such reads. qa-final re-runs the
   five-block `cmp` of Level 1 on the final bytes.
+- FF-T4-a (from T4; T6 and T7): the rehearsal row for "Plugin loads from the project declaration" states that the
+  pack fallback (remove both plugin keys) also removes the plugin lines of `docs/lsp-setup.md` (lines 25 and 26) and
+  the same two keys from the level-3 settings file staged by T7.
+- FF-D14 (from the T4 meta-review): C0-13 (consistency-check block) is prepended to the qaDirectives of T3, T5, T6,
+  T9, T10, T12, T13 with the per-task deltas in the QA ledger ("QA strategy changes under D14"); C0-7, C0-12, P1, P4,
+  the spot re-runs and every stream or transcript check lapse; C0-11 is reduced to one status per scenario and no
+  claimed Claude result.
+- Product findings from T4 for Maik: PF-T4-1 the JDK floor reads "JDK 17 or later" in spec 10 line 168 and in
+  workshop-plan line 59 (J8 and `docs/lsp-setup.md`: 21); PF-T4-2 workshop-plan line 207 `claude mcp add` writes a
+  literal URL while the staged `.mcp.json` uses `DISTRIBUTOR_MCP_URL` (name, transport and port agree).
 - Follow-ups from T1 for qa-final: FU-T1-1 (closed-stderr test of the three exit handlers; qa-final greps that each
   keeps `set +e`); F13 (README cut-procedure prose carries no push line, reading check); J12/F14 (backup removed on an
   incomplete rollback: residual for Maik).
@@ -220,6 +230,56 @@ for all three tracks is a manual check for Maik.
   scratchpad; every `mktemp` call (scripts, tests, README recipes, verifier runs) uses an explicit template under
   `$TMPDIR` or the scratchpad; every `./mvnw` run sets `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>` (the macOS
   JVM ignores TMPDIR); sandboxes use free ports; J10 allows sandbox Maven builds to read the shared `~/.m2` cache and Docker.
+- A2 (2026-11-09, orchestrator, from Maik's decision D14 on factory c35037f, merged into the spec branch; answers
+  open question Q1): no agent runs Claude Code for spec 10 at all (no login, no setup-token, no real HOME, no
+  headless session); J5 (`brew install jdtls`) and the headless parts of J7 lapse. Where a task text above says "run",
+  "headless", "session", "transcript" or "rehearse", A2 wins:
+  - Every scenario run becomes a careful consistency check, recorded in `S/records/level-<n>.md`: every path,
+    command, skill, hook, agent, setting key, MCP server and tool name, env variable, port and plugin id a staged
+    file or a scenario names exists on the built sandbox tree or on `origin/factory` at the recorded sha, and is
+    spelled the same in pack spec 10, spec 11 and its guide sources (`origin/sdd/11-workshop-guide/spec`,
+    read-only), the staged files and the code. A mismatch in the task's own files is a FAIL; one in pack or guide
+    text is a product finding for Maik. Everything provable without a model still runs (harness, curl, generators,
+    validators, glob tests, `./mvnw clean verify` per level).
+  - Scenarios that need a Claude Code session, the macOS LSP rehearsal and "Rehearsed in time" become rows of one
+    rehearsal checklist for Maik's rehearsal on 2026-11-10, `S/records/rehearsal-checklist.md`: per row the branch,
+    setup, exact prompt or command, expected observation, what counts as failure and the pack fallback, checked word
+    by word against the pack scenario. T3 creates the file with the Level 1 rows; T6, T10, T11, T12, T13 add their
+    levels; T13 adds the closing list of directly written files.
+  - T3: Level 1 consistency check (CLAUDE.md and rules against the code: commands, class names, packages, the
+    `Money` rule, migration folder and naming, `PostgresTestConfig`, `ScriptedChatModel`, `@MockitoBean`,
+    `MockRestServiceServer`, `DistributorAppService`); CLAUDE.md has no `@` import; a glob test proves each rule's
+    `paths` matches only its intended folder (with a widened-glob control); FF-T2-a stays; rehearsal rows for "Rules
+    load on demand" and "Level 0 task with context".
+  - T5: the multi-role contract test is built directly through the normal TDD flow; the payload is captured with
+    curl from a distributor jar on a free port, via REST `GET /api/titles/{ean}` and MCP `tools/call get_title`, and
+    the contract file is byte-identical to both; the "built in Claude Code" provenance is dropped.
+  - T6: Level 2 consistency check (`.mcp.json` server name, transport, URL and port against the distributor config and
+    the guide; curl `initialize` plus `tools/list` shows exactly the four tools; the plugin id and marketplace repo
+    against `docs/lsp-setup.md` and the guide; `Money.of` used in at least two layers; `Book.price()` exists as the
+    guide's type-error step says); rehearsal rows for MCP, the LSP scenarios (first-index time, multi-module result,
+    type error, find references) and "Plugin loads from the project declaration" (with FF-T4-a: the pack fallback also
+    removes the plugin lines of `docs/lsp-setup.md` and the plugin keys of the level-3 settings file).
+  - T7: the D9 `onFailure` field is checked against the official Claude Code documentation and settings schema, not
+    by a run.
+  - T9: cancel order is a normal critical TDD task through the `hexagonal-slice` skill; new classes follow the staged
+    `reference.md` rows; the sandbox commit is made with `core.hooksPath .githooks` and its git hook run is green; the
+    skill-selection and `/ship` provenance is dropped (both become rehearsal rows in T10).
+  - T10: Level 3 consistency check (settings hook paths and modes, permission rule spelling, skill name, description
+    and `allowed-tools`, `/ship` allowed tools against the permissions, the agent file, the git hook activation
+    command in the guide); hook behaviour is cited from the T8 harness (re-run); a measured cold `./mvnw -q verify`
+    time is compared with the hook timeout 180; rehearsal rows for red build, escape hatch (including the variants the
+    deny rules may miss: `git commit -m "x" -n`, `git -C . push`, `cat .env` through Bash), secrets, skill selection,
+    `/ship`, and the Windows runs.
+  - T11: unchanged (CLI only, HR1 isolation), plus its rehearsal rows.
+  - T12, T13: CLI-only init steps (`specify init`, the Agent OS install script) still run under HR1 isolation; the
+    files a Claude Code step would generate (the Spec Kit constitution, the Agent OS `/plan-product` output, the
+    discovered and indexed standards) are written directly from the pack's product docs, carry no placeholders, trace
+    every statement to a pack line and never contradict the architecture standard; each is listed for Maik's review.
+  - QA follows the QA lead's "QA strategy changes under D14" (C0-13 for every re-planned task); Gate 2 reads every
+    rehearsal-only scenario as an unproven residual until Maik rehearses.
+  Gate 1 re-run and self-accepted: the scope narrows, no task is added, the per-task file scopes are unchanged except
+  that `S/records/rehearsal-checklist.md` joins the file scope of T3, T6, T10, T11, T12 and T13.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
