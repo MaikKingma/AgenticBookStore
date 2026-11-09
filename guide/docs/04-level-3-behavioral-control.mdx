@@ -129,7 +129,7 @@ rm -f "$log"
 exit 2
 ```
 
-Windows participants need Git for Windows (Git Bash). The `Bash` matcher, the `if` field and the `Bash(...)` permission rules only apply when Claude Code runs commands through Bash. No PowerShell handlers or rules are added.
+Windows participants need Git for Windows (Git Bash). The `Bash` matcher, the `if` field and the `Bash(...)` permission rules only apply when Claude Code runs commands through Bash. The settings add no hooks and no permission rules for PowerShell.
 
 On Windows, `solution/level-3` also holds a PowerShell variant of the hook with the same behaviour, `tests-before-commit.ps1`. How Windows participants point the hook command at it is not verified yet.
 
