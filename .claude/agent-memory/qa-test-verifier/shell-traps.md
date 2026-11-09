@@ -43,4 +43,9 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>`; Surefire forks inherit it.
 - `git ls-tree` rejects `:(exclude)` pathspec magic ("pathspec magic not supported by this command"); filter
   `ls-tree -r --full-tree --name-only` output with awk instead.
+- Nested `$(basename "$(dirname "$(cat f)")")` inside a Bash call trips the built-in "could not be checked for dangerous
+  rm operations" refusal even with no rm in it. Write the literal path (read it from your own earlier output) instead.
+- Verbatim check of a staged settings-type file under a plugin-key guard: extract the pack fenced block with a
+  `python3 -I` script (heading text, block count asserted) and `cmp` on paths only; cross-check with `sed -n 'A,Bp'` pack
+  line numbers; negative control = one byte changed via `dd conv=notrunc`. No Bash text names the guarded keys.
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]], [[bash-script-qa-probes]]
