@@ -77,6 +77,10 @@ metadata:
   builder needs pop-to-matching end tags plus "new li closes the open li of the same ul/ol" (bounded by the nearest list, or
   tabs inside a list item break). MDX `<pre>` over lines renders `<pre><p>a\nb</pre>`; a blank line inside makes `<p>a<p>b`
   with no newline (text content joins). Only `<` is entity-encoded in code text, `&` and `>` stay raw.
+- Evasion classes in built HTML (T5b r2): "invisible characters" means a Unicode property (`/\p{Default_Ignorable_Code_Point}/gu`),
+  never a hand list (QA enumerates all of them; the build keeps a raw U+200E in a tab label). Language classes: a fence info string
+  without a space keeps its suffix (`powershell{1}` builds `language-powershell{1}`), and raw `<pre><code className=...>` puts the
+  class on the code, not the pre; match names with `(?![a-z0-9])`, not `$`, and read the pre's code elements too.
 - Probe builds without touching the repo: copy guide/ minus node_modules/build/.docusaurus into the scratchpad, symlink
   node_modules, `npm --prefix <copy> run build` (about 2 s warm). Capture fixtures as the `<article>` slice (ASCII check:
   real pages carry U+200B in hash links, so slice a smaller fragment there).

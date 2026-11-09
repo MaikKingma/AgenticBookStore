@@ -95,5 +95,8 @@ Rule: for a built-HTML tab reader (tab label -> panel lines), probe the Tabs pro
 - Combined escapes: prefix a probe with an A7-style unclosed `{/*` span opener; then a `powershell` fence outside tabs, a soft-hyphen label and a `token-line` span plus stray text in a raw pre all pass both rules.
 - Fixture provenance: CSS-module class suffixes (`tabList_xxxx`) depend on the build path, so byte equality fails; compare articles with `name_[A-Za-z0-9_-]{4}` normalised.
 - The offline (hash router) build writes only index.html; panel text lives in a JS chunk, so check:built on it is vacuous by construction.
+- Invisible-character label stripping: a closed code-point list (U+00AD, U+200B-D, U+2060, U+FEFF) misses 17 of 23 Default_Ignorable characters (U+200E/F bidi marks, U+034F, U+2061-4, U+2066-9, tag chars). Enumerate them at unit level, confirm one with a real build (Docusaurus keeps a raw U+200E in the tab), and offer `/\p{Default_Ignorable_Code_Point}/gu` (Node 26 supports it) as the fix.
+- Language-class detection on `pre`: probe `<pre><code className="language-powershell">` (class on code only, raw JSX keeps it there), a fence info string without a space (`powershell{1}` gives class `language-powershell{1}`), class order and extra classes in raw JSX, `<CodeBlock language=...>`, upper-case fences (Docusaurus writes the lower-case class on the pre).
+- Tests that filter errors through a message-shape helper (`offending(errors)`) without an `errors.length` check silently ignore errors of another shape; a reverted test line can stay green for the wrong reason. Run the reverted line under the new code to see it.
 
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

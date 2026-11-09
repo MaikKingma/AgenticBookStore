@@ -59,4 +59,6 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 
 - The worktree guard refused `bash -c '... "$HOME/..." ...'` while an identical `bash -c` without `$HOME` passed: put budgeted runs in a script file. While a background mutant runner edits the tree, the harness reports "modified files you've previously read": that is the runner, not you; touch no tree file until it ends.
 
+- Never name a script variable `LANG` (or `LC_*`): it is already exported, so assigning a path to it makes every later `node` in the script exit 139 and `perl` print locale warnings. Every probe then shows `exit=139`, which reads like a checker crash. Use a distinct name (`LANGINV`) and re-run.
+
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]]
