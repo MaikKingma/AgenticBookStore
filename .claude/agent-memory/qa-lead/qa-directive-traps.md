@@ -32,6 +32,13 @@ Traps that recur across specs in this repo. Write them into every qaDirective th
      code. When one fixture carries several witnesses (depth-1 and depth-2 nested types), anchor by member
      (`^Field <FQN.field>`), because the class-anchored `anyMatch` passes on any one. The production import is a free
      control for widened predicates when real code already uses the excluded shape (port-nested exceptions in flows).
+   - A predicate that walks the enclosing-class chain ("nested at any depth in a class named *X") needs a member-anchored
+     witness per position of the matching class, not only per depth: direct enclosing only (kills top-only), middle
+     only (kills direct-or-top), top only (kills direct-only), plus depth one past any cap you probe, a class named
+     exactly `X` (kills a `.+X` regex), and controls for letter case, a longer name and the class's own name. Each
+     control asserts its field type first, and an `Object`-retype probe proves it. Spec 06 T6 listed depths only and
+     lost a round to the top-only and case-insensitive survivors. A walk cap at or above the deepest fixture is
+     unkillable; do not list it as must-fail.
    - A CompositeArchRule that repeats one package list per half needs every occurrence falsified: a fixture per package per half, or a per-half description pin (for example the full bracket occurs once per half). A set comparison over the whole description hides a drop from one half.
 
 5. **Framework warnings vs task sequencing.** The verifier rule "green with a framework warning = FAIL" collides with skeleton-first specs: the first task's referee prints warnings that later tasks fix. At strategy time, give every expected warning an owning acceptance criterion. Known ones on this stack: Mockito inline-mock self-attach on JDK 25 (dynamic-agent and CDS warnings, fixed by a Surefire `-javaagent` argLine), JPA open-in-view, Flyway "No migrations found". Also the Maven `prefixes.txt` 401 warnings, which come from repositories declared in the pinned flyway-parent POM and are not machine-local. Put a warning-inventory item in C0: every warning quoted and classified as fixable here (FAIL), owned by a named criterion, or unowned (flag it).

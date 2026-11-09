@@ -26,5 +26,14 @@ metadata:
 - `ArchitectureSelfTest.assertReportsExpectedViolators` stops at the first missing violator, so the order of an
   `EXPECTED_VIOLATORS` list decides which fixture a probe names. Put the fixture that uniquely kills a mutant
   before the ones that die with it.
+- Nested types: referencing `Outer.Nested` from another class gives ArchUnit dependencies only on `Outer$Nested`. The
+  InnerClasses attribute creates no dependency on `Outer`, so a "never references the outer class" fixture holds
+  (`javap -c -p` shows no `Outer;`). A nested type used from another package must be `public`.
+- Class-anchored registry checks pass as soon as ANY member of the violator is reported. With control fields in the
+  same violator class, a wrong predicate (for example own-name instead of enclosing-name) still names the class. Kill
+  such mutants with member-anchored witnesses (`Field <X.f> has type <T>`) and field-anchored controls.
+- A walk predicate (enclosing-class chain, name suffix) needs a witness with the match on EACH walk position: direct
+  only, middle only, top-level only, plus an exact-name witness and a letter-case control. Putting the suffix only on
+  the top-level class lets "top-only" and "direct-or-top" walks survive, and QA probes both.
 
 Related: [[maven-build-traps]].
