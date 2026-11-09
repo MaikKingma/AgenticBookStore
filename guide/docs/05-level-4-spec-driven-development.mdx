@@ -3,6 +3,8 @@ title: "Level 4: Spec-driven development"
 sidebar_position: 7
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import LevelProgress from '@site/src/components/LevelProgress';
 
 <LevelProgress current={4} />
@@ -23,11 +25,212 @@ git stash -u && git switch start/level-4-<track>
 
 :::
 
-{/* guide-skeleton */}
+In this level you pick a track and a feature brief, turn the brief into a spec, a plan and tasks, then let the agent implement and verify it inside the harness you built.
 
 ## Tracks {/* #tracks */}
 
+Pick a track and switch to its prepared branch (built from `solution/level-3`, framework installed, project conventions captured):
+
+| Track | Branch | Weight | Commands you will use |
+|---|---|---|---|
+| A: OpenSpec | `start/level-4-openspec` | Light | `/opsx:explore`, `/opsx:propose`, `openspec validate --strict`, `/opsx:update`, `/opsx:apply`, `/opsx:archive` |
+| B: Spec Kit | `start/level-4-speckit` | Heavier, most guard rails | `/speckit-specify`, `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-implement`, `/speckit-converge` |
+| C: Agent OS | `start/level-4-agentos` | Light, standards-centric | `/plan` then `/shape-spec`, `/inject-standards`, implement the plan |
+
+Common start for every track:
+
+```bash
+git stash -u                         # keep your own Level 3 work if you like
+git switch start/level-4-<track>     # openspec | speckit | agentos
+claude                               # new session; /model sonnet
+```
+
+The start branches are built from `solution/level-3`: your Level 2 and Level 3 harness (`.mcp.json`, the `jdtls-lsp` plugin declaration, hooks, permissions, skill, `/ship`) plus the framework, already installed and configured. Pick a feature brief from the [feature briefs](#feature-briefs) below. Write the brief into the first command in your own words and add the answers to its questions: that is your contribution as the human.
+
+The steps below use the example names of brief A (`add-book-reviews`, `add book reviews`). With brief B or C, use your own change name.
+
+Open the tab of your track.
+
+<Tabs groupId="track">
+  <TabItem value="openspec" label="Track A: OpenSpec">
+
+About 35 minutes.
+
+1. Run the command below with "reviews and ratings" (or your brief) after it: the agent reads the code you are about to change.
+
+   ```text
+   /opsx:explore
+   ```
+
+2. Propose the change with your brief and decisions:
+
+   ```text
+   /opsx:propose add-book-reviews
+   ```
+
+3. In your terminal, validate it. Fix what it reports. Common error: a scenario heading with three `#` instead of four is silently ignored.
+
+   ```bash
+   openspec validate add-book-reviews --strict
+   ```
+
+4. Read `openspec/changes/add-book-reviews/specs/.../spec.md`. Change what is wrong with this command:
+
+   ```text
+   /opsx:update
+   ```
+
+5. Clear the context first:
+
+   ```text
+   /clear
+   ```
+
+   Then apply the change and watch the tasks tick off:
+
+   ```text
+   /opsx:apply
+   ```
+
+6. Commit through your `/ship` command. The test-gate hook runs.
+
+   ```text
+   /ship add book reviews
+   ```
+
+7. Archive the change. Your requirements are now part of the living spec in `openspec/specs/`.
+
+   ```text
+   /opsx:archive
+   ```
+
+Gotchas: `openspec ...` runs in the terminal, `/opsx:...` in Claude Code. If the commands do not show up, restart Claude Code.
+
+  </TabItem>
+  <TabItem value="speckit" label="Track B: Spec Kit">
+
+About 35 minutes, short path.
+
+1. Specify the feature with your brief and decisions. Describe what and why, not the tech stack.
+
+   ```text
+   /speckit-specify
+   ```
+
+2. Answer up to five questions. This is where Spec Kit shines; take it seriously.
+
+   ```text
+   /speckit-clarify
+   ```
+
+3. Plan it. Give the command this text: "Use the existing onion layers, see docs/architecture.md and the constitution."
+
+   ```text
+   /speckit-plan
+   ```
+
+4. Create the tasks:
+
+   ```text
+   /speckit-tasks
+   ```
+
+5. Implement, then converge once:
+
+   ```text
+   /speckit-implement
+   ```
+
+   ```text
+   /speckit-converge
+   ```
+
+6. Commit through your `/ship` command:
+
+   ```text
+   /ship add book reviews
+   ```
+
+Skip `/speckit-checklist` and `/speckit-analyze` today; try them at home.
+
+Gotchas: in Claude Code the commands are `/speckit-specify` (dash), the dotted names are documentation notation. The active feature is stored in `.specify/feature.json`, not taken from the git branch.
+
+  </TabItem>
+  <TabItem value="agentos" label="Track C: Agent OS">
+
+About 35 minutes.
+
+1. Look at `agent-os/standards/` first: these were discovered from the codebase. Fix anything wrong.
+
+2. Enter plan mode (or press `Shift+Tab` until plan mode):
+
+   ```text
+   /plan
+   ```
+
+   Then shape the spec with your brief and decisions:
+
+   ```text
+   /shape-spec
+   ```
+
+3. Answer its questions; let it save the spec folder in `agent-os/specs/`.
+
+4. Approve the plan and let Claude implement it. Use this command if tests drift from the conventions:
+
+   ```text
+   /inject-standards testing
+   ```
+
+5. Commit through your `/ship` command:
+
+   ```text
+   /ship add book reviews
+   ```
+
+Gotchas: `/shape-spec` refuses to run outside plan mode. Agent OS needs bash: on Windows use WSL or Git Bash.
+
+  </TabItem>
+</Tabs>
+
 ## Feature briefs {/* #feature-briefs */}
+
+Pick one. Each brief is written the way a product owner would ask for it: incomplete on purpose. Turning it into a precise, testable spec is the point of the level.
+
+A fits every track in 35 minutes. B is fine for OpenSpec and Agent OS, tight for Spec Kit. C is for people who finished early or know Spring AI.
+
+### Brief A: Reviews and ratings (recommended for most people)
+
+> "Customers keep asking which books are actually good. Let them leave a rating from 1 to 5 stars and a short review for books they bought. Show the average rating in the catalogue search."
+
+Questions your spec should answer: who may review (only customers with a shipped order containing the book?), one review per customer per book or edits allowed, review length, how the average is rounded and shown when there are no reviews, whether discontinued books keep their reviews.
+
+### Brief B: Wishlist with back-in-stock notice
+
+> "When a book is out of stock, customers should be able to put it on a wishlist, and we tell them when it is back."
+
+Questions your spec should answer: identify customers by e-mail like orders do?, what "tell them" means here (no real e-mail: record a `NotificationRequested` entry that a query can list), what happens when stock comes back while a restock is pending, limits per customer. Touches the `process` layer: a new domain event when stock becomes available again.
+
+### Brief C: Assistant recommends from the distributor (advanced)
+
+> "When we don't have what a customer asks for, the assistant should suggest titles from our distributor that we could order for them."
+
+Questions your spec should answer: how the assistant reaches the distributor, how suggestions are clearly marked as "not in stock, can be ordered", what the assistant must never promise (delivery dates?), how tests stay offline.
+
+Two routes, and your spec must pick one explicitly:
+
+1. **Within the architecture (recommended):** add a `searchTitles` method to the `DistributorAppService` port, implement it over REST in `acl`, expose it to the model through a new tool that calls a flow. Tests: scripted chat model plus a mocked port.
+2. **Via MCP:** use Spring AI's MCP client against our distributor MCP server. This breaks two rules on purpose (outbound integration only through `acl`; `CLAUDE.md` says the distributor is reached only through the port), so your spec must include an architecture change: update `docs/architecture.md`, `CLAUDE.md` and the ArchUnit rule with a documented exception. That is a legitimate outcome of a spec, as long as it is explicit.
+
+:::info[Sync moment]
+
+Look up, Maik demos this now. Maik shows one spec artefact per framework side by side (OpenSpec delta spec, Spec Kit spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes. (5 minutes)
+
+:::
+
+## Before you move on
+
+Who finished, and where did the spec save you? Where did it slow you down?
 
 ## Level cleared when
 
