@@ -160,3 +160,15 @@ Maik, 2026-11-09, after the spec 08 review:
 Changed files: `specs/08-bookstore-assistant.md` (configuration, API table, new requirement "Failed model call"),
 `specs/12-storefront.md` (assistant error messages). Implemented through /sdd-bugfix (`fix-08-assistant-review`).
 
+## D11. Storefront: readable genre labels and a footer at the bottom of the window
+
+Maik, 2026-11-09, during the live walk of the storefront:
+
+- The storefront showed the raw enum names (`SCIENCE_FICTION`) in the genre select and on the book cards. The shop
+  shows a readable label in sentence case instead ("Science fiction"); the select still sends the enum name to
+  `GET /books`. The label casing is my default; the spec did not name one.
+- The footer floated in the middle of the window on a short page. It now sits at the bottom of the window when the
+  content is short, and below the content when it is long.
+
+Changed file: `specs/12-storefront.md` (Visual design, catalogue scenario). Implemented through /sdd-bugfix
+(`fix-12-genre-labels-footer`).
