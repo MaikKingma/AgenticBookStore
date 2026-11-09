@@ -1,9 +1,10 @@
 ---
 spec: 06-distributor-acl
 source: docs/spec-pack/specs/06-distributor-acl.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-08T20:32:05Z
+gate2: 2026-11-09T02:57:20Z
 qa-lead: on
 base: factory
 spec-branch: sdd/06-distributor-acl/spec
@@ -198,3 +199,11 @@ From the QA lead's T8 r0 review (full text in the QA ledger, FF-19):
 - A2 (2026-11-09T00:23Z, orchestrator, self-accepted): T8 also carries the QA lead's test-only follow-ups FU-T5-1 to FU-T5-3 from the T5 r0 ENDORSE; its fileScope gains `T/command/BookCommandsTest.java` and it now depends on T5. Consequence: none on requirements or production code. Within authority (tests only).
 - A3 (2026-11-09T01:29Z, orchestrator, self-accepted, QA lead endorsed): T6 criterion 2 said "package-private nested record", which cannot compile with the `TitleImportCommands` clause (another package); the pack spec says "non-private" and wins. Wording corrected; the fixture records are public. No change to the bar (the guard does not depend on visibility).
 - A4 (2026-11-09T02:03Z, orchestrator, self-accepted): T8 also fixes the comment wording above the appended import requests in `http/catalogue.http` (QA lead T7 r0 note: the comment says both requests import, the second is a GET); spec 09 publishes the file. Comment only; T8 now depends on T7.
+
+## Final sweep and Gate 2
+
+- qa-final (opus): PASS on TIP 4ab8f34 over `origin/factory...origin/sdd/06-distributor-acl/spec`. Referee `./mvnw clean verify` 17.027 s, bookstore 931/0/0/0, distributor 190/0/0/0; reverse order green; live end to end with the real distributor and bookstore (30 checks: normal, chaos 503, 5 s read timeout at 5.02 s, refused connection, no rows left after failures); committed-bytes integrity 55 of 55 against the task gates; PR readiness: failing 0, skip count 0 to 0, no gitlinks, base is an ancestor.
+- QA lead final review: ENDORSE; Gate 2 QA confidence high; untraced pack criteria 0.
+- Residuals accepted: R1 connect timeout by inspection; R2 AUTHOR filter untested by decision D6 (Level 2 exercise); R3 restock quantity source indistinguishable; R5 remote call inside the transaction (spec 07 under load); R6 `requestRestock` has no caller until spec 07 (spec 07 adds an integration test); R7 closed by the unique constraint; R8 unreadable request body gives Boot's 400 JSON without a ProblemDetail code (since spec 02, owner decision).
+- Owner notes: `contracts/distributor/restock-invalid-request-request.json` is read by no test; `IsbnTest.java:67` and `:74` hold literal Arabic-Indic digits (published by spec 09); R8.
+- Gate 2 self-accepted by the orchestrator (merge: true run).

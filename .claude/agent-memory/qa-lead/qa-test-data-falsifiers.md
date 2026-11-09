@@ -67,3 +67,6 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      rework rounds on it). Equal needs a counterpart in another currency to be visible.
    - Live "remote not called" witness: make the remote fail every call (chaos failure-rate 1.0) and expect the
      local answer (409); a call would have produced the remote's 503 (spec 06 qa-final plan).
+     Live read-timeout default: chaos latency above the timeout, a direct-call witness taking at least that latency,
+     then the import's `time_total` inside [timeout, latency); one row-count query after all failure phases proves
+     "nothing saved" for every mode at once. Held first time in spec 06 qa-final.
