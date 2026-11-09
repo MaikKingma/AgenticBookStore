@@ -46,7 +46,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T6 | index, setup check, wrap-up pages | guide | [T5c] | B6 | elevated | sonnet | sonnet | PASS r1 | #112 | sdd/11-workshop-guide/T6 | ENDORSE |
 | T7 | Level 0 and Level 1 pages | guide | [T5] | B7 | elevated | sonnet | sonnet | PASS r1 | #114 | sdd/11-workshop-guide/T7 | ENDORSE |
 | T8 | Level 2 page | guide | [T5] | B8 | elevated | sonnet | sonnet | PASS r1 | #115 | sdd/11-workshop-guide/T8 | ENDORSE |
-| T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | pending | | | |
+| T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | pending | | | |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | pending | | | |
 
@@ -386,6 +386,30 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   `<code className="language-powershell">` outside tabs (all barred for authors by FF-31, checked by FF-32). The offline
   build has no page HTML to check (code text lives in JS chunks); the Pages build in CI is the guard.
 
+- FF-44 (T11 implementer and verifier, amendment A12): the only change to `guide/docs/04-level-3-behavioral-control.mdx`
+  is one line added after line 130 (the `tests-before-commit.ps1` sentence):
+  `[Windows hooks](./reference/troubleshooting.md#windows-hooks)`. The verifier shows that `git diff` on the file is
+  exactly that line, and that the file with the line removed hashes to `t9-hashes.txt`. In both builds a click on the
+  link lands on the `h2` "Windows hooks" (check the click target, not only the href). The troubleshooting Windows hooks
+  section matches L3:130 (the `.ps1` name, "not verified yet" until F2), states the WP:344 advice (Git Bash or WSL2,
+  `.ps1` variants on `solution/level-3`) and invents no hook-command text.
+- FF-45 (T10, T11 verifiers): a fenced prompt that is not pack text counts as a forced form only if it restates the
+  scenario's WHEN clause and adds nothing; its Expected line is the THEN clause word for word. List it with its scenario
+  lines and kill a reworded copy with a must-fail mutant. A precondition no page provides is stated as a precondition
+  and becomes a Gate 2 owner note; never invent a setup step for it.
+- FF-46 (qa-final): re-run the content verifiers' scratch-layer scripts on the merge result (T7 g14, T8 ff39, T9
+  `qa-t9-s11-sem.mjs` and `qa-t9-s11-ff39.mjs`, plus T10's); before re-running, update every assertion that pins a
+  decision rather than pack text (T9 SEM-06 "no windows-hooks link" is superseded by A12) and quote the change. The
+  cheat sheet's names for Level 3 files match the Level 3 page.
+- Process note from T9 (orchestrator): before approving a departure from a link the task card names, check the
+  skeleton; all 18 contractual anchors have existed since T4.
+- Gate 2 owner notes from T9: (R3) the `.env` checkpoint needs a `.env` file in the repository root and the pack never
+  says who creates one (`.env*` is git-ignored); (QA lead, untested reading) the deny rule is `Read(./.env)`, so a
+  Claude that falls back to Bash `cat .env` may hit a permission prompt rather than a deny; confirm in the spec 10
+  rehearsal; (R4) L3 line 55 "Two deny rules guard the escape hatches" also calls the `.env` rule an escape hatch,
+  which the pack uses only for the `--no-verify` path (WP:266-268); loose wording, not a false claim. The T9 page hash
+  is in `t9-hashes.txt`.
+
 ## Amendments
 
 - A1 (2026-11-08, orchestrator, during T1): the lab rule (G-4) also skips `guide/package-lock.json`. The lockfile is
@@ -492,6 +516,13 @@ From the T8 meta-review (qa-lead ENDORSE r1; T8 page hash in `t8-hashes.txt`):
   exactly one added frontmatter line on `guide/docs/03-level-2-give-your-agent-eyes.mdx`:
   `description: "Goal: Let the agent see what you see: the code through a language server, and real external data through our own MCP server, instead of guessing."`
   (the WP:177-178 Goal verbatim). Checked under FF-41 (b). Consequence: one line; no other change to the L2 page.
+
+- A12 (2026-11-09, orchestrator, on the QA lead's T9 meta-review): the T9 card (strategy.md:595) asked for a pointer to
+  the troubleshooting anchor `#windows-hooks`; the T9 brief approved a prose pointer instead on the false premise that
+  the anchor did not exist (it exists on the T4 skeleton, `guide/docs/reference/troubleshooting.md:8`). T11's fileScope
+  gains exactly one added line on `guide/docs/04-level-3-behavioral-control.mdx`, after line 130:
+  `[Windows hooks](./reference/troubleshooting.md#windows-hooks)`. Checked under FF-44. Consequence: one line; no other
+  change to the L3 page (the line 55 wording, R4, stays an owner note).
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 

@@ -1,6 +1,6 @@
 ---
 name: qa-docs-checker-specs
-description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content, axe preload noise on file://, shape-vs-count rules, built meta descriptions, substring command entries, branch lag; read before the strategy of any docs or checker task
+description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content, axe preload noise on file://, shape-vs-count rules, built meta descriptions, substring command entries, branch lag, derived scenario prompts; read before the strategy of any docs or checker task
 metadata:
   type: feedback
 ---
@@ -107,5 +107,11 @@ contrast), the checker is production code AND the oracle for every later task. T
     skip frontmatter accept it). Manifest command entries are substring matches (`which jdtls-lsp` passes): ask
     content verifiers for whole-line command equality. A class a pack prompt names may be missing only because the
     spec branch lags the integration branch: check `origin/factory` before calling the pack wrong.
+
+20. **Derived prompts for pack scenarios** (spec 11 T9 `.env`): when the pack gives GIVEN/WHEN/THEN but no prompt
+    words, a fenced prompt is a valid forced form only if it restates the WHEN clause and adds no output, path, tool
+    or flag, and the Expected line is the THEN clause verbatim. A GIVEN no page provides is stated as a precondition
+    (owner note), never an invented setup step. Check deny-rule scenarios against the tool the rule names (a `Read()`
+    deny does not cover a Bash read): a rehearsal item, not a page finding.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).

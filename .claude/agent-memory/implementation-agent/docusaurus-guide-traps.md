@@ -108,3 +108,8 @@ metadata:
   observation card): pin CLI output equal to in-process `runChecks` plus pending lines derived from the live markers.
 - Playwright for rendering evidence: import it by absolute path from another scratch install, do not copy it.
   Wait for `document.title` to update before asserting the title (react-helmet sets it after load).
+- Level page recipe that passed first time (T9): h3 steps instead of nested list fences, the sync box and Checkpoint boxes as in
+  the L2 page, a `Before you move on` h2 for the debrief plus the compare link, the double-backtick span for
+  `` !`cmd` `` and bold inside the sentence but never inside a manifest snippet. Copy the previous task's scratch render
+  script (`s11-tN-impl-render.mjs`) and change SPEC, checkpoint count and anchors. A worktree agent's `bash -c 'cd ...'` is
+  refused by the guard; put such runs in a script under `.claude/comms/tmp/`.
