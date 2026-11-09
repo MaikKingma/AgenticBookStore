@@ -58,11 +58,14 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T1 | Demo seed, Flyway locations per profile, empty-catalogue guard, seed census test | bookstore | [] | 1 | elevated | sonnet | sonnet | done | PASS | ENDORSE (r0 REJECT) | 1 | #121 | sdd/09-workshop-baseline/T1 | 7664a56 |
 | T4 | Publish script, its bash test, ci.yml job, no-agent-config guard | root | [] | 1 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | #123 | sdd/09-workshop-baseline/T4 | cd354c6, 30303e6 |
 | T2 | http collection for a seeded database, assistant.http, demo-flow.http | root | [T1] | 2 | elevated | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T2 | 146efe0 |
-| T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | todo | | | | | | |
+| T3 | docs/architecture.md and README.md for the team | root | [T1, T2] | 3 | elevated | sonnet | sonnet | done | PASS (r0 BLOCKED by orchestrator, r1, r2) | ENDORSE | 2 | (see PR list) | sdd/09-workshop-baseline/T3 | d604307 |
 | T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | todo | | | | | | |
-| T6 | Test-only follow-up FU-T2-1: the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | 4 | elevated | sonnet | sonnet | todo | | | | | | |
+| T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
+| T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | todo | | | | | | |
+| T8 | Seed grows to 100 books, at least 10 AVAILABLE per genre (D12), plus FU-T2-1 | bookstore | [T7] | 6 | (QA strategy) | | | needs-decision (Q1) | | | | | | |
+| T9 | Count updates "40" to the new seed count in README.md, http/demo-flow.http and docs (D12) | root | [T8] | 7 | (QA strategy) | | | todo | | | | | | |
 
-Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
+Execution order, one task at a time: T1, T4, T2, T3, T5, T7, then T8 and T9 once Q1 is answered.
 
 ## T1 Demo seed data and Flyway locations per profile
 
@@ -229,9 +232,11 @@ Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
   `http/orders.http` (header comment lines 2 and 4 only).
 - qaDirective: ledger C0, T4 directive, review log "T4 r1" (FU-T4-1, R10) and "T2 r0" (A1, A1b carry-over recipe).
 - Acceptance criteria:
-  0. In `catalogue.http`, `inventory.http` and `orders.http`, line 2 reads "Every ISBN these requests add or import is
-     one that the demo data leaves out." and line 4 reads "Run this file once per database: a second run is refused
-     with 409, because its ISBNs are in the catalogue by then." A diff against the T2 baseline shows only those lines
+  0. In `catalogue.http`, `inventory.http` and `orders.http`, only the false sentences change (FF-7): on line 2 the
+     sentence "Every ISBN used in this folder is one that the demo data leaves out." becomes "Every ISBN these requests
+     add or import is one that the demo data leaves out." and every other sentence on that line stays as it is (the
+     demo data count sentence is T9's); line 4 becomes "Run this file once per database: a second run is refused with
+     409, because its ISBNs are in the catalogue by then." A diff against the T2 baseline shows only those sentences
      changed; the text gates are re-run with positive controls.
   1. A new test case after the existing reuse cases makes a local parentless commit with the published `main`'s tree,
      the baseline message and a different date, then runs `--push`: exit 0, remote `main` and tag unchanged, local
@@ -250,6 +255,37 @@ Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
   2. A seed copy that holds 9780141439792 (and one that holds 9789900010791) fails the census test; the real seed
      stays green; no other test changes; referee green within 60 s.
 
+## T7 Spec 02 search cap from 100 to 200 results (D12)
+
+- fileScope: `bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlow.java` (line 37 only);
+  `bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlowTest.java`; one integration test
+  file (a new method in `CatalogueIntegrationTest.java` or a new `*IntegrationTest` extending `IntegrationTestBase`).
+- qaDirective: ledger C0 plus T7-A to T7-F (C0-7 not run: no live claim).
+- Acceptance criteria (Gate findings G15 to G18 folded in):
+  1. The whole production diff is one line, `CatalogueFlow.java:37`, `SEARCH_LIMIT` 100 to 200; the search Javadoc
+     keeps `{@value #SEARCH_LIMIT}`. `BookstoreTools`, `BookstoreToolsTest`, `BookDataServiceImpl`, `BookRepository`,
+     `BookDataServiceImplTest` and `IntegrationTestBase` stay byte-identical (G18).
+  2. `CatalogueFlowTest` lines 424 to 454 pin 200 instead of 100 (method name included); the `never()` check at line
+     462 is unchanged; nothing deleted or loosened (G17).
+  3. A full-context integration test through `GET /books` (extends `IntegrationTestBase`, no new context key) in two
+     phases: 200 books, all 200 titles returned in title order; then one more book whose title sorts first, inserted
+     last: exactly 200 returned, that title first, the previously last title gone. Titles share a prefix plus a
+     zero-padded number, inserted out of title order, checksum-valid ISBNs whose order follows title order in neither
+     direction, every book with a stock item, assertions on the parsed title list (G15, G16, T7-C).
+  4. `./mvnw clean verify` green within 60 s, the same number of Spring contexts, the new test under 10 s;
+     ArchitectureTest unchanged.
+
+## T8 Seed grows to 100 books (D12), plus FU-T2-1
+
+Blocked on Q1 (amendment A3). Criteria are written once Q1 is answered; T1 criteria 3 to 6 apply with the D12
+counts, and the T6 criteria fold in.
+
+## T9 Count updates for the new seed (D12)
+
+- fileScope: `README.md`, `http/demo-flow.http`, `docs/architecture.md`, and line 2 of `http/catalogue.http`,
+  `http/inventory.http`, `http/orders.http` (count sentences only). Runs after T8. Covers every "40" or "forty" and
+  every derived count such as README "The other 20 books" (N3).
+
 ## Amendments
 
 - A1 (2026-11-09, orchestrator, after the T4 r1 ENDORSE): (1) T4 criterion 7 reads "adds no actionlint finding"
@@ -263,6 +299,24 @@ Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
   join T5, which now also covers those comment lines; T6 added as a test-only follow-up (FU-T2-1, residual R12: the
   census constant missed the two new http ISBNs). Consequence: none for T3; qa-final checks the http hashes against
   the T5 baseline.
+- A3 (2026-11-09, orchestrator, on the main session's relay of Maik's decisions D12 and D13; factory 39f5e5e,
+  8e7334e, 3d467fc, merged into the spec branch as e4f978a):
+  - D12 search cap: new task T7, `CatalogueFlow.SEARCH_LIMIT` from 100 to 200 with its Javadoc and a test that pins
+    200 (more than 100 matches returned, the 201st cut off); the assistant's `BookstoreTools` limits stay.
+  - D12 seed: new task T8 (depends on T7), the seed grows to 100 books with at least 10 AVAILABLE per genre; the 20
+    shared ISBNs stay as they are; the new books are invented, bookstore-only, checksum-valid, unique against the seed,
+    the distributor catalogue and 9789900010029, stocked above their reorder level, no pending restock; stock, order
+    and reserved rules unchanged. T6 (FU-T2-1) folds into T8 because both edit the census test. New task T9 updates
+    every "40" or "forty" in README.md, http/demo-flow.http and docs.
+  - Open question Q1, blocking T8: `Genre` has exactly 10 values, so 100 books with at least 10 AVAILABLE per genre
+    means every book is AVAILABLE (exactly 10 per genre), which contradicts "a few discontinued (bookstore-only ones)"
+    in the same Seed data section and T1 criterion 3. Options: (a) 100 books, all AVAILABLE, drop the discontinued
+    line; (b) 103 books, 100 AVAILABLE plus the 3 discontinued bookstore-only books; (c) 100 books, at least 10 per
+    genre counting discontinued ones, keep 3 discontinued. Put to the main session; no pick.
+  - D13: README and docs never send readers to an Assistant page, nav link or route; the assistant is part of the shop
+    at /shop/. Applied in T3 round 2. `POST /assistant/chat` stays, so `http/assistant.http` is unchanged.
+  - QA strategy for T7 to T9 comes from the QA lead before each task runs. Consequence: T5 runs as planned; qa-final
+    waits for T8 and T9.
 
 ## QA feed-forward
 
@@ -290,3 +344,8 @@ Execution order, one task at a time: T1, T4, T2, T3, T5, T6.
   9780141439563; documented order on one database: catalogue, inventory, orders, distributor, demo-flow; demo-flow
   runs once per fresh database; distributor.http can run again. qa-final: http hashes equal the final baseline, a
   collision check on the tip with a seeded control, demo-flow green on the published clone.
+- FF-7 to FF-9 (T3, ledger Cross-task patterns): a "line N reads X" criterion replaces only the named sentence; the
+  D13 change cycle must add `POST /assistant/chat/stream` to the README endpoint list (outside this spec); warning
+  baselines after the spec 08 merge come from a base run on the PR base, not the pre-merge 142. qa-final adds the T3
+  hashes at the tip, the endpoint and architecture scripts on the tip with controls, and the README data claims against
+  the seed after T8 and T9.
