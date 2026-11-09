@@ -29,7 +29,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | staging layout, scripts, self-test, branch-cut tool | root | [] | 1 | critical | opus | opus | #135 | sdd/10-harness-reference-solutions/T1 | ENDORSE (r3) |
 | T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | #139 | sdd/10-harness-reference-solutions/T2 | ENDORSE (r0) |
-| T3 | Level 1 consistency check and rehearsal rows (A2) | root | [T2] | 3 | elevated | sonnet | sonnet | | | |
+| T3 | Level 1 consistency check and rehearsal rows (A2) | root | [T2] | 3 | elevated | sonnet | sonnet | #144 | sdd/10-harness-reference-solutions/T3 | ENDORSE (r2) |
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | #142 | sdd/10-harness-reference-solutions/T4 | ENDORSE (r0) |
 | T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | | | |
 | T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | | | |
@@ -197,7 +197,8 @@ for all three tracks is a manual check for Maik.
 - FF-T2-a (from T2; T3 directive and record): the T3 record states that `docs/architecture.md` (named by
   `CLAUDE.md`) and `db/seed/R__seed_demo_data.sql` (named by `.claude/rules/data-and-migrations.md` line 5) are absent
   on the simulated base and arrive with spec 09, and lists both as resumed-run checks
-  (`git ls-tree level-0-start -- <path>` non-empty); a Level 0 run that tries to read either file and finds it
+  (`git ls-tree level-0-start -- <path>` non-empty; the seed path is on line 10 of the rule, corrected from "line 5"
+  after the T3 r1 meta-review); a Level 0 run that tries to read either file and finds it
   missing is a side effect of the base, not a run failure; the verifier quotes such reads. qa-final re-runs the
   five-block `cmp` of Level 1 on the final bytes.
 - FF-T4-a (from T4; T6 and T7): the rehearsal row for "Plugin loads from the project declaration" states that the
@@ -207,6 +208,21 @@ for all three tracks is a manual check for Maik.
   T9, T10, T12, T13 with the per-task deltas in the QA ledger ("QA strategy changes under D14"); C0-7, C0-12, P1, P4,
   the spot re-runs and every stream or transcript check lapse; C0-11 is reduced to one status per scenario and no
   claimed Claude result.
+- FF-T3-a (from T3; QA directives of T6, T10, T11, T12, T13): C0-13e also checks that every rehearsal row's setup,
+  reset and judging commands produce the state the scenario assumes: a recorded start commit,
+  `git reset --hard <start> && git clean -fdx` (or a fresh clone) between repeated runs, judging against `<start>`
+  with commits included, and `./mvnw clean verify` wherever a verify result is judged; the witnesses are stale
+  git-ignored output (`target/classes/db/migration`) and commits made by a run.
+- FF-T3-b (from T3; same tasks): repeated "fresh session" runs also start with clean Claude Code auto memory for the
+  project, which lives outside the repository and is keyed by the clone path; require a new clone folder per run or a
+  `/memory` check before each run (a git reset in the same folder does not touch it).
+- FU-T3-1 (from the T3 r2 meta-review, folded into T6): T6 also updates the Level 1 row R1-2 Setup in
+  `S/records/rehearsal-checklist.md` so a new clone folder per run is the default (or a `/memory` check before each
+  run is required), per FF-T3-b.
+- Product findings from T3 for Maik: PF-T3-1 spec 09 line 49 says "Level 1 imports it from `CLAUDE.md`" while spec
+  10, the workshop plan and the guide use a plain path; PF-T3-2 `mvnw.cmd verify` is named only in spec 10 and
+  `CLAUDE.md` (Windows rehearsal row R1-3). Guide notes: workshop-plan line 114's reset (`git restore . && git
+  clean -fd`) keeps `target/`; running Level 0 and Level 1 in one clone carries Level 0's auto memory into Level 1.
 - Product findings from T4 for Maik: PF-T4-1 the JDK floor reads "JDK 17 or later" in spec 10 line 168 and in
   workshop-plan line 59 (J8 and `docs/lsp-setup.md`: 21); PF-T4-2 workshop-plan line 207 `claude mcp add` writes a
   literal URL while the staged `.mcp.json` uses `DISTRIBUTOR_MCP_URL` (name, transport and port agree).
