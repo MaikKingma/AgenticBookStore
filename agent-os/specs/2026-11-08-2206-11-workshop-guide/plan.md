@@ -49,7 +49,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T9 | Level 3 page | guide | [T5] | B9 | elevated | sonnet | sonnet | PASS r1 | #118 | sdd/11-workshop-guide/T9 | ENDORSE |
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
-| T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | pending | | | |
+| T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | PASS r1, REJECT r1 reworked, PASS r2 | #129 | sdd/11-workshop-guide/T12 | ENDORSE r2 |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
@@ -493,6 +493,60 @@ From the T11 meta-review (qa-lead ENDORSE r1; hashes in `t11-hashes.txt`, checke
   or ruling; one green CI run is no evidence against a 5 to 20 percent race.
 - Process note (all agents, from the T11 r2 meta-review): `updated` in an outbox is written from `date -u`, never as
   an estimate ahead of the clock; a future heartbeat hides a dead agent from the staleness rule.
+
+From the T12 meta-reviews (qa-lead REJECT r1 on 738f7ac: RA-1 the L3 PowerShell sentence, RA-2 the cheat sheet's
+"optional" Stop hook label; ENDORSE r2 on fdc0383; hashes in `t12-hashes.txt`, file sha256
+b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
+
+- FF-55 (T12 r2 verifier, delivered): diff L3 and the cheat sheet against the r1 bytes of 738f7ac; only L3:132 and the
+  cheat-sheet lines in the implementer's table change; L3 minus lines 101-102 and 132-133 hashes to the `t11` value;
+  FF-49 unchanged; the wording and static scratch checks follow the r2 sentences, with two must-fail copies (the r1 L3
+  sentence restored; the cheat sheet without "optional") that fail the QA check while the frozen checker passes; 52
+  tokens and a word trace against r1; print in four variants plus a control; rendered L3 and cheat sheet in both builds
+  and three engines. Answered by qa-t12 PASS r2, QA lead ENDORSE r2.
+- FF-56 (orchestrator, later directives; standards proposal at Gate 2): a directive that bans a literal gives the
+  implementer replacement wording that keeps the referent; a trim-for-fit criterion lists what may not be dropped
+  (qualifiers and labels such as optional and stretch, and pack facts, not only manifest tokens); every trim is graded
+  meaning-neutral or not in an old -> new table; the verifier proves trims with a word-sequence trace against the
+  previous bytes plus a control build without the compensating edits.
+- FF-57 (qa-final, T12 layer, on the final head after the factory merge): (a) `shasum -a 256 -c t12-hashes.txt` gives
+  3 OK; the rest of the chain is OK (`t6` index and wrap-up, `t7` 2, `t10` 1, `t11` architecture, troubleshooting and
+  L2), the `t6` setup and `t11` L3 and cheat-sheet lines fail as expected; 11 pages bound. (b) Re-run the T12 scratch
+  layer and quote each tail: `qa-t12-wording.mjs` (`WORDING OK`), `qa-t12-static.mjs` (`STATIC ALL OK`),
+  `qa-t12-r2-joins.mjs` against 738f7ac (`JOINS ALL OK`), `qa-t12-cs.mjs` (52 tokens, 0 missing), `qa-t12-ff39.mjs`
+  with the FF-50 ranges, `qa-t12-r2-mutants.sh` (same kill table). (c) Print with `qa-t12-r2-print.sh` in Chromium A4
+  at margin 0 and 10 mm with a control: head full 2/2 and Level 4 hidden 1/1, control Level-4-hidden 10 mm = 2; quote
+  the Chromium version and the headroom; two pages for the head is a FAIL. (d) `qa-t12-r2-sentences.sh` in three
+  engines and both builds. (e) FF-53 and FF-54 apply unchanged.
+- FF-58 (qa-final, after merging `origin/factory`: decisions D10 to D13 and the spec 08 code): (a) on the merge,
+  `git diff <tip> <merge> -- guide` prints nothing, FF-49 and FF-57 (a) hold. (b) Manifest sources unchanged: the diff
+  over `docs/spec-pack/workshop` and spec 10 prints nothing; spec 09 changed but has 0 manifest entries
+  (`grep -c "entries('spec09'" guide/scripts/coverage.mjs` = 0); `npm run check` still prints `anchored 304/304, 15
+  manual rows, 0 entries pending`; if a source did change, re-derive the FF-50 ranges. (c) decisions.md D9 still at
+  lines 134-147; quote the lines the C0-13 rows cite. (d) D11 to D13 sweep over `guide/docs` and the built text for
+  assistant, `/chat`, seed, book counts, results, temperature and storefront; allowed hits: L0:26, L4 Brief C
+  (verbatim) and the architecture page's `assistant` rows; a page that tells participants to open an Assistant page,
+  tab or nav link, counts seeded books, or quotes a result cap is a finding. (e) FF-43 on the merge:
+  `AssistantCommands`, `BookstoreTools`, `AssistantConfig`, `OfflineChatModel` exist under
+  `bookstore/src/main/java/**/assistant/`; the page's assistant suffix row equals the merged ArchitectureTest; its
+  numbered rules match. (f) Referee on the merge: quote `Total time` and the counts (bookstore at least 1314,
+  distributor 190, Vitest `598 passed | 2 expected fail`); over 60 s is never waived: re-run once on an idle machine
+  and state the load; a second over-budget run is a needs-decision. (g) Guide, CI verify and windows-build on the merge
+  commit and the final head, with run ids and attempts.
+- Follow-up F16 (post-cycle, with F15, once the checker freeze lifts; from T12 O-4): manifest entries or a checker
+  rule for setup:23 (Git Bash prerequisite), L3:101 (`onFailure`, "times out (180 s) or fails to run"), L3:132 (the
+  PowerShell sentence) and the cheat-sheet labels "optional" (Stop hook) and "stretch" (review subagent), so removing
+  or widening any of them fails `npm run check`; the must-fail copies R2-M1 to R2-M4 become the tests; re-baseline the
+  freeze.
+- Follow-up F14 extension (T12 O-3): spec 10 also settles whether `"onFailure": "block"` covers a non-2 exit (the
+  reference script's `cd ... || exit 1`, next to its comment "Any other non-zero code does NOT block") or only a
+  timeout or launch failure; the guide follows (L3:101, L3:105, L3:112, cheat-sheet:21); if it covers exit 1, spec 10
+  changes first, then an sdd-bugfix on the guide.
+- Follow-up F17 (post-cycle, D13): when the chat widget and streaming endpoint are built, re-check the architecture
+  page's `assistant` rows against that change's ArchitectureTest.
+- Gate 2 owner notes from T12: O-2 the L3 sentence says "hooks" where the pack says "handlers" (true of the settings
+  fragment shown); O-5 the cheat sheet's one-page variant at 10 mm has 8 px of headroom; the D9 sentences have no repo
+  pin until F16.
 
 ## Amendments
 

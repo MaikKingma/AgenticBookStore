@@ -16,4 +16,12 @@ metadata:
   Opt-in rules reach the CLI through `runChecks` options set only for the default root (`positional.length === 0`).
 - In a rendered link check, heading permalinks (`a.hash-link`) also match `href*=reference/...` in the offline hash build
   (`#/reference/page#id`, a double hash); exclude `.hash-link` and take the id after the last `#`.
+- Print fit at a margin: set the viewport width to `794 - 2*margin_px`, `emulateMedia({media: 'print'})`, hide the section, read
+  `documentElement.scrollHeight`; it must be at most `1123 - 2*margin_px` (1047 at 10 mm) or the PDF gets a second page (a
+  6 px overflow did). Prose wraps at about 85 chars and code lines at about 70 per line at 718 px. Merging two one-line
+  bullets into one two-line bullet saves the 4 px list-item gap, with no fact lost. Re-measure after every list edit.
+- One restored word can cost a whole line (26 px): a paragraph wrapping from 2 to 3 lines used up a 10 px headroom. Each
+  joined pair of bullets regains about 4 px, so budget several joins per word that wraps.
+- An Edit that deletes text at the end of a list line (`old_string` ending at the line end, `new_string` empty) can swallow the
+  newline and fuse two bullets: always read `git diff -U0` of an edited Markdown list, and re-run all gates after the last edit.
 - Never `sleep` in a Bash call (blocked): start the run with `run_in_background` and wait for the notification.

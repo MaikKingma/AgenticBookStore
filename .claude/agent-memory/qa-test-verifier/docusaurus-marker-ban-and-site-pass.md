@@ -1,6 +1,6 @@
 ---
 name: docusaurus-marker-ban-and-site-pass
-description: Techniques and traps for QA of a checker rule turned on for the live guide (skeleton marker ban) and for the site-wide rendered pass over a Docusaurus guide (offline zip, dev console, print, own render script)
+description: QA of a checker rule turned on for the live guide (marker ban), the site-wide rendered pass (offline zip, dev console, print) and Linux-only flaky node:test CLI tests
 metadata:
   type: feedback
 ---
@@ -24,5 +24,19 @@ Rule: derive the rendered script from the previous one with an exact-replacement
 - Dev-mode driver traps: a collapsed sidebar category needs a click on its label before the link is visible; read `h1` and `meta[name=description]` only after waiting for the new page (they race and show the previous page); copy buttons inside hidden tab panels are not visible, click only the visible ones; assert counts after `waitFor`.
 - Print: Playwright `page.pdf({format:'A4'})` page count = `/Type /Page[^s]` matches (equals `/Count`); hide the last section by `display:none` from its h2 to the end for the "second page only for X" proof; also measure at 10 mm margins, the count can differ from the margin-0 result (report as an observation when the card's check is margin-0).
 - Must-fail mutants for a rendered-only assertion (a Checkpoint retitled, one added to a page that has none) pass the frozen checker and both builds; show the exit 0 of the checker and the failing rendered line in the same log.
+- Insertion-only content task (frozen checker): prove it three ways (diff -U0 has no deleted line, HEAD minus added line numbers hashes to the frozen value, base lines are an in-order subsequence of HEAD). Build the PR base from `git archive <base> guide` in the scratchpad (symlink node_modules, `--out-dir`) and compare stripped text plus meta description per built page: only the task's pages may differ. `diff -rq` of the build trees is noise (asset hashes follow the build path). Print control: run the same print script on the base build; the count the task fixes must differ there (sensitivity).
+- Wording mutants for "must not claim X" (a sentence-level negation rule over prose, inline code and fences stripped): the frozen checker passed every claim-style mutant, pack-line equality of a hook fragment is the only content pin that killed one (an added JSON key). Deleting a required new sentence survives every automated gate: say so, it is manual-only.
+- Re-verifying a wording-fidelity rework on a frozen checker: pin the new sentences as positive AND negative exact-string checks (old sentence must be absent), trace `;`-joined bullets by rebuilding each new bullet from consecutive old bullets, and run the join trace on the mutants too (a dropped "stretch" label passed frozen checker and wording check, only the trace killed it).
+- Print headroom control: build the old text plus only the one restored word into a scratch tree; if that variant prints one page more at the hidden-last-section 10 mm variant while the final tree fits, the compensation edits are proven load-bearing. Quote headroom as allowed minus documentElement.scrollHeight in print media at the margin's content width.
+- Never rerun a previous round's helper script as is: it writes fixed log names and overwrote that round's evidence log (`s11-tNN-...-mvnw.log`). Copy with a new prefix first.
 
+Rule: a test that runs a CLI through `spawnSync` pipes and reads a long stderr is Linux-flaky when the CLI ends with `process.exit(n)`; prove a fix by reproducing red and green on Linux, not by repeating macOS runs.
+
+**Why:** Node writes pipe output asynchronously on Linux, so a failing run that exits right after a long `console.error` loses the tail (status and stdout stay intact). macOS never truncated in 480+ runs, so any amount of local looping is vacuous; only the Linux CI showed it.
+**How to apply:**
+- Container: `docker run ubuntu:24.04` with a Linux Node tarball mounted (`-v <dir>/node-v..-linux-arm64:/node:ro`), `apt-get install -y libatomic1`, worktree mounted `:ro`, copy `guide/` and `docs/spec-pack` into the container so the checker finds the pack relative to itself. 8 parallel workers x 25 to 40 runs of the one test file give a measurable rate (old test red about 11 percent, pipe-capture mutant 8 percent).
+- Take the "before" file from `git show <sha>:<path>`, not from the implementer's copy, and compare sha256.
+- Must-fail for the new witness: a mutant of the capture helper back to pipes run in the same container (red in some runs), plus deterministic macOS mutants (cut stderr at the CI byte, drop the last line, status 0, wrong count in the CLI). Which test sees a given cut depends on where it falls, so do not expect the witness to be the more sensitive one.
+- Bash traps: `pids="$pids $(burn)"` where burn backgrounds a busy loop hangs forever (the substitution waits for the background job's pipe); background with `> /dev/null 2>&1 &` and use `$!`. A `\.` before a multi-byte char in `grep -E` fails in the Ubuntu C locale: write the literal `ℹ`. A foreground wait loop belongs in a script file (`sleep` alone is blocked).
+- Rule on the underlying `process.exit` in a frozen checker: pre-existing and failing-path only means follow-up (`process.exitCode = 1`), not a finding of the task that only fixed the test.
 Related: [[docusaurus-guide-probes]], [[shell-traps]]

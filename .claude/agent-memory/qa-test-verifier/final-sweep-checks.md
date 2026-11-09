@@ -1,6 +1,6 @@
 ---
 name: final-sweep-checks
-description: qa-final (PR readiness) traps in this repo - base branch moving under the spec branch, CI run ids that belong to task branches, running mvnw inside a scratch clone, bugfix negative-control ladder with cross controls in throwaway worktrees
+description: qa-final (PR readiness) traps - base branch moving, CI run ids of task branches, mvnw in a scratch clone, bugfix negative-control ladder, JaCoCo from the CLI without a POM change
 metadata:
   type: feedback
 ---
@@ -15,7 +15,6 @@ Rule: verify every PR-readiness fact against the live remote yourself. Never cop
 - In a scratch clone, run `./mvnw` from a script that `cd`s into the clone. Calling `<clone>/mvnw` from the project root would resolve the main checkout's `.mvn`.
 - The session scratchpad is shared across specs: a previous final sweep's `final-qa-clone` blocks `git clone`. Move it aside (`mv` to `spec<NN>-final-qa-clone`), never delete it.
 - Surefire-vs-source class lists: ArchitectureTest holds `@ArchTest` fields and no `@Test`, so list `@(Test|ArchTest)` holders. A tr_TR run proves its argLine took effect when the PostgreSQL detail line prints in Turkish (`Ayrıntı:`).
-- Writing your own memory changes the main checkout's `git status`. Quote the end status first, then write memory, and report the delta.
 
 Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway worktrees as a three-step ladder, then prove the cross-task paths in a scratch worktree at the tip.
 **Why:** a regression test that turns green when the OTHER task's fix lands does not pin its own defect. That gap only shows when the fixes are applied one at a time, and a single base-vs-tip run cannot see it.
@@ -29,8 +28,13 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 - "Recipe does not reproduce" after fixture alignment: the recipe tests at tip are happy-path guards, so install the BASE bytes of the recipe tests at the tip (throwaway worktree) and show them red.
 - Surefire `-Dtest=A#m1+B#m2` runs only class A: `+` joins methods of ONE class. Count `Tests run` before trusting a recipe; use a comma between classes.
 - Per-task hash baselines into one integrity check: a python script reads the gate files in task order, keeps only `^[0-9a-f]{64}  ` lines (some files also hold porcelain and bare paths), drops agreed paths, keeps the LAST line per path and prints every supersede (old -> new hash, by which gate); then `shasum -a 256 -c` in the `git archive <tip>` extraction and a `diff` of the sorted path union against the spec diff's name list proves "reconciled by name".
-- PR body "ASCII only" checks: the prescribed attribution footer carries U+1F916. `rg -n '[^\x00-\x7F]'` on the saved body shows it; report it as the footer, not as prose, and let the lead rule.
-- Jars from `spring-boot:repackage` carry the reproducible 1980 mtime: cite the `Building jar` log line of the run that built them, never `stat`.
-- A directive that says a mutated control "fails at check X" is about order: the driver's first FAIL can be an earlier witness (a log check) for the same cause. Quote the first FAIL and the X lines both.
 - Warning inventory (against a reference referee log, or a base referee in a throwaway worktree): a case-insensitive `warn` grep hits about 130 lines per referee here (app WARN logs that ACL, data and web tests provoke on purpose, Spring AI BeanPostProcessorChecker, npm `install-scripts` printed as `[ERROR]`), far beyond a directive's short "pre-existing" list. Prove ownership instead of arguing: `git reset --hard <base>` in the worktree, run the base referee, grep both logs per module section, classify by category in a python script and `diff` the sorted multisets after normalising timestamps, PIDs, thread names (`[...-exec-N]`), `Time elapsed: X s`, logback `HH:MM:SS,mmm` prefixes and the `.m2` path; "0 added at TIP" closes it. Without the thread and elapsed-time filters every run differs.
+
+Rule: measure coverage from the command line; never add JaCoCo to a POM (plans forbid POM changes).
+
+**Why:** the bookstore POM has no JaCoCo and its surefire config sets no `argLine`, so `prepare-agent` can inject the agent cleanly. Java 25 needs JaCoCo 0.8.14 or later.
+**How to apply:**
+- `./mvnw -pl bookstore org.jacoco:jacoco-maven-plugin:0.8.14:prepare-agent verify org.jacoco:jacoco-maven-plugin:0.8.14:report -l <scratch>/jacoco.log`, then grep `bookstore/target/site/jacoco/jacoco.csv` for the changed classes (columns: instr missed/covered, branch missed/covered, line missed/covered).
+- Run the plain `./mvnw -pl bookstore verify` too, as the gate run. The referee's `clean` removes the report.
+- For a constraint-only change (annotations on a record), line coverage is vacuous: prove each kept or removed annotation with a probe instead.
 Related: [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[readme-and-live-jar-probes]]
