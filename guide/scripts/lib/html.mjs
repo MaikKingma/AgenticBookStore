@@ -1,8 +1,9 @@
 // A small HTML scanner for the built pages, Node built-ins only. It reads the
 // minified output of the Docusaurus build (unquoted attributes, void tags written
 // with a trailing slash) and finds checkboxes that have no accessible name.
-// It is a scanner, not a parser: it does not build a tree and it does not decode
-// entities, which is enough to tell "has a name" from "has none".
+// It is a scanner, not a parser: the checkbox check needs no tree and no decoded
+// entities, which is enough to tell "has a name" from "has none". elementTree builds
+// a light tree on top of the scanner (with decoded text) for the PowerShell rule.
 
 const RAW_TEXT = new Set(['script', 'style']);
 
@@ -137,6 +138,58 @@ export function checkboxes(html) {
       (attrs.has('id') && labelledIds.has(attrs.get('id')));
     return {offset, named};
   });
+}
+
+// The named character references the build writes, and numeric ones in decimal or hex. Any
+// other reference stays as written, so text holding it cannot equal a plain line by accident.
+const NAMED = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: String.fromCharCode(0xa0)};
+
+export function decodeEntities(text) {
+  return text.replace(/&(?:#[xX]([0-9a-fA-F]+)|#([0-9]+)|([A-Za-z][A-Za-z0-9]*));/g, (whole, hex, dec, name) => {
+    if (name !== undefined) return Object.hasOwn(NAMED, name) ? NAMED[name] : whole;
+    const code = hex !== undefined ? parseInt(hex, 16) : parseInt(dec, 10);
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+  });
+}
+
+// The element tree of a page (for the rules that need to know what is inside what):
+// {name, attrs, offset, parent, children}, the root has the name "#root"; a text child is
+// {text}, with its character references decoded. An end tag closes the nearest open element
+// of its name and everything opened inside it (the minifier drops optional end tags such as
+// </p>); an end tag with no open element of its name is ignored. A new <li> closes an open
+// <li> of the same list, so the tabs of a tab list (<li role=tab>, written without </li>)
+// are siblings. A void element (<br/>, <img>) stays open until its parent closes: it holds
+// the text that follows it, which changes no text content and no ancestor of interest.
+export function elementTree(html) {
+  const root = {name: '#root', attrs: new Map(), offset: 0, parent: null, children: []};
+  const open = [root];
+  const top = () => open[open.length - 1];
+  for (const event of scanHtml(html)) {
+    if (event.kind === 'text') {
+      top().children.push({text: decodeEntities(event.value)});
+      continue;
+    }
+    if (event.closing) {
+      const at = open.findLastIndex((node) => node.name === event.name);
+      if (at > 0) open.length = at;
+      continue;
+    }
+    if (event.name === 'li') {
+      const list = open.findLastIndex((node) => node.name === 'ul' || node.name === 'ol');
+      const item = open.findLastIndex((node) => node.name === 'li');
+      if (item > list) open.length = item;
+    }
+    const node = {name: event.name, attrs: event.attrs, offset: event.offset, parent: top(), children: []};
+    top().children.push(node);
+    open.push(node);
+  }
+  return root;
+}
+
+// The text content of a node as the DOM gives it: the text of every descendant.
+export function textContent(node) {
+  if ('text' in node) return node.text;
+  return node.children.map(textContent).join('');
 }
 
 export function lineOf(html, offset) {
