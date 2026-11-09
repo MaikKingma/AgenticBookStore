@@ -1,0 +1,34 @@
+---
+title: "Level 1: Context engineering"
+sidebar_position: 4
+---
+
+import LevelProgress from '@site/src/components/LevelProgress';
+
+<LevelProgress current={1} />
+
+:::note[At a glance]
+
+**Goal:** Give the agent the smallest set of high-signal context that makes the right thing the obvious thing.
+
+**Start branch:** `main`
+
+**Catch-up:**
+
+```bash
+git stash -u && git switch main
+```
+
+**Time:** 35 minutes
+
+**Compare:** `solution/level-1`
+
+:::
+
+{/* guide-skeleton */}
+
+## Level cleared when
+
+- [ ] `CLAUDE.md` has at most 60 lines.
+- [ ] `/context` shows the path-scoped rules loading only for matching files.
+- [ ] In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no ArchUnit violation.

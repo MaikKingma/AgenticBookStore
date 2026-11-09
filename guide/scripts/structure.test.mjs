@@ -1,0 +1,339 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {structureErrors, SKELETON_MARKER} from './rules/structure.mjs';
+import {FIXTURE_LEVELS, fixturePlan, fixtureSdd, goodDocs, levelPage} from './lib/structure-fixtures.mjs';
+import {replaceOnce} from './lib/test-fixtures.mjs';
+
+// Runs the pure rule on the good docs plus overrides (a null removes a file).
+function run(overrides = {}, input = {}) {
+  const files = {...goodDocs(), ...overrides};
+  for (const key of Object.keys(files)) if (files[key] === null) delete files[key];
+  return structureErrors({files, nulFiles: [], planText: fixturePlan(), sddText: fixtureSdd(), ...input});
+}
+
+const L = (n) => FIXTURE_LEVELS[n].file;
+const page = (n, options) => levelPage(n, options);
+
+// Asserts that exactly the errors matching the patterns are reported, one per pattern.
+function assertErrors(errors, patterns) {
+  assert.equal(errors.length, patterns.length, errors.join('\n'));
+  patterns.forEach((pattern) => assert.ok(errors.some((e) => pattern.test(e)), `no error matches ${pattern}:\n${errors.join('\n')}`));
+}
+
+test('structure: the good docs have no errors and the summary counts the pages', () => {
+  const {errors, summary} = run();
+  assert.deepEqual(errors, []);
+  assert.match(summary, /11 pages/);
+});
+
+test('structure: a skeleton level page and a finished one both pass the grammar', () => {
+  assert.deepEqual(run({[L(1)]: page(1, {skeleton: false})}).errors, []);
+});
+
+// Checklist
+
+test('structure: swapping two checklist items fails', () => {
+  const [a, b] = FIXTURE_LEVELS[3].items.slice(0, 2);
+  let text = replaceOnce(page(3), `- [ ] ${a}`, '- [ ] SWAP');
+  text = replaceOnce(text, `- [ ] ${b}`, `- [ ] ${a}`);
+  text = replaceOnce(text, '- [ ] SWAP', `- [ ] ${b}`);
+  assertErrors(run({[L(3)]: text}).errors, [/item 1 /, /item 2 /]);
+});
+
+test('structure: rewording one word of an item fails and names the page', () => {
+  const text = replaceOnce(page(1), 'path-scoped rules', 'path-limited rules');
+  const {errors} = run({[L(1)]: text});
+  assertErrors(errors, [/item 2 /]);
+  assert.match(errors[0], /^structure: docs\/02-level-1-context-engineering\.mdx: /);
+});
+
+test('structure: a word on the continuation line of a wrapped plan bullet is compared', () => {
+  const text = replaceOnce(page(0), 'or the wrong file', 'or the right file');
+  assertErrors(run({[L(0)]: text}).errors, [/item 1 /]);
+});
+
+test('structure: dropping the backticks of an inline code item fails', () => {
+  const text = replaceOnce(page(1), '- [ ] `CLAUDE.md` has', '- [ ] CLAUDE.md has');
+  assertErrors(run({[L(1)]: text}).errors, [/item 1 /]);
+});
+
+test('structure: an item may wrap over indented lines, whitespace is normalised', () => {
+  const text = replaceOnce(page(1), '- [ ] `CLAUDE.md` has at most', '- [ ] `CLAUDE.md`   has\n  at most');
+  assert.deepEqual(run({[L(1)]: text}).errors, []);
+});
+
+test('structure: a checked item and a plain bullet fail', () => {
+  const checked = replaceOnce(page(2), '- [ ] `/mcp`', '- [x] `/mcp`');
+  assertErrors(run({[L(2)]: checked}).errors, [/item 2 .*checked/]);
+  const upper = replaceOnce(page(2), '- [ ] `/mcp`', '- [X] `/mcp`');
+  assertErrors(run({[L(2)]: upper}).errors, [/item 2 .*checked/]);
+  const plain = replaceOnce(page(2), '- [ ] `/mcp`', '- `/mcp`');
+  assertErrors(run({[L(2)]: plain}).errors, [/item 2 .*task list item/]);
+});
+
+test('structure: an extra item, a missing last item and a duplicated item fail on the count', () => {
+  const extra = `${page(1)}- [ ] One more.\n`;
+  assertErrors(run({[L(1)]: extra}).errors, [/4 items.*plan has 3/]);
+  const last = FIXTURE_LEVELS[1].items[2];
+  const dropped = replaceOnce(page(1), `- [ ] ${last}\n`, '');
+  assertErrors(run({[L(1)]: dropped}).errors, [/2 items.*plan has 3/]);
+  const first = FIXTURE_LEVELS[1].items[0];
+  const doubled = replaceOnce(page(1), `- [ ] ${first}\n`, `- [ ] ${first}\n- [ ] ${first}\n`);
+  assertErrors(run({[L(1)]: doubled}).errors, [/4 items.*plan has 3/, /item 2 /, /item 3 /]);
+});
+
+test('structure: nothing may follow the checklist', () => {
+  const after = (extra) => `${page(2)}\n${extra}\n`;
+  const follow = /follows the checklist/;
+  assertErrors(run({[L(2)]: after('A closing paragraph.')}).errors, [follow]);
+  assertErrors(run({[L(2)]: after('## Debrief')}).errors, [follow]);
+  assertErrors(run({[L(2)]: after(':::tip\nx\n:::')}).errors, [follow]);
+  assertErrors(run({[L(2)]: after('{/* a comment */}')}).errors, [follow]);
+  assertErrors(run({[L(2)]: after('- [ ] A second list.')}).errors, [follow]);
+});
+
+test('structure: a paragraph between the heading and the list fails, trailing blank lines pass', () => {
+  const text = replaceOnce(page(2), '## Level cleared when\n\n', '## Level cleared when\n\nRead this first.\n\n');
+  assertErrors(run({[L(2)]: text}).errors, [/must be followed by a task list/]);
+  assert.deepEqual(run({[L(2)]: `${page(2)}\n\n\n`}).errors, []);
+});
+
+test('structure: a missing or repeated "Level cleared when" heading fails', () => {
+  const none = replaceOnce(page(0), '## Level cleared when', '## Cleared');
+  assertErrors(run({[L(0)]: none}).errors, [/no "## Level cleared when" heading/]);
+  const twice = `${page(0)}\n## Level cleared when\n`;
+  assertErrors(run({[L(0)]: twice}).errors, [/2 "## Level cleared when" headings/]);
+});
+
+test('structure: the marker never exempts the checklist', () => {
+  const text = replaceOnce(page(3), '`git commit --no-verify` is denied.', 'changed');
+  assert.ok(text.includes(SKELETON_MARKER));
+  assertErrors(run({[L(3)]: text}).errors, [/item 2 /]);
+});
+
+// At a glance box
+
+test('structure: the Goal matches the plan, first letter case-insensitive, whole sentence', () => {
+  const goal = FIXTURE_LEVELS[2].goal;
+  assert.deepEqual(run({[L(2)]: replaceOnce(page(2), `**Goal:** ${goal.charAt(0).toUpperCase()}${goal.slice(1)}`, `**Goal:** ${goal}`)}).errors, []);
+  const noPeriod = replaceOnce(page(2), 'instead of guessing.', 'instead of guessing');
+  assertErrors(run({[L(2)]: noPeriod}).errors, [/Goal/]);
+  const firstLine = replaceOnce(page(2), ', and real external data through our own MCP server, instead of guessing.', '.');
+  assertErrors(run({[L(2)]: firstLine}).errors, [/Goal/]);
+});
+
+test('structure: a Goal that wraps over lines is joined', () => {
+  const text = replaceOnce(page(2), ' through a language server,', '\nthrough a language server,');
+  assert.deepEqual(run({[L(2)]: text}).errors, []);
+});
+
+test('structure: the Time equals the plan minutes of the heading, not a part', () => {
+  assertErrors(run({[L(2)]: replaceOnce(page(2), '**Time:** 20 minutes', '**Time:** 8 minutes')}).errors, [/Time is 8 minutes.*20/]);
+  assertErrors(run({[L(0)]: replaceOnce(page(0), '**Time:** 25 minutes', '**Time:** 30 minutes')}).errors, [/Time is 30 minutes.*25/]);
+  assertErrors(run({[L(0)]: replaceOnce(page(0), '**Time:** 25 minutes', '**Time:** 25')}).errors, [/Time/]);
+});
+
+test('structure: the Start branch equals the header table value', () => {
+  assertErrors(run({[L(1)]: replaceOnce(page(1), '**Start branch:** `main`', '**Start branch:** `develop`')}).errors, [/Start branch/]);
+  assertErrors(run({[L(0)]: replaceOnce(page(0), ' (tag `level-0-start`)', '')}).errors, [/Start branch/]);
+  assertErrors(run({[L(2)]: replaceOnce(page(2), 'your Level 1 result, or `solution/level-1`', 'your Level 1 result')}).errors, [/Start branch/]);
+});
+
+test('structure: the catch-up block is exactly git stash -u && git switch <branch>', () => {
+  const wrongBranch = replaceOnce(page(2), 'git switch solution/level-1', 'git switch solution/level-2');
+  assertErrors(run({[L(2)]: wrongBranch}).errors, [/Catch-up/]);
+  const extraCommand = replaceOnce(page(1), 'git switch main\n', 'git switch main\ngit pull\n');
+  assertErrors(run({[L(1)]: extraCommand}).errors, [/Catch-up/]);
+  const noStash = replaceOnce(page(1), 'git stash -u && git switch main', 'git switch main');
+  assertErrors(run({[L(1)]: noStash}).errors, [/Catch-up/]);
+  const noFence = replaceOnce(page(1), '```bash\ngit stash -u && git switch main\n```', '`git stash -u && git switch main`');
+  assertErrors(run({[L(1)]: noFence}).errors, [/Catch-up/]);
+  const wrongLang = replaceOnce(page(1), '```bash', '```text');
+  assertErrors(run({[L(1)]: wrongLang}).errors, [/Catch-up/]);
+});
+
+test('structure: Compare appears on Levels 1 to 3 only, with the right branch', () => {
+  assertErrors(run({[L(0)]: replaceOnce(page(0), '\n\n:::\n', '\n\n**Compare:** `solution/level-1`\n\n:::\n')}).errors, [/Compare/]);
+  assertErrors(run({[L(4)]: replaceOnce(page(4), '\n\n:::\n', '\n\n**Compare:** `solution/level-4`\n\n:::\n')}).errors, [/Compare/]);
+  assertErrors(run({[L(3)]: replaceOnce(page(3), '\n\n**Compare:** `solution/level-3`', '')}).errors, [/Compare/]);
+  assertErrors(run({[L(3)]: replaceOnce(page(3), '`solution/level-3`', '`solution/level-2`')}).errors, [/Compare/]);
+});
+
+test('structure: the box lines must come in order, each once, with no stray content', () => {
+  const swapped = replaceOnce(
+    page(1),
+    '**Time:** 35 minutes\n\n**Compare:** `solution/level-1`',
+    '**Compare:** `solution/level-1`\n\n**Time:** 35 minutes',
+  );
+  assertErrors(run({[L(1)]: swapped}).errors, [/out of order/]);
+  const twice = replaceOnce(page(1), '**Time:** 35 minutes', '**Time:** 35 minutes\n\n**Time:** 35 minutes');
+  assertErrors(run({[L(1)]: twice}).errors, [/Time.* twice/]);
+  const stray = replaceOnce(page(1), '**Goal:**', 'A stray line.\n\n**Goal:**');
+  assertErrors(run({[L(1)]: stray}).errors, [/unexpected/]);
+  const noGoal = replaceOnce(page(1), /\*\*Goal:\*\*[^\n]*\n\n/.exec(page(1))[0], '');
+  assertErrors(run({[L(1)]: noGoal}).errors, [/missing the Goal line/]);
+});
+
+test('structure: a page without the at a glance box fails', () => {
+  const text = replaceOnce(page(1), ':::note[At a glance]', ':::note[Summary]');
+  assert.ok(run({[L(1)]: text}).errors.some((e) => /At a glance/.test(e)));
+});
+
+// LevelProgress
+
+test('structure: LevelProgress must be the first element after the imports, with the right level', () => {
+  const below = page(1)
+    .replace(/<LevelProgress current=\{1\} \/>\n\n/, '')
+    .replace('\n:::\n', '\n:::\n\n<LevelProgress current={1} />\n');
+  assertErrors(run({[L(1)]: below}).errors, [/first element/]);
+  const inside = page(1)
+    .replace(/<LevelProgress current=\{1\} \/>\n\n/, '')
+    .replace(':::note[At a glance]\n', ':::note[At a glance]\n<LevelProgress current={1} />\n');
+  assert.ok(run({[L(1)]: inside}).errors.some((e) => /first element/.test(e)));
+  const paragraph = replaceOnce(page(1), '<LevelProgress current={1} />', 'Welcome.\n\n<LevelProgress current={1} />');
+  assertErrors(run({[L(1)]: paragraph}).errors, [/first element/]);
+  assertErrors(run({[L(3)]: replaceOnce(page(3), 'current={3}', 'current={2}')}).errors, [/current=\{2\}.*Level 3/]);
+  assertErrors(run({[L(3)]: replaceOnce(page(3), 'current={3}', 'current={7}')}).errors, [/current=\{7\}/]);
+});
+
+test('structure: blank lines and several imports before LevelProgress are fine', () => {
+  const imports = "import LevelProgress from '@site/src/components/LevelProgress';\nimport Tabs from '@theme/Tabs';\nimport TabItem from '@theme/TabItem';";
+  const text = replaceOnce(page(2), "import LevelProgress from '@site/src/components/LevelProgress';", `\n${imports}\n`);
+  assert.deepEqual(run({[L(2)]: text}).errors, []);
+});
+
+test('structure: the LevelProgress import is required and the component appears once', () => {
+  const noImport = replaceOnce(page(1), "import LevelProgress from '@site/src/components/LevelProgress';\n\n", '');
+  assertErrors(run({[L(1)]: noImport}).errors, [/import/]);
+  const twice = `${page(1).replace(/\n## Level cleared when/, '\n<LevelProgress current={1} />\n\n## Level cleared when')}`;
+  assertErrors(run({[L(1)]: twice}).errors, [/2 times/]);
+});
+
+// Title, H1, frontmatter
+
+test('structure: a level page title must be the exact spec name, quoted when it holds a colon', () => {
+  assertErrors(run({[L(2)]: replaceOnce(page(2), 'Level 2: Give your agent eyes (LSP + MCP)', 'Level 2: Give your agent eyes')}).errors, [/title/]);
+  assertErrors(run({[L(4)]: replaceOnce(page(4), 'title: "Level 4', 'title: Level 4').replace('development"', 'development')}).errors, [/quoted/]);
+  const noFrontmatter = page(0).replace(/^---\n[\s\S]*?\n---\n/, '');
+  assert.ok(run({[L(0)]: noFrontmatter}).errors.some((e) => /frontmatter/.test(e)));
+});
+
+test('structure: a body H1 fails, a comment line inside a fenced block does not', () => {
+  assertErrors(run({[L(1)]: replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n# Context`)}).errors, [/H1/]);
+  const fenced = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n\`\`\`bash\n# a comment\n~/x\n\`\`\`\n\n~~~\n# also a comment\n~~~`);
+  assert.deepEqual(run({[L(1)]: fenced}).errors, []);
+  assertErrors(run({'docs/06-wrap-up.md': '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n# Heading\n'}).errors, [/H1/]);
+});
+
+// Admonitions
+
+test('structure: space-form admonitions fail on every page', () => {
+  const level = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::info Sync moment\nbody\n:::`);
+  assertErrors(run({[L(1)]: level}).errors, [/space form/]);
+  const wrapUp = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::tip Checkpoint\nbody\n:::\n';
+  assertErrors(run({'docs/06-wrap-up.md': wrapUp}).errors, [/space form/]);
+});
+
+test('structure: a sync moment must say "Look up, Maik demos this now"', () => {
+  const sync = (body) => replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::info[Sync moment]\n${body}\n:::`);
+  assert.deepEqual(run({[L(1)]: sync('Look up, Maik demos this now.')}).errors, []);
+  assertErrors(run({[L(1)]: sync('Look up, Maik demos this soon.')}).errors, [/Sync moment/]);
+  assertErrors(run({[L(1)]: sync('Look up Maik demos this now')}).errors, [/Sync moment/]);
+});
+
+test('structure: a checkpoint needs a fenced block and a line starting with Expected', () => {
+  const tip = (body) => replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::tip[Checkpoint]\n${body}\n:::`);
+  assert.deepEqual(run({[L(1)]: tip('Run:\n\n```bash\n./mvnw verify\n```\n\nExpected: BUILD SUCCESS.')}).errors, []);
+  assertErrors(run({[L(1)]: tip('Run it.\n\nExpected: BUILD SUCCESS.')}).errors, [/Checkpoint.*fenced/]);
+  assertErrors(run({[L(1)]: tip('Run:\n\n```bash\n./mvnw verify\n```\n\nYou should see BUILD SUCCESS.')}).errors, [/Checkpoint.*Expected/]);
+  assertErrors(run({[L(1)]: tip('Run:\n\n```bash\n./mvnw verify\n```\n\nThe Expected output is BUILD SUCCESS.')}).errors, [/Checkpoint.*Expected/]);
+});
+
+test('structure: a finished level page has exactly one sync moment, a skeleton is exempt', () => {
+  const finished = (n) => page(1, {skeleton: false}).replace(':::info[Sync moment]\nLook up, Maik demos this now.\n:::\n', n);
+  assertErrors(run({[L(1)]: finished('')}).errors, [/0 sync moments/]);
+  const two = ':::info[Sync moment]\nLook up, Maik demos this now.\n:::\n\n:::info[Sync moment]\nLook up, Maik demos this now.\n:::\n';
+  assertErrors(run({[L(1)]: finished(two)}).errors, [/2 sync moments/]);
+  assert.deepEqual(run({[L(1)]: page(1)}).errors, []);
+});
+
+// Anchors
+
+test('structure: every contractual anchor must sit on an H2 of its page', () => {
+  assertErrors(run({[L(2)]: replaceOnce(page(2), ' {/* #part-b-mcp */}', '')}).errors, [/part-b-mcp/]);
+  const h3 = replaceOnce(page(3), '## Optional: Stop hook {/* #optional-stop-hook */}', '### Optional: Stop hook {/* #optional-stop-hook */}');
+  assertErrors(run({[L(3)]: h3}).errors, [/optional-stop-hook/]);
+  assertErrors(run({[L(4)]: replaceOnce(page(4), '{/* #feature-briefs */}', '{/* #briefs */}')}).errors, [/feature-briefs/]);
+  const trouble = goodDocs()['docs/reference/troubleshooting.md'];
+  assertErrors(run({'docs/reference/troubleshooting.md': replaceOnce(trouble, ' {/* #anthropic-api-key */}', '')}).errors, [/anthropic-api-key/]);
+});
+
+test('structure: the {#id} heading form fails, it does not compile in MDX with future.v4', () => {
+  const text = replaceOnce(page(2), '{/* #part-a-lsp */}', '{#part-a-lsp}');
+  assertErrors(run({[L(2)]: text}).errors, [/part-a-lsp.*\{\/\* #part-a-lsp \*\/\}/]);
+});
+
+test('structure: an anchor inside a fenced block does not count', () => {
+  const text = replaceOnce(page(2), '## Part A: LSP {/* #part-a-lsp */}', '```md\n## Part A: LSP {/* #part-a-lsp */}\n```');
+  assertErrors(run({[L(2)]: text}).errors, [/part-a-lsp/]);
+});
+
+// Files and sidebar
+
+test('structure: exactly the eleven pages and the category file exist', () => {
+  assertErrors(run({'docs/extra.md': '---\ntitle: X\n---\n'}).errors, [/unexpected file docs\/extra\.md/]);
+  assertErrors(run({'docs/06-wrap-up.md': null}).errors, [/missing .*06-wrap-up\.md/]);
+  assertErrors(run({'docs/reference/_category_.json': null}).errors, [/missing .*_category_\.json/]);
+  assertErrors(run({'docs/img/a.png': 'x'}).errors, [/unexpected file docs\/img\/a\.png/]);
+});
+
+test('structure: index is the home page and the sidebar positions are fixed', () => {
+  const index = goodDocs()['docs/index.md'];
+  assertErrors(run({'docs/index.md': replaceOnce(index, 'slug: /\n', '')}).errors, [/slug/]);
+  assertErrors(run({'docs/index.md': replaceOnce(index, 'sidebar_position: 1', 'sidebar_position: 5')}).errors, [/sidebar_position/]);
+  assertErrors(run({'docs/00-setup-check.md': replaceOnce(goodDocs()['docs/00-setup-check.md'], 'sidebar_position: 2\n', '')}).errors, [/sidebar_position/]);
+  assertErrors(run({[L(2)]: replaceOnce(page(2), 'sidebar_position: 5', 'sidebar_position: 4')}).errors, [/sidebar_position/]);
+});
+
+test('structure: the Reference category is labelled and comes after Wrap-up', () => {
+  const category = 'docs/reference/_category_.json';
+  assertErrors(run({[category]: '{"label": "Docs", "position": 9}'}).errors, [/label/]);
+  assertErrors(run({[category]: '{"label": "Reference", "position": 8}'}).errors, [/position/]);
+  assertErrors(run({[category]: '{"label": "Reference"}'}).errors, [/position/]);
+  assertErrors(run({[category]: '{nope'}).errors, [/not valid JSON/]);
+});
+
+test('structure: other page titles are fixed', () => {
+  const text = replaceOnce(goodDocs()['docs/reference/cheat-sheet.md'], 'title: Cheat sheet', 'title: Cheatsheet');
+  assertErrors(run({'docs/reference/cheat-sheet.md': text}).errors, [/title/]);
+});
+
+test('structure: a docs file with a NUL byte is an error, not skipped', () => {
+  const {errors} = run({}, {nulFiles: ['docs/06-wrap-up.md']});
+  assertErrors(errors, [/docs\/06-wrap-up\.md.*NUL byte/]);
+});
+
+// Pack files
+
+test('structure: the plan guards come through, with the plan named', () => {
+  const {errors} = run({}, {planText: `${fixturePlan()}\n**Level cleared when**\n- x\n`});
+  assertErrors(errors, [/workshop plan: found 6/]);
+});
+
+test('structure: the L4 list of the SDD guide must equal the plan, and the message names the SDD guide', () => {
+  const items = [...FIXTURE_LEVELS[4].items];
+  items[1] = items[1].replace('green', 'red');
+  const {errors} = run({}, {sddText: fixtureSdd(items)});
+  assertErrors(errors, [/SDD framework guide.*item 2/]);
+});
+
+test('structure: the L4 page list must equal the plan list', () => {
+  const text = replaceOnce(page(4), 'not claimed', 'claimed');
+  assertErrors(run({[L(4)]: text}).errors, [/item 2 /]);
+});
+
+test('structure: a plan with no parsable levels reports the plan, not the pages', () => {
+  const {errors} = run({}, {planText: '# Empty plan\n'});
+  assert.ok(errors.some((e) => /workshop plan: no section for Level 0/.test(e)), errors.join('\n'));
+  assert.ok(errors.every((e) => !/item \d/.test(e)), errors.join('\n'));
+});
