@@ -40,6 +40,19 @@ metadata:
   attribute and direction proves it. The rule covers EVERY array under a `toEqual`, not only lists named "in order":
   arrays nested in a view (`authors`), sent payloads (`lines`), and a test helper's call log. One UUID per entity across
   all test files (a not-found id is its own literal; a 404 or 409 detail must not reuse a live order or book id).
+- Hash router tests: assigning `window.location.hash` fires `hashchange` in a later task, so await a `findBy*` right after
+  (RTL turns the act environment off while it polls, no act warning); set the hash before `render` for a start route.
+  A stale async answer needs a body-read witness (`vi.spyOn(response, 'text')`, then `waitFor`), not a timer, before the
+  absence assertion. C0-6b also hits a module-level `const X: T = [`: wrap with `Object.freeze(...)` or use `as const`.
+- jsdom "Not implemented: HTMLFormElement's requestSubmit()" goes to raw stderr, NOT through the console trap, so a form
+  handler missing `preventDefault` stays green. Witness it in the test: `document.addEventListener('submit', (e) =>
+  seen.push(e.defaultPrevented))` (runs after React's root listener), `onTestFinished` removes it, expect `[true]`.
+- Router rows an unknown-route list needs: unknown first segment WITH a second segment (`#/basket/x`, `#/foo/bar`), a
+  prefix like `#xbasket`, `#/basket?x=1`, and a double-encoded id decode row (`a%2541` gives `a%41`); the final
+  `return notFound` after a valid id is otherwise never executed. A genre or enum shown on a card needs one fixture with an
+  underscore (`SCIENCE_FICTION`) to pin "shown as sent".
+- Worktree Bash guard refuses `cd <dir> && ...` and `for` loops inline: use relative paths from the worktree root or a
+  script in `.claude/comms/tmp`. The `Grep` tool does not exist here; grep through Bash.
 - Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
   a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
   test file, not by the guard.
