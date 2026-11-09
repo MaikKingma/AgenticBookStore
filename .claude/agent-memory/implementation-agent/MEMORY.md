@@ -2,7 +2,7 @@
 - [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist
 - [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps
 - [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
-- [Integration test techniques](integration-test-techniques.md) — RestTestClient jsonPath type coercion, Map bodies for exact view shapes, AssertJ LIST/MAP factories, probe-killing data, PER_CLASS hook guards
+- [Integration test techniques](integration-test-techniques.md) — RestTestClient type coercion, Map bodies for view shapes, AssertJ factories, probe-killing data, PER_CLASS hooks, OutputCapture accumulates per class
 - [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
 - [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
 - [Bean validation traps](bean-validation-traps.md) — trimmed-length rule needs a nested custom constraint (regex counts code points), JSON control-char test data, U+2003 is not padding

@@ -54,5 +54,13 @@ metadata:
   into a `LinkedHashMap` and puts the null, so existing pin lines keep their figures. `Map.equals` treats a missing key
   as different from a null value, so `isEqualTo` is itself a presence check. In slices,
   `jsonPath("$.k").value(nullValue())` fails on a missing path, and `jsonPath("$", hasKey("k"))` pins presence.
+- `OutputCaptureExtension` on a full-context IT: `CapturedOutput.getOut()` joins the class-level capture with the test's
+  own, so a test also sees the context start-up and every EARLIER test of the class. Assert per unique token (a fresh
+  book id, a literal only that test throws), never a bare `containsOnlyOnce(" WARN ")`. "Exactly one WARN naming X"
+  without filtering: `containsPattern(" WARN .*" + x)` plus `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`.
+- Spring's after-commit listener failure logs `ERROR ... TransactionSynchronization.afterCompletion threw exception`,
+  then a BLANK line, then `java.lang.X: <message>`: join them with `\\R+`, not `\\R`. Logged per failing listener call.
+- Re-stubbing the shared mock replaces the base default; for "fail first, then the default", rebuild the default answer
+  locally (`doThrow(e).doAnswer(this::defaultConfirmation)`), since the base's lambda cannot be chained.
 
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].
