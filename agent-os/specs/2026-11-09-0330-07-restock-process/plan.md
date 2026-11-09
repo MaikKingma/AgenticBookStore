@@ -1,0 +1,98 @@
+---
+spec: 07-restock-process
+source: docs/spec-pack/specs/07-restock-process.md
+status: in-progress
+accepted-by: orchestrator (autonomous)
+gate1: 2026-11-09T03:45:00Z
+qa-lead: on
+base: factory
+spec-branch: sdd/07-restock-process/spec
+modules: [root, bookstore, distributor, frontend, guide]
+---
+
+# Plan: Spec 07 Restock process adapter
+
+Restates `docs/spec-pack/specs/07-restock-process.md` (source of truth). Shaping decisions D1 to D7 and O1 are in `shape.md`, standards in `standards.md`, research summary in `references.md`. The full task cards (file scope, criteria, named tests, forced test updates, risks) are section 4 of the tech-lead strategy; the QA strategy (tiers, Gate 1 findings G1 to G20, common directive C0, per-task directives, scenario-to-test plan, qa-final focus, residuals) is in the QA lead's ledger. Both live in the cycle's comms and are passed to every agent by path: `.claude/comms/mailboxes/lead-1/outbox/strategy-07-restock-process.md` (section 3 design calls, section 4 task cards) and `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-07-restock-process.md` (section "QA strategy"). Precedence for a task's acceptance criteria: this plan's task section, then the Gate 1 findings it names (they win over the card), then the card.
+
+Path abbreviations: B = `bookstore/src/main/java/nl/openvalue/bookstore/`, T = `bookstore/src/test/java/nl/openvalue/bookstore/`, F = `bookstore/src/test/java/nl/openvalue/archfixtures/`, M = `bookstore/src/main/resources/db/migration/`.
+
+## Summary
+
+When stock runs low the bookstore asks the distributor for more. `StockItem` gains a pending restock (`restockRequested`, cleared by `receive`, `hasPendingRestock()`), persisted through four nullable columns added by `V4__add_pending_restock.sql`. `InventoryFlow` gets two use cases sharing one private implementation: `handleStockRunningLow(UUID)` (the event path, catches the three port exceptions itself) and `requestRestock(UUID)` (the manual path, lets them propagate). The `process` layer gets `EventProcessor` (`@TransactionalEventListener(phase = AFTER_COMMIT)` on `StockRunningLowEvent`) handing the event to `RequestRestockDelegate` (`@Transactional(propagation = REQUIRES_NEW)`, one flow call). `POST /inventory/{bookId}/commands/request-restock` gives 202, 503, 404 or 422. `StockView` gains `pendingRestock` (null when none). `IntegrationTestBase` gets a default distributor answer (CONFIRMED, delivery in 2 days). `RestockProcessIntegrationTest` covers every scenario. ArchUnit keeps exactly one documented exception, sharpened by three fixtures. Referee `./mvnw clean verify` from the repo root, green after every task, budget 60 s (baseline 17.48 s on 824af83: bookstore 931 tests, distributor 190, 10 Started lines in the bookstore, ArchitectureTest 22 rules).
+
+## Ground rules for every task
+
+- The pack spec decides what; `docs/spec-pack/product/architecture-standard.md`, `tech-stack.md` and `docs/spec-pack/orchestrator/decisions.md` win. Bookstore code goes through the `hexagonal-slice` skill (with `clean-hexagonal-onion`, `ddd-building-blocks`, `layer-testing`); the standard and the spec win over the skills. A contradiction is reported as blocked, never resolved by the implementer.
+- Only the task's fileScope is edited, never anything else, not even temporarily. Mutation probes on production code are the verifier's job: the implementer describes each mutant in its outbox.
+- Never skip, disable, delete or weaken a test or an ArchUnit rule; never edit `ArchitectureTest.java`; never add `ignoreDependency`; no `@Disabled`, `assume*`, `@DirtiesContext`; never `--no-verify`.
+- No new dependency; no `@Async`, `@EnableAsync`, `@JsonInclude`, outbox or retry; no `@Transactional` in `acl`; no `@Transactional` on `EventProcessor`. No test calls the real distributor (live runs are qa-final evidence only).
+- Time only through a fixed `Clock` in unit tests; the integration base computes its default date from the autowired context `Clock` (QA C0-5e as rewritten by G6).
+- Pins: no `Map.of` for JSON pins that contain a null value (use one null-tolerant helper per class). A key that must be present with a null value is asserted with `hasKey` or the key count, never `doesNotExist()`. Stub the shared distributor mock in subclasses with `doThrow(...)/doAnswer(...).when(mock)`.
+- Falsifiers first: two values per pass-through field, both starting states for every "unchanged" claim, witnesses that differ from every default (reorder quantity, delivery date, id, backordered).
+- Plain English, no em dashes; every new or changed file is ASCII (`rg -n '[^\x00-\x7F]' <file>` empty). Product files and test code never reference `docs/spec-pack`, `agent-os`, `.claude`, `CLAUDE.md`. Never `ANTHROPIC_API_KEY`.
+- Git is read-only for every agent; the orchestrator owns commits, branches and PRs.
+- Every implementer records its final test method names in its outbox as the task's rows of the scenario-to-test map, and names every falsifier of its card and of its Gate 1 rows with the final method name.
+- Scratch and evidence files: session scratchpad `/private/tmp/claude-501/-Users-maikkingma-OpenValue-AI-Conferences-AgenticBookStore/cb0898b6-6f7b-44fd-8024-5110d0f772e2/scratchpad/` with prefix `s07-T<n>-<role>-`. Long runs through `bash ~/.claude/scripts/with-budget.sh <s> ...`.
+
+## Task table
+
+| id | summary | module | dependsOn | batch | qaTier | qaModel | implModel | status | verdict | qa-lead | rounds | pr | commit |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| T1 | Domain pending restock: `PendingRestock`, `InvalidPendingRestockException`, `RestockAlreadyPendingException`, `restockRequested`, `hasPendingRestock`, `pendingRestock()`, `restockRequestFailed`, `receive` clears, `restore` takes the pending restock | bookstore | [] | 1 | elevated | sonnet | sonnet | todo | | | | | |
+| T2 | Persistence: `PendingRestockDTO`, `StockItemDTO` 7 components plus 6-argument convenience constructor, mapper both ways, `V4__add_pending_restock.sql`, `StockItemJPA`, `StockItemJPAMapper` | bookstore | [T1] | 2 | critical | opus | opus | todo | | | | | |
+| T3 | `InventoryFlow.requestRestock` and `handleStockRunningLow` (O1), WARN logs, port Javadoc, `IntegrationTestBase` default answer | bookstore | [T2] | 3 | critical | opus | opus | todo | | | | | |
+| T4 | `POST /inventory/{bookId}/commands/request-restock`, `PendingRestockView`, `StockView.pendingRestock`, 6 to 7 key pins | bookstore | [T3] | 4 | elevated | sonnet | sonnet | todo | | | | | |
+| T5 | `EventProcessor`, `RequestRestockDelegate` (trade-off Javadoc), process unit tests, `RestockProcessIntegrationTest` event path, post-dip pins | bookstore | [T4] | 5 | critical | opus | opus | todo | | | | | |
+| T6 | Manual-path and delivery scenarios in `RestockProcessIntegrationTest` (closes spec 06 R6), three ArchUnit fixtures, PR trade-off text | bookstore | [T5] | 6 | critical | opus | opus | todo | | | | | |
+| T7 | `http/inventory.http` request-restock examples | root | [T4, T5] | 7 | elevated | sonnet | sonnet | todo | | | | | |
+
+Execution and merge order, one task at a time: T1, T2, T3, T4, T5, T6, T7.
+
+qaDirective of every task: C0 plus the task's T<n> block of the QA ledger, plus every `## QA feed-forward` entry recorded before the task starts.
+
+## Tasks
+
+### T1: Domain pending restock
+- fileScope: `B/domain/StockItem.java`, `B/domain/PendingRestock.java`, `B/domain/InvalidPendingRestockException.java`, `B/domain/RestockAlreadyPendingException.java`, `B/domaininteraction/StockItemDomainMapper.java` (call site only, passes `null`), `T/domain/StockItemTest.java`, `T/domain/PendingRestockTest.java`, `T/domaininteraction/StockItemDomainMapperTest.java` (call sites only).
+- Acceptance criteria: strategy card T1, plus Gate 1 finding G17.
+
+### T2: Persistence of the pending restock
+- fileScope: `B/domaininteraction/PendingRestockDTO.java`, `B/domaininteraction/StockItemDTO.java`, `B/domaininteraction/StockItemDomainMapper.java`, `M/V4__add_pending_restock.sql`, `B/data/StockItemJPA.java`, `B/data/StockItemJPAMapper.java`, `T/domaininteraction/StockItemDomainMapperTest.java`, `T/domaininteraction/OrderFlowTest.java` and `T/domaininteraction/InventoryFlowTest.java` (additions only), `T/data/StockItemDataServiceImplTest.java` (additions only).
+- Acceptance criteria: strategy card T2, plus G16 and G18.
+
+### T3: Flow use cases and the default mocked port
+- fileScope: `B/domaininteraction/InventoryFlow.java`, `B/domaininteraction/DistributorAppService.java` (one Javadoc sentence), `T/domaininteraction/InventoryFlowTest.java`, `T/IntegrationTestBase.java`, `T/IntegrationTestBaseHooksTest.java`.
+- Acceptance criteria: strategy card T3 with O1 (shape.md), plus G1 (replaces the card's unusable-confirmation criterion), G2, G3, G4, G5, G7.
+
+### T4: Manual endpoint and view
+- fileScope: `B/command/InventoryCommands.java`, `B/query/StockView.java`, `B/query/PendingRestockView.java`, `T/command/InventoryCommandsTest.java`, `T/query/InventoryQueriesTest.java`, `T/InventoryIntegrationTest.java`, `T/OrderIntegrationTest.java`, `T/DistributorImportIntegrationTest.java`.
+- Acceptance criteria: strategy card T4, plus G8.
+
+### T5: Process adapter and event-path integration test
+- fileScope: `B/process/EventProcessor.java`, `B/process/RequestRestockDelegate.java`, `T/process/EventProcessorTest.java`, `T/process/RequestRestockDelegateTest.java`, `T/RestockProcessIntegrationTest.java` (new), `T/OrderIntegrationTest.java`, `T/InventoryIntegrationTest.java`, `T/IntegrationTestBase.java`, `T/IntegrationTestBaseHooksTest.java` (pin updates and an expected-default-pending helper on the base only).
+- Acceptance criteria: strategy card T5, plus G9 (replaces the card's two-book test), G10, G11, G19, G20.
+
+### T6: Manual-path integration test, ArchUnit fixtures, trade-off text
+- fileScope: `T/RestockProcessIntegrationTest.java`, `T/ArchitectureSelfTest.java` (additions only), `F/domain/BookEventLog.java`, `F/domain/BookRefusedException.java`, `F/process/EventLogDelegate.java`, `F/process/RefusalDelegate.java`, `F/query/BookEventQueries.java`, `B/process/RequestRestockDelegate.java` (Javadoc only, if needed).
+- Acceptance criteria: strategy card T6, plus G12, G13, G14, G20. The PR-description trade-off text goes into the T6 outbox.
+
+### T7: HTTP collection
+- module: root.
+- fileScope: `http/inventory.http`.
+- Acceptance criteria: strategy card T7, with G15 (the ISBN condition reads: no other `http/*.http` request adds or imports 9789900010029 in the bookstore on port 8080; distributor-side reads on port 8090 are fine).
+
+## Scenario-to-test map
+
+Planned in the QA ledger section "Scenario-to-test traceability plan"; final method names are recorded here after each task.
+
+## QA feed-forward
+
+(none yet)
+
+## Amendments
+
+(none yet)
+
+## Final sweep and Gate 2
+
+(pending)
