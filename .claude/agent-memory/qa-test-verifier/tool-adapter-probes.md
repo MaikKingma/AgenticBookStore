@@ -42,5 +42,13 @@ ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
   `@Bean` to let the auto-configured bean take over, then pin the origin with `getFactoryBeanName()`.
 - Memory advisor order 200 vs tool-calling advisor 300: `.order(ToolCallingAdvisor.DEFAULT_ORDER + 1)` puts TOOL messages
   into memory, a cheap advisor-order mutant. 2.0.2 has no default conversation id and no PromptChatMemoryAdvisor.
+- Snapshot-and-restore around a chat call (catch at the controller boundary): one family per restore spelling (none,
+  remove-last, clear-only, skip-when-empty), one per use-case type dropped from the pass-through multi-catch, log
+  level/twice/no-throwable, detail or title from the cause. Remove-last dies only on a full-window conversation (tool
+  messages never reach memory, so a tool-round case cannot see it). Dropping the cause from the translated exception
+  survives by design (the handler never reads it; the WARN log carries it): report as advisory, not a gap of an AC.
+- Runs with exported dummy `SPRING_AI_*` vars: set `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9` and grep the log for
+  `127.0.0.1:9` / `Connection refused` to prove escaped calls stayed local. To show a red there predates the task, rerun
+  that class on the pre-fix bytes in the same env (script swap, `clean`, `cp -p` restore), then a plain referee.
 
 Related: [[env-switch-mutant-runner]], [[shell-traps]]

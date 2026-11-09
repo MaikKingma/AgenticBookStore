@@ -1,9 +1,9 @@
 ---
 bug: fix-08-assistant-review
-severity: S3
-path: lite
+severity: S2
+path: lite+research
 status: open
-closes: [spec 08 residual R1, spec 08 residual R22, README answer language, integration tests online under exported SPRING_AI variables]
+closes: [spec 08 residual R1, spec 08 residual R22, README answer language, integration tests online under exported SPRING_AI variables, live follow-up rejected for a thinking signature (A2)]
 ---
 # Bug: a failed live model call answers a generic 500 and leaves the question in the conversation
 
@@ -99,6 +99,71 @@ Chosen: (a), because the boundary is the one place that knows both the conversat
 - Action: T1 adds a failing-model test double and tests; T3 pins offline mode in `IntegrationTestBase` with a test
   property source (outranks the environment). Follow-up for Maik: a standards line "a test configuration that must
   hold whatever the shell exports belongs in `@TestPropertySource`, not in `application-test.yml`".
+
+## Amendment A2 (2026-11-09): every second message of a conversation fails live (task T4, S2)
+
+### Report
+- Observed (main session, owner's live-key check of spec 08 at a56dfbc, default model Haiku 5.5, 2026-11-09 21:36
+  local): the first message of a conversation answers 200 with grounded answers; every second message in the same
+  conversation fails in about 0.25 s, with or without tool use ("Hello, what can you do?" then "And what genres do
+  you have?"). Log: `com.anthropic.errors.BadRequestException: 400 ... messages.1.content.1: Invalid signature in
+  thinking block. The block is bound to a different conversation ... Content before this block was rewritten since
+  it was created, first at messages.1.content.0.` (request ids req_011CgsziS4C1e2YPNbGRsTaz,
+  req_011CgszjYwiWjrh8uoZh5e1m, req_011CgszjhdbCTcbHQNNZzR6w). Stack: AnthropicChatModel.call (spring-ai-anthropic
+  2.0.2) <- ChatModelCallAdvisor <- ToolCallingAdvisor <- MessageChatMemoryAdvisor <- AssistantCommands.chat.
+- Expected: spec 08 "Conversation memory", scenario "Follow-up question": the follow-up answers 200 with the earlier
+  messages of the conversation.
+- Severity: S2 (blocks the spec 08 conversation memory scenario live). Regression window: not a regression (since
+  spec 08; offline tests use `ScriptedChatModel` and never see thinking blocks).
+- With T1 in place the same defect shows as 503 `assistant-unavailable` on turn 2 (memory restored) instead of 500.
+
+### Reproduction
+- Status: reproduced offline by res-1 (`.claude/comms/mailboxes/res-1/outbox/research-t4-thinking-replay.md`) with the
+  real `AnthropicChatModel`, `MessageChatMemoryAdvisor` and `MessageWindowChatMemory` against a local JDK
+  `HttpServer` stub (no key, no real call): the turn-2 request body was `[user, assistant [text, thinking(SIG1)],
+  assistant "<thinking text>", user]`, where the stub had answered `[thinking(SIG1), text]`.
+- Regression-test layer: an HTTP contract test of the real chat client against a local stub server (the acl-style
+  contract layer of architecture standard section 5 applied to the assistant's outbound model call; the offline
+  `ScriptedChatModel` cannot see it). Test file:
+  `bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantAnthropicContractTest.java`, run with
+  `./mvnw -pl bookstore test -Dtest=AssistantAnthropicContractTest -Dsurefire.failIfNoSpecifiedTests=false`.
+
+### Root cause
+- Causal chain: turn 2 fails with 400 -> the replayed assistant turn starts with text although the API answered with
+  thinking first, so the thinking signature no longer matches its prefix -> spring-ai-anthropic 2.0.2 writes a
+  stored assistant message as text, then thinking, then tool_use (`AnthropicChatModel.java:846-851`), and
+  `MessageChatMemoryAdvisor.java:138-146` also stores the extra thinking `Generation` built at
+  `AnthropicChatModel.java:1100-1110` as a plain assistant message; the same reorder happens inside one call in the
+  tool loop when the model writes text before a tool_use -> **root cause in this repository
+  (`bookstore/src/main/java/nl/openvalue/bookstore/assistant/AssistantConfig.java:45-48`)**: the assistant's chat
+  client leaves thinking unset, so Haiku 5.5 answers with signed adaptive-thinking blocks that Spring AI 2.0.2 cannot
+  replay in order -> missed because every test runs on `ScriptedChatModel` or offline.
+- Root cause (one sentence): `AssistantConfig.assistantChatClient` builds the chat client without a thinking option,
+  so the model's default adaptive thinking produces signed thinking blocks that the pinned Spring AI version replays
+  reordered and duplicated.
+- Contributing factor (framework, not patched here): the replay order in `AnthropicChatModel` 2.0.2.
+
+### Blast radius
+- [x] Same pattern elsewhere: one chat client (`git grep -n "ChatClient" bookstore/src/main` hits only the
+  assistant package). -> task T4.
+- [x] Tool loop inside one call (same reorder on text before tool_use). -> task T4 (covered by the same option).
+- [x] Persisted data: none (memory in process only). Produced artifacts: none.
+- [x] Docs: spec 08 Configuration lists model and max-tokens only; the thinking setting is reported to the main
+  session as a product-behaviour change (plan.md D7); `docs/spec-pack/` is not edited here.
+
+### Fix strategy
+| option | viable? | trade-off |
+|---|---|---|
+| (a) strip thinking blocks from the replayed history (memory decorator) | partly | does not fix the in-call tool-loop reorder |
+| (b) thinking disabled on the assistant's chat client | yes | no thinking blocks at all; frees max-tokens for the answer (R2); lower latency; product change beyond spec 08 |
+| (c) `drop_block` beta header | no | depends on a beta header and keeps the duplicated thinking message |
+Chosen: (b), in `AssistantConfig` (the property cannot bind `ThinkingConfigParam`; res-1 probe), because it removes the
+cause for memory replay and tool loop alike without a beta header.
+
+### Prevention
+- Gap: no test drives the real Anthropic chat model; offline doubles cannot show provider-shape defects.
+- Action: T4 adds the stub-server contract test. Follow-up for the main session: a standards line "an LLM adapter
+  has one contract test of the real model client against a local stub server".
 
 ## Verification
 - Regression tests red on unfixed -> green on fixed (impl `## Red evidence`, QA `## Negative control`)

@@ -11,11 +11,11 @@ base: factory
 branch: sdd/fix-08-assistant-review/spec
 module-vocabulary: [root, bookstore, distributor, frontend, guide]
 kind: bugfix
-severity: S3
-path: lite
+severity: S2
+path: lite+research
 fix-strategy: root-cause
 regression-since: not-a-regression
-closes: [R1 failed live call gives a generic 500, R22 failed question stays in memory, README answer language, integration tests online under exported SPRING_AI variables]
+closes: [R1 failed live call gives a generic 500, R22 failed question stays in memory, README answer language, integration tests online under exported SPRING_AI variables, live follow-up rejected for a thinking signature]
 ---
 
 # Plan: a failed live model call answers 503 assistant-unavailable and leaves the conversation as it was
@@ -95,6 +95,10 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
   variables, and a subclass's own `@TestPropertySource` (`AssistantIntegrationTest`: `scripted`) still wins over the
   inherited value. `application-test.yml` stays (it also covers contexts outside the base); only its comment is made
   true. `AssistantConfigContextTest` (R17) is deferred: it cannot reach the API.
+- D7 (T4, amendment A2): the assistant's chat client runs with thinking disabled
+  (`defaultOptions(AnthropicChatOptions.builder().thinkingDisabled())` in `AssistantConfig`; the property cannot bind).
+  It removes the signed thinking blocks Spring AI 2.0.2 replays reordered, in memory and in the tool loop, needs no
+  beta header, and leaves all of max-tokens 1024 to the answer. Product-behaviour change beyond spec 08, reported.
 - D6: models per the main session: opus for T1 (implementer and verifier), the QA lead and qa-final; sonnet for T2
   and T3. Never fable.
 
@@ -102,11 +106,14 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | pending | | | | |
-| T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 2 | elevated | sonnet | pending | | | | |
-| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 3 | elevated | sonnet | pending | | | | |
+| T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | done | PASS r0 | ENDORSE | #134 | sdd/fix-08-assistant-review/T1 |
+| T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | pending | | | | |
+| T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | pending | | | | |
+| T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | pending | | | | |
 
-T1 and T3 share the bookstore module and run one after the other; the batches fix the order T1, T2, T3.
+T1, T4 and T3 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3
+(amendment A2). T4 depends on T1 because its red evidence names T1's 503 shape. T4 is critical with a sonnet
+verifier: the main session's model rule (opus only for T1, the QA lead and qa-final) wins over the tier mapping.
 
 ### T1: a failed chat call answers 503 assistant-unavailable and leaves the memory as it was
 
@@ -170,6 +177,48 @@ T1 and T3 share the bookstore module and run one after the other; the batches fi
   after `rateLimiter.acquire()` it snapshots `chatMemory.get(id)` (a copy), calls the chat client, and on
   `RuntimeException` clears the conversation and adds the snapshot back (when not empty), logs WARN with the cause,
   and throws the `assistant-unavailable` `UnavailableException` with the cause. The class comment names the new step.
+
+### T4: the assistant's chat client runs with thinking disabled (amendment A2)
+
+- fileScope: `bookstore/src/main/java/nl/openvalue/bookstore/assistant/AssistantConfig.java`,
+  `bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantAnthropicContractTest.java` (new)
+- Acceptance criteria:
+  1. Regression test `bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantAnthropicContractTest.java` >
+     a follow-up turn test (for example `followUpTurnReplaysNoThinkingBlock`) exists at the HTTP contract layer (the
+     real `AnthropicChatModel` against a local stub server; per bug.md A2 Reproduction), is named for the correct
+     behaviour (not the bug id), and asserts: the `ChatClient` comes from the production factory
+     `AssistantConfig.assistantChatClient(...)` (same package; `BookstoreTools` with mocked flows, the real
+     `assistantChatMemory()`), never from a copy of its builder chain; the model is built by hand with a literal
+     dummy key, base URL `http://127.0.0.1:<port>` of a JDK `com.sun.net.httpserver.HttpServer` on port 0, the model
+     and max-tokens of `application.yml` (`claude-haiku-5-5`, 1024). The stub answers like the real API: a request
+     without `"thinking":{"type":"disabled"}` gets `[thinking + signature, text]`, a request with it gets `[text]`.
+     Two turns in one conversation: every captured request carries `thinking.type == "disabled"`; the turn-2 request
+     carries the turn-1 answer text and no `thinking` block and no assistant message other than the turn-1 answer.
+  2. Tool-use variant (for example `toolRoundReplaysNoThinkingBlock`): the stub answers turn 1 without the disabled
+     setting with `[thinking, text, tool_use searchCatalogue]`, then `[thinking, text]`; with the setting
+     `[text, tool_use]`, then `[text]`. At least 3 captured requests (turn 1, the tool loop, turn 2); every request
+     carries `thinking.type == "disabled"`; no request holds a thinking block; the tool result reaches the model.
+  3. Every request still carries the model and `max_tokens` of the configuration and no sampling parameter
+     (`temperature`, `top_p`, `top_k`).
+  4. Negative control: on the pre-fix code (`AssistantConfig.java` restored from `git show <pr-base>:<file>` via
+     copy-aside + SHA-256; never `git checkout --`, `git restore` or `git stash`), `./mvnw -pl bookstore test
+     -Dtest=AssistantAnthropicContractTest -Dsurefire.failIfNoSpecifiedTests=false` FAILS on the tests of criteria
+     1 and 2 with a request lacking `thinking.type == "disabled"` and, where asserted, a turn-2 body holding an
+     assistant message `[text, thinking]` (the reorder shape of bug.md A2) - not with a compile, bind or context
+     error. With the fix in place it PASSES. Outputs verbatim under `## Red evidence` and `## Green evidence`.
+  5. The fix sits at the root cause: `AssistantConfig.assistantChatClient` sets
+     `defaultOptions(AnthropicChatOptions.builder().thinkingDisabled())` (or the equivalent 2.0.2 API res-1 verified);
+     the class comment says why in plain English (the pinned Spring AI replays thinking blocks reordered, the API
+     then rejects the follow-up); no property, no beta header, no memory decorator, no change to `AssistantCommands`.
+  6. No behaviour change outside the root cause: the default options reach `ScriptedChatModel` and `OfflineChatModel`
+     harmlessly; `AssistantIntegrationTest`, `ScriptedChatModelTest`, `AssistantCommandsTest`,
+     `AssistantModeIntegrationTest`, `AssistantConfigTest` and `AssistantConfigContextTest` pass unmodified, and the
+     tool tests still see their tool names; `./mvnw -pl bookstore test` green; ArchUnit green unmodified; no POM
+     change.
+  7. The outbox states whether spec 08 residual R2 (thinking tokens counting toward max-tokens 1024) is closed.
+  8. `./mvnw clean verify` is green within 60 seconds.
+- Live re-check (not a criterion of the task; the main session runs it with the owner's key after the merge): the
+  two-message conversation answers 200 twice.
 
 ### T2: the assistant page shows the unavailable text
 
@@ -245,4 +294,52 @@ T1 and T3 share the bookstore module and run one after the other; the batches fi
 
 ## QA feed-forward
 
+From the QA lead's T1 r0 review (ENDORSE; ledger `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-08-assistant-review.md`):
+- FF-T4-1 (T4): the regression test takes the `ChatClient` from `AssistantConfig.assistantChatClient(...)`, never a
+  copy of its builder chain. Must-fail probe: delete the thinking-disabled line, the test goes red.
+- FF-T4-2 (T4): stub `HttpServer` on 127.0.0.1 port 0; `thinking.type == "disabled"` on every captured request; the
+  test proves it saw something (at least 3 requests with the tool round; turn 2 carries the turn-1 answer). Literal
+  dummy key; never ANTHROPIC_API_KEY.
+- FF-T4-3 (T4, live re-check): with T1 in place the unfixed defect shows as 503 `assistant-unavailable` on turn 2
+  with the memory restored; after T4 turn 2 answers 200.
+- FF-T4-4 (T4): the default options also reach `ScriptedChatModel` and `OfflineChatModel`; the verifier runs
+  `AssistantIntegrationTest`, `ScriptedChatModelTest`, `AssistantCommandsTest` and `AssistantModeIntegrationTest`
+  unmodified and green and checks the tool tests still see their tool names.
+- FF-T4-5 (T4): the T4 record says whether residual R2 is closed.
+- FF-T2-1 (T2): the server `detail` in the fixture differs from the spec 12 text and the server title is asserted
+  absent. Must-fail probe: render `problem.detail` for `assistant-unavailable`.
+- FF-T3-1 (T3): the exported proof turns the 5 `AssistantModeIntegrationTest` failures seen by qa-t1 green, its log
+  holds zero `Failed to connect to /127.0.0.1:9` lines, and offline assertions check the code `assistant-offline`,
+  not only the status (with T1 an escaped call also answers 503).
+- qa-final Q1: in `AssistantCommands.java`, `git grep -n -E "catch \((Throwable|Exception|Error)[ )]"` prints nothing
+  and `catch (RuntimeException failure)` appears exactly once. Q2: the cause is passed (by reading, unless a test
+  pins it). Q3: `AssistantCommands.java` at the spec tip has the hash of the T1 merge, or T1's branch-level negative
+  control is re-run.
+- Optional follow-up FU-1 (not in this cycle's criteria): a test asserting `hasCauseReference` on the
+  `UnavailableException` and an `isNotNull()` before `AssistantCommandsTest.java:465` reads the throwable.
+
 ## Amendments
+
+- A1 (2026-11-09, orchestrator, on impl-t1's question; self-accepted, cheap and reversible): (1) T1 criterion 1:
+  `org.springframework.ai.retry.*` is not on the Spring AI 2.0.2 classpath (no spring-ai-retry module; adding it is a
+  POM change). The witness types are `com.anthropic.errors.AnthropicIoException` (connection or timeout),
+  `com.anthropic.errors.AnthropicRetryableException`, `java.lang.IllegalStateException` and
+  `java.io.UncheckedIOException` (two outside the Anthropic hierarchy, so a catch of `AnthropicException` alone
+  dies). (2) D1 refined: the four use-case exceptions (`NotFoundException`, `ConflictException`,
+  `InvalidInputException`, `UnavailableException`) thrown from the chat call are not a failed model call: they pass
+  through unchanged (the existing `useCaseExceptionsMapToTheirStatus` rows stay green and unmodified), after the
+  memory restore, without the WARN line. Every other `RuntimeException` is restored, logged once at WARN and
+  translated to `assistant-unavailable`. New T1 criterion 6a: an integration test with `ScriptedChatModel` throwing
+  a use-case exception (for example `NotFoundException`) answers its own status and code and leaves that
+  conversation's memory exactly as before; a slice test finds no WARN line from `AssistantCommands` for a
+  pass-through. Consequence: none outside T1.
+- A2 (2026-11-09, orchestrator, on the main session's report from the owner's live-key check; self-accepted): new
+  defect, S2: every second message of a conversation fails live with a 400 for a thinking-block signature (bug.md
+  "Amendment A2"). Path stays lite+research: one researcher, res-1 (sonnet), confirmed the root cause offline against
+  a local stub. New task T4 (bookstore, critical tier, sonnet implementer and verifier per the main session's model
+  rule), ordered right after T1: T1, T4, T2, T3. Decision D7: thinking disabled on the assistant's chat client
+  (`AssistantConfig`), not a memory decorator and not the `drop_block` beta header. D7 changes product behaviour
+  beyond spec 08 "Configuration" (which names model and max-tokens only): the assistant no longer uses extended
+  thinking; recorded here and reported to the main session, not put to Maik. The live re-check with the owner's key
+  is the main session's, after the merge. Consequence: the spec PR closes one more finding; T4's contract test is the
+  first test of the real model client.
