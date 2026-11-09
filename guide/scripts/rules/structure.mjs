@@ -141,7 +141,8 @@ function admonitions(lines, flags) {
 }
 
 // The at a glance box content: {entries, strays}. An entry is a "**Label:**" line with
-// the text after it, the continuation lines and an optional fenced block.
+// the text after it, the continuation lines and its fenced blocks (every one is kept, so
+// a second block cannot hide behind the first).
 function parseBox(content) {
   const entries = [];
   const strays = [];
@@ -152,11 +153,11 @@ function parseBox(content) {
     const fence = /^\s*(`{3,})(\w*)\s*$/.exec(line);
     const current = entries[entries.length - 1];
     if (label) {
-      entries.push({label: label[1], text: label[2], fence: null});
+      entries.push({label: label[1], text: label[2], fences: []});
     } else if (fence && current) {
       const lines = [];
       for (i++; i < content.length && !/^\s*`{3,}\s*$/.test(content[i]); i++) lines.push(content[i].trim());
-      current.fence = {lang: fence[2], lines: lines.filter((l) => l !== '')};
+      current.fences.push({lang: fence[2], lines: lines.filter((l) => l !== '')});
     } else if (current) {
       current.text += ` ${line}`;
     } else {
@@ -196,11 +197,20 @@ function boxErrors({box, level, spec, planLevel}) {
   if (start && normalise(start.text) !== spec.start) {
     errors.push(`the Start branch must be "${spec.start}", found "${normalise(start.text)}"`);
   }
+  // Only the Catch-up line holds a fenced block: exactly one, the command, nothing else
+  // on that line.
+  for (const entry of entries) {
+    if (entry.label !== 'Catch-up' && entry.fences.length > 0) {
+      errors.push(`the at a glance box has a fenced block under the ${entry.label} line, only the Catch-up line has one`);
+    }
+  }
   const catchUp = first('Catch-up');
   const command = `git stash -u && git switch ${spec.catchUp}`;
   if (catchUp) {
-    const ok = normalise(catchUp.text) === '' && catchUp.fence?.lang === 'bash' && catchUp.fence.lines.join('\n') === command;
-    if (!ok) errors.push(`the Catch-up must be a fenced bash block of exactly "${command}"`);
+    const [block] = catchUp.fences;
+    const ok =
+      normalise(catchUp.text) === '' && catchUp.fences.length === 1 && block.lang === 'bash' && block.lines.join('\n') === command;
+    if (!ok) errors.push(`the Catch-up must be a fenced bash block of exactly "${command}", once, with nothing else on the Catch-up line`);
   }
   const time = first('Time');
   if (time && planLevel) {
@@ -276,7 +286,12 @@ function checklistErrors({lines, flags, bodyLine, planItems}) {
 function commonErrors({lines, flags, bodyLine, anchors}) {
   const errors = [];
   lines.forEach((line, index) => {
-    if (!flags[index] && /^#(?!#)/.test(line)) errors.push(`line ${bodyLine + index + 1}: a body H1 ("${line.trim()}"), the title comes from the frontmatter`);
+    // Every H1 that Markdown renders: ATX with up to three spaces of indent (four is code),
+    // and setext, a text line underlined with "=".
+    if (!flags[index] && /^ {0,3}#(?!#)/.test(line)) errors.push(`line ${bodyLine + index + 1}: a body H1 ("${line.trim()}"), the title comes from the frontmatter`);
+    if (!flags[index] && index > 0 && !flags[index - 1] && lines[index - 1].trim() !== '' && /^ {0,3}=+\s*$/.test(line)) {
+      errors.push(`line ${bodyLine + index}: a setext H1 ("${lines[index - 1].trim()}" underlined with ===), the title comes from the frontmatter`);
+    }
     if (/^\s*:::[A-Za-z]+[ \t]+\S/.test(line)) {
       errors.push(`line ${bodyLine + index + 1}: admonition in the space form ("${line.trim()}"), use the bracket form, for example :::info[Sync moment]`);
     }

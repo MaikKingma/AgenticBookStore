@@ -71,3 +71,9 @@ test('parseSddChecklist: a missing or duplicated heading is an error', () => {
   const twice = `${fixtureSdd()}\n### Level cleared when\n- x\n`;
   assert.ok(parseSddChecklist(twice).errors.some((e) => /2 .*Level cleared when/.test(e)));
 });
+
+test('parseSddChecklist: a heading followed by prose instead of a list is an error, with no items', () => {
+  const {items, errors} = parseSddChecklist('# Guide\n\n### Level cleared when (all tracks)\nProse, not a list.\n');
+  assert.deepEqual(items, []);
+  assert.deepEqual(errors, ['SDD framework guide: the "Level cleared when" heading has no list']);
+});

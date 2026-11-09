@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {structureErrors, SKELETON_MARKER} from './rules/structure.mjs';
 import {FIXTURE_LEVELS, fixturePlan, fixtureSdd, goodDocs, levelPage} from './lib/structure-fixtures.mjs';
+import {TROUBLESHOOTING_ANCHORS} from './lib/structure-fixtures.mjs';
 import {replaceOnce} from './lib/test-fixtures.mjs';
 
 // Runs the pure rule on the good docs plus overrides (a null removes a file).
@@ -330,6 +331,122 @@ test('structure: the L4 list of the SDD guide must equal the plan, and the messa
 test('structure: the L4 page list must equal the plan list', () => {
   const text = replaceOnce(page(4), 'not claimed', 'claimed');
   assertErrors(run({[L(4)]: text}).errors, [/item 2 /]);
+});
+
+// Rework round 1: the at a glance box holds one fenced block, under Catch-up only
+
+test('structure: a second fenced block in the Catch-up entry fails, whichever side the right one is on', () => {
+  const bogus = '```bash\ngit reset --hard origin/main\n```\n\n';
+  const above = replaceOnce(page(1), '**Catch-up:**\n\n```bash\n', `**Catch-up:**\n\n${bogus}\`\`\`bash\n`);
+  assertErrors(run({[L(1)]: above}).errors, [/Catch-up/]);
+  const below = replaceOnce(page(1), 'git switch main\n```\n', 'git switch main\n```\n\n```bash\ngit pull\n```\n');
+  assertErrors(run({[L(1)]: below}).errors, [/Catch-up/]);
+});
+
+test('structure: a fenced block under any other box line fails', () => {
+  const goal = replaceOnce(page(1), 'the obvious thing.\n', 'the obvious thing.\n\n```bash\nrm -rf .claude\n```\n');
+  assertErrors(run({[L(1)]: goal}).errors, [/fenced block under the Goal line/]);
+  const time = replaceOnce(page(1), '**Time:** 35 minutes\n', '**Time:** 35 minutes\n\n```bash\ngit pull\n```\n');
+  assertErrors(run({[L(1)]: time}).errors, [/fenced block under the Time line/]);
+  const compare = replaceOnce(page(1), '**Compare:** `solution/level-1`\n', '**Compare:** `solution/level-1`\n\n```bash\ngit pull\n```\n');
+  assertErrors(run({[L(1)]: compare}).errors, [/fenced block under the Compare line/]);
+});
+
+test('structure: text on the Catch-up line itself fails', () => {
+  const inline = replaceOnce(page(1), '**Catch-up:**\n', '**Catch-up:** run this first\n');
+  assertErrors(run({[L(1)]: inline}).errors, [/Catch-up/]);
+  const wrapped = replaceOnce(page(1), '**Catch-up:**\n\n```bash\n', '**Catch-up:**\nrun this first\n\n```bash\n');
+  assertErrors(run({[L(1)]: wrapped}).errors, [/Catch-up/]);
+});
+
+// Rework round 1: every form of H1 that Markdown renders
+
+test('structure: an indented ATX H1 of up to three spaces fails, four spaces is code and passes', () => {
+  const h1 = (indent) => run({[L(1)]: replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n${indent}# Foo`)}).errors;
+  assertErrors(h1(' '), [/H1/]);
+  assertErrors(h1('   '), [/H1/]);
+  assert.deepEqual(h1('    '), []);
+});
+
+test('structure: a setext H1 fails, a setext H2 and a === line inside a fence do not', () => {
+  const body = (text) => run({[L(1)]: replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n${text}`)}).errors;
+  assertErrors(body('Foo\n==='), [/setext H1/]);
+  assertErrors(body('Foo\n   ======  '), [/setext H1/]);
+  assert.deepEqual(body('Foo\n---'), []);
+  assert.deepEqual(body('```text\nFoo\n===\n```'), []);
+  assert.deepEqual(body('A paragraph.\n\n==='), []);
+});
+
+// Rework round 1: every contractual anchor is pinned by page and exact id
+
+const ANCHORS = {
+  2: ['part-a-lsp', 'part-b-mcp', 'stretch'],
+  3: ['part-a-permissions', 'part-b-hooks', 'optional-stop-hook', 'part-c-skill-and-command', 'stretch'],
+  4: ['tracks', 'feature-briefs'],
+};
+const TROUBLESHOOTING = [
+  'windows-hooks',
+  'jdtls-not-starting',
+  'usage-limits',
+  'mcp-not-connecting',
+  'anthropic-api-key',
+  'offline-copy-blank-page',
+  'docker-not-running',
+  'far-behind',
+];
+
+test('structure: each of the 18 contractual anchors fails when its heading id is removed, and the other pages stay ok', () => {
+  const cases = [];
+  for (const [level, ids] of Object.entries(ANCHORS)) {
+    for (const id of ids) cases.push({file: L(Number(level)), text: page(Number(level)), id});
+  }
+  const trouble = goodDocs()['docs/reference/troubleshooting.md'];
+  for (const id of TROUBLESHOOTING) cases.push({file: 'docs/reference/troubleshooting.md', text: trouble, id});
+  assert.equal(cases.length, 18);
+  for (const {file, text, id} of cases) {
+    const errors = run({[file]: replaceOnce(text, ` {/* #${id} */}`, '')}).errors;
+    assert.equal(errors.length, 1, `${file} without #${id}:\n${errors.join('\n')}`);
+    assert.ok(errors[0].startsWith(`structure: ${file}: `) && errors[0].includes(`#${id} `), `${file} without #${id}:\n${errors[0]}`);
+  }
+});
+
+test('structure: the fixture and the pinned anchor table agree, so a page needs no anchor beyond them', () => {
+  for (const n of [0, 1, 2, 3, 4]) assert.deepEqual(FIXTURE_LEVELS[n].anchors.map(([, id]) => id), ANCHORS[n] ?? [], `Level ${n}`);
+  assert.deepEqual(TROUBLESHOOTING_ANCHORS.map(([, id]) => id), TROUBLESHOOTING);
+});
+
+// Rework round 1: rules that had no self-test
+
+test('structure: the at a glance box must follow LevelProgress directly', () => {
+  const text = replaceOnce(page(1), '<LevelProgress current={1} />\n', '<LevelProgress current={1} />\n\nSome text first.\n');
+  assertErrors(run({[L(1)]: text}).errors, [/box must follow LevelProgress directly/]);
+  const comment = replaceOnce(page(1), '<LevelProgress current={1} />\n', '<LevelProgress current={1} />\n\n{/* a comment */}\n');
+  assertErrors(run({[L(1)]: comment}).errors, [/box must follow LevelProgress directly/]);
+});
+
+test('structure: a level page has exactly one at a glance box', () => {
+  const second = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::note[At a glance]\n\n**Goal:** Again.\n\n:::`);
+  assertErrors(run({[L(1)]: second}).errors, [/2 :::note\[At a glance\] boxes, expected 1/]);
+});
+
+test('structure: an admonition that is never closed fails and names its line', () => {
+  const text = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::tip[Later]\nbody without a closing line`);
+  const {errors} = run({[L(1)]: text});
+  assertErrors(errors, [/line \d+: the tip admonition is never closed/]);
+  const wrapUp = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::info[Sync moment]\nLook up, Maik demos this now.\n';
+  assertErrors(run({'docs/06-wrap-up.md': wrapUp}).errors, [/the info admonition is never closed/]);
+});
+
+test('structure: errors from parsing the SDD guide are reported, they do not pass silently', () => {
+  const renamed = fixtureSdd().replace('### Level cleared when (all tracks)', '### Cleared (all tracks)');
+  assertErrors(run({}, {sddText: renamed}).errors, [/^structure: SDD framework guide: no "Level cleared when" heading$/]);
+  const twice = `${fixtureSdd()}\n### Level cleared when\n- x\n`;
+  assertErrors(run({}, {sddText: twice}).errors, [/^structure: SDD framework guide: 2 "Level cleared when" headings, expected 1$/]);
+});
+
+test('structure: an SDD guide heading with no list is an error', () => {
+  const noList = '# Guide\n\n### Level cleared when (all tracks)\nSome prose instead of a list.\n';
+  assertErrors(run({}, {sddText: noList}).errors, [/^structure: SDD framework guide: the "Level cleared when" heading has no list$/]);
 });
 
 test('structure: a plan with no parsable levels reports the plan, not the pages', () => {

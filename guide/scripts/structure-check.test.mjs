@@ -60,6 +60,35 @@ test('runChecks with structure: each rule family reaches the whole checker', () 
   }
 });
 
+test('runChecks with structure: a page that misses a contractual anchor fails, on a level page and on troubleshooting', () => {
+  const level = failing(check({[FIXTURE_LEVELS[3].file]: replaceOnce(levelPage(3), ' {/* #part-c-skill-and-command */}', '')}).errors);
+  assert.equal(level.length, 1, level.join('\n'));
+  assert.match(level[0], /^structure: docs\/04-level-3-behavioral-control\.mdx: the contractual anchor #part-c-skill-and-command is missing/);
+  const trouble = goodDocs()['docs/reference/troubleshooting.md'];
+  const page = failing(check({'docs/reference/troubleshooting.md': replaceOnce(trouble, ' {/* #docker-not-running */}', '')}).errors);
+  assert.equal(page.length, 1, page.join('\n'));
+  assert.match(page[0], /^structure: docs\/reference\/troubleshooting\.md: the contractual anchor #docker-not-running is missing/);
+});
+
+test('runChecks with structure: the box, H1 and SDD guide rules reach the whole checker', () => {
+  const l = FIXTURE_LEVELS;
+  const marker = '{/* guide-skeleton */}';
+  const cases = [
+    [{[l[1].file]: replaceOnce(levelPage(1), '**Catch-up:**\n\n```bash\n', '**Catch-up:**\n\n```bash\ngit reset --hard origin/main\n```\n\n```bash\n')}, /Catch-up/],
+    [{[l[1].file]: replaceOnce(levelPage(1), '<LevelProgress current={1} />\n', '<LevelProgress current={1} />\n\nText first.\n')}, /must follow LevelProgress directly/],
+    [{[l[1].file]: replaceOnce(levelPage(1), marker, `${marker}\n\nFoo\n===`)}, /setext H1/],
+    [{[l[1].file]: replaceOnce(levelPage(1), marker, `${marker}\n\n:::tip[Later]\nopen`)}, /never closed/],
+  ];
+  for (const [files, pattern] of cases) {
+    const errors = failing(check(files).errors);
+    assert.equal(errors.length, 1, `${pattern}: ${errors.join(' | ')}`);
+    assert.match(errors[0], pattern);
+  }
+  const sdd = failing(check({}, {sdd: '# Guide\n'}).errors);
+  assert.equal(sdd.length, 1, sdd.join('\n'));
+  assert.match(sdd[0], /SDD framework guide: no "Level cleared when" heading/);
+});
+
 test('runChecks with structure: a docs file with a NUL byte is an error', () => {
   const wrapUp = `${goodDocs()['docs/06-wrap-up.md']}\0`;
   const {errors} = check({'docs/06-wrap-up.md': wrapUp});
