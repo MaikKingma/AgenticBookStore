@@ -28,7 +28,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | pr | branch | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | staging layout, scripts, self-test, branch-cut tool | root | [] | 1 | critical | opus | opus | #135 | sdd/10-harness-reference-solutions/T1 | ENDORSE (r3) |
-| T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | | | |
+| T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | #139 | sdd/10-harness-reference-solutions/T2 | ENDORSE (r0) |
 | T3 | Level 1 scenarios run and recorded | root | [T2] | 3 | elevated | sonnet | sonnet | | | |
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | | | |
 | T5 | Level 2 multi-role ACL contract test from MCP data | bookstore | [T4] | 5 | elevated | sonnet | sonnet | | | |
@@ -194,6 +194,12 @@ for all three tracks is a manual check for Maik.
   (proved by deleting the added lines from a copy and comparing with the earlier original) and the earlier logs are on
   disk; re-run the batch whose killing cases gained assertions; an escalated round gets a closed Required Actions list
   and named FAIL bounds.
+- FF-T2-a (from T2; T3 directive and record): the T3 record states that `docs/architecture.md` (named by
+  `CLAUDE.md`) and `db/seed/R__seed_demo_data.sql` (named by `.claude/rules/data-and-migrations.md` line 5) are absent
+  on the simulated base and arrive with spec 09, and lists both as resumed-run checks
+  (`git ls-tree level-0-start -- <path>` non-empty); a Level 0 run that tries to read either file and finds it
+  missing is a side effect of the base, not a run failure; the verifier quotes such reads. qa-final re-runs the
+  five-block `cmp` of Level 1 on the final bytes.
 - Follow-ups from T1 for qa-final: FU-T1-1 (closed-stderr test of the three exit handlers; qa-final greps that each
   keeps `set +e`); F13 (README cut-procedure prose carries no push line, reading check); J12/F14 (backup removed on an
   incomplete rollback: residual for Maik).
