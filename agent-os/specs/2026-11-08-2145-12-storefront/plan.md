@@ -29,7 +29,7 @@ gate and green checks.
 | T3 | root | [T1, T2] | 3 | elevated | sonnet | root module list `frontend`, `bookstore`, `distributor`; `actions/cache` for `frontend/node` and the npm cache in both CI jobs; `jar tf` evidence (GQ14) | #74 | sdd/12-storefront/T3 | PASS r2 | ENDORSE |
 | T4 | frontend | [T3] | 4 | elevated | sonnet | OpenBook styling foundation: `tokens.css`, self-hosted Montserrat plus OFL, mobile-first `global.css`, contrast test (GQ2, GQ3) and style contract test, title "OpenBook" | #77 | sdd/12-storefront/T4 | PASS r3 | ENDORSE |
 | T5 | frontend | [T3] | 5 | critical | opus | API client, ProblemDetail normalisation (including plain Boot error JSON), endpoint functions, `client.test.ts`, fetch mock | #81 | sdd/12-storefront/T5 | PASS r3 | ENDORSE |
-| T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | | | | |
+| T6 | frontend | [T4, T5] | 6 | elevated | sonnet | in-house `HashRouter`, sticky header with the OpenBook wordmark (light header), `ProblemDetailAlert`, `SearchForm`, `BookCard`, `StockBadge`, `CataloguePage` | #85 | sdd/12-storefront/T6 | PASS r2 | ENDORSE |
 | T7 | frontend | [T6] | 7 | elevated | sonnet | `limits.ts`, basket state (sessionStorage), `estimate.ts`, `BookDetailPage`, header badge counting items (GQ11), deep link | | | | |
 | T8 | frontend | [T7] | 8 | critical | opus | basket page, checkout, order page, orders page, `format.ts` | | | | |
 | T9 | frontend | [T7] | 9 | elevated | sonnet | conversation id, `AssistantPage`, `ChatMessageList`, chat length limit (spec 08 contract text) | | | | |
@@ -100,6 +100,18 @@ Never fable.
   tabulate every array inside a pass-through or order assertion (three or more elements, every attribute a peak,
   valley or zigzag in string and number order, UUIDs one entity each, first hex digit 0 to 7); verifiers rebuild the
   table and run one sort sweep per attribute and direction.
+- FF-T6 (qa-lead, T6 r2; applies to T7 to T10 and qa-final; full text QA ledger "FF-T6" 1 to 9): Vitest baseline 11
+  files, 332 tests (330 passed + 2 expected fail). Router contract: `useRoute()` (catalogue, book {id}, basket,
+  checkout, orders, order {id}, assistant, not-found; ids decoded once), `navigate(path)` sets the hash as given
+  (callers encode), `Link to` renders `href="#/..."`; App's `Page` switch is the only route-to-page map; router.tsx and
+  router.test.tsx are frozen. PagePending replacement rule per A7. T7 (owns App.tsx, App.test.tsx) asserts the count
+  badge and the `Main` navigation inside the banner and `toHaveClass('site-header')` on it. StockBadge (T7) keeps the
+  catalogue on `inStock` (T7 verifier re-runs T6 P1, P2, C-badge-inverted); ProblemDetailAlert (T8) keeps its test
+  green unchanged (T8 verifier re-runs P8 and the index-key probe). Every stale-answer guard tests a late success and a
+  late failure with hand-resolved promises. Every form submit test asserts `event.defaultPrevented` from a `document`
+  submit listener removed with `onTestFinished` (probes: removal and a late `setTimeout` cancel). The `Not implemented`
+  grep on the verifier's own Vitest log (stderr captured) is the only guard for jsdom errors. T10 and qa-final: live
+  sticky header check after scrolling, `PagePending` grep empty, T6 frozen lines hold.
 
 ## Amendments
 
@@ -143,6 +155,17 @@ Never fable.
   optional `whenTestFinishes` parameter. C0-17 reads per field (every string sent needs one edge-whitespace witness).
   Residual R11 (no test pins the default `onTestFinished` wiring of `mockFetch`; a deliberately failing test would be
   needed) is carried to Gate 2, mitigated by the T5 hash pin. Gate re-run self-accepted.
+- A7 (2026-11-09, orchestrator, on the QA lead's T6 r2 recommendation): accepted T6 implementer decisions inside the
+  card: strict route matching (trailing slash, empty id, extra segments, wrong case, malformed escape give "Page not
+  found"); active navigation (book marks Catalogue, checkout marks Basket, an order marks Orders, unknown marks
+  nothing); genre shown as the server sends it and price as `<price> <currency>`; last search in sessionStorage key
+  `openbook.lastSearch`, invalid stored values ignored; an error replaces the list, a non-ApiError shows "Something
+  went wrong". PagePending replacement rule: T7 replaces `book`, T8 `basket`, `checkout`, `orders`, `order`, T9
+  `assistant`; the App.test.tsx row of a replaced route may change only to install `mockFetch` and to use the real
+  page's level-1 heading; after T9 `grep -rn PagePending frontend/src` is empty. Residual R13 (the comment at
+  `setupTests.ts:5` claims jsdom "Not implemented" errors reach the console trap; they do not, the C0-7 grep is the
+  only guard): T7's fileScope gains a comment-only correction of that line (no code change; the new setupTests.ts
+  hash replaces the FF-T2 pin). Gate re-run self-accepted.
 
 ## Decisions log (self-accepted gates and judgment calls)
 
