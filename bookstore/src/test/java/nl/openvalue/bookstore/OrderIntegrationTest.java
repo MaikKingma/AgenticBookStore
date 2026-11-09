@@ -69,8 +69,8 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertThat(order.get("total")).isEqualTo("33.00");
         assertThat(order.get("status")).isEqualTo("PLACED");
         assertThat(order).containsEntry("shippedAt", null);
-        assertThat(getStock(a)).isEqualTo(stockView(a, 5, 2, 3, true));
-        assertThat(getStock(b)).isEqualTo(stockView(b, 2, 1, 1, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 5, 2, 3, true), 10));
+        assertThat(getStock(b)).isEqualTo(withDefaultPendingRestock(stockView(b, 2, 1, 1, true), 10));
 
         Instant placedAt = Instant.parse((String) order.get("placedAt"));
         assertThat(placedAt).isBetween(before.truncatedTo(ChronoUnit.MICROS), after);
@@ -228,7 +228,7 @@ class OrderIntegrationTest extends IntegrationTestBase {
                 .isEqualTo(List.of(lineView("9780141439600", "A Tale of Two Cities", 6, "12.50", "75.00")));
         assertThat(order.get("total")).isEqualTo("75.00");
         assertThat(countRows("order_line")).isEqualTo(1);
-        assertThat(getStock(a)).isEqualTo(stockView(a, 8, 6, 2, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 8, 6, 2, true), 10));
         assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
         assertThat(orderEvents.rolledBack()).isEmpty();
         assertThat(stockEvents.committed()).extracting(StockRunningLowEvent::bookId).containsExactly(a);
@@ -321,7 +321,7 @@ class OrderIntegrationTest extends IntegrationTestBase {
         UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
         receive(a, 5);
         UUID id = placeOrder("reader@example.com", List.of(line(a, 2)));
-        assertThat(getStock(a)).isEqualTo(stockView(a, 5, 2, 3, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 5, 2, 3, true), 10));
         Instant before = clock.instant();
 
         ship(id).expectStatus().isAccepted().expectBody().isEmpty();
@@ -331,7 +331,7 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertThat(order.get("status")).isEqualTo("SHIPPED");
         assertThat(Instant.parse((String) order.get("shippedAt")))
                 .isBetween(before.truncatedTo(ChronoUnit.MICROS), after);
-        assertThat(getStock(a)).isEqualTo(stockView(a, 3, 0, 3, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 3, 0, 3, true), 10));
         assertThat(version(id)).isEqualTo(1L);
         // Shipping registers no event: the order event and the stock signal are the ones of the placement.
         assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
@@ -356,7 +356,7 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertThat(order.get("status")).isEqualTo("SHIPPED");
         assertThat(order.get("shippedAt")).isNotNull().isEqualTo(shippedAt);
         assertThat(version(id)).isEqualTo(version);
-        assertThat(getStock(a)).isEqualTo(stockView(a, 3, 0, 3, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 3, 0, 3, true), 10));
         assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
         assertThat(orderEvents.rolledBack()).isEmpty();
         assertThat(stockEvents.committed()).extracting(StockRunningLowEvent::bookId).containsExactly(a);
@@ -525,8 +525,8 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertThat(stockEvents.committed()).extracting(StockRunningLowEvent::available)
                 .containsExactlyElementsOf(a.compareTo(b) < 0 ? List.of(3, 1) : List.of(1, 3));
         assertThat(stockEvents.rolledBack()).isEmpty();
-        assertThat(getStock(a)).isEqualTo(stockView(a, 5, 2, 3, true));
-        assertThat(getStock(b)).isEqualTo(stockView(b, 2, 1, 1, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 5, 2, 3, true), 10));
+        assertThat(getStock(b)).isEqualTo(withDefaultPendingRestock(stockView(b, 2, 1, 1, true), 10));
     }
 
     @Test
@@ -571,8 +571,8 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertThat(order.get("status")).isEqualTo("PLACED");
         assertThat(order).containsEntry("shippedAt", null);
         assertThat(version(id)).isEqualTo(version);
-        assertThat(getStock(a)).isEqualTo(stockView(a, 5, 2, 3, true));
-        assertThat(getStock(b)).isEqualTo(stockView(b, 2, 1, 1, true));
+        assertThat(getStock(a)).isEqualTo(withDefaultPendingRestock(stockView(a, 5, 2, 3, true), 10));
+        assertThat(getStock(b)).isEqualTo(withDefaultPendingRestock(stockView(b, 2, 1, 1, true), 10));
         assertThat(orderEvents.committed()).isEmpty();
         assertThat(orderEvents.rolledBack()).isEmpty();
         assertThat(stockEvents.committed()).isEmpty();
@@ -633,13 +633,23 @@ class OrderIntegrationTest extends IntegrationTestBase {
     /** The stock view as JSON gives it, with the default reorder level 3. */
     private static Map<String, Object> stockView(UUID bookId, int onHand, int reserved, int available,
             boolean lowStock) {
-        return Map.of(
+        return withNoPendingRestock(Map.of(
                 "bookId", bookId.toString(),
                 "onHand", onHand,
                 "reserved", reserved,
                 "available", available,
                 "reorderLevel", 3,
-                "lowStock", lowStock);
+                "lowStock", lowStock));
+    }
+
+    /**
+     * The view with the key {@code pendingRestock} present and null, as JSON gives it when no restock is pending. A
+     * {@link Map#of} cannot hold a null value, so the copy is a {@link LinkedHashMap}.
+     */
+    private static Map<String, Object> withNoPendingRestock(Map<String, Object> figures) {
+        Map<String, Object> view = new LinkedHashMap<>(figures);
+        view.put("pendingRestock", null);
+        return view;
     }
 
     /** The order view as JSON gives it; the shipped time may be null, so the map allows a null value. */

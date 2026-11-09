@@ -1,13 +1,16 @@
 package nl.openvalue.bookstore.domain;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * The stock of one book. New stock items come from {@link #openFor}, stored ones from {@link #restore}; both check
- * every invariant. The clock is kept to stamp the events this stock item registers.
+ * every invariant. The clock is kept to stamp the events this stock item registers. A stock item has at most one
+ * pending restock: a restock the distributor confirmed and that no delivery has completed yet.
  */
 public final class StockItem {
 
@@ -24,11 +27,12 @@ public final class StockItem {
     private final int reorderLevel;
     private final int reorderQuantity;
     private boolean lowStockSignalled;
+    private PendingRestock pendingRestock;
     private final Clock clock;
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private StockItem(BookId bookId, int onHand, int reserved, int reorderLevel, int reorderQuantity,
-            boolean lowStockSignalled, Clock clock) {
+            boolean lowStockSignalled, PendingRestock pendingRestock, Clock clock) {
         this.bookId = Objects.requireNonNull(bookId, "bookId");
         this.clock = Objects.requireNonNull(clock, "clock");
         requireNotNegative(reserved, "reserved stock");
@@ -40,28 +44,40 @@ public final class StockItem {
         this.reorderLevel = reorderLevel;
         this.reorderQuantity = reorderQuantity;
         this.lowStockSignalled = lowStockSignalled;
+        this.pendingRestock = pendingRestock;
     }
 
-    /** Opens an empty stock item for a book with the default reorder settings; it registers no event. */
+    /**
+     * Opens an empty stock item for a book with the default reorder settings and no pending restock; it registers no
+     * event.
+     */
     public static StockItem openFor(BookId bookId, Clock clock) {
-        return new StockItem(bookId, 0, 0, DEFAULT_REORDER_LEVEL, DEFAULT_REORDER_QUANTITY, false, clock);
+        return new StockItem(bookId, 0, 0, DEFAULT_REORDER_LEVEL, DEFAULT_REORDER_QUANTITY, false, null, clock);
     }
 
-    /** Rebuilds a stored stock item with every figure and its signal, checking every invariant again. */
+    /**
+     * Rebuilds a stored stock item with every figure, its signal and its pending restock ({@code null} when there is
+     * none), checking every invariant again.
+     */
     public static StockItem restore(BookId bookId, int onHand, int reserved, int reorderLevel, int reorderQuantity,
-            boolean lowStockSignalled, Clock clock) {
-        return new StockItem(bookId, onHand, reserved, reorderLevel, reorderQuantity, lowStockSignalled, clock);
+            boolean lowStockSignalled, PendingRestock pendingRestock, Clock clock) {
+        return new StockItem(bookId, onHand, reserved, reorderLevel, reorderQuantity, lowStockSignalled,
+                pendingRestock, clock);
     }
 
     /**
      * Adds a delivery of 1 to 1000 copies to the stock on hand. When the available stock ends above the reorder
-     * level, the low-stock signal is reset so that the next dip registers a new event. Never registers an event.
+     * level, the low-stock signal is reset so that the next dip registers a new event. Every accepted delivery clears a
+     * pending restock, whatever its size: a delivery smaller than the pending quantity completes the restock too, and
+     * the stock can stay low and signalled until a new restock is requested. A rejected delivery changes nothing.
+     * Never registers an event.
      */
     public void receive(Quantity quantity) {
         if (quantity.value() < MIN_RECEIVED || quantity.value() > MAX_RECEIVED) {
             throw new ReceivedQuantityOutOfRangeException(quantity.value(), MIN_RECEIVED, MAX_RECEIVED);
         }
         onHand += quantity.value();
+        pendingRestock = null;
         if (available() > reorderLevel) {
             lowStockSignalled = false;
         }
@@ -104,6 +120,28 @@ public final class StockItem {
         signalLowStockOncePerDip();
     }
 
+    /**
+     * Records the restock the distributor confirmed: the confirmed order id, quantity and expected delivery date, and
+     * whether the distributor has to wait for new stock. Figures and the low-stock signal stay as they are and no event
+     * is registered. A book has at most one pending restock: when one is pending, nothing changes.
+     */
+    public void restockRequested(String restockOrderId, int quantity, LocalDate expectedDeliveryDate,
+            boolean backordered) {
+        if (pendingRestock != null) {
+            throw new RestockAlreadyPendingException(bookId, pendingRestock);
+        }
+        pendingRestock = new PendingRestock(restockOrderId, quantity, expectedDeliveryDate, backordered);
+    }
+
+    /**
+     * Records that asking the distributor for a restock failed: it resets the low-stock signal so that the next
+     * reservation starts a new attempt. A pending restock, the figures and the events stay as they are, and calling it
+     * again changes nothing. A distributor that refuses the title is not a failure in this sense: the signal stays.
+     */
+    public void restockRequestFailed() {
+        lowStockSignalled = false;
+    }
+
     /** Returns the events registered since the last pull, and forgets them. */
     public List<DomainEvent> pullDomainEvents() {
         List<DomainEvent> events = List.copyOf(domainEvents);
@@ -138,6 +176,16 @@ public final class StockItem {
 
     public boolean lowStockSignalled() {
         return lowStockSignalled;
+    }
+
+    /** True when a restock was confirmed by the distributor and has not been delivered yet. */
+    public boolean hasPendingRestock() {
+        return pendingRestock != null;
+    }
+
+    /** The confirmed restock that has not been delivered yet, or empty when there is none. */
+    public Optional<PendingRestock> pendingRestock() {
+        return Optional.ofNullable(pendingRestock);
     }
 
     /** True when the available stock is at or below the reorder level. */

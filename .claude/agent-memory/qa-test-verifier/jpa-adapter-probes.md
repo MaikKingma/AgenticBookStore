@@ -23,4 +23,8 @@ Rule: a "join instead of exists" probe is only killed by a test whose SQL row li
 - Arithmetic JPQL (`a - b <= c`, `order by a - b`): probe each operand with its default literal (`s.reserved` -> `0`, `s.reorderLevel` -> `3`) in the `where` AND in the `order by` separately; grep the probe log for the generated SQL (`(x.on_hand-0)`) to prove the mutant ran.
 - Mapper helpers shared by insert and update (`toNewEntity` calls `copyInto`): to probe one path only, append the mutated setter calls after the shared call in that one method instead of editing the helper.
 - A "save unchanged keeps version 0" test (save, clear, `save(findBy(...))`) also kills read-path swaps in `toDTO`, because the swapped DTO dirties the entity on the second save.
+- `ddl-auto: validate` (active in the bookstore `@DataJpaTest` slices too) checks column names and types but not varchar length: `@Column(length = 64)` -> `255` survives every slice, while a renamed column fails with `Schema validation: missing column`. Only the migration plus an `information_schema` test and a 65-non-space-char insert pin the length. Run the rename as a control to prove validate is on.
+- Update-only per-field loss when insert and update share `copyInto`: drop one setter from `copyInto` and re-add it in `toNewEntity` (insert still writes it, update keeps the old value). Needs an A -> B update test whose every field differs.
+- Hand-written corrupt rows (residual claims): a temporary `@DataJpaTest` class in the scratchpad, installed, run with `clean`, then `rm`'d by one script that ends with `ls` showing it gone, turns "throws NPE on read" into evidence.
+
 Related: [[domain-mutation-probes]], [[spring-runtime-probes]]

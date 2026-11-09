@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +82,12 @@ class OrderFlowTest {
     private static final StockItemDTO SHIP_STOCK_1 = new StockItemDTO(BOOK_1, 20, 5, 3, 10, false);
     private static final StockItemDTO SHIP_STOCK_2 = new StockItemDTO(BOOK_2, 9, 3, 2, 12, false);
     private static final StockItemDTO SHIP_STOCK_3 = new StockItemDTO(BOOK_3, 30, 9, 4, 8, false);
+
+    // Two pending restocks that differ in every field; no quantity equals a figure of its stock item.
+    private static final PendingRestockDTO PENDING =
+            new PendingRestockDTO("R-7781", 13, LocalDate.of(2026, 7, 3), true);
+    private static final PendingRestockDTO OTHER_PENDING =
+            new PendingRestockDTO("DIST-RO-0042", 5, LocalDate.of(2027, 11, 30), false);
 
     @Mock
     private OrderDataService orders;
@@ -193,6 +200,38 @@ class OrderFlowTest {
                 new StockItemDTO(BOOK_2, 4, 2, 2, 7, true),
                 new StockItemDTO(BOOK_3, 9, 5, 5, 12, true));
         verifyNoMoreInteractions(events);
+    }
+
+    @Test
+    void placeOrderSavesTheStockItemWithItsPendingRestockUnchanged() {
+        // Reserving 3 of 9 with reorder level 2 leaves available 6: no dip, the pending restock stays as it is.
+        stubBooks(BOOK_2_DTO);
+        stubStock(new StockItemDTO(BOOK_2, 9, 0, 2, 12, false, PENDING));
+
+        flow.placeOrder("reader@example.com", List.of(line(BOOK_2, 3)));
+
+        verify(stockItems).save(savedStock.capture());
+        assertThat(savedStock.getValue()).isEqualTo(new StockItemDTO(BOOK_2, 9, 3, 2, 12, false, PENDING));
+        assertThat(savedStock.getValue().pendingRestock())
+                .isEqualTo(new PendingRestockDTO("R-7781", 13, LocalDate.of(2026, 7, 3), true));
+    }
+
+    @Test
+    void placeOrderThatStartsADipSavesTheStockItemWithItsPendingRestockUnchanged() {
+        // Reserving 3 of 6 with reorder level 4 leaves available 3: the dip is signalled and published, and the
+        // pending restock stays as it is.
+        stubBooks(BOOK_1_DTO);
+        stubStock(new StockItemDTO(BOOK_1, 6, 0, 4, 10, false, OTHER_PENDING));
+
+        flow.placeOrder("reader@example.com", List.of(line(BOOK_1, 3)));
+
+        verify(stockItems).save(savedStock.capture());
+        assertThat(savedStock.getValue()).isEqualTo(new StockItemDTO(BOOK_1, 6, 3, 4, 10, true, OTHER_PENDING));
+        assertThat(savedStock.getValue().pendingRestock())
+                .isEqualTo(new PendingRestockDTO("DIST-RO-0042", 5, LocalDate.of(2027, 11, 30), false));
+        verify(events, times(2)).publishEvent(published.capture());
+        assertThat(published.getAllValues().get(1))
+                .isEqualTo(new StockRunningLowEvent(BOOK_1, 3, 10, Instant.parse("2026-06-15T10:00:00Z")));
     }
 
     @Test
@@ -598,6 +637,33 @@ class OrderFlowTest {
         verify(orders).save(any());
         verify(stockItems).save(new StockItemDTO(BOOK_1, 1, 0, 3, 10, false));
         verifyNoInteractions(events);
+    }
+
+    @Test
+    void shipSavesTheStockItemWithItsPendingRestockUnchanged() {
+        // Shipping 2 of 2 reserved, signalled stock: the figures drop, the signal and the pending restock stay.
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(new OrderLineDTO(BOOK_1, "9780141439600",
+                "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 2))));
+        stubStock(new StockItemDTO(BOOK_1, 4, 2, 3, 10, true, PENDING));
+
+        flow.ship(ORDER_ID);
+
+        verify(stockItems).save(savedStock.capture());
+        assertThat(savedStock.getValue()).isEqualTo(new StockItemDTO(BOOK_1, 2, 0, 3, 10, true, PENDING));
+        assertThat(savedStock.getValue().pendingRestock())
+                .isEqualTo(new PendingRestockDTO("R-7781", 13, LocalDate.of(2026, 7, 3), true));
+    }
+
+    @Test
+    void shipSavesAnotherStockItemWithItsPendingRestockUnchanged() {
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(new OrderLineDTO(BOOK_3, "9780141439518",
+                "Pride and Prejudice", new BigDecimal("9.99"), "EUR", 3))));
+        stubStock(new StockItemDTO(BOOK_3, 30, 9, 4, 8, false, OTHER_PENDING));
+
+        flow.ship(ORDER_ID);
+
+        verify(stockItems).save(savedStock.capture());
+        assertThat(savedStock.getValue()).isEqualTo(new StockItemDTO(BOOK_3, 27, 6, 4, 8, false, OTHER_PENDING));
     }
 
     @Test

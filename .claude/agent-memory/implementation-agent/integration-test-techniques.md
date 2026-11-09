@@ -46,4 +46,28 @@ metadata:
 - Verifier greps `^\s*@` on integration classes allow only `@Test`/`@Autowired`: a generic varargs helper needs
   `@SafeVarargs` (or logs an unchecked note), so pass `List<Map<String, Object>>` instead.
 
+- QA greps `LocalDate(Time)?\.now\(` over `bookstore/src/test` and allows only the base's default-answer line. A
+  test that needs "today by the application Clock" autowires its own `Clock` and writes
+  `LocalDate.ofInstant(clock.instant(), clock.getZone())`. Stub the shared `@MockitoBean` default in the base
+  `@BeforeEach` with `doAnswer(...).when(mock)`; it causes no strict-stubbing failure in tests that never call it.
+- Null-valued JSON key pins: wrap the unchanged `Map.of(...)` literal in one `withNoPending...(Map)` helper that copies
+  into a `LinkedHashMap` and puts the null, so existing pin lines keep their figures. `Map.equals` treats a missing key
+  as different from a null value, so `isEqualTo` is itself a presence check. In slices,
+  `jsonPath("$.k").value(nullValue())` fails on a missing path, and `jsonPath("$", hasKey("k"))` pins presence.
+- `OutputCaptureExtension` on a full-context IT: `CapturedOutput.getOut()` joins the class-level capture with the test's
+  own, so a test also sees the context start-up and every EARLIER test of the class. Assert per unique token (a fresh
+  book id, a literal only that test throws), never a bare `containsOnlyOnce(" WARN ")`. "Exactly one WARN naming X"
+  without filtering: `containsPattern(" WARN .*" + x)` plus `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`.
+- Spring's after-commit listener failure logs `ERROR ... TransactionSynchronization.afterCompletion threw exception`,
+  then a BLANK line, then `java.lang.X: <message>`: join them with `\\R+`, not `\\R`. Logged per failing listener call.
+- Re-stubbing the shared mock replaces the base default; for "fail first, then the default", rebuild the default answer
+  locally (`doThrow(e).doAnswer(this::defaultConfirmation)`), since the base's lambda cannot be chained.
+
+- JDBC witnesses for nullable column groups: a `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
+  rs.getObject(2, Integer.class), rs.getObject(3, LocalDate.class), rs.getObject(4, Boolean.class)), id)` row gives
+  nulls for SQL NULL (pgjdbc), so "all cleared" is `isEqualTo(Arrays.asList(null, null, null, null))`. "Row unchanged
+  after a rejected command": `queryForMap("select * ...")` before and after, compared with `isEqualTo`. Run every
+  "unchanged" claim from each start of the flag it could flip (`@ValueSource(booleans = {true, false})`): from one
+  start, a reset-with-rollback-suppressed mutant changes nothing and survives (QA rule C0-17).
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

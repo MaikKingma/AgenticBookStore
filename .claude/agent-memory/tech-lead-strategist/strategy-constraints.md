@@ -29,6 +29,10 @@ metadata:
   The pack task lists put the flow before the data adapter; flip it and say why in `dependsOn`. The same holds for
   data existence (a query adapter that composes flows merges after the task that guarantees the composed rows exist)
   and for pins: a view change merges in the same task as the full-context tests that pin its key set.
+- **View before behaviour.** When a spec adds a view field and the behaviour that fills it, merge the view first
+  (its pin edits stay mechanical, e.g. `null`) and let the behaviour task update the pins it changes; the behaviour
+  task also owns the end-to-end test for its proxy or after-commit claims (spec 07 strategy). JSON pins with a null
+  value cannot use `Map.of` (it throws on null); name a null-tolerant builder in the card.
 - **Transactional claims need a failure device.** With `saveAndFlush` adapters, removing `@Transactional` is invisible
   on the happy path, so plan a behavioural proof per claim: a test-only `BEFORE_COMMIT` thrower plus an
   `AFTER_ROLLBACK` recorder for "events after commit, none on rollback", a `@MockitoSpyBean` on the shared base that
