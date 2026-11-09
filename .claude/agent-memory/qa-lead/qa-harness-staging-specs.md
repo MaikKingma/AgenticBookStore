@@ -44,3 +44,14 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    verifier run, so a whole-repo `for-each-ref` before/after diff is never clean. Write the check as "no ref the
    scripts can name exists" (the branch and tag names from the step library) plus the suite's own ref checks on
    TMPDIR repos; then a moved `sdd/<other spec>` ref is attributable, not a finding.
+
+9. **When agents may not run Claude Code at all** (owner decision mid-cycle). Re-plan verification three ways:
+   (a) zero-token behaviour still executed (bash harnesses, curl JSON-RPC `initialize`/`tools/list` for MCP, generator
+   inits, validators, glob tests of rule `paths`, `./mvnw verify`); (b) static consistency by the verifier's OWN
+   token inventory (paths, commands, skills, hooks, settings keys, server and tool names, ports) resolved on the built
+   tree and spelled the same in spec, guide sources and code, with a misspelling negative control; (c) owner rehearsal
+   rows with exact setup, prompt, expected observation and fallback. Isolation checks that read `~/.claude` become
+   n/a (a "no claude invocation" grep replaces them).
+   **Why:** without (a) verifiers drift into pure reading; without (c) Gate 2 reads unproven scenarios as passed.
+   **How to apply:** static matching of permission rules is consistency, not behaviour; the rehearsal rows must
+   carry position variants a prefix rule misses (`git commit -m x -n`, `git -C . push`, `cat .env` via Bash).

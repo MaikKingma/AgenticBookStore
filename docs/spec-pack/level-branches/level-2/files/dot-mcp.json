@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "distributor": {
+      "type": "http",
+      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+    }
+  }
+}

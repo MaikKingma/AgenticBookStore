@@ -2,6 +2,6 @@
 - [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, timeouts, log escapes; read before a falsifier list
 - [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout and live-browser witnesses; read before a UI task falsifier list
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, caches; read before a CI spec strategy
-- [Harness staging specs](qa-harness-staging-specs.md) — staged agent config and headless claude -p scenario tasks: ignore traps, eol, re-run budget, isolation evidence
+- [Harness staging specs](qa-harness-staging-specs.md) — staged agent config and headless claude -p scenario tasks: ignore traps, eol, re-run budget, isolation evidence, no-run consistency checks
 - [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI/model specs: keyed referee, env-reading unit tests, network-safe probes, default-equivalent mutants, EPP order, memory window, tool double, catch-all tool helpers; read first
 - [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review
