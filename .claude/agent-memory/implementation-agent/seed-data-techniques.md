@@ -26,5 +26,9 @@ metadata:
   mutants survive. Pin ASCII-only SQL with a byte scan of the classpath resource (reports the offset).
 - The distributor catalogue already uses ISBN prefixes 978990001 and 978990002; invent new ISBNs in 978990003.
   macOS grep has no `-P`: use `perl -ne 'print if /[^\x00-\x7F]/'` for ASCII gates (and give it a positive control).
+- Growing a seed: append rows to the existing INSERT statements with a generator in the scratchpad, then prove "old
+  lines unchanged" with an ordered-subsequence script (old non-comment lines in order, nothing between them, only the
+  last row of each list gaining a comma) plus two negative-control copies. Unanchored `grep -c 'ON CONFLICT DO NOTHING'`
+  also counts a header comment that quotes it; anchor with `^`. `grep -c '@Test'` counts `@TestInstance` too.
 - Data-as-test: write the seed guard test first (counts, checksums, consumer invariants), then author the data until
   it passes; generate check digits with a scratchpad program, never committed.

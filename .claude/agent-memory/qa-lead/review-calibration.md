@@ -14,7 +14,7 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
 
    **Why:** a mutant's kill depends only on the production bytes and on the killing test. Re-running is wasted budget, but an edited killing test silently voids the old evidence.
    **How to apply:** this is why I quote asserting lines into the ledger every round. If any of (a) to (c) fails, CHALLENGE for a re-run.
-   A verifier can prove (b) without my quotes: it copies the test file, deletes the inserted method and hashes the result against the earlier baseline.
+   A verifier can prove (b) without my quotes: it copies the test file, deletes the inserted method and hashes the result against the earlier baseline. Pair it in the rework directive with a control: the REJECT's survivor run against the pre-rework test copy must still pass, which proves the inserted lines are the killers (spec 09 T8 r1).
    Key carried probes by handler and field, not by probe ID: verifiers renumber IDs between rounds to follow the plan.
    A whitespace-only production edit (a formatting Required Action) keeps (a) in substance when I `diff` the `.orig` copy myself and see only spacing.
    A comment-only edit of a guarded TS/JS file (a hash pin replaced by an amendment) keeps the earlier probe kills when the comment-stripped files are byte-identical and the guarding test's hash is unchanged; close a skipped re-run probe list by that proof, not a CHALLENGE (spec 12 T7, setupTests.ts).

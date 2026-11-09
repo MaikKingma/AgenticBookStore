@@ -62,7 +62,7 @@ list. Referee `./mvnw clean verify` from the repo root, green after every task, 
 | T5 | Follow-ups in root: FU-T4-1 test (remote baseline `main` wins) and the two false `http/` header comments (A1, A1b) | root | [T4, T2] | 4 | critical | opus | opus | done | PASS (r0 FAIL) | ENDORSE | 1 | (see PR list) | sdd/09-workshop-baseline/T5 | (see PR list) |
 | T6 | Folded into T8 (A3): the census test lists every ISBN the http collection adds or imports | bookstore | [T1, T2] | - | elevated | sonnet | sonnet | folded | | | | | | |
 | T7 | Spec 02 search cap from 100 to 200 results (D12) | bookstore | [] | 5 | standard | sonnet | sonnet | done | PASS | ENDORSE | 0 | (see PR list) | sdd/09-workshop-baseline/T7 | (see PR list) |
-| T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | elevated | sonnet | sonnet | todo | | | | | | |
+| T8 | Seed grows to 103 books: 100 AVAILABLE (10 per genre) plus 3 discontinued (D12, Q1 b), plus FU-T2-1 | bookstore | [T7] | 6 | elevated | sonnet | sonnet | done | PASS (r1) | ENDORSE (r0 REJECT) | 1 | (see PR list) | sdd/09-workshop-baseline/T8 | (see PR list) |
 | T9 | Count updates for the 103-book seed in README.md, http files and docs; README links the guide site instead of a guide/ row | root | [T8] | 7 | standard | sonnet | sonnet | todo | | | | | | |
 
 Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
@@ -421,3 +421,9 @@ Execution order, one task at a time: T1, T4, T2, T3, T7, T5, T8, T9.
   count sentences only; optional R10 harness variant: a clone with a stale local main runs `--push`, remote main and tag
   unchanged. Residual R10 is closed by the test. Precedence witnesses need two baselines, one dated before and one after
   the remote.
+- FF-12 (T8, for T9 and qa-final): seed sha256 2e1ed6b3e1046cd2d77d71f32f2f7682948f3938cf2504c5020f3478c4356a96, census
+  3fbf8695...ba61bf04 (replaces earlier census baselines); per-genre claims are pinned at census D:182 and D:195-196;
+  qa-final re-runs the G19 diff script against the T8 PR base (162 old lines in order, [63, 65, 63]) for R15, keeps the
+  anchored gate greps (`^INSERT` 5, `^ON CONFLICT DO NOTHING` 5, `DO UPDATE` 0), and the G28 word grep skips the order
+  timestamp at SQL:351. FU-T8-1 (exact content check of the seven-ISBN constant) declined by the orchestrator: the
+  content is correct and pinned by the census hash baseline; listed as a residual.

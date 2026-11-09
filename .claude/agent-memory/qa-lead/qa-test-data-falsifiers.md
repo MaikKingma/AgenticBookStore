@@ -56,10 +56,10 @@ Split out of [[qa-directive-traps]] (this was its item 15; other item numbers be
      DEFAULT profile unfalsified: read the main yml with `YamlPropertySourceLoader`. Re-run idempotence needs content
      equality AFTER edits in every seeded table (an app-like ship); `DO UPDATE SET c = excluded.c` is equivalent on an
      unmodified DB (spec 09 T1 r0 REJECT). Probe one full-row upsert per table; close untouched columns with a gate grep
-     (`ON CONFLICT DO NOTHING` = INSERT count, `DO UPDATE` 0), and keep later seed rows inside the edited statements.
+     anchored (`^ON CONFLICT DO NOTHING` = `^INSERT` count, `DO UPDATE` 0: header comments quote the phrase), and keep later seed rows inside the edited statements.
      Guard behind a stronger guard: a "not in list L" check after a range or catalogue check whose domain already
      excludes every member of L can never fire (spec 09 T8: http-ISBN constant behind the 978990003 prefix); give it
-     its own test so its must-kill seed fails there.
+     its own test so its must-kill seed fails there. Rewriting a census test as an exact map over a FILTERED subset (AVAILABLE per genre) drops its all-rows clauses for the filtered-out rows (genre is an enum name on the DISCONTINUED rows; no DB CHECK, restore does `valueOf`): in the rewrite, list each old clause and where it lands, and aim the old killing probe at a filtered-out row. Verifiers' "no matcher loosened" compares literals, not clauses (spec 09 T8 r0 REJECT, my own G23).
    - Frontend witnesses (React, Vitest, RTL), contrast and style-guard tests, CSS layout and live-browser checks moved to [[qa-frontend-falsifiers]].
    - HTTP cache-policy criteria (fix-12 T1 held in one round): directive token parse (kills noStore, max-age=0), a GET with `If-Modified-Since` = now (classpath mtime is never newer, so a kept validator gives 304), an asset guard, a mutant per chained setter. Tests serve test-classes, not the jar (1980 dates): add a live `java -jar` header check, and run live checks of a new build in a brand-new browser context (see [[qa-frontend-falsifiers]]).
    - "Random UUID id": a round trip (`UUID.fromString(id).toString()`) plus distinctness lets a counter dressed as a UUID (`new UUID(0, n)`) survive, and the same EAN ordered twice is what kills `nameUUIDFromBytes`. Write `UUID.fromString(id).version()` equal to 4 into the falsifier list (spec 05 T2, F-s05-5).
