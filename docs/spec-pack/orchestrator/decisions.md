@@ -191,6 +191,11 @@ not by a separate agent.
 Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
 cap).
 
+Clarified by the main session on 2026-11-09 after the spec 09 orchestrator found a contradiction (10 genres times at
+least 10 AVAILABLE books leaves no room for discontinued books in exactly 100): the seed has 103 books, 100 AVAILABLE
+(exactly 10 per genre) plus the 3 discontinued bookstore-only books spec 09 already asks for. This keeps both of
+Maik's requirements and fits under the cap of 200.
+
 ## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
 
 Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
