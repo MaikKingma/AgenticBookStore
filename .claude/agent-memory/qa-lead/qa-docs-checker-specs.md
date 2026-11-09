@@ -1,6 +1,6 @@
 ---
 name: qa-docs-checker-specs
-description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions; read before the strategy of any docs or checker task
+description: Strategy traps for docs-site specs whose oracle is a home-made checker (Docusaurus guide, spec 11): checker mutation probes, coverage-manifest gaming, plan-parser witnesses, hex false positives, font-loading evidence, generated folders before their ignore rule, regex MDX scanner construct lists and fail directions, self-tests that read live content; read before the strategy of any docs or checker task
 metadata:
   type: feedback
 ---
@@ -77,5 +77,11 @@ contrast), the checker is production code AND the oracle for every later task. T
     cross-check in the content verifiers. Before sending a contract as a Required Action, read the pinned tests it
     touches, and trace every consumer before calling an over-approximation fail-closed. Swapping in the MDX parser
     breaks a "dependency free" checker rule and a dependency key-set test: a plan decision, never a last-round fix.
+15. **Frozen self-tests must not read the content tree** (spec 11 A10/T5c): "the real guide passes" tests that read
+    live `docs/` freeze the content with the checker, so the first content task fails them. Before the freeze
+    baseline, grep the checker tests for reads of the content dir and move them to a committed byte-equal snapshot
+    (compare the tree ids). A later flag-removal task (marker ban) then collides with the snapshot: make it an
+    opt-in the CLI sets on its default root, scope it to `<root>/docs` (fixtures carry markers), and let only the
+    CLI copy tests change.
 
 See also [[qa-directive-traps]] (snapshots, probe reasons, scratch names) and [[qa-ci-config-specs]] (workflow tasks).

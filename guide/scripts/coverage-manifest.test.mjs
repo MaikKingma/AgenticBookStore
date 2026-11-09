@@ -1,24 +1,26 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
-import {join, relative, sep} from 'node:path';
+import {dirname, join, relative, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ENTRIES, MANUAL_ROWS, PAGE_FILES, SOURCE_FILES} from './coverage.mjs';
 import {coverageErrors, fold, manifestShapeErrors} from './rules/coverage.mjs';
+import {SKELETON_DOCS} from './fixtures/skeleton-docs.mjs';
 
 // The real manifest against the real pack and the real pages. The pack lives on the factory
-// branch next to guide/, found relative to this file like the checker does.
+// branch next to guide/, found relative to this file like the checker does. The real pages are
+// the skeleton snapshot (guide/docs at 05e58a2, every page a skeleton), so these tests hold while
+// the content tasks fill in the live pages; the page-set test reads the live guide/docs.
 const GUIDE = fileURLToPath(new URL('..', import.meta.url));
 const PACK = fileURLToPath(new URL('../../docs/spec-pack/', import.meta.url));
 
 const readPack = () => Object.fromEntries(Object.entries(SOURCE_FILES).map(([source, rel]) => [source, readFileSync(join(PACK, rel), 'utf8')]));
 
-function readPages() {
-  const docs = join(GUIDE, 'docs');
+function readPages(docs = SKELETON_DOCS) {
   return Object.fromEntries(
     readdirSync(docs, {recursive: true, withFileTypes: true})
       .filter((entry) => entry.isFile() && /\.mdx?$/.test(entry.name))
-      .map((entry) => [relative(GUIDE, join(entry.parentPath, entry.name)).split(sep).join('/'), readFileSync(join(entry.parentPath, entry.name), 'utf8')]),
+      .map((entry) => [relative(dirname(docs), join(entry.parentPath, entry.name)).split(sep).join('/'), readFileSync(join(entry.parentPath, entry.name), 'utf8')]),
   );
 }
 
@@ -86,7 +88,7 @@ test('manifest: the sources and the pages are the five pack files and the eleven
   for (const rel of Object.values(SOURCE_FILES)) assert.ok(existsSync(join(PACK, rel)), rel);
   assert.deepEqual(
     Object.values(PAGE_FILES).sort(),
-    Object.keys(readPages()).sort(),
+    Object.keys(readPages(join(GUIDE, 'docs'))).sort(),
     'the pages of the manifest are exactly the md and mdx files of docs/',
   );
 });
