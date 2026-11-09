@@ -1,0 +1,46 @@
+# Level 1 sandbox build with the T1 scripts, unmodified (output trimmed to the lines that carry facts)
+# environment: TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir pointing into the scratchpad ($SP/t3/tmp), no claude process in this build (the one earlier auth probe is described in level-1.md, "Scope guard")
+factory sha:  ae2a5f26ef752f68a49d6d44ce2e860ffe6a57cc   (origin/factory)
+spec tip sha: 0f07e919f05c49392895779a49b27bab27c39f59   (scripts and staged files)
+
+$ bash docs/spec-pack/level-branches/scripts/simulate-level-0.sh origin/factory $SBX
+simulate-level-0: no scripts/publish-workshop-main.sh in origin/factory; using the built-in list
+list: built-in
+strip-path: CLAUDE.md | CLAUDE.local.md | AGENTS.md | .claude/ | .mcp.json | openspec/ | .specify/ | specs/ | agent-os/ | .githooks/ | docs/spec-pack/
+removed: CLAUDE.md, .claude/, agent-os/, docs/spec-pack/
+simulated level-0: $SP/t3/tmp/sbx.RQZ5oY/level-1 at 3b34237764412495519afd8fc1c28fc479a8029c (from origin/factory ae2a5f26ef752f68a49d6d44ce2e860ffe6a57cc)
+
+$ bash docs/spec-pack/level-branches/scripts/build-level.sh level-1 $SBX
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted
+build-level: committed level-1 as fcff79f: Level 1 solution: context engineering
+
+$ git log --format='%h %s'
+fcff79f Level 1 solution: context engineering
+3b34237 Agentic Bookstore: workshop baseline (simulated from ae2a5f26ef752f68a49d6d44ce2e860ffe6a57cc)
+
+$ git diff --name-status HEAD~1 HEAD
+A	.claude/rules/data-and-migrations.md
+A	.claude/rules/domain.md
+A	.claude/rules/testing.md
+A	CLAUDE.local.md.example
+A	CLAUDE.md
+
+$ git check-ignore -v CLAUDE.local.md
+.gitignore:29:CLAUDE.local.md	CLAUDE.local.md
+
+# ./mvnw clean verify on this sandbox: see zero-model-proofs.txt (P6), started 22:26:11Z, ended 22:26:39Z (UTC)
+# ./mvnw -pl bookstore test -Dtest=BookTest: see zero-model-proofs.txt (P7)
+# spring-boot:run goal resolution without starting an app, both modules:
+$ ./mvnw -pl bookstore spring-boot:help -Dgoal=run
+spring-boot:run
+  Run an application in place.
+[INFO] BUILD SUCCESS
+$ ./mvnw -pl distributor spring-boot:help -Dgoal=run
+spring-boot:run
+  Run an application in place.
+[INFO] BUILD SUCCESS
