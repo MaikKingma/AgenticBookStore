@@ -165,6 +165,42 @@ cause for memory replay and tool loop alike without a beta header.
 - Action: T4 adds the stub-server contract test. Follow-up for the main session: a standards line "an LLM adapter
   has one contract test of the real model client against a local stub server".
 
+## Amendment A3 (2026-11-09): answer-quality defects from the live check (task T5, S3)
+
+### Report
+- Observed (main session, owner's live check of cc6d658, three conversations, all answers 200):
+  1. Conversation 7e5d5bb7: turn 1 "Anything by Austen?" found Sense and Sensibility; turn 2 "Is it in stock, and is
+     more on its way?" answered that the search returned no results and doubted its earlier answer; turn 3 found it
+     again.
+  2. Conversation 172a2b6a, turn 1: the assistant offered book "descriptions", which the catalogue does not have.
+  3. "And what genres do you have?" answered that it cannot list genres.
+- Expected: spec 08 "Grounded answers" (answers about the catalogue through the tools) and the system prompt rules:
+  a follow-up finds the book again; the assistant offers only what the tools return; it can name the genres.
+- Severity S3 (degraded answers; the customer can rephrase). Owner's decision: fix now, in this cycle.
+
+### Reproduction and root cause
+- Status: reproduced live by the main session (transcript on PR #111); mechanism confirmed by reading.
+- Finding 1: `AssistantConfig` keeps only the questions and final answers in memory (`AssistantConfig.java`, the
+  `MEMORY_MESSAGES` comment: "never tool calls or tool results"), so on turn 2 the model has no book id and searches
+  again with a combined phrase; spec 02's `q` criterion matches title OR author by contains, so "title author" finds
+  nothing. Root cause in the assistant layer: the `searchCatalogue` description (`BookstoreTools.java`) does not say
+  that the query is one title or one author, and the system prompt (`assistant-system.st`) does not tell the model to
+  look a book up again by title on a follow-up.
+- Finding 2: `assistant-system.st` does not say what the tools return, so the model offers fields that do not exist.
+- Finding 3: `assistant-system.st` does not name the genres and no tool lists them.
+- Regression-test layer: prompt and tool-description statement tests (unit, `AssistantSystemPromptTest`,
+  `BookstoreToolsTest`) plus a scripted end-to-end guard (`AssistantIntegrationTest`); model behaviour itself is
+  live-only (spec 08 residual R5).
+
+### Blast radius
+- [x] One prompt, one search tool. -> task T5.
+- [x] Spec 02 search contract: unchanged by decision (main session). -> none.
+- [x] Memory window keeps final texts only: unchanged (plan D8). -> none.
+
+### Fix strategy
+Prompt and tool description texts (plan D8). Not chosen: keeping tool calls in memory (replay risk, see A2); changing
+the spec 02 search (out of scope by the owner's decision).
+
 ## Verification
 - Regression tests red on unfixed -> green on fixed (impl `## Red evidence`, QA `## Negative control`)
 - Blast-radius items closed or deferred

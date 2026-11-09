@@ -99,6 +99,11 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
   (`defaultOptions(AnthropicChatOptions.builder().thinkingDisabled())` in `AssistantConfig`; the property cannot bind).
   It removes the signed thinking blocks Spring AI 2.0.2 replays reordered, in memory and in the tool loop, needs no
   beta header, and leaves all of max-tokens 1024 to the answer. Product-behaviour change beyond spec 08, reported.
+- D8 (T5, amendment A3): the `searchCatalogue` description keeps the spec 08 sentence unchanged and appends the
+  one-title-or-one-author rule (the smallest deviation from the spec 08 tool table text, reported to the main session);
+  the follow-up rule, the returned fields and the genre list go into the system prompt next to the spec 08 rules. The
+  spec 02 search contract and the memory window stay as they are (keeping tool calls in memory would be a larger
+  change with the replay risks of A2).
 - D6: models per the main session: opus for T1 (implementer and verifier), the QA lead and qa-final; sonnet for T2
   and T3. Never fable.
 
@@ -108,11 +113,12 @@ to qaTier critical with opus implementer and verifier; T2 and T3 are elevated wi
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | a failed chat call answers 503 `assistant-unavailable` and leaves the conversation memory as it was | bookstore | [] | 1 | critical | opus | done | PASS r0 | ENDORSE | #134 | sdd/fix-08-assistant-review/T1 |
 | T4 | the assistant's chat client runs with thinking disabled, so a follow-up turn replays no thinking block (A2) | bookstore | [T1] | 2 | critical | sonnet | done | PASS r0 | ENDORSE | #138 | sdd/fix-08-assistant-review/T4 |
-| T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | pending | | | | |
+| T2 | the assistant page shows "The assistant is unavailable right now, try again later" for `assistant-unavailable` | frontend | [] | 3 | elevated | sonnet | done | FAIL r0, PASS r1 | ENDORSE | #141 | sdd/fix-08-assistant-review/T2 |
 | T3 | README matches the prompt's answer language; integration tests stay offline whatever is exported | bookstore | [] | 4 | elevated | sonnet | pending | | | | |
+| T5 | the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (A3) | bookstore | [T3] | 5 | elevated | sonnet | pending | | | | |
 
-T1, T4 and T3 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3
-(amendment A2). T4 depends on T1 because its red evidence names T1's 503 shape. T4 is critical with a sonnet
+T1, T4, T3 and T5 share the bookstore module and run one after the other; the batches fix the order T1, T4, T2, T3,
+T5 (amendments A2 and A3). T5 depends on T3 for ordering only. T4 depends on T1 because its red evidence names T1's 503 shape. T4 is critical with a sonnet
 verifier: the main session's model rule (opus only for T1, the QA lead and qa-final) wins over the tier mapping.
 
 ### T1: a failed chat call answers 503 assistant-unavailable and leaves the memory as it was
@@ -292,6 +298,53 @@ verifier: the main session's model rule (opus only for T1, the QA lead and qa-fi
      SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9` exported in the child shell (`SPRING_AI_MODEL_CHAT` stays out of
      the full run because of the deferred `AssistantConfigContextTest`, R17).
 
+### T5: the assistant finds a book again on a follow-up, names only what the tools return and lists the genres (amendment A3)
+
+- fileScope: `bookstore/src/main/resources/prompts/assistant-system.st`,
+  `bookstore/src/main/java/nl/openvalue/bookstore/assistant/BookstoreTools.java` (the `searchCatalogue` description
+  and its `@ToolParam` descriptions only), `bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantSystemPromptTest.java`,
+  `bookstore/src/test/java/nl/openvalue/bookstore/assistant/BookstoreToolsTest.java`,
+  `bookstore/src/test/java/nl/openvalue/bookstore/AssistantIntegrationTest.java` (appended test only),
+  one new test class if a genre check needs access the `assistant` test package lacks (name it in the outbox)
+- Acceptance criteria:
+  1. Regression test `AssistantSystemPromptTest` > new tests pin these statements of `assistant-system.st` (red on the
+     current prompt): (a) what the tools return, by name: title, authors, genre, price in EUR, publication year, the
+     number of copies in stock and whether a restock is on its way, and that the catalogue holds nothing else (no
+     descriptions, summaries or reviews), so the assistant offers nothing else; (b) on a follow-up about a book named
+     earlier in the conversation, look the book up again by its title (a title-only search) before checking stock or
+     a restock; (c) the 10 genres of spec 02 in readable form (for example "science fiction", not
+     `SCIENCE_FICTION`), in the declaration order of `domain/Genre.java`, and that the assistant can list them when
+     asked. A test proves the listed genres equal the `Genre` constants, so the two cannot drift.
+  2. The spec 08 prompt rules stay, each still pinned by the existing tests unmodified: assistant of an online
+     bookstore; only books in our catalogue; always use the tools before naming a book, never invent titles, authors
+     or prices; prices in EUR; cannot place or change orders and points to the shop; answer in the language of the
+     customer; at most 120 words.
+  3. Regression test `BookstoreToolsTest` > a new test pins the `searchCatalogue` tool description: it starts with the
+     spec 08 text unchanged ("Search the bookstore catalogue by title or author, optionally filtered by genre. Use
+     this before mentioning any book.") and adds that the query is one title or one author name (or a fragment of
+     one), never a title and an author together (plan D8); the query parameter's `@ToolParam` description says the
+     same. Red on the current code. The other three tools' descriptions are unchanged (existing tests unmodified).
+  4. Guard test (green before and after, recorded as such) `AssistantIntegrationTest` > a follow-up scenario with
+     `ScriptedChatModel`: turn 1 asks for an author and the scripted model calls `searchCatalogue` with the author;
+     turn 2 ("Is it in stock, and is more on its way?") the scripted model calls `searchCatalogue` with the title only,
+     then `checkAvailability` with the returned id, and replies with the availability; the test asserts the flows are
+     called with those arguments, the reply carries the stock figure, and turn 2's prompt holds the turn-1 question and
+     answer. A second assertion documents the spec 02 contract the rule rests on: a combined "title author" query
+     returns no book while the title-only query returns it (through the real tool and flow, no mock of the search).
+  5. Negative control: on the pre-fix code (`assistant-system.st` and `BookstoreTools.java` restored from
+     `git show <pr-base>:<file>` via copy-aside + SHA-256; never `git checkout --`, `git restore` or `git stash`),
+     `./mvnw -pl bookstore test -Dtest='AssistantSystemPromptTest,BookstoreToolsTest' -Dsurefire.failIfNoSpecifiedTests=false`
+     FAILS on exactly the new tests of criteria 1 and 3 with a missing-statement assertion (the expected sentence or
+     genre not found in the prompt or description) - not with a compile, resource or context error; no pre-existing
+     test red. With the fix in place it PASSES. Outputs verbatim under `## Red evidence` and `## Green evidence`.
+  6. No behaviour change outside the root cause: the catalogue search of spec 02 (`CatalogueFlow`, `q` criterion) is
+     unchanged; no other production file changes; every pre-existing test passes unmodified; the prompt stays plain
+     English, ASCII, no em dash, and short enough that the 120-word answer rule and the 1024 max-tokens are not at risk
+     (state the prompt's word count in the outbox); ArchUnit green unmodified.
+  7. `./mvnw clean verify` is green within 60 seconds.
+- Live check (not a criterion; the main session runs it with the owner's key after the T5 merge and before qa-final):
+  the three findings no longer occur.
+
 ## QA feed-forward
 
 From the QA lead's T1 r0 review (ENDORSE; ledger `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-08-assistant-review.md`):
@@ -331,6 +384,25 @@ From the QA lead's T4 r0 review (ENDORSE):
   off for every model while the model is overridable through `BOOKSTORE_AI_MODEL` (checked for Haiku 5.5 only);
   R-f the auto-configured `ChatClient.Builder` is not exercised offline (R17 deferred; FF-LIVE closes it); R-g the
   Spring AI 2.0.2 replay reorder stays latent in the library, guarded by the contract test (keep it through upgrades).
+From the QA lead's T2 r1 review (ENDORSE):
+- FF-T3-3 (T3, and T5): no `frontend/` file changes; `AssistantPage.tsx` (db0f0dc2...bf44) and
+  `AssistantPage.test.tsx` (67167522...735f) keep their hashes after the T2 merge; the Vitest baseline in every later
+  referee run is 605 passed + 2 expected fail.
+- qa-final Q6: walk `#/assistant` in Vite dev mode in a fresh browser context with the console captured: happy path,
+  then a `page.route` answering 503 `application/problem+json` with the exact unavailable body of
+  `AssistantIntegrationTest`; the alert reads exactly "The assistant is unavailable right now, try again later", the
+  server title and detail are absent, the typed message stays, Send is enabled, a second send clears the alert; console
+  at most the deliberate 503 line, zero React warnings. A real-server variant only with
+  `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9` and a dummy key in a child shell.
+- qa-final Q7: both T2 hashes unchanged at the spec tip, or T2's negative control re-run at branch level;
+  `git grep -c "assistant-unavailable" <tip> -- frontend/src/pages/AssistantPage.tsx` is 2.
+- Residual R-h: the real T1 answer reaching the page in a browser is unproven until Q6 runs.
+
+For T5 (orchestrator, from earlier lessons):
+- FF-T5-1: pin prompt statements by meaning-bearing phrases, not whole-file equality, so later wording edits fail only
+  where a rule is lost; one assertion per rule; genre check derived from `Genre.values()`.
+- FF-T3-2 applies to T5 as well: `AssistantAnthropicContractTest` stays 3/3 and untouched.
+
 - Optional follow-up FU-1 (not in this cycle's criteria): a test asserting `hasCauseReference` on the
   `UnavailableException` and an `isNotNull()` before `AssistantCommandsTest.java:465` reads the throwable.
 
@@ -359,3 +431,12 @@ From the QA lead's T4 r0 review (ENDORSE):
   thinking; recorded here and reported to the main session, not put to Maik. The live re-check with the owner's key
   is the main session's, after the merge. Consequence: the spec PR closes one more finding; T4's contract test is the
   first test of the real model client.
+- A3 (2026-11-09, orchestrator, on the main session's report; owner's decision): (1) T4 live evidence (FF-LIVE a, b,
+  c): the main session re-checked cc6d658 with the owner's key: 7 of 7 messages answered 200 (1.4 to 3.8 s),
+  including follow-ups in three conversations (172a2b6a hello then genres; 7e5d5bb7 Austen, stock, price; 04519ed6
+  science fiction under 15 euro, then newest); no `BadRequestException`; thinking disabled is accepted by Haiku 5.5.
+  Closes residuals R-d and R-f. Transcript posted by the main session on PR #111. (2) New task T5 (S3, bookstore,
+  elevated, sonnet), three answer-quality defects from the same check against spec 08 "Grounded answers" and the
+  system prompt rules (bug.md "Amendment A3"). Decision D8. After T5 merges into the spec branch the orchestrator
+  tells the main session and pauses before qa-final for its live check. Consequence: one more task PR; qa-final
+  waits for the main session.
