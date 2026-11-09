@@ -52,9 +52,16 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
     private static final Path SHARED_ISBNS = distributorCatalogFile("bookstore-shared-isbns.txt");
     private static final Path DISTRIBUTOR_TITLES = distributorCatalogFile("titles.json");
 
+    /** The ISBN range of the bookstore-only books, which the distributor does not use. */
+    private static final String BOOKSTORE_ONLY_ISBN_PREFIX = "978990003";
+
+    /** The id of the last of the 40 books that earlier versions of the seed held; the books after it are newer. */
+    private static final String LAST_EARLIER_BOOK_ID = "0b00c000-0000-4000-8000-000000000040";
+
     /** The ISBNs that the http collection adds or imports itself, so the seed must leave them out. */
     private static final Set<String> ISBNS_THE_HTTP_COLLECTION_ADDS = Set.of(
-            "9789900010029", "9780141439471", "9780141439600", "9780141439563", "9789900010050");
+            "9789900010029", "9780141439471", "9780141439600", "9780141439563", "9789900010050",
+            "9780141439792", "9789900010791");
 
     /** The distributor's title and author of each shared ISBN, in the order of the shared list. */
     private static final Map<String, List<String>> SHARED_TITLES_AND_AUTHORS = sharedTitlesAndAuthors();
@@ -114,10 +121,10 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
     // Books
 
     @Test
-    void holdsFortyBooksWithUniqueIsbns() {
+    void holdsOneHundredAndThreeBooksWithUniqueIsbns() {
         List<Book> books = books();
 
-        assertThat(books).hasSize(40);
+        assertThat(books).hasSize(103);
         assertThat(books.stream().map(Book::isbn)).doesNotHaveDuplicates();
         assertThat(books.stream().map(Book::id)).doesNotHaveDuplicates();
     }
@@ -139,38 +146,84 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void theTwentyBookstoreOnlyBooksHaveValidIsbnsTheDistributorDoesNotList() throws IOException {
+    void theEightyThreeBookstoreOnlyBooksHaveValidIsbnsFromTheirOwnRangeTheDistributorDoesNotList()
+            throws IOException {
         Set<String> sharedIsbns = SHARED_TITLES_AND_AUTHORS.keySet();
         Set<String> distributorIsbns = distributorIsbns();
         List<String> bookstoreOnly = books().stream().map(Book::isbn).filter(isbn -> !sharedIsbns.contains(isbn))
                 .toList();
 
         assertThat(distributorIsbns).hasSize(150);
-        assertThat(bookstoreOnly).hasSize(20);
+        assertThat(bookstoreOnly).hasSize(83);
         assertThat(bookstoreOnly).allSatisfy(isbn -> assertThat(isValidIsbn13(isbn)).as(isbn).isTrue());
         assertThat(bookstoreOnly).doesNotContainAnyElementsOf(distributorIsbns);
         assertThat(bookstoreOnly).doesNotContainAnyElementsOf(ISBNS_THE_HTTP_COLLECTION_ADDS);
+        assertThat(bookstoreOnly).allSatisfy(isbn -> assertThat(isbn).as("range of %s", isbn)
+                .startsWith(BOOKSTORE_ONLY_ISBN_PREFIX));
+    }
+
+    /** The seven http ISBNs are checked over every seeded book, apart from the range and the distributor checks. */
+    @Test
+    void noSeededBookHasAnIsbnThatTheHttpCollectionAddsOrImports() {
+        assertThat(ISBNS_THE_HTTP_COLLECTION_ADDS).hasSize(7);
+        assertThat(books().stream().map(Book::isbn))
+                .doesNotContainAnyElementsOf(ISBNS_THE_HTTP_COLLECTION_ADDS)
+                .hasSize(103);
     }
 
     @Test
-    void theGenresAreEnumNamesSpreadOverAtLeastSixGenresWithNoneOnMoreThanTenBooks() {
-        Set<String> genreNames = Arrays.stream(Genre.values()).map(Enum::name).collect(Collectors.toSet());
-        Map<String, Long> perGenre = books().stream()
+    void everyGenreHasExactlyTenAvailableBooks() {
+        Map<String, Long> expected = Arrays.stream(Genre.values())
+                .collect(Collectors.toMap(Enum::name, genre -> 10L));
+        Map<String, Long> availablePerGenre = books().stream().filter(book -> book.status().equals("AVAILABLE"))
                 .collect(Collectors.groupingBy(Book::genre, Collectors.counting()));
 
-        assertThat(genreNames).hasSize(10);
-        assertThat(perGenre.keySet()).isSubsetOf(genreNames);
-        assertThat(perGenre).hasSizeGreaterThanOrEqualTo(6);
-        assertThat(perGenre.values()).allSatisfy(count -> assertThat(count).isLessThanOrEqualTo(10L));
+        assertThat(expected).hasSize(10);
+        assertThat(availablePerGenre).isEqualTo(expected);
+        assertThat(books()).allSatisfy(book -> assertThat(book.genre()).as("genre of %s", book.isbn())
+                .isIn(expected.keySet()));
     }
 
     @Test
-    void twoToFourBooksAreDiscontinuedAndNoneOfThemIsShared() {
+    void exactlyThreeBooksAreDiscontinuedAndNoneOfThemIsShared() {
         List<Book> discontinued = books().stream().filter(book -> book.status().equals("DISCONTINUED")).toList();
 
         assertThat(books()).allSatisfy(book -> assertThat(book.status()).isIn("AVAILABLE", "DISCONTINUED"));
-        assertThat(discontinued).hasSizeBetween(2, 4);
+        assertThat(discontinued.stream().map(Book::isbn)).containsExactlyInAnyOrder(
+                "9789900030119", "9789900030140", "9789900030164");
         assertThat(discontinued.stream().map(Book::isbn)).doesNotContainAnyElementsOf(SHARED_TITLES_AND_AUTHORS.keySet());
+        assertThat(discontinued.stream().collect(Collectors.toMap(Book::isbn, Book::genre))).isEqualTo(
+                Map.of("9789900030119", "MYSTERY", "9789900030140", "HISTORY", "9789900030164", "SCIENCE"));
+    }
+
+    @Test
+    void titlesAreDistinctAndTheInventedBooksReuseNoDistributorTitleOrAuthor() throws IOException {
+        Set<String> sharedIsbns = SHARED_TITLES_AND_AUTHORS.keySet();
+        Set<String> distributorTitles = distributorValues("titleName");
+        Set<String> distributorPeople = distributorValues("name");
+        List<Book> invented = books().stream().filter(book -> !sharedIsbns.contains(book.isbn())).toList();
+
+        assertThat(books().stream().map(book -> book.title().strip().toLowerCase(Locale.ROOT))).hasSize(103)
+                .doesNotHaveDuplicates();
+        assertThat(distributorTitles).hasSize(150);
+        assertThat(distributorPeople).isNotEmpty();
+        assertThat(invented).hasSize(83).allSatisfy(book -> {
+            assertThat(distributorTitles).as("distributor titles").doesNotContain(book.title().strip().toLowerCase(Locale.ROOT));
+            assertThat(book.authors().stream().map(author -> author.strip().toLowerCase(Locale.ROOT)))
+                    .as("authors of %s", book.isbn()).doesNotContainAnyElementsOf(distributorPeople);
+        });
+    }
+
+    /** http/catalogue.http and http/demo-flow.http state what these searches find, so the seed must keep it true. */
+    @Test
+    void theSearchTermsTheHttpCollectionDescribesFindTheBooksItNames() {
+        List<Book> austen = books().stream().filter(book -> mentions(book, "austen")).toList();
+
+        assertThat(austen.stream().map(Book::isbn)).containsExactlyInAnyOrder("9780141439518", "9789900010012");
+        assertThat(austen.stream().filter(book -> book.genre().equals("FICTION")).map(Book::isbn))
+                .containsExactly("9780141439518");
+        assertThat(books().stream().filter(book -> mentions(book, "treasure")).map(Book::isbn))
+                .containsExactly(MARGIN_BOOK_ISBN);
     }
 
     @Test
@@ -199,7 +252,7 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
             positions.computeIfAbsent(rs.getObject(1, UUID.class), id -> new ArrayList<>()).add(rs.getInt(2));
         });
 
-        assertThat(positions).hasSize(40);
+        assertThat(positions).hasSize(103);
         assertThat(positions.values()).allSatisfy(list -> assertThat(list)
                 .containsExactlyElementsOf(IntStream.range(0, list.size()).boxed().toList()));
     }
@@ -210,7 +263,7 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
     void everyBookHasAStockItemWithItsFiguresInRange() {
         List<Stock> stock = stock();
 
-        assertThat(stock).hasSize(40);
+        assertThat(stock).hasSize(103);
         assertThat(stock.stream().map(Stock::isbn)).containsExactlyInAnyOrderElementsOf(
                 books().stream().map(Book::isbn).toList());
         assertThat(stock).allSatisfy(item -> {
@@ -252,7 +305,7 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
                 + "OR pending_restock_expected_delivery_date IS NOT NULL OR pending_restock_backordered IS NOT NULL",
                 Integer.class);
 
-        assertThat(stock()).hasSize(40);
+        assertThat(stock()).hasSize(103);
         assertThat(withPendingColumns).isZero();
     }
 
@@ -263,9 +316,23 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
                 .collect(Collectors.toMap(Stock::isbn, Stock::signalled));
 
         assertThat(stock().stream().filter(item -> item.available() > item.reorderLevel()))
-                .hasSize(33)
+                .hasSize(96)
                 .allSatisfy(item -> assertThat(item.signalled()).as("signal of %s", item.isbn()).isFalse());
         assertThat(signalled).isEqualTo(AT_OR_BELOW_LEVEL_SIGNALLED);
+    }
+
+    @Test
+    void theSixtyThreeNewerBooksHaveNothingReservedAndStandAboveTheirLevelWithoutSignal() {
+        Set<String> newerIsbns = books().stream().filter(book -> book.id().toString().compareTo(LAST_EARLIER_BOOK_ID) > 0)
+                .map(Book::isbn).collect(Collectors.toSet());
+        List<Stock> newerStock = stock().stream().filter(item -> newerIsbns.contains(item.isbn())).toList();
+
+        assertThat(newerIsbns).hasSize(63);
+        assertThat(newerStock).hasSize(63).allSatisfy(item -> {
+            assertThat(item.reserved()).as("reserved of %s", item.isbn()).isZero();
+            assertThat(item.available()).as("available of %s", item.isbn()).isGreaterThan(item.reorderLevel());
+            assertThat(item.signalled()).as("signal of %s", item.isbn()).isFalse();
+        });
     }
 
     @Test
@@ -375,8 +442,8 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
 
             MigrateResult rerun = second.migrate();
 
-            assertThat(before.get("book")).hasSize(40);
-            assertThat(before.get("stock_item")).hasSize(40);
+            assertThat(before.get("book")).hasSize(103);
+            assertThat(before.get("stock_item")).hasSize(103);
             assertThat(before.get("customer_order")).hasSize(6);
             assertThat(before.get("order_line")).isNotEmpty();
             assertThat(before.get("book_author")).isNotEmpty();
@@ -569,6 +636,22 @@ class DemoSeedCensusIntegrationTest extends IntegrationTestBase {
                 Path.of("distributor", "src", "main", "resources", "catalog", name));
         return candidates.stream().filter(Files::exists).findFirst().orElseThrow(
                 () -> new IllegalStateException("The distributor catalogue file " + name + " was not found"));
+    }
+
+    /** Every value of the JSON key in titles.json, stripped and in lower case. */
+    private static Set<String> distributorValues(String key) throws IOException {
+        Matcher matcher = Pattern.compile("\"" + key + "\":\\s*\"([^\"\\\\]*)\"").matcher(Files.readString(DISTRIBUTOR_TITLES));
+        Set<String> values = new HashSet<>();
+        while (matcher.find()) {
+            values.add(matcher.group(1).strip().toLowerCase(Locale.ROOT));
+        }
+        return values;
+    }
+
+    /** Whether the term, in lower case, is part of the title or of any author, as the catalogue search matches. */
+    private static boolean mentions(Book book, String term) {
+        return book.title().toLowerCase(Locale.ROOT).contains(term)
+                || book.authors().stream().anyMatch(author -> author.toLowerCase(Locale.ROOT).contains(term));
     }
 
     private static Set<String> distributorIsbns() throws IOException {
