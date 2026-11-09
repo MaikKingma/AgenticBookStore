@@ -37,5 +37,4 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - Passing a Windows-runner cache path from a card literal is unverified until a run saves it: the `windows-latest` npm cache dir written by a Maven-installed Node was not `~\AppData\Local\npm-cache` (spec 12 T3). The fix that held: set `npm_config_cache: ${{ runner.temp }}\npm-cache` in the step that runs npm and cache the same path; the log echoes the resolved `D:\a\_temp\npm-cache` in both the cache `with:` and the step `env:` block. On a re-run after a first save, the other caches show `Cache hit ... not saving cache.` (not a save line): accept hits by exact primary key as proof of an earlier save, and say so.
 - Byte-check negative controls: write one control per changed literal (old value restored, and a one-character change in the new env value); a single control can leave the other comparison untested. macOS `grep -P` does not exist: use `rg` for non-ASCII checks.
 - `bash $HOME/...` and `$HOME` in argv trip the worktree guard ("cannot be shown not to run git"); use the literal home path for `with-budget.sh`.
-
 Related: [[final-sweep-checks]], [[shell-traps]]

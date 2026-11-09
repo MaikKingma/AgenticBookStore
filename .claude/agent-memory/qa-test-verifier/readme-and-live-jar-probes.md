@@ -27,14 +27,12 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
 - `localhost` tries `::1` first; a server bound to 127.0.0.1 only answers after curl falls back (`curl -v` shows both Trying lines).
 - A literal grep over a path that does not exist yet (`http/distributor.http` before T8) exits 2 with a warning and prints
   no matches: say so rather than calling it a clean empty result.
-
 - `.http` request collections: a `python3 -I` driver parses the file's own bytes (split on `###`, comments, request line, headers,
   body by line range, emulate the `client.global.set(...)` handler), sends with http.client, and oracles every body from the seed
   JSON plus today's Amsterdam date. Prove it bites with 4-5 mutated COPIES in the scratchpad (swap an EAN against its comment,
   quantity 0 to 1, drop the handler, change a query); never edit the repo file. A comment-vs-seed rule must only fire when the
   comment actually names a title (a first run FAILed on a comment that makes no title claim: driver defect, keep both outputs).
   A mutant with an unresolved `{{var}}` makes Tomcat log "Invalid character found in the request target": attribute it.
-
 - Headless Claude Code proxy (never `claude mcp add`): run `claude -p ... --mcp-config <scratch json> --strict-mcp-config
   --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` from a script that `cd`s to the scratchpad (the
   project's CLAUDE.md and settings stay out). Judge the `system/init` event (`mcp_servers[].status`, `tools`, `apiKeySource`),
@@ -44,7 +42,6 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
 - After a Claude Code HTTP session, SIGTERM on a Boot MCP server hangs 30 s in graceful shutdown (open SSE GETs) while the
   port is already free: wait for the PID (up to 35 s) before the next jar, never kill -9 it as "stuck".
 - `clean test` order runs delete `target/<app>.jar`: rebuild (`clean verify`) before live runs from the jar.
-
 - Tip-vs-base live comparison: one session script per phase starts both jars (`--server.port`), polls health, runs
   one driver against each URL, stops by PID and waits for exit, then diffs only the outside-scope requests. For a
   chaos share, `seq 1 400 | xargs -P 8 -I{} sh -c 'curl -o d/b{} -w %{http_code} ... > d/c{}'` gives one body and
@@ -59,5 +56,4 @@ Penguin edition. Found by `grep -o -E '"ean": "978[0-8]...'` on the seed plus a 
   hits the dependency directly (a 503 body, a 6 s `time_total`), so the phase proves the flag took effect.
   Time with curl `-w %{time_total}`, write one CHECK line per expectation, and finish with a DB count via
   `docker compose exec -T postgres psql -At`.
-
 Related: [[stdio-shared-fork-probes]], [[shell-traps]]

@@ -34,5 +34,4 @@ a trim removal.
   list runs in about 6 s per probe.
 - The runner also greps C0-5 f/g/h with each mutant installed and logs the counts, so every survivor carries its
   FF3 gate classification without extra runs.
-
 Related: [[env-switch-mutant-runner]], [[spring-runtime-probes]], [[shell-traps]]

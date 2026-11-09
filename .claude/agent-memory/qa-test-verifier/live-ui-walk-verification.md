@@ -18,5 +18,4 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
 - `playwright-cli` drops `.playwright-cli/` (page snapshots, console log) into the cwd, here the repo root, as untracked files that break a before/after porcelain snapshot; delete them and `rmdir` before the final snapshot.
 - Before calling a leftover process yours, read `ps -o lstart,ppid`; an MCP server started weeks ago is not.
 - Warning-inventory diffs against an earlier referee log: normalise Tomcat thread names (`[1-auto-1-exec-N]`) as well as timestamps and PIDs, else a reshuffle shows up as paired add/remove lines; then group the real additions by logger to attribute them (merged-in spec vs this task).
-
 Related: [[readme-and-live-jar-probes]], [[ci-workflow-verification]], [[shell-traps]]
