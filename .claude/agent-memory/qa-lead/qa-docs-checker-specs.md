@@ -50,6 +50,8 @@ contrast), the checker is production code AND the oracle for every later task. T
 11. **Self-hosted static sites in Docusaurus**: the hash-router build skips SSG and link checks (exit 0 on broken
     links and crashing pages), so only the browser build is evidence; a missing `.md` link failing the hash build
     too proves `markdown.hooks.onBrokenMarkdownLinks: 'throw'` survived a config spread (res-1, spec 11 folder).
+    `onBrokenLinks` never checks external links: a DoD "no broken links" with links to refs a later publish creates
+    (solution branches, `main` paths) needs a strategy-time link inventory and a deploy-gate check (spec 11 R-G2).
 12. **Docusaurus markup traps for a page grammar**: `{#id}` heading ids do not compile under `future.v4` (use
     `{/* #id */}`, spec 11 plan.md A3); `- [ ]` task lists render bare disabled checkboxes that fail axe `label`
     (critical). At strategy time say whether "axe" means color-contrast only or the full ruleset, and give every
@@ -81,7 +83,6 @@ contrast), the checker is production code AND the oracle for every later task. T
     (compare the tree ids). A later flag-removal task (marker ban) then collides with the snapshot: make it an
     opt-in the CLI sets on its default root, scope it to `<root>/docs` (fixtures carry markers), and let only the
     CLI copy tests change.
-
 16. **Semantic source reviews of content pages** (spec 11 T6): verifiers search only the main source file and flag
     sourced clauses as embellishments; the content spec itself and app specs or product docs hold sources too. Direct
     a whole-pack search before any "embellished" mark; a usage instruction derived from a cited mechanism is faithful,
@@ -110,7 +111,6 @@ contrast), the checker is production code AND the oracle for every later task. T
     skip frontmatter accept it). Manifest command entries are substring matches (`which jdtls-lsp` passes): ask
     content verifiers for whole-line command equality. A class a pack prompt names may be missing only because the
     spec branch lags the integration branch: check `origin/factory` before calling the pack wrong.
-
 20. **Derived prompts for pack scenarios** (spec 11 T9 `.env`): when the pack gives GIVEN/WHEN/THEN but no prompt
     words, a fenced prompt is a valid forced form only if it restates the WHEN clause and adds no output, path, tool
     or flag, and the Expected line is the THEN clause verbatim. A GIVEN no page provides is stated as a precondition

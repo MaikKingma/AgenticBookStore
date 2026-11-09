@@ -1,10 +1,11 @@
 ---
 spec: 11-workshop-guide
 source: docs/spec-pack/specs/11-workshop-guide-site.md (factory 52c4f6b, includes D7)
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 created: 2026-11-08T21:07:46Z
 gate1: 2026-11-08T21:07:46Z
+gate2: 2026-11-09T22:49:14Z
 qa-lead: on
 base: factory
 branch: sdd/11-workshop-guide/spec
@@ -518,19 +519,23 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
   at margin 0 and 10 mm with a control: head full 2/2 and Level 4 hidden 1/1, control Level-4-hidden 10 mm = 2; quote
   the Chromium version and the headroom; two pages for the head is a FAIL. (d) `qa-t12-r2-sentences.sh` in three
   engines and both builds. (e) FF-53 and FF-54 apply unchanged.
-- FF-58 (qa-final, after merging `origin/factory`: decisions D10 to D13 and the spec 08 code): (a) on the merge,
+- FF-58 (qa-final, after merging `origin/factory`: decisions D10 to D14, the D12 clarification and the spec 08 code;
+  D13 deferred to spec 13): (a) on the merge,
   `git diff <tip> <merge> -- guide` prints nothing, FF-49 and FF-57 (a) hold. (b) Manifest sources unchanged: the diff
   over `docs/spec-pack/workshop` and spec 10 prints nothing; spec 09 changed but has 0 manifest entries
   (`grep -c "entries('spec09'" guide/scripts/coverage.mjs` = 0); `npm run check` still prints `anchored 304/304, 15
-  manual rows, 0 entries pending`; if a source did change, re-derive the FF-50 ranges. (c) decisions.md D9 still at
+  manual rows, 0 entries pending`; if a source did change, re-derive the FF-50 ranges; D14 inserts 9 lines after
+  spec 10 line 483 and edits the DoD, so T10's FF-39 range is S10:430-503 and ranges up to 483 stand. (c) decisions.md D9 still at
   lines 134-147; quote the lines the C0-13 rows cite. (d) D11 to D13 sweep over `guide/docs` and the built text for
-  assistant, `/chat`, seed, book counts, results, temperature and storefront; allowed hits: L0:26, L4 Brief C
-  (verbatim) and the architecture page's `assistant` rows; a page that tells participants to open an Assistant page,
-  tab or nav link, counts seeded books, or quotes a result cap is a finding. (e) FF-43 on the merge:
+  assistant, `/chat`, `/assistant/chat`, widget, stream, seed, book counts, results, temperature and storefront;
+  allowed hits: L0:26, L4 Brief C (verbatim) and the architecture page's `assistant` rows. With D13 deferred the
+  assistant page stays, so a page that mentions it or its nav link is not a finding; a chat widget, a streaming
+  endpoint, a seeded-book count other than D12's (103 books: 100 available, 10 per genre, 3 discontinued), a search
+  cap other than 200, or a temperature setting is a finding. (e) FF-43 on the merge:
   `AssistantCommands`, `BookstoreTools`, `AssistantConfig`, `OfflineChatModel` exist under
   `bookstore/src/main/java/**/assistant/`; the page's assistant suffix row equals the merged ArchitectureTest; its
   numbered rules match. (f) Referee on the merge: quote `Total time` and the counts (bookstore at least 1314,
-  distributor 190, Vitest `598 passed | 2 expected fail`); over 60 s is never waived: re-run once on an idle machine
+  distributor 190, Vitest `682 passed | 2 expected fail` from factory ae2a5f2 on; fix-12 added tests, 598 before); over 60 s is never waived: re-run once on an idle machine
   and state the load; a second over-budget run is a needs-decision. (g) Guide, CI verify and windows-build on the merge
   commit and the final head, with run ids and attempts.
 - Follow-up F16 (post-cycle, with F15, once the checker freeze lifts; from T12 O-4): manifest entries or a checker
@@ -547,6 +552,34 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
 - Gate 2 owner notes from T12: O-2 the L3 sentence says "hooks" where the pack says "handlers" (true of the settings
   fragment shown); O-5 the cheat sheet's one-page variant at 10 mm has 8 px of headroom; the D9 sentences have no repo
   pin until F16.
+
+## Gate 2 (2026-11-09, self-accepted by the orchestrator)
+
+- qa-final r1 at 921e18b (base factory 3b7e4f3): all 24 directive items green, no product finding; FAIL only because
+  factory moved during the sweep. Factory ae2a5f2 merged into the spec branch (e7e7dea, no force-push).
+- qa-final r2 at e7e7dea (base ae2a5f2, unmoved): PASS. Fresh-tree gates against the merged pack (coverage 304/304,
+  15 manual rows, 0 pending; 514 tests; both check:built lines), referee 28.6 s (bookstore 1314, distributor 190, Vitest
+  682 passed and 2 expected fail), D14 ranges re-derived, freeze 92 OK, 11 pages and 121 product files bound by hash,
+  three byte-identical builds, rendered matrix 66 cells with 0 failures, CI attempt 1 green, PR readiness clean, deploy
+  gate closed (Pages, release, gh-pages 404, no GUIDE_DEPLOY).
+- QA lead final-review: ENDORSE; Gate 2 QA confidence high for the PR scope (guide source, frozen checker,
+  `guide.yml`, one `.gitignore` line). Spec matrix S1 to S12 met (S7 push deploy and S9 hook tabs as residuals F12 and
+  F2); S13 definition of done is an owner residual.
+- Human overrides: only A7 (T5 merged after FAIL r4 and AMEND r4); its condition held (T5b and T5c merged before the
+  first content task). The A7 temporary risk is still true at the head.
+- Residuals with owners: F1 and F12 (push deploy, live site, release zip, clean-machine run: Maik and the
+  orchestrator at the deploy gate); R-G2 external links to `solution/level-1..3` and `main` are checked by no gate (one
+  `gh api` call per link at the deploy gate, after the spec 09 publish and spec 10); R-G3 `npm ci` reports 25
+  vulnerabilities in the pinned Docusaurus 3.10.2 tree (static site built only on CI; Maik decides on a version bump
+  after the release); FF-12 pack-only changes do not trigger the guide workflow (run `npm run check` by hand after a
+  pack change); O1 and O2; F2; F14 with O-3; F15; F16; F-T5b-1; R-1 to R-5; F17 belongs to spec 13; the owner notes
+  in the QA feed-forward section for the 2026-11-10 rehearsal.
+- Standards proposals (QA lead ledger, `## Gate 2 QA assessment`): SP-1 literal bans with replacement wording and
+  trim-for-fit qualifier lists; SP-2 Node CLI entry points set `process.exitCode`; SP-3 gate content and security rules
+  on the built output, freeze checkers by hash; SP-4 spec-prefixed evidence names; SP-5 a base moved during qa-final is
+  a FAIL, merge and re-run scoped by tree ids; SP-6 "no broken links" covers external links, checked at the deploy gate.
+- The spec PR #68 is NOT merged by the orchestrator: it waits for `spec-10-done` and Maik's public deploy approval
+  (the coordinator's rule for this run). The roadmap and progress files are not edited by this cycle.
 
 ## Amendments
 
