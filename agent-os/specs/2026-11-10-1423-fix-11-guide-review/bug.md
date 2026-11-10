@@ -87,6 +87,10 @@ closes: [review S1 Level 0 and 1 catch-up on main, review S2 no run command for 
   participants: `git stash -u && git switch solution/level-N`" -> deferred: outside amendment A1 (which allows only
   `workshop-plan.md` lines 132 and 347), and `roadmap.md` is the main session's; owner residual reported at hand-back.
   `docs/spec-pack/orchestrator/decisions.md:55` is decision history and needs nothing.
+- [x] Pack spec text (qa-final RA-1): `docs/spec-pack/specs/11-workshop-guide-site.md:51` states the at a glance
+  rule "**Catch-up**: `git stash -u && git switch <branch>`" -> deferred: outside amendment A1, and the pack spec
+  wins over this cycle; the guide's Level 0 and 1 boxes deviate from that generic form on purpose (D17, plan.md D1:
+  `git switch` cannot target the tag `level-0-start`). Owner residual reported at hand-back.
 - [x] Sibling environments: none (no CI config or seed carries the catch-up).
 
 ## Fix strategy
