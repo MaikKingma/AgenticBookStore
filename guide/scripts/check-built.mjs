@@ -1,8 +1,8 @@
 // Entry point of `npm run check:built`. It scans the Pages build (build/ by default)
 // and needs `npm run build` to have run first. Usage: node scripts/check-built.mjs [build-dir]
-// The navbar rule (rules/navbar-built.mjs) describes the real site, so it runs only on the
-// default build dir; a build dir given on the command line (the fixture builds of the
-// self-tests) is scanned without it.
+// The navbar rule (rules/navbar-built.mjs) and the level progress rule (rules/level-progress-built.mjs)
+// describe the real site, so they run only on the default build dir; a build dir given on the command
+// line (the fixture builds of the self-tests) is scanned without them.
 import {existsSync, readFileSync} from 'node:fs';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {scanBuilt} from './rules/built.mjs';
@@ -20,10 +20,10 @@ function main() {
     if (base === undefined) {
       configErrors.push('navbar: docusaurus.config.ts has no readable baseUrl, so the title link of the navbar cannot be checked');
     } else {
-      options = {navbar: {base}};
+      options = {navbar: {base}, levels: {base}};
     }
   }
-  const {errors: scanErrors, count, checkboxes, windowsLines, navbarPages} = scanBuilt(dir, options);
+  const {errors: scanErrors, count, checkboxes, windowsLines, navbarPages, levelPages, otherPages} = scanBuilt(dir, options);
   const errors = [...configErrors, ...scanErrors];
   if (errors.length > 0) {
     for (const error of errors) console.error(error);
@@ -34,6 +34,9 @@ function main() {
   console.log(`ok   built: ${windowsLines} Windows PowerShell lines in tab panels and PowerShell code blocks, all pack command lines`);
   if (options.navbar) {
     console.log(`ok   navbar: ${navbarPages} pages, each with the logo link, the title link, the GitHub link and the LinkedIn link`);
+  }
+  if (options.levels) {
+    console.log(`ok   level progress: ${levelPages} level pages, each with five crumbs and one current, none on the ${otherPages} other pages`);
   }
 }
 

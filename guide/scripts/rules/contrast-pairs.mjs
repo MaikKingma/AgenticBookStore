@@ -70,6 +70,7 @@ export const CONTRAST_PAIRS = [
   text('block quote', '--ifm-blockquote-color', '--ifm-background-color'),
   text('keyboard key', '--ifm-color-emphasis-800', '--ifm-color-emphasis-0'),
   ...admonitionPairs,
+  text('level progress done label', '--guide-level-done-fg', '--guide-level-done-bg'),
   text('level progress current label', '--guide-level-current-fg', '--guide-level-current-bg'),
   text('level progress inactive label', '--guide-level-inactive-fg', '--guide-level-inactive-bg'),
   nontext('navbar accent line', '--guide-navbar-accent', '--ifm-navbar-background-color'),
@@ -77,4 +78,9 @@ export const CONTRAST_PAIRS = [
   nontext('navbar logo', '--guide-navbar-logo', '--ifm-navbar-background-color'),
   nontext('level progress current fill', '--guide-level-current-bg', '--ifm-background-color'),
   nontext('level progress current outline', '--guide-level-current-border', '--ifm-background-color'),
+  nontext('level progress done fill', '--guide-level-done-bg', '--ifm-background-color'),
+  nontext('level progress done outline', '--guide-level-done-border', '--ifm-background-color'),
+  nontext('level progress done check mark', '--guide-level-done-check', '--guide-level-done-bg'),
+  nontext('level progress inactive outline', '--guide-level-inactive-border', '--ifm-background-color'),
+  nontext('level progress focus ring', '--guide-level-focus', '--ifm-background-color'),
 ];

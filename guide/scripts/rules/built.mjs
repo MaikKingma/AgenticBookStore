@@ -6,6 +6,7 @@ import {SOURCE_FILES} from '../coverage.mjs';
 import {packCommandLines} from './content.mjs';
 import {powershellLineErrors} from './built-powershell.mjs';
 import {navbarErrors} from './navbar-built.mjs';
+import {levelOfFile, levelPagesOf, levelProgressErrors, routeOf} from './level-progress-built.mjs';
 
 // The built-output rules behind `npm run check:built`.
 // 1. With the Docusaurus 3 title syntax (:::info[Title]) an admonition renders as a box.
@@ -43,13 +44,16 @@ function htmlFiles(dir, relDir, out) {
   return out;
 }
 
-// Returns {errors, count, checkboxes, windowsLines, navbarPages}: count is the number of html
+// Returns {errors, count, checkboxes, windowsLines, navbarPages, levelPages, otherPages}: count is the number of html
 // files scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
 // number of lines read in PowerShell tab panels and PowerShell-language code blocks, a line
 // counted once (in the list or not). options.navbar ({base}) switches on rule 4 below, the navbar
 // of every page (rules/navbar-built.mjs); it describes the real site, so check-built.mjs sets it
-// for the default build dir only and the fixture builds of the self-tests leave it off.
+// for the default build dir only and the fixture builds of the self-tests leave it off. The same
+// holds for options.levels ({base}), rule 5: levelPages and otherPages are returned only then.
 // 4. The navbar of the Pages build: logo link, title link, GitHub and LinkedIn links.
+// 5. The level progress breadcrumb: on the five level pages (level-N-*.html), none on any other page
+// (rules/level-progress-built.mjs).
 export function scanBuilt(dir, options = {}) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {
     return {errors: [`built: ${dir} is missing; run npm run build first`], count: 0};
@@ -63,6 +67,9 @@ export function scanBuilt(dir, options = {}) {
   let windowsLines = 0;
   let navbarPages = 0;
   const allowed = packAllowList();
+  const pages = options.levels ? levelPagesOf(files) : null;
+  if (pages) errors.push(...pages.errors);
+  const routes = pages ? [0, 1, 2, 3, 4].map((level) => (pages.levels.has(level) ? routeOf(pages.levels.get(level)) : undefined)) : [];
   for (const file of files) {
     const html = readFileSync(join(dir, file), 'utf8');
     html.split('\n').forEach((line, index) => {
@@ -87,8 +94,23 @@ export function scanBuilt(dir, options = {}) {
       errors.push(...navbarErrors({file, html, base: options.navbar.base}));
       navbarPages++;
     }
+    if (pages) {
+      const level = levelOfFile(file);
+      // a level-N file beyond Level 4 is reported by levelPagesOf; its page is no level page
+      const pageLevel = level !== null && level < 5 ? level : null;
+      errors.push(...levelProgressErrors({file, html, base: options.levels.base, level: pageLevel, routes}));
+    }
   }
-  return {errors, count: files.length, checkboxes: checkboxCount, windowsLines, navbarPages};
+  const levelPages = pages ? files.filter((file) => levelOfFile(file) !== null).length : undefined;
+  return {
+    errors,
+    count: files.length,
+    checkboxes: checkboxCount,
+    windowsLines,
+    navbarPages,
+    levelPages,
+    otherPages: pages ? files.length - levelPages : undefined,
+  };
 }
 
 export function builtErrors(dir) {

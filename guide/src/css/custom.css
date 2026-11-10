@@ -157,13 +157,22 @@
   --guide-alert-warning-code: var(--ov-snow);
   --guide-alert-danger-code: var(--ov-teal);
 
-  /* LevelProgress: current level filled teal with a white label, others on snow outlined in sage. */
-  --guide-level-current-bg: var(--ov-teal);
+  /* LevelProgress (spec 14): chevron crumbs. Done is a green fill with a white label and check mark,
+     the current level is the deck blue's AA shade #3371B8 (white label, 5.01:1) with a bold label,
+     upcoming levels are a muted fill with a muted label and an outline. The outlines (3:1 on the
+     page) and the focus ring are non-text pairs, every label a text pair (see contrast-pairs.mjs).
+     The exact deck blue #3C7EC9 is 4.18:1 with white, so it stays out of text pairs. */
+  --guide-level-done-bg: #1E6B3E;
+  --guide-level-done-fg: var(--ov-white);
+  --guide-level-done-border: var(--guide-level-done-bg);
+  --guide-level-done-check: var(--guide-level-done-fg);
+  --guide-level-current-bg: #3371B8;
   --guide-level-current-fg: var(--ov-white);
-  --guide-level-current-border: var(--ov-navy);
+  --guide-level-current-border: #28588F;
   --guide-level-inactive-bg: var(--ov-snow);
-  --guide-level-inactive-fg: var(--ov-navy);
-  --guide-level-inactive-border: var(--ov-sage);
+  --guide-level-inactive-fg: #52616B;
+  --guide-level-inactive-border: #7A8A94;
+  --guide-level-focus: var(--ov-slate);
 }
 
 /* Dark mode: navy background, mist primary, white text. */
@@ -243,9 +252,13 @@ html[data-theme='dark'] {
   --guide-alert-warning-code: var(--ov-snow);
   --guide-alert-danger-code: var(--ov-mist);
 
-  --guide-level-current-bg: var(--ov-mist);
-  --guide-level-current-fg: var(--ov-navy);
-  --guide-level-current-border: var(--ov-white);
+  /* LevelProgress, dark mode: the white labels and the current fill carry over from light mode. */
+  --guide-level-done-bg: #2A8050;
+  --guide-level-current-border: #79A7DA;
+  --guide-level-inactive-bg: #2A333C;
+  --guide-level-inactive-fg: #B5C0C7;
+  --guide-level-inactive-border: #6F7F8A;
+  --guide-level-focus: var(--ov-white);
 }
 
 /* Navbar: slate text on a light bar in light mode, light text on slate in dark mode. The mobile
