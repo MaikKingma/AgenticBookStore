@@ -33,7 +33,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | #142 | sdd/10-harness-reference-solutions/T4 | ENDORSE (r0) |
 | T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | #148 | sdd/10-harness-reference-solutions/T5 | ENDORSE (r2) |
 | T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | #150 | sdd/10-harness-reference-solutions/T6 | ENDORSE (r2) |
-| T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | | | |
+| T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | #154 | sdd/10-harness-reference-solutions/T7 | ENDORSE (r2) |
 | T8 | Level 3 hooks (sh, ps1, git hook), harness, Windows note | root | [T7] | 8 | critical | opus | opus | | | |
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | opus | opus | | | |
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
@@ -254,6 +254,32 @@ for all three tracks is a manual check for Maik.
   prompt 1 is not sent again, R2-2 continues with prompt 2, then the tree is reset before R2-4 Measure 2 (b); (3) the
   warm comparison repeats the prompt that started the server and records which one; plus the optional extra source
   for N7 (the tools page sentence on LSP calls whose server cannot start) and the long-line nit.
+- FF-T7-a (from T7; T8, T10, the guide hand-off): with `"onFailure": "block"`, Claude Code 2.1.295 or later blocks
+  the commit when the commit hook cannot start, times out, or exits with any code other than 0 and 2; T8's harness
+  still asserts the verbatim script's own exit codes, but no T8 file may say a non-2 exit lets the commit through;
+  the Windows note says a missing Git Bash or interpreter blocks every `git commit` through Claude; the Stop handler
+  has no `onFailure`, so its non-2 exits do not block; T10's red-build and escape-hatch rows expect a block for exit 1
+  and for a timeout and check the amended J15.
+- FF-T7-b (from T7; every remaining task writing non-verbatim files): every universal or descriptive claim about the
+  code gets a `git grep` counterexample search on `level-0-start` with a control; a counterexample is a FAIL in the
+  task's own file.
+- FF-T7-c (from T7; rehearsal rows in T10 to T13): when a component is started by an edit, its "started but not
+  ready" form is a missing report under that edit; the row says what to record, how it differs from "never
+  started", and whether the follow-up prompt is still sent.
+- FF-T7-d (from T7): a heading, column header or section label is a scope label, judged by the file's own cells;
+  it is a finding only when an item under it prescribes something false, it contradicts the declared source, or the
+  label itself states a fact a `git grep` falsifies.
+- FF-T7-e (from T7): when an authored file names a source of truth, every departure from it follows the code or the
+  evidence, is marked in the trace ("code only" or the evidence line), and is reported as a product finding against
+  the source; the file is never reworded back to a false source. Verifiers write per-round hash files
+  (`t<n>-qa-r<k>-hashes.txt`) over every fileScope file.
+- Product findings from T7 for Maik: PF-QA-T7-1 `onFailure: "block"` also blocks on unexpected exit codes, so the
+  pack hook comment (pack line 283, "Any other non-zero code does NOT block") and guide
+  `04-level-3-behavioral-control.mdx` line 105 are stale for the commit hook; the public schemastore settings schema
+  lacks `onFailure` (additionalProperties false), so a schema-validating editor flags it; PF-QA-T7-3
+  `docs/architecture.md` lines 65-66 on `main` and factory say a price is "a `BigDecimal` plus a currency code outside"
+  the domain, false for payloads and views (decimal strings); the staged reference.md follows the code and marks the
+  departure.
 - Product findings from T6 for Maik: PF-T6-1 JDK floor 17 also in guide `00-setup-check.md` line 92; PF-T6-2 guide
   `03-level-2-give-your-agent-eyes.mdx` line 124 and `reference/cheat-sheet.md` line 14 use `claude mcp add` (literal
   URL); PF-T6-3 spec 10 lines 182-183 "Built in Claude Code" stale under D14; PF-QA-T6-1 spec 05 line 159 lacks
@@ -336,6 +362,22 @@ for all three tracks is a manual check for Maik.
   `S/records/rehearsal-checklist.md` for the three Level 2 sentences only (and the two optional items); Maik rehearses
   on 2026-11-10, so the fix ships with the next task instead of T10. Gate 1 re-run and self-accepted: one docs-only
   addition to T7, no new task.
+- A4 (2026-11-10, coordinator: `main` and tag `level-0-start` published at b668073): after T13 and a merge of
+  `origin/factory` into the spec branch, PHASE cut: task T14 (orchestrator) runs `cut-level-branches.sh level-0-start`
+  (dry run, then `--execute`), pushes the six new branches `solution/level-1` to `solution/level-3`,
+  `start/level-4-openspec`, `start/level-4-speckit`, `start/level-4-agentos` (never touching `main` or
+  `level-0-start`; SSH where workflow files are involved), a verifier runs `./mvnw clean verify` on each branch and
+  checks each branch tree against build-level; then qa-final and Gate 2, stopping with the spec PR ready (merge:
+  false). From T8 on, sandboxes are built from `level-0-start`. Gate 1 re-run and self-accepted.
+- A5 (2026-11-10, coordinator: parallel Level 4 tracks): after T10 merges, T11, T12 and T13 run in parallel on their
+  own task branches in separate git worktrees and merge one after the other; each writes its own record
+  `S/records/level-4-<track>.md` (consistency check plus its rehearsal rows) instead of a section of one shared file;
+  the Level 4 section of `S/records/rehearsal-checklist.md` (pointers plus the "Rehearsed in time" rows) is added only
+  by the last track to merge, after merging the spec branch into it. Gate 1 re-run and self-accepted.
+- J15 (amended after T7 QA, PF-QA-T7-2): if Maik's rehearsal triggers the pack's plugin fallback, the level-2
+  `.claude/settings.json` add row and the two plugin lines of `docs/lsp-setup.md` go, the level-3 settings file drops
+  the two plugin keys (one Write, HR2), AND level-3 manifest row 2 flips from `replace` to `add`, otherwise
+  build-level.sh level-3 fails.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
