@@ -1,6 +1,6 @@
 ---
 name: qa-harness-staging-specs
-description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, lifecycle premises (LSP starts on first edit), exercise reference tests and staged doc rows
+description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, lifecycle premises (LSP starts on first edit), exercise reference tests, staged doc rows, locale-bound parity twins and gate-regex input forms (chained commands)
 metadata:
   type: feedback
 ---
@@ -100,3 +100,17 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    A component started BY an edit has a second "not ready" form: no report under that edit (no `Found N` line), so the
    stopwatch has no stop event and a "not running" failure label misjudges a running server. List both forms (empty
    answer, missing report) and the "never started" case in every timing branch (spec 10 T7).
+
+13. **Parity twins of shell tools are locale-bound.** A twin of `grep -E '[[:space:]]'` written as `[ \t\v\f\r]` agrees
+   only in the C locale; in UTF-8 (participant default) grep also matches U+3000 raw in a JSON string. Name the UTF-8
+   witness or require the claim scoped. Probe with `/usr/bin/grep` (interactive `grep` can be a shell function). Any
+   rework of a staged file changes blob ids in evidence: put the evidence refresh into the RA list (spec 10 T8 r2).
+
+14. **Gate regexes need the caller's real input form.** A hook grep `"command"...:"[^"]*git[[:space:]]+commit` was
+   probed for every whitespace member over three rounds, yet every positive fixture started with `git`, so the deleted
+   prefix (`"git`, a start-anchored hook) passed 68/68 and lets `git add -A && git commit` (how Claude usually commits)
+   through. At strategy time list the chained form as a must-block case and a word-internal `gitcommit` as must-pass,
+   and probe each quantified part widened AND deleted. Found in a bounded round with the task open: REJECT, closed
+   test-only RA (protected property; not the rule 23 narrowing loop of [[review-calibration]]) (spec 10 T8 r3).
+   Write an "insert exactly these lines after line N" bound as `diff --minimal` plus a split check (head N, the block,
+   the tail): when the block's last line equals line N, plain `diff` may report a shifted hunk (spec 10 T8 r4).

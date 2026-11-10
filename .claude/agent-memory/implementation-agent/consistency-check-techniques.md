@@ -31,40 +31,24 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
   seconds; delete the file at once); the worktree guard refuses `find`/`ls` with `$HOME` on the command line, put it in
   a script file; macOS `sed -i` needs `-i ''`, and `-i.bak` drops a stray `.bak` into the worktree; a leak-grep pattern
   quoted verbatim inside a record makes the leak grep hit the record.
-- **Completeness and quote fidelity are separate checks**: (1) a `python3 -I` token inventory over every staged file
-  (backtick spans, JSON keys and values, URLs, quoted strings, identifiers) diffed literally against the record catches
-  missing rows (JSON field names and enum values were the r0 gap); (2) a quote pass over the record and checklist
-  (double-quoted strings of 12 or more characters, quotes inside code spans hidden, whitespace collapsed) against the
-  union of pack, plan, guide and fetched pages catches an altered word and a changed capital letter. Add mutated-quote
-  controls.
+- **Completeness and quote fidelity are separate checks**: a token inventory of every staged file (backtick spans, JSON
+  keys and values, URLs, identifiers) diffed against the record, and a quote pass (quoted strings of 12+ characters)
+  against pack, plan, guide and fetched pages; add mutated-quote controls.
 - The `grep` of this shell (ugrep) has no `-P` and rejects `.{0,200}` context patterns; print context with `python3 -I`.
 - A wrapper's per-platform behaviour (jdtls cache folder: Darwin `~/Library/Caches`, Linux `~/.cache`) means one
   cold-cache proof per OS in a rehearsal row; quote the platform lines of the script, not only the folder line.
 - `origin/factory` can move while a task runs (shared clone): pin the sha the sandbox was built from in every script.
 - Pack text can contradict itself on wording (spec 09 says Level 1 "imports" `docs/architecture.md`, spec 10 forbids the
   `@` import): record it as a product finding, never edit verbatim staged files.
-- A rehearsal row that times a "cold start" must cite the docs sentence that says what starts the process (LSP: the
-  first edit of a matching file, not a read-only references request). Without that citation the first request is only
-  assumed to be the trigger; give the row a branch for "nothing started" and let the stopwatch follow the real start.
-- **Insertion-only proof for edits of long one-line table rows**: old tokens (`\w+|\s+|[^\w\s]`) must be a greedy
-  subsequence of the new tokens. `difflib.SequenceMatcher` reports "replace" for pure insertions (and a char-level
-  subsequence hides a replaced digit inside inserted text); keep a mutant that changes one number. Word choices in
-  an edit matter: replacing "ask again, record the time" by new wording is a replace, wrap the old words instead.
-- **Public docs as evidence**: the docs pages are Mintlify pages; strip tags, `html.unescape`, collapse whitespace,
-  quote from a start marker to an end marker (a fixed length cuts mid-word). The curly apostrophe becomes `?` in ASCII
-  evidence, so search with `can?t`. A field can be documented while the public settings JSON schema (schemastore)
-  lacks it and forbids unknown keys: check both, report the gap. The changelog page dates the release of a field.
-- **Universal claims in a staged cheat sheet** ("every", "only", "never", "a command is"): each needs a `git grep` for the
-  counterexample on the recorded tag, plus a control that must hit on the same pathspec. macOS `git grep -E` has no `\w`
-  or `\b`: such a pattern silently matches nothing, so spell `[A-Za-z0-9_]` and `(^|[^A-Za-z0-9_])`. Rewrite a descriptive
-  universal into a prescriptive form ("name a new X ...") and name the real exception (the assistant chat endpoint is a
-  `*Commands` class that is not `/commands/...` and answers 200). A class-name rule enforced by ArchUnit is not a naming
-  fact about tests: 5 of 16 `IntegrationTestBase` subclasses are not named `*IntegrationTest`. `git grep -P` works on
-  macOS and keeps `\b \w \s`. Keyword hunting ("every", "only") misses descriptive sentences such as "a flow loads,
-  maps, saves" or "outside the domain it is a BigDecimal": split the file into units (cells, sentences, bullet clauses),
-  require each unit to match exactly one table entry (P prescriptive, S searched, H label) and each entry a unit, and
-  add mutants (a new sentence, a reworded one) that must be reported. Price types differ per layer (DTO and JPA
-  BigDecimal, payload and view String, acl wire cents): search per layer pathspec before wording a money rule.
+- A rehearsal row that times a "cold start" cites the docs sentence on what starts the process (LSP: first edit of a
+  matching file) and has a branch for "nothing started".
+- **Insertion-only proof** for long one-line rows: old tokens must be a greedy subsequence of the new tokens (difflib
+  reports "replace" for insertions); keep a mutant that changes one number; wrap old words instead of rewording.
+- **Public docs as evidence**: append `.md` to a docs URL (`/docs/en/hooks.md`) for the markdown form and quote by line
+  number; curly apostrophes become `?` in ASCII evidence. Check the schemastore schema too (it may lack a field).
+- **Universal and descriptive claims**: `git grep` each for a counterexample on the recorded tag plus a control that
+  must hit (macOS `git grep -E` has no `\w`/`\b`; use `-P`). Split the file into units (sentences, cells), give every
+  unit a source tag and resolve each tag with a script; prefer prescriptive wording and name the real exceptions.
 - Pack headings repeat: `### .claude/settings.json` is a prefix of the level-2 heading too, so match the level-3
   section by exact line. When a level file merges a pack block into an earlier staged file, build the expected text
   from the earlier file plus the pack lines and compare bytes, with one mutant per key and list.
