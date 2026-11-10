@@ -1,0 +1,84 @@
+# T8 sandbox: simulate-level-0.sh level-0-start, then build-level.sh level-3 (T1 scripts, unmodified).
+# date: 2026-11-10T11:39:28Z
+level-0-start: b668073eb44bfea453c291509a615f6de081e54a
+spec branch tip (worktree HEAD): 6c3210b3f0a54909025f5a26183eaf0ec983117f
+
+$ bash scripts/simulate-level-0.sh level-0-start $SBX
+list: scripts/publish-workshop-main.sh --list-paths
+simulated level-0: $TMPDIR/sbx.TTsCw9/level-3 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+rc=0  (strip-path lines omitted)
+
+$ bash scripts/build-level.sh level-3 $SBX
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $TMPDIR/sbx.TTsCw9/level-3
+build-level: committed level-1 as c973d23: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $TMPDIR/sbx.TTsCw9/level-3
+build-level: committed level-2 as d7fed36: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3: 8 rows applied (group: all); changes left uncommitted in $TMPDIR/sbx.TTsCw9/level-3
+build-level: committed level-3 as 59f4d87: Level 3 solution: behavioral control
+build-level: level-3 built in $TMPDIR/sbx.TTsCw9/level-3
+rc=0
+
+$ git log --format="%h %s"
+59f4d87 Level 3 solution: behavioral control
+d7fed36 Level 2 solution: give your agent eyes (LSP + MCP)
+c973d23 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+
+$ git diff --name-status HEAD~1 HEAD   (level-3 commit)
+A	.claude/agents/architecture-reviewer.md
+A	.claude/commands/ship.md
+A	.claude/hooks/architecture-check-on-stop.sh
+A	.claude/hooks/tests-before-commit.sh
+M	.claude/settings.json
+A	.claude/skills/new-use-case/SKILL.md
+A	.claude/skills/new-use-case/reference.md
+A	.githooks/pre-commit
+
+$ git ls-files -s -- .claude/hooks .githooks
+100755 004a8bba8a80da4b7a74c403b0cbb878754a4863 0	.claude/hooks/architecture-check-on-stop.sh
+100755 dfc8d44c338bee5fd2c65d02e9205cee0d3f0a24 0	.claude/hooks/tests-before-commit.sh
+100755 3a2a135a3a0224e406b20d32c62495bac1929472 0	.githooks/pre-commit
+
+$ git ls-files --eol -- .claude/hooks .githooks
+i/lf    w/lf    attr/text eol=lf      	.claude/hooks/architecture-check-on-stop.sh
+i/lf    w/lf    attr/text eol=lf      	.claude/hooks/tests-before-commit.sh
+i/lf    w/lf    attr/text eol=lf      	.githooks/pre-commit
+
+$ git check-attr text eol -- (the three paths)   (root .gitattributes of level-0-start)
+.claude/hooks/tests-before-commit.sh: text: set
+.claude/hooks/tests-before-commit.sh: eol: lf
+.claude/hooks/architecture-check-on-stop.sh: text: set
+.claude/hooks/architecture-check-on-stop.sh: eol: lf
+.githooks/pre-commit: text: set
+.githooks/pre-commit: eol: lf
+
+$ cmp staged file with sandbox work tree file (three paths)
+identical: .claude/hooks/tests-before-commit.sh
+identical: .claude/hooks/architecture-check-on-stop.sh
+identical: .githooks/pre-commit
+
+$ ls -A .claude/hooks
+architecture-check-on-stop.sh
+tests-before-commit.sh
+
+$ git status --short
+(end of status)
