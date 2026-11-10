@@ -23,6 +23,12 @@ runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run 
 `COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
+## Status (2026-11-10, paused before T9)
+
+T1 to T8 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155). Next: T9, then T10,
+then T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4), qa-final and Gate 2.
+The run ledger (comms, not committed) holds the full resume point.
+
 ## Tasks
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | impl model | pr | branch | qa-lead |
