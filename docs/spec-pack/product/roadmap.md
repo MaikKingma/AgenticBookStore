@@ -53,13 +53,12 @@ configuration. Therefore:
 | `main` (tag `level-0-start`) | Full app, zero agent configuration | Level 0, and the start of Level 1 |
 | `solution/level-1` | + lean `CLAUDE.md`, `.claude/rules/*`, `CLAUDE.local.md.example` | Level 1 catch-up / compare |
 | `solution/level-2` | `solution/level-1` + `.mcp.json`, the MCP-assisted ACL contract test, the LSP setup note (`docs/lsp-setup.md`) and the `jdtls-lsp` plugin declaration in `.claude/settings.json` | Level 2 catch-up / compare |
-| `solution/level-3` | `solution/level-2` + permissions, hooks, git pre-commit hook, skill, command, subagent, PowerShell hook variants | Level 3 catch-up / compare |
+| `solution/level-3` | `solution/level-2` + permissions, hooks, git pre-commit hook, skill, command, subagent (no PowerShell hook variants, D16) | Level 3 catch-up / compare |
 | `start/level-4-openspec` | `solution/level-3` + OpenSpec initialised and configured | Level 4, track A |
 | `start/level-4-speckit` | `solution/level-3` + Spec Kit initialised, constitution written | Level 4, track B |
 | `start/level-4-agentos` | `solution/level-3` + Agent OS installed, standards discovered and indexed | Level 4, track C |
-| `solution/level-4-<track>-<brief>` | One shipped feature per track (facilitator reference, optional) | Wrap-up demo |
 
-Catch-up rule for participants: `git stash -u && git switch solution/level-N`. Nobody falls behind for more than one level.
+Catch-up rule for participants, at the start of each level: Level 0 `git stash -u && git switch -C level-0 level-0-start`, Level 1 `git stash -u && git switch -C level-1 level-0-start`, Levels 2 and 3 `git stash -u && git switch solution/level-N` (N one lower than the level), Level 4 `git stash -u && git switch start/level-4-<track>`. Nobody falls behind for more than one level. There are no Level 4 solution branches (D17).
 
 ## Milestones (build week)
 

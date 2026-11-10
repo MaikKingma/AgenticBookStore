@@ -48,7 +48,8 @@ tabs and the feature briefs as a section of the same page.
   Level 4: Spec-driven development.
 - Every level page starts with the level progress indicator (`<LevelProgress current={N} />`: levels 0 to 4, the
   current one highlighted), then a box: **Goal**, **Start branch**, **Catch-up**:
-  `git stash -u && git switch <branch>`, **Time**.
+  the level's command from the workshop plan ("Someone is far behind": `git switch -C level-N level-0-start` for
+  Levels 0 and 1, `git switch <branch>` from Level 2 on, each after `git stash -u`), **Time**.
 - Every level page ends with a "Level cleared when" checklist (a Markdown task list) copied from the workshop plan.
 - Sync moments are marked with an admonition `:::info Sync moment` that says "Look up, Maik demos this now".
 - Checkpoints are `:::tip Checkpoint` with the exact command and the expected output.
