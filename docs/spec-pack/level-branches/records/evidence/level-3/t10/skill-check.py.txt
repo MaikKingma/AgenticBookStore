@@ -1,0 +1,57 @@
+#!/usr/bin/env python3 -I
+"""Static check for the skill-selection scenario (criterion 5): which words of the scenario sentence does the skill
+description share, and which kinds of request does the description name? Consistency evidence only: whether Claude
+loads the skill is rehearsal row R3-5.
+Usage: impl-t10-skill-check.py <SKILL.md> <skills.md docs page>
+"""
+import re
+import sys
+
+skill = open(sys.argv[1], encoding="utf-8").read()
+docs = open(sys.argv[2], encoding="utf-8").read().split("\n")
+SENT = "Customers must be able to cancel an order that has not shipped yet."
+STOP = set("a an the to of and or in on at for with that this it is are be not has have been as by from when use used end through".split())
+
+
+def words(t):
+    return [w for w in re.findall(r"[a-z]+", t.lower()) if w not in STOP]
+
+
+def description(text):
+    m = re.search(r"^description: (.*)$", text, re.M)
+    return m.group(1)
+
+
+def report(label, desc):
+    sw = sorted(set(words(SENT)))
+    dw = set(words(desc))
+    shared = [w for w in sw if w in dw]
+    print("%s" % label)
+    print("  sentence words (stop words removed): %s" % ", ".join(sw))
+    print("  shared with the description:         %s" % (", ".join(shared) if shared else "none"))
+    return shared
+
+
+desc = description(skill)
+print("scenario sentence: %s" % SENT)
+print("skill description: %s" % desc)
+print("description length: %d characters" % len(desc))
+shared = report("run 1: staged description", desc)
+print()
+kinds = ["add a feature", "endpoint", "business rule", "command or query", "bookstore module"]
+print("kinds of request the description names (substring search in the description):")
+for k in kinds:
+    print("  %-18s %s" % (k, "present" if k in desc else "absent"))
+print("reading (not a search): the sentence is a feature request that adds behaviour to the bookstore Order (a business rule:")
+print("  only an order that has not shipped can be cancelled); the description says to use the skill 'when asked to add a feature,")
+print("  endpoint, business rule, command or query in the bookstore module'. The link is meaning, not shared words.")
+print()
+ctl = desc + " Cancel an order that has not shipped."
+c = report("control: the description with the words of the sentence added", ctl)
+print("  control result: %s" % ("reported (%d shared words)" % len(c) if len(c) > len(shared) else "NOT REPORTED"))
+print()
+print("docs quotes (skills.md, fetched 2026-11-10; non-ASCII shown as '?'):")
+for n in (398, 138, 557):
+    t = docs[n - 1].encode("ascii", "replace").decode()
+    print("  %d | %s" % (n, t[:560]))
+sys.exit(0 if len(c) > len(shared) else 3)

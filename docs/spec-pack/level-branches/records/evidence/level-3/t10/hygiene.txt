@@ -1,0 +1,89 @@
+# hygiene of the T10 files (counts only; the leak patterns are not quoted here)
+
+## leak grep over the whole records folder (6 patterns: home folder prefix, user name, scratchpad prefix, API key prefix, two token names)
+matching lines: 0   (expected 0)
+positive control, the same grep over a raw unmasked output kept in the scratchpad: 4 matching lines   (expected above 0)
+positive control 2, the raw sandbox log: 5 matching lines   (expected above 0)
+
+## ASCII and dashes (LC_ALL=C, bytes outside space to tilde, tab and newline excluded)
+files with a non-ASCII line: 0   (expected 0)
+em or en dash bytes in the two records: docs/spec-pack/level-branches/records/level-3.md:0 docs/spec-pack/level-branches/records/rehearsal-checklist.md:0    (expected 0 0)
+
+## evidence file types in t10 (expected only .txt)
+  20 txt
+.log files in the records folder: 0   (expected 0)
+
+## insertion-only: the Level 1 and Level 2 sections of rehearsal-checklist.md are byte-unchanged
+first 51366 bytes of the new file equal the committed file: identical
+control: one byte changed in a copy -> reported
+lines added to the checklist: 212   lines removed: 0   (expected 0)
+
+## README.md: only the two A9 hunks
+14	0	docs/spec-pack/level-branches/README.md
+@@ -26,0 +27 @@ docs/spec-pack/level-branches/
+@@ -162,0 +164,13 @@ repository set `SPEC09_FILE` to the spec 09 file. `KEEP_TMP=1` keeps the temp fo
+
+## file scope: every changed or new path of the working tree
+   M .claude/agent-memory/implementation-agent/MEMORY.md
+   M .claude/agent-memory/implementation-agent/consistency-check-techniques.md
+   D .claude/agent-memory/implementation-agent/powershell-hook-traps.md
+   M docs/spec-pack/level-branches/README.md
+   M docs/spec-pack/level-branches/records/rehearsal-checklist.md
+  ?? docs/spec-pack/level-branches/records/evidence/level-3/t10/
+  ?? docs/spec-pack/level-branches/records/level-3.md
+paths outside the T10 file scope (T10 scope: records/level-3.md, records/evidence/level-3/t10, the Level 3 section of the checklist, the README A9 item, .claude/ comms and memory): 0   (expected 0)
+T9 evidence changed: 0   (expected 0)
+
+## C0-13a no Claude invocation in the T10 records, evidence and scripts (lines that match, to be classified)
+  docs/spec-pack/level-branches/records/level-3.md:450:`claude mcp add`, `claude --version`, `claude --debug` and `claude` appear only as quoted guide text or as commands
+  docs/spec-pack/level-branches/records/evidence/level-3/t10/hygiene.txt:38:  docs/spec-pack/level-branches/records/level-3.md:450:`claude mcp add`, `claude --version`, `
+  docs/spec-pack/level-branches/records/evidence/level-3/t10/hygiene.txt:39:  docs/spec-pack/level-branches/records/evidence/level-3/t10/hygiene.txt:35:  docs/spec-pack/l
+stream files (*.jsonl) in the evidence folder: 0   (expected 0)
+
+## r1 (rework after the QA verdict FAIL r0; counts only; everything above this line is unchanged)
+
+### leak grep over the whole records folder, six patterns, with positive controls
+matching lines: 0   (expected 0)
+positive control 1, the same grep over the unmasked raw output of the r1 row dry run: 6 matching lines   (expected above 0)
+positive control 2, the unmasked raw output of the J15 run: 3 matching lines   (expected above 0)
+
+### ASCII and dashes (LC_ALL=C)
+files with a non-ASCII line (level-3.md, the checklist, README.md, every file of t10): 0   (expected 0)
+control, a printf-built file with an em dash: 1   (expected 1)
+em or en dash bytes in the two records: level-3.md:0 rehearsal-checklist.md:0    (expected 0 0)
+.log or .jsonl files in the records folder: 0   (expected 0); evidence file types in t10:  22 txt;
+
+### Level 1 and Level 2 sections of the checklist stay byte-identical (insertion only)
+first 51366 bytes of the file equal the committed file: identical
+control: one byte changed in a copy -> reported
+lines added to the checklist: 217   lines removed against the committed file: 0   (expected 0)
+the Level 3 section of the r0 file is changed only by insertion into its table rows: not asserted here (the r1 edits touch rows of R3-1, R3-2, R3-3, R3-5, R3-7 and R3-8 and the preconditions, listed in the outbox)
+
+### files that were accepted in r0 are unchanged (sha256 against the QA r0 hash list)
+files of the r0 hash list identical to their r0 hash: 33; files expected to differ (the two records, three evidence files with appended parts, and the two gate files re-run after the r1 edits): level-3.md rehearsal-checklist.md claude-docs-quotes.txt hygiene.txt referee-verify.txt row-setup-dry-run.txt staging-selftest.txt
+README.md identical to its r0 hash: yes
+control: the hash of the checklist against its r0 hash -> reported as different
+
+### appended evidence files keep their earlier bytes
+claude-docs-quotes.txt: first 13556 bytes equal the file before the H5 block: identical
+row-setup-dry-run.txt: first 3431 bytes equal the masked raw output of the r0 run: identical
+control: the same comparison against a changed copy -> reported
+
+### file scope
+changed or new paths outside the T10 file scope (records/level-3.md, records/evidence/level-3/t10, records/rehearsal-checklist.md, README.md, .claude/ comms and memory): 0   (expected 0)
+T9 evidence (cancel-order) changed: 0   (expected 0)
+staged files, scripts and harness changed (level-1, level-2, level-3 folders, scripts, tests): 0   (expected 0)
+
+### C0-13a no Claude invocation (the lines that match the command pattern, counted per file; the earlier section lists the one quoted scope-guard sentence)
+level-3.md: 1 line(s) (expected 1, the scope-guard sentence); the checklist: 1 line(s) (the Level 1 and 2 sections held the same before r1: 1)
+r1 scripts that start a claude process: 0   (expected 0)
+
+### checks of the new text (impl-t10-r1-checks.py, with controls)
+citations and spot checks: 263 checked, 0 problems
+control (a citation at line 999 and a wrong needle): reported
+raw word sets of the sentence and of the skill description share: ['to']
+control (the sentence's words added to the description) shares: ['an', 'cancel', 'has', 'not', 'order', 'shipped', 'that', 'to']
+harness lines that chmod the commit hook script: 0 (claim: no harness case starts a hook that cannot start); control, lines that chmod mvnw: 4
+occurrences of 'push' in row R3-3: 0 (claim: R3-3 never pushes); control, row R3-2: 14
+guard sentence in prompt A: True, B: True, R3-2 prompt 1: True; prompts 2 and 3 say 'same two sentences': True
+variant E prompt carries the guard: True

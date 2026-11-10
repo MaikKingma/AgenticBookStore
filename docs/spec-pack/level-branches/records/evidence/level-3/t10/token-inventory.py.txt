@@ -1,0 +1,637 @@
+#!/usr/bin/env python3 -I
+"""Level 3 token inventory (T10, C0-13b and C0-13c). Own script, zero model, read-only.
+
+Reads: the staged level-3 and level-2 files, the built full level-3 sandbox (git tree), level-0-start (git grep),
+pack spec 10, spec 11, the workshop plan, the guide pages on origin/factory and origin/sdd/11-workshop-guide/spec,
+and the Claude Code docs pages fetched with curl. Never starts Claude. Never names the two plugin settings keys: the
+plugin part of the settings file is compared against the level-2 file without reading key names.
+
+Usage: impl-t10-token-inventory.py <WT> <SBX> <RAW> [--no-controls]
+Output: the table, the findings, the controls. Exit 0 when no mismatch in the staged files or code (own) and every
+negative control is reported; exit 3 otherwise. Pack or guide text mismatches never change the exit code: they are
+product findings for the owner.
+"""
+import copy
+import json
+import os
+import re
+import subprocess
+import sys
+
+WT, SBX, RAW = sys.argv[1], sys.argv[2], sys.argv[3]
+CONTROLS = "--no-controls" not in sys.argv
+S = os.path.join(WT, "docs/spec-pack/level-branches")
+
+
+def git(*a, cwd=WT):
+    r = subprocess.run(["git", "-C", cwd] + list(a), capture_output=True)
+    return r.returncode, r.stdout.decode("utf-8", "replace")
+
+
+def read(path):
+    with open(path, "rb") as fh:
+        return fh.read()
+
+
+def lines_of(text, needle):
+    return [i + 1 for i, l in enumerate(text.split("\n")) if needle in l]
+
+
+# ---------------------------------------------------------------- sources
+def load_manifest():
+    rows = []
+    for l in read(os.path.join(S, "level-3/manifest.tsv")).decode().split("\n"):
+        if not l or l.startswith("#"):
+            continue
+        op, grp, staged, target, mode, base = l.split("\t")
+        rows.append((op, grp, staged, target, mode))
+    return rows
+
+
+def load_staged():
+    files = {}
+    for op, grp, staged, target, mode in load_manifest():
+        if grp == "config":
+            files[target] = read(os.path.join(S, "level-3", staged))
+    return files
+
+
+def load_guide(ref):
+    code, out = git("ls-tree", "-r", "--name-only", ref, "--", "guide/docs")
+    g = {}
+    for p in out.split():
+        if p.endswith((".md", ".mdx")):
+            g[p.replace("guide/docs/", "")] = git("show", ref + ":" + p)[1]
+    return g
+
+
+def load_docs():
+    d = {}
+    base = os.path.join(WT, "docs/spec-pack")
+    d["P10"] = read(os.path.join(base, "specs/10-harness-reference-solutions.md")).decode()
+    d["P11"] = read(os.path.join(base, "specs/11-workshop-guide-site.md")).decode()
+    d["WP"] = read(os.path.join(base, "workshop/workshop-plan.md")).decode()
+    return d
+
+
+def load_cc():
+    cc = {}
+    for n in ("hooks", "permissions", "skills", "sub-agents", "tools-reference", "settings"):
+        cc[n] = read(os.path.join(RAW, "docs", n + ".md")).decode("utf-8", "replace")
+    return cc
+
+
+GUIDE_SHORT = {
+    "04-level-3-behavioral-control.mdx": "G04",
+    "reference/cheat-sheet.md": "Gcheat",
+    "reference/troubleshooting.md": "Gtrouble",
+    "00-setup-check.md": "Gsetup",
+    "05-level-4-spec-driven-development.mdx": "G05",
+    "06-wrap-up.md": "G06",
+    "index.md": "Gindex",
+    "reference/architecture.md": "Garch",
+    "01-level-0-break-the-agent.mdx": "G01",
+    "02-level-1-context-engineering.mdx": "G02",
+    "03-level-2-give-your-agent-eyes.mdx": "G03",
+}
+
+
+def wrapped_lines(text, needle):
+    """start lines of needle, where a space in the needle also matches a line break plus indentation (hard-wrapped text)."""
+    rx = re.compile(r"\s+".join(re.escape(w) for w in needle.split(" ")))
+    return [text.count("\n", 0, m.start()) + 1 for m in rx.finditer(text)]
+
+
+def spell_hits(ctx, needle):
+    """lines that contain needle, per source: P10, P11, WP, guide pages (short names)."""
+    out = {}
+    for k in ("P10", "P11", "WP"):
+        h = wrapped_lines(ctx["docs"][k], needle)
+        if h:
+            out[k] = h
+    for page, text in ctx["guide"].items():
+        h = wrapped_lines(text, needle)
+        if h:
+            out[GUIDE_SHORT.get(page, page)] = h
+    return out
+
+
+def loose_hits(ctx, loose, needle):
+    """lines that match the loose regex but do not contain the exact needle: misspellings in pack or guide text."""
+    out = []
+    rx = re.compile(loose, re.I)
+    srcs = [("P10", ctx["docs"]["P10"]), ("P11", ctx["docs"]["P11"]), ("WP", ctx["docs"]["WP"])]
+    srcs += [(GUIDE_SHORT.get(p, p), t) for p, t in ctx["guide"].items()]
+    for name, text in srcs:
+        for i, l in enumerate(text.split("\n")):
+            if rx.search(l) and needle not in l:
+                out.append("%s:%d" % (name, i + 1))
+    return out
+
+
+def fmt_hits(h):
+    return " ".join("%s:%s" % (k, ",".join(str(n) for n in v[:6]) + ("+" if len(v) > 6 else "")) for k, v in h.items()) or "-"
+
+
+# ---------------------------------------------------------------- tree access (built sandbox, level-0-start)
+def tree_mode(ctx, path):
+    code, out = git("ls-files", "-s", "--", path, cwd=ctx["sbx"])
+    return out.split()[0] if out.strip() else None
+
+
+def tree_blob(ctx, path):
+    if path in ctx.get("overlay", {}):
+        return ctx["overlay"][path]
+    code, out = git("show", "HEAD:" + path, cwd=ctx["sbx"])
+    return out.encode() if code == 0 else None
+
+
+def l0_grep(pattern, paths):
+    code, out = git("grep", "-n", "-F", "-e", pattern, "level-0-start", "--", *paths)
+    return out.split("\n")[0].replace("level-0-start:", "", 1) if out.strip() else None
+
+
+def l0_grep_re(pattern, paths):
+    code, out = git("grep", "-n", "-E", "-e", pattern, "level-0-start", "--", *paths)
+    return out.split("\n")[0].replace("level-0-start:", "", 1) if out.strip() else None
+
+
+def l0_has(path):
+    return git("ls-tree", "level-0-start", "--", path)[1].strip() != ""
+
+
+# ---------------------------------------------------------------- pack block extraction (own extractor)
+def pack_level3_slice(p10):
+    ls = p10.split("\n")
+    a = next(i for i, l in enumerate(ls) if l.startswith("## Branch `solution/level-3`"))
+    b = next(i for i, l in enumerate(ls) if i > a and l.startswith("## Branches `start/level-4-"))
+    return ls, a, b
+
+
+def pack_block(p10, heading):
+    ls, a, b = pack_level3_slice(p10)
+    h = next(i for i in range(a, b) if ls[i].startswith("### " + heading))
+    s = next(i for i in range(h, b) if ls[i].startswith("```"))
+    e = next(i for i in range(s + 1, b) if ls[i].startswith("```"))
+    return "\n".join(ls[s + 1:e]) + "\n", s + 2
+
+
+def json_fences(text):
+    out = []
+    ls = text.split("\n")
+    i = 0
+    while i < len(ls):
+        if re.match(r"\s*```json", ls[i]):
+            j = i + 1
+            while j < len(ls) and not re.match(r"\s*```\s*$", ls[j]):
+                j += 1
+            out.append((i + 2, "\n".join(ls[i + 1:j])))
+            i = j
+        i += 1
+    return out
+
+
+def frontmatter(text):
+    m = re.match(r"---\n(.*?)\n---\n", text, re.S)
+    fm = {}
+    for l in m.group(1).split("\n"):
+        k, _, v = l.partition(":")
+        fm[k.strip()] = v.strip()
+    return fm
+
+
+def split_tools(v):
+    parts, cur, depth = [], "", 0
+    for c in v:
+        if c == "(":
+            depth += 1
+        if c == ")":
+            depth -= 1
+        if c == "," and depth == 0:
+            parts.append(cur.strip())
+            cur = ""
+        else:
+            cur += c
+    if cur.strip():
+        parts.append(cur.strip())
+    return parts
+
+
+# ---------------------------------------------------------------- the check
+def check(ctx):
+    rows, own, doc = [], [], []
+    n = [0]
+
+    def add(kind, token, resolve, spell, status, note=""):
+        n[0] += 1
+        rows.append((n[0], kind, token, resolve, spell, status, note))
+        return n[0]
+
+    def fail_own(rid, msg):
+        own.append("T%02d %s" % (rid, msg))
+
+    def fail_doc(rid, msg):
+        doc.append("T%02d %s" % (rid, msg))
+
+    st = ctx["staged"]
+    docs = ctx["docs"]
+    cc = ctx["cc"]
+    p10 = docs["P10"]
+    manifest = load_manifest()
+
+    # ---- A. files and modes: staged equals sandbox blob, mode equals manifest, path on the built tree
+    for op, grp, staged, target, mode in manifest:
+        if grp != "config":
+            continue
+        want = "100755" if mode == "755" else "100644"
+        got = tree_mode(ctx, target)
+        blob = tree_blob(ctx, target)
+        same = blob is not None and blob == st[target]
+        ok = got == want and same
+        rid = add("path+mode", target, ("tree %s mode %s, bytes %s staged" % (got, mode, "equal" if same else "DIFFERENT")) if got else "NOT ON TREE",
+                  fmt_hits(spell_hits(ctx, target)), "consistent" if ok else "mismatch-own-file")
+        if not ok:
+            fail_own(rid, "%s: staged file and built tree differ (mode %s, bytes equal %s)" % (target, got, same))
+
+    # ---- B. settings: parse staged, compare with level-2 file (plugin part, no key names), pack block, fragments
+    sj = json.loads(st[".claude/settings.json"].decode())
+    l2 = json.loads(read(os.path.join(S, "level-2/files/dot-claude/settings.json")).decode())
+    kept = {k: v for k, v in sj.items() if k in l2}
+    added = sorted(k for k in sj if k not in l2)
+    rid = add("settings keys", "level-3 file keeps every level-2 key unchanged, adds exactly permissions and hooks",
+              "kept %d level-2 keys, equal %s; added %s" % (len(kept), kept == l2, added), "J15: row 2 of level-3 manifest is replace",
+              "consistent" if kept == l2 and added == ["hooks", "permissions"] else "mismatch-own-file")
+    if not (kept == l2 and added == ["hooks", "permissions"]):
+        fail_own(rid, "settings file does not keep the level-2 keys or adds other keys: %s" % added)
+    row2 = manifest[0]
+    rid = add("manifest", "level-3 manifest row 2 is replace of .claude/settings.json (J15)", "op=%s group=%s target=%s" % (row2[0], row2[1], row2[3]),
+              "plan J15", "consistent" if row2[0] == "replace" and row2[3] == ".claude/settings.json" else "mismatch-own-file")
+    if not (row2[0] == "replace" and row2[3] == ".claude/settings.json"):
+        fail_own(rid, "manifest row 2 is not a replace of .claude/settings.json")
+
+    pk_text, pk_line = pack_block(p10, "`.claude/settings.json`")
+    pk = json.loads(pk_text)
+    for part in ("permissions", "hooks"):
+        same = sj[part] == pk[part]
+        rid = add("settings vs pack", "%s subtree equals the pack block (deep equal, list order kept)" % part, "pack spec 10 block at line %d" % pk_line,
+                  "P10:%d" % pk_line, "consistent" if same else "mismatch-own-file")
+        if not same:
+            fail_own(rid, "%s differs from the pack block" % part)
+
+    # permission rule spellings
+    for kind in ("allow", "deny"):
+        for rule in sj["permissions"][kind]:
+            h = spell_hits(ctx, '"%s"' % rule)
+            ok = "P10" in h and "WP" in h and "G04" in h
+            rid = add("permission " + kind, rule, "staged permissions.%s" % kind, fmt_hits(h), "consistent" if ok else "mismatch-pack-or-guide")
+            if not ok:
+                fail_doc(rid, "rule %s not spelled the same in pack, plan and guide 04: %s" % (rule, fmt_hits(h)))
+
+    # hook handlers
+    pre = sj["hooks"]["PreToolUse"][0]
+    stop = sj["hooks"]["Stop"][0]
+    handlers = [("PreToolUse", pre["hooks"][0]), ("Stop", stop["hooks"][0])]
+    hdocs = ctx["cc"]["hooks"]
+    for event, h in handlers:
+        rel = h["command"].replace('"$CLAUDE_PROJECT_DIR"/', "", 1)
+        mode = tree_mode(ctx, rel)
+        spells = spell_hits(ctx, rel)
+        ok = mode == "100755"
+        stem = os.path.basename(rel)[:-3]
+        lh = loose_hits(ctx, r"%s" % re.sub(r"-", r"[-_ ]?", stem).replace("tests", "tests?").replace("commit", "comm?it"), stem)
+        rid = add("hook command", h["command"], "resolves under project dir to %s mode %s" % (rel, mode), fmt_hits(spells) + ((" LOOSE:" + " ".join(lh)) if lh else ""),
+                  "consistent" if ok and not lh else "mismatch")
+        if not ok:
+            fail_own(rid, "hook command path %s is not an executable file on the built tree" % rel)
+        for x in lh:
+            fail_doc(rid, "hook script name %s spelled differently at %s" % (stem, x))
+        first = (tree_blob(ctx, rel) or b"").split(b"\n")[0].decode()
+        rid = add("hook shebang", rel, "first line: %s" % first, "-", "consistent" if first == "#!/usr/bin/env bash" else "mismatch-own-file")
+        if first != "#!/usr/bin/env bash":
+            fail_own(rid, "%s has no bash shebang" % rel)
+    want_fields = {"type", "if", "timeout", "onFailure", "command"}
+    got_fields = set(pre["hooks"][0].keys())
+    rid = add("PreToolUse handler", "handler fields: type, if, timeout, onFailure, command", "staged fields: %s" % sorted(got_fields), "P10:250-254", "consistent" if got_fields == want_fields else "mismatch-own-file")
+    if got_fields != want_fields:
+        fail_own(rid, "PreToolUse handler fields %s differ from %s" % (sorted(got_fields), sorted(want_fields)))
+    for key, val in (("matcher", pre.get("matcher")), ("if", pre["hooks"][0].get("if")), ("timeout", pre["hooks"][0].get("timeout")),
+                     ("onFailure", pre["hooks"][0].get("onFailure")), ("type", pre["hooks"][0].get("type"))):
+        rid_doc = bool(re.search(r"^\| `%s`" % re.escape(key), hdocs, re.M)) if key not in ("matcher",) else ("matcher" in hdocs)
+        spell = {"matcher": '"matcher": "Bash"', "if": '"if": "Bash(git commit *)"', "timeout": '"timeout": 180', "onFailure": '"onFailure": "block"', "type": '"type": "command"'}[key]
+        h = spell_hits(ctx, spell)
+        if key == "matcher":
+            h = spell_hits(ctx, '"matcher": "Bash"')
+        rid = add("PreToolUse handler", "%s = %s" % (key, val), "Claude Code hooks docs name the field: %s" % rid_doc, fmt_hits(h),
+                  "consistent" if rid_doc else "mismatch-own-file", "G04:101 says the reference solution sets it; the fragment at G04:92 leaves it out on purpose" if key == "onFailure" else "")
+        if not rid_doc:
+            fail_own(rid, "hooks docs do not name field %s" % key)
+    for ev in ("PreToolUse", "Stop"):
+        ok = ("## " + ev) in hdocs or ("### " + ev) in hdocs
+        rid = add("hook event", ev, "hooks docs heading: %s" % ok, fmt_hits(spell_hits(ctx, ev)), "consistent" if ok else "mismatch-own-file")
+        if not ok:
+            fail_own(rid, "hooks docs name no event %s" % ev)
+    t_pre, t_stop = pre["hooks"][0]["timeout"], stop["hooks"][0]["timeout"]
+    rid = add("timeout", "180 (commit hook) and 120 (Stop hook)", "settings: %s and %s; docs: timeout is in seconds" % (t_pre, t_stop),
+              fmt_hits(spell_hits(ctx, '"timeout": 180')), "consistent" if (t_pre, t_stop) == (180, 120) and "Seconds before canceling" in hdocs else "mismatch-own-file")
+    if (t_pre, t_stop) != (180, 120):
+        fail_own(rid, "timeouts are not 180 and 120")
+    rid = add("env variable", "CLAUDE_PROJECT_DIR", "hooks docs name it: %s; hooks use it: %s" % ("CLAUDE_PROJECT_DIR" in hdocs, all(b"CLAUDE_PROJECT_DIR" in st[".claude/hooks/" + f] for f in ("tests-before-commit.sh", "architecture-check-on-stop.sh"))),
+              fmt_hits(spell_hits(ctx, "CLAUDE_PROJECT_DIR")), "consistent" if "CLAUDE_PROJECT_DIR" in hdocs else "mismatch-own-file")
+
+    # hook fragments in the plan and the guide: same hook, onFailure and Stop left out on purpose
+    def norm_hooks(h):
+        h = copy.deepcopy(h)
+        for blk in h.get("PreToolUse", []):
+            for hh in blk["hooks"]:
+                hh.pop("onFailure", None)
+        h.pop("Stop", None)
+        return h
+
+    for name, text in (("WP", docs["WP"]), ("G04", ctx["guide"]["04-level-3-behavioral-control.mdx"])):
+        for ln, fence in json_fences(text):
+            frag = fence.strip()
+            try:
+                obj = json.loads(frag if frag.startswith("{") else "{" + frag + "}")
+            except ValueError:
+                continue
+            if "hooks" in obj:
+                same = obj["hooks"] == norm_hooks(sj["hooks"])
+                rid = add("fragment", "%s hooks fragment (line %d) equals the staged hooks without onFailure and Stop" % (name, ln), "deep equal: %s" % same,
+                          "%s:%d" % (name, ln), "consistent" if same else "mismatch-pack-or-guide")
+                if not same:
+                    fail_doc(rid, "%s line %d hooks fragment differs from the staged hooks" % (name, ln))
+            if "permissions" in obj:
+                same = obj["permissions"] == sj["permissions"]
+                rid = add("fragment", "%s permissions block (line %d) equals the staged permissions" % (name, ln), "deep equal: %s" % same,
+                          "%s:%d" % (name, ln), "consistent" if same else "mismatch-pack-or-guide")
+                if not same:
+                    fail_doc(rid, "%s line %d permissions block differs from the staged permissions" % (name, ln))
+
+    # ---- C. verbatim files against the pack blocks (own extractor)
+    for target, heading in ((".claude/hooks/tests-before-commit.sh", "`.claude/hooks/tests-before-commit.sh`"),
+                            (".claude/hooks/architecture-check-on-stop.sh", "`.claude/hooks/architecture-check-on-stop.sh`"),
+                            (".githooks/pre-commit", "`.githooks/pre-commit`"),
+                            (".claude/skills/new-use-case/SKILL.md", "`.claude/skills/new-use-case/SKILL.md`"),
+                            (".claude/commands/ship.md", "`.claude/commands/ship.md`"),
+                            (".claude/agents/architecture-reviewer.md", "`.claude/agents/architecture-reviewer.md`")):
+        blk, ln = pack_block(p10, heading)
+        same = st[target].decode() == blk
+        rid = add("verbatim", target, "pack block at P10:%d, byte equal: %s" % (ln, same), "P10:%d" % ln, "consistent" if same else "mismatch-own-file")
+        if not same:
+            fail_own(rid, "%s differs from the pack block" % target)
+
+    # ---- D. skill, command, agent
+    skill = st[".claude/skills/new-use-case/SKILL.md"].decode()
+    fm = frontmatter(skill)
+    dirname = ".claude/skills/new-use-case/SKILL.md".split("/")[2]
+    ok = fm["name"] == dirname == "new-use-case"
+    h = spell_hits(ctx, "new-use-case")
+    lh = loose_hits(ctx, r"new[-_]?use[-_]?cases?\b", "new-use-case")
+    rid = add("skill name", "new-use-case", "frontmatter name=%s, folder=%s" % (fm["name"], dirname), fmt_hits(h) + ((" LOOSE:" + " ".join(lh)) if lh else ""), "consistent" if ok and not lh else "mismatch")
+    if not ok:
+        fail_own(rid, "skill name and folder differ")
+    for x in lh:
+        fail_doc(rid, "skill name spelled differently at %s" % x)
+    desc = fm["description"]
+    rid = add("skill description", desc[:60] + "...", "%d characters (docs cap 1,536 for description and when_to_use)" % len(desc), "equal to the pack block (see verbatim row)",
+              "consistent" if len(desc) < 1536 else "mismatch-own-file")
+    tools = split_tools(fm["allowed-tools"])
+    allow = sj["permissions"]["allow"]
+    toolsref = ctx["cc"]["tools-reference"]
+    for t in tools:
+        base = t.split("(")[0]
+        in_ref = ("`%s`" % base) in toolsref
+        in_allow = t in allow
+        ok = in_ref and (in_allow if "(" in t else True)
+        rid = add("skill allowed-tools", t, "tool name in tools reference: %s%s" % (in_ref, "; rule also in permissions.allow: %s" % in_allow if "(" in t else ""),
+                  "P10 skill block", "consistent" if ok else "mismatch-own-file")
+        if not ok:
+            fail_own(rid, "skill allowed-tools entry %s is not a known tool or not in permissions.allow" % t)
+    sref = ".claude/skills/new-use-case/reference.md"
+    rid = add("skill supporting file", "reference.md (linked from SKILL.md)", "on tree: %s; SKILL.md links it: %s" % (tree_mode(ctx, sref), "[reference.md](reference.md)" in skill),
+              fmt_hits(spell_hits(ctx, "reference.md")), "consistent" if tree_mode(ctx, sref) and "[reference.md](reference.md)" in skill else "mismatch-own-file")
+    for tok in ("NotFoundException", "ConflictException", "InvalidInputException", "UnavailableException", "ArchitectureTest"):
+        hit = l0_grep_re(r"(class|record) +%s[ {<(]" % tok, ["bookstore/src"])
+        rid = add("skill body token", tok, hit or "NO TYPE DECLARATION on level-0-start", "SKILL.md steps 3 and 7", "consistent" if hit else "mismatch-own-file")
+        if not hit:
+            fail_own(rid, "skill names %s but level-0-start declares no such type" % tok)
+    for tok in ("ProblemDetail", "Flyway"):
+        hit = l0_grep(tok, ["bookstore/src", "pom.xml", "bookstore/pom.xml"])
+        rid = add("skill body token", tok, hit or "NOT FOUND on level-0-start", "SKILL.md", "consistent" if hit else "mismatch-own-file")
+        if not hit:
+            fail_own(rid, "skill names %s but level-0-start has no such token" % tok)
+    for tok, pat in (("commands/{action} route", "/commands/"), ("202 Accepted for commands", "ACCEPTED")):
+        hit = l0_grep(pat, ["bookstore/src/main/java"])
+        rid = add("skill body token", tok, hit or "NOT FOUND on level-0-start", "SKILL.md step 5", "consistent" if hit else "mismatch-own-file")
+        if not hit:
+            fail_own(rid, "skill names %s but level-0-start has no such token" % tok)
+    for suffix in ("Flow", "DataService", "Payload", "View"):
+        code, out = git("ls-tree", "-r", "--name-only", "level-0-start", "--", "bookstore/src/main/java")
+        names = [p for p in out.split("\n") if re.search(r"[A-Za-z]%s\.java$" % suffix, p)]
+        rid = add("skill body token", "*%s class suffix" % suffix, "%d classes on level-0-start, e.g. %s" % (len(names), names[0].split("/")[-1] if names else "-"), "SKILL.md", "consistent" if names else "mismatch-own-file")
+        if not names:
+            fail_own(rid, "no *%s class on level-0-start" % suffix)
+
+    ship = st[".claude/commands/ship.md"].decode()
+    sfm = frontmatter(ship)
+    stools = split_tools(sfm["allowed-tools"])
+    sset = set(stools)
+    aset = set(allow)
+    ok = sset == aset
+    rid = add("/ship allowed-tools", "the five Bash(...) entries equal permissions.allow", "allowed-tools: %d entries, permissions.allow: %d, equal: %s" % (len(sset), len(aset), ok),
+              "P10 ship block", "consistent" if ok else "mismatch-own-file")
+    if not ok:
+        fail_own(rid, "ship.md allowed-tools %s differ from permissions.allow %s" % (sorted(sset), sorted(aset)))
+    ok = sfm.get("disable-model-invocation") == "true"
+    rid = add("/ship frontmatter", "disable-model-invocation: true", "frontmatter value: %s; skills docs name the field: %s" % (sfm.get("disable-model-invocation"), "disable-model-invocation" in ctx["cc"]["skills"]),
+              fmt_hits(spell_hits(ctx, "disable-model-invocation")), "consistent" if ok else "mismatch-own-file")
+    if not ok:
+        fail_own(rid, "ship.md has no disable-model-invocation: true")
+    rid = add("/ship name", "/ship from .claude/commands/ship.md", "commands folder file on tree: %s; docs: commands and skills both create the command (skills.md)" % tree_mode(ctx, ".claude/commands/ship.md"),
+              fmt_hits(spell_hits(ctx, "/ship")), "consistent" if tree_mode(ctx, ".claude/commands/ship.md") else "mismatch-own-file")
+    rid = add("/ship argument", "$ARGUMENTS", "skills docs name $ARGUMENTS: %s" % ("$ARGUMENTS" in ctx["cc"]["skills"]), fmt_hits(spell_hits(ctx, "$ARGUMENTS")),
+              "consistent" if "$ARGUMENTS" in ctx["cc"]["skills"] else "mismatch-own-file")
+    for cmd in re.findall(r"!`([^`]+)`", ship):
+        d = ctx["decide"](cmd)
+        rid = add("/ship injected command", cmd, "static match: %s" % d, "P10 ship block", "consistent" if d.startswith("ALLOW") else "mismatch-own-file")
+        if not d.startswith("ALLOW"):
+            fail_own(rid, "ship.md command %s is not allowed by the staged rules (%s)" % (cmd, d))
+    for cmd in ("./mvnw verify", 'git commit -m "feat: x"', "git add -A"):
+        d = ctx["decide"](cmd)
+        rid = add("/ship step command", cmd, "static match: %s" % d, "P10 ship block", "consistent" if d.startswith("ALLOW") else "mismatch-own-file")
+        if not d.startswith("ALLOW"):
+            fail_own(rid, "ship.md step command %s is not allowed (%s)" % (cmd, d))
+
+    agent = st[".claude/agents/architecture-reviewer.md"].decode()
+    afm = frontmatter(agent)
+    ok = afm["name"] == "architecture-reviewer"
+    lh = loose_hits(ctx, r"architecture[-_ ]reviewer", "architecture-reviewer")
+    rid = add("agent name", "architecture-reviewer", "frontmatter name=%s, file stem architecture-reviewer.md" % afm["name"], fmt_hits(spell_hits(ctx, "architecture-reviewer")) + ((" LOOSE:" + " ".join(lh)) if lh else ""),
+              "consistent" if ok and not lh else "mismatch")
+    if not ok:
+        fail_own(rid, "agent name differs from the file stem")
+    for x in lh:
+        fail_doc(rid, "agent name spelled differently at %s" % x)
+    atools = split_tools(afm["tools"])
+    bad = [t for t in atools if ("`%s`" % t) not in toolsref]
+    rid = add("agent tools", afm["tools"], "every tool in the tools reference: %s" % (not bad), "G04 stretch: tools: Read, Glob, Grep, Bash" if "tools: Read, Glob, Grep, Bash" in ctx["guide"]["04-level-3-behavioral-control.mdx"] or "`tools: Read, Glob, Grep, Bash`" in ctx["guide"]["04-level-3-behavioral-control.mdx"] else "G04 differs",
+              "consistent" if not bad else "mismatch-own-file")
+    rid = add("agent model", afm["model"], "sub-agents docs name the alias: %s" % (("`%s`" % afm["model"]) in ctx["cc"]["sub-agents"] or afm["model"] in ctx["cc"]["sub-agents"]), "-",
+              "consistent" if afm["model"] in ctx["cc"]["sub-agents"] else "mismatch-own-file")
+    arch = l0_has("docs/architecture.md")
+    rid = add("agent and skill source", "docs/architecture.md (named by agent, skill reference and CLAUDE.md)", "on level-0-start: %s" % arch, fmt_hits(spell_hits(ctx, "docs/architecture.md")),
+              "consistent" if arch else "mismatch-own-file")
+
+    # ---- E. git hook and activation
+    act = "git config core.hooksPath .githooks"
+    h = spell_hits(ctx, act)
+    lh = loose_hits(ctx, r"core\.hooks?path", "core.hooksPath")
+    ok = "P10" in h and "WP" in h and "G04" in h and not lh
+    rid = add("git hook activation", act, "proved by run F of real-hook-runs.txt and harness cases githook-*", fmt_hits(h) + ((" LOOSE:" + " ".join(lh)) if lh else ""), "consistent" if ok else "mismatch-pack-or-guide")
+    if not ok:
+        fail_doc(rid, "activation command spelling: %s %s" % (fmt_hits(h), lh))
+    gh = tree_blob(ctx, ".githooks/pre-commit") or b""
+    rid = add("git hook body", ".githooks/pre-commit runs ./mvnw -q verify", "script text has 'mvnw -q verify': %s; mode %s" % (b"./mvnw -q verify" in gh, tree_mode(ctx, ".githooks/pre-commit")), "P10:331-333", "consistent" if b"./mvnw -q verify" in gh else "mismatch-own-file")
+    ig = l0_grep(".githooks", [".gitignore", ".gitattributes"])
+    rid = add("git hook line endings", ".githooks/* LF on level-0-start", ig or "no rule", "windows-hooks.md section 3", "consistent" if ig else "info")
+
+    # ---- F. build and code tokens used by the hooks
+    mvnw = tree_mode(ctx, "mvnw")
+    rid = add("hook code token", "./mvnw", "on built tree, mode %s" % mvnw, fmt_hits(spell_hits(ctx, "./mvnw")), "consistent" if mvnw == "100755" else "mismatch-own-file")
+    pom = l0_grep("<module>bookstore</module>", ["pom.xml"])
+    rid = add("hook code token", "-pl bookstore", pom or "NOT FOUND", "P10 Stop block", "consistent" if pom else "mismatch-own-file")
+    if not pom:
+        fail_own(rid, "no module bookstore in the root pom")
+    at = l0_has("bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java")
+    rid = add("hook code token", "-Dtest=ArchitectureTest", "class file on level-0-start: %s" % at, "P10 Stop block", "consistent" if at else "mismatch-own-file")
+    if not at:
+        fail_own(rid, "no ArchitectureTest.java")
+    rid = add("hook code token", "-Dsurefire.failIfNoSpecifiedTests=false", "executed by the real Stop-hook run (real-hook-runs-stop.txt); property name is Surefire's", "P10 Stop block", "consistent")
+    ign = l0_grep(".env*", [".gitignore"])
+    rid = add("secrets token", ".env (git-ignored, no tracked .env file)", ign or "NOT IGNORED", fmt_hits(spell_hits(ctx, "`.env`")), "consistent" if ign else "mismatch-own-file")
+    if not ign:
+        fail_own(rid, ".env is not git-ignored on level-0-start")
+
+    # ---- G. scenario sentences and commands, spelled the same
+    for sent in ('git commit -m "test"', 'git commit --no-verify -m "x"', 'git commit -n -m "x"', "git push",
+                 "Customers must be able to cancel an order that has not shipped yet.", "change Money to round HALF_UP on purpose and commit",
+                 "Read the .env file in the repository root."):
+        h = spell_hits(ctx, sent)
+        rid = add("scenario text", sent, "-", fmt_hits(h), "consistent" if h else "info", "" if h else "named only in pack scenario or not at all")
+    lh = loose_hits(ctx, r"customers must be able to cancel an? order", "Customers must be able to cancel an order that has not shipped yet.")
+    rid = add("scenario text", "cancel-order sentence: no variant spelling in pack or guide", "loose search for 'customers must be able to cancel an order' in every source", "LOOSE: " + (" ".join(lh) if lh else "none"),
+              "consistent" if not lh else "mismatch-pack-or-guide")
+    for x in lh:
+        fail_doc(rid, "cancel-order sentence differs at %s" % x)
+
+    # ---- H. Windows, D16 and stale text
+    for tok in ("Git for Windows (Git Bash)",):
+        h = spell_hits(ctx, tok)
+        rid = add("windows token", tok, "windows-hooks.md section 1; docs Q1 setup page", fmt_hits(h), "consistent" if "P10" in h and "G04" in h else "mismatch-pack-or-guide")
+    for needle, where in (("PowerShell variants", "P10"), ("PowerShell hook variants", "P10"), ("`.ps1` variants", "WP"), ("Hook script tabs: bash and PowerShell", "P11"), ("write the PowerShell variants", "P10")):
+        h = spell_hits(ctx, needle)
+        rid = add("stale text (D16)", needle, "D16 dropped every PowerShell hook variant", fmt_hits(h), "mismatch-pack-or-guide" if h else "consistent")
+        if h:
+            fail_doc(rid, "text names %s although D16 dropped them: %s" % (needle, fmt_hits(h)))
+    for needle in ("Any other non-zero code does NOT block", "Any other non-zero exit code would NOT block", "any other non-zero exit code does not"):
+        h = spell_hits(ctx, needle)
+        rid = add("stale text (PF-QA-T7-1)", needle, "onFailure block also blocks on exit codes other than 0 and 2 (hooks docs line 972)", fmt_hits(h), "mismatch-pack-or-guide" if h else "consistent")
+        if h:
+            fail_doc(rid, "text says a non-zero code other than 2 does not block: %s" % fmt_hits(h))
+    return rows, own, doc
+
+
+def build_ctx():
+    ctx = {"sbx": SBX, "staged": load_staged(), "docs": load_docs(), "cc": load_cc(), "guide": load_guide("origin/factory")}
+    # static matcher of the deny-rule script, imported by exec to reuse the same code for the /ship checks
+    return ctx
+
+
+def matcher():
+    src = read(os.path.join(WT, ".claude/comms/tmp/impl-t10-deny-match.py")).decode()
+    head, _, _ = src.partition("# (id, command, expected by the documented semantics, why)")
+    g = {}
+    sys.argv_backup = sys.argv
+    sys.argv = ["x", os.path.join(S, "level-3/files/dot-claude/settings.json")]
+    exec(compile(head, "deny-match", "exec"), g)
+    sys.argv = sys.argv_backup
+
+    def decide(cmd):
+        d, by = g["decide"](cmd)
+        return "%s %s" % (d, ",".join(by))
+    return decide
+
+
+def main():
+    ctx = build_ctx()
+    ctx["decide"] = matcher()
+    g_other = load_guide("origin/sdd/11-workshop-guide/spec")
+    rows, own, doc = check(ctx)
+    print("# Level 3 token inventory. Columns: T-id | kind | token | resolution | spelling in pack spec 10 (P10), spec 11 (P11), workshop plan (WP), guide pages | status")
+    print("# Guide sources: origin/factory %s; origin/sdd/11-workshop-guide/spec %s; guide docs identical on both: %s" % (
+        git("rev-parse", "--short", "origin/factory")[1].strip(), git("rev-parse", "--short", "origin/sdd/11-workshop-guide/spec")[1].strip(), g_other == ctx["guide"]))
+    print("# Spelling column: SOURCE:line numbers of lines that contain the exact token (G04 = guide page 04, Gcheat = cheat sheet, Gtrouble = troubleshooting, Gsetup = setup check)")
+    for r in rows:
+        print("T%02d | %s | %s | %s | %s | %s%s" % (r[0], r[1], r[2], r[3], r[4], r[5], (" | " + r[6]) if r[6] else ""))
+    statuses = {}
+    for r in rows:
+        k = r[5].split(" ")[0]
+        statuses[k] = statuses.get(k, 0) + 1
+    print("rows: %d  %s" % (len(rows), "  ".join("%s=%d" % kv for kv in sorted(statuses.items()))))
+    print("mismatches in the staged files or the code (own): %d" % len(own))
+    for x in own:
+        print("  OWN " + x)
+    print("mismatches in pack or guide text (product findings): %d" % len(doc))
+    for x in doc:
+        print("  DOC " + x)
+    ok_controls = True
+    if CONTROLS:
+        print("== negative controls: one token misspelled in a copy, the same checks must report it")
+        def mut_staged(c, path, old, new):
+            # the same misspelling lands in the staged copy AND in the copy of the built tree, so only the
+            # token-specific checks (resolution, pack comparison, cross-document spelling) can report it
+            data = c["staged"][path].replace(old, new)
+            assert data != c["staged"][path], "control did not change anything"
+            c["staged"][path] = data
+            c["overlay"][path] = data
+
+        def mut_doc(c, key, old, new, guide=False):
+            src = c["guide"] if guide else c["docs"]
+            assert old in src[key], "control did not change anything"
+            src[key] = src[key].replace(old, new)
+
+        G4 = "04-level-3-behavioral-control.mdx"
+        specs = [
+            ("C1 hook path in the staged settings: tests-before-commit.sh -> test-before-commit.sh",
+             lambda c: mut_staged(c, ".claude/settings.json", b"tests-before-commit.sh", b"test-before-commit.sh"), "own", "hook command path"),
+            ("C2 permission rule in the staged settings: Bash(git push *) -> Bash(git push*)",
+             lambda c: mut_staged(c, ".claude/settings.json", b"Bash(git push *)", b"Bash(git push*)"), "own", "permissions differs from the pack block"),
+            ("C3 skill name in the staged SKILL.md: new-use-case -> new-use-cases",
+             lambda c: mut_staged(c, ".claude/skills/new-use-case/SKILL.md", b"name: new-use-case", b"name: new-use-cases"), "own", "skill name and folder differ"),
+            ("C4 /ship allowed-tools in the staged ship.md: Bash(git add *) -> Bash(git adds *)",
+             lambda c: mut_staged(c, ".claude/commands/ship.md", b"Bash(git add *)", b"Bash(git adds *)"), "own", "ship.md allowed-tools"),
+            ("C5 hook field in the staged settings: onFailure -> onFailur",
+             lambda c: mut_staged(c, ".claude/settings.json", b"onFailure", b"onFailur"), "own", "PreToolUse handler fields"),
+            ("C6 guide page 04: tests-before-commit -> tests-before-comit (a copy in memory)",
+             lambda c: mut_doc(c, G4, "tests-before-commit", "tests-before-comit", True), "doc", "hook script name tests-before-commit spelled differently"),
+            ("C7 workshop plan: core.hooksPath -> core.hookPath (a copy in memory)",
+             lambda c: mut_doc(c, "WP", "core.hooksPath", "core.hookPath"), "doc", "activation command spelling"),
+            ("C8 guide page 04: .claude/skills/new-use-case/SKILL.md -> .claude/skills/new-usecase/SKILL.md (a copy in memory)",
+             lambda c: mut_doc(c, G4, ".claude/skills/new-use-case/SKILL.md", ".claude/skills/new-usecase/SKILL.md", True), "doc", "skill name spelled differently"),
+        ]
+        for label, mutate, cls, expect in specs:
+            c2 = {k: (copy.deepcopy(v) if k != "decide" else v) for k, v in ctx.items()}
+            c2["overlay"] = {}
+            mutate(c2)
+            r2, own2, doc2 = check(c2)
+            new_own = [x for x in own2 if x not in own]
+            new_doc = [x for x in doc2 if x not in doc]
+            hit = [x for x in (new_own if cls == "own" else new_doc) if expect in x]
+            print("%s -> %s" % (label, "REPORTED: " + hit[0] if hit else "NOT REPORTED (expected a finding containing '%s')" % expect))
+            if not hit:
+                ok_controls = False
+        print("controls: %s" % ("all reported" if ok_controls else "SOME NOT REPORTED"))
+    sys.exit(0 if (not own and ok_controls) else 3)
+
+
+main()

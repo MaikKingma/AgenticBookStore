@@ -1,0 +1,132 @@
+# Level 3 token inventory. Columns: T-id | kind | token | resolution | spelling in pack spec 10 (P10), spec 11 (P11), workshop plan (WP), guide pages | status
+# Guide sources: origin/factory 8e7b279; origin/sdd/11-workshop-guide/spec b7f053c; guide docs identical on both: True
+# Spelling column: SOURCE:line numbers of lines that contain the exact token (G04 = guide page 04, Gcheat = cheat sheet, Gtrouble = troubleshooting, Gsetup = setup check)
+T01 | path+mode | .claude/settings.json | tree 100644 mode 644, bytes equal staged | P10:140,154,173,222,464 WP:193,236,250 G03:65 G04:40,89,176 Gcheat:18 | consistent
+T02 | path+mode | .claude/skills/new-use-case/SKILL.md | tree 100644 mode 644, bytes equal staged | P10:337 WP:274 G04:184 Gcheat:19 | consistent
+T03 | path+mode | .claude/skills/new-use-case/reference.md | tree 100644 mode 644, bytes equal staged | P10:365 | consistent
+T04 | path+mode | .claude/commands/ship.md | tree 100644 mode 644, bytes equal staged | P10:370 WP:279 G04:198 Gcheat:15 | consistent
+T05 | path+mode | .claude/agents/architecture-reviewer.md | tree 100644 mode 644, bytes equal staged | P10:389 WP:284 G04:204 Gcheat:19 | consistent
+T06 | path+mode | .claude/hooks/tests-before-commit.sh | tree 100755 mode 755, bytes equal staged | P10:254,279 WP:256,260 G04:96,105 Gcheat:18 | consistent
+T07 | path+mode | .claude/hooks/architecture-check-on-stop.sh | tree 100755 mode 755, bytes equal staged | P10:265,303 G04:176 | consistent
+T08 | path+mode | .githooks/pre-commit | tree 100755 mode 755, bytes equal staged | P10:329 WP:264 G04:144 Gcheat:19 | consistent
+T09 | settings keys | level-3 file keeps every level-2 key unchanged, adds exactly permissions and hooks | kept 2 level-2 keys, equal True; added ['hooks', 'permissions'] | J15: row 2 of level-3 manifest is replace | consistent
+T10 | manifest | level-3 manifest row 2 is replace of .claude/settings.json (J15) | op=replace group=config target=.claude/settings.json | plan J15 | consistent
+T11 | settings vs pack | permissions subtree equals the pack block (deep equal, list order kept) | pack spec 10 block at line 226 | P10:226 | consistent
+T12 | settings vs pack | hooks subtree equals the pack block (deep equal, list order kept) | pack spec 10 block at line 226 | P10:226 | consistent
+T13 | permission allow | Bash(./mvnw *) | staged permissions.allow | P10:229 WP:241 G04:45 | consistent
+T14 | permission allow | Bash(git status *) | staged permissions.allow | P10:230 WP:241 G04:45 | consistent
+T15 | permission allow | Bash(git diff *) | staged permissions.allow | P10:231 WP:241 G04:45 | consistent
+T16 | permission allow | Bash(git add *) | staged permissions.allow | P10:232 WP:241 G04:45 | consistent
+T17 | permission allow | Bash(git commit *) | staged permissions.allow | P10:233,251 WP:241,255 G04:45,95 | consistent
+T18 | permission deny | Read(./.env) | staged permissions.deny | P10:236 WP:242 G04:46 | consistent
+T19 | permission deny | Read(./.env.*) | staged permissions.deny | P10:237 WP:242 G04:46 | consistent
+T20 | permission deny | Bash(git push) | staged permissions.deny | P10:238 WP:242 G04:46 | consistent
+T21 | permission deny | Bash(git push *) | staged permissions.deny | P10:239 WP:242 G04:46 | consistent
+T22 | permission deny | Bash(* --no-verify*) | staged permissions.deny | P10:240 WP:242 G04:46 | consistent
+T23 | permission deny | Bash(git commit -n *) | staged permissions.deny | P10:241 WP:242 G04:46 | consistent
+T24 | hook command | "$CLAUDE_PROJECT_DIR"/.claude/hooks/tests-before-commit.sh | resolves under project dir to .claude/hooks/tests-before-commit.sh mode 100755 | P10:254,279 WP:256,260 G04:96,105 Gcheat:18 | consistent
+T25 | hook shebang | .claude/hooks/tests-before-commit.sh | first line: #!/usr/bin/env bash | - | consistent
+T26 | hook command | "$CLAUDE_PROJECT_DIR"/.claude/hooks/architecture-check-on-stop.sh | resolves under project dir to .claude/hooks/architecture-check-on-stop.sh mode 100755 | P10:265,303 G04:176 | consistent
+T27 | hook shebang | .claude/hooks/architecture-check-on-stop.sh | first line: #!/usr/bin/env bash | - | consistent
+T28 | PreToolUse handler | handler fields: type, if, timeout, onFailure, command | staged fields: ['command', 'if', 'onFailure', 'timeout', 'type'] | P10:250-254 | consistent
+T29 | PreToolUse handler | matcher = Bash | Claude Code hooks docs name the field: True | P10:247 WP:254 G04:94 | consistent
+T30 | PreToolUse handler | if = Bash(git commit *) | Claude Code hooks docs name the field: True | P10:251 WP:255 G04:95 | consistent
+T31 | PreToolUse handler | timeout = 180 | Claude Code hooks docs name the field: True | P10:252 WP:255 G04:95 | consistent
+T32 | PreToolUse handler | onFailure = block | Claude Code hooks docs name the field: True | P10:253,275 G04:101 | consistent | G04:101 says the reference solution sets it; the fragment at G04:92 leaves it out on purpose
+T33 | PreToolUse handler | type = command | Claude Code hooks docs name the field: True | P10:250,263 WP:255 G04:95 | consistent
+T34 | hook event | PreToolUse | hooks docs heading: True | P10:245,282 WP:250,253 G04:89,93,111 | consistent
+T35 | hook event | Stop | hooks docs heading: True | P10:259,306,383 P11:32 WP:40,270 G04:172,174 Gindex:35 Gcheat:21 Gtrouble:106 | consistent
+T36 | timeout | 180 (commit hook) and 120 (Stop hook) | settings: 180 and 120; docs: timeout is in seconds | P10:252 WP:255 G04:95 | consistent
+T37 | env variable | CLAUDE_PROJECT_DIR | hooks docs name it: True; hooks use it: True | P10:254,265,289,311 WP:256 G04:96,118 Gcheat:21 | consistent
+T38 | fragment | WP permissions block (line 239) equals the staged permissions | deep equal: True | WP:239 | consistent
+T39 | fragment | WP hooks fragment (line 252) equals the staged hooks without onFailure and Stop | deep equal: True | WP:252 | consistent
+T40 | fragment | G04 permissions block (line 43) equals the staged permissions | deep equal: True | G04:43 | consistent
+T41 | fragment | G04 hooks fragment (line 92) equals the staged hooks without onFailure and Stop | deep equal: True | G04:92 | consistent
+T42 | verbatim | .claude/hooks/tests-before-commit.sh | pack block at P10:281, byte equal: True | P10:281 | consistent
+T43 | verbatim | .claude/hooks/architecture-check-on-stop.sh | pack block at P10:305, byte equal: True | P10:305 | consistent
+T44 | verbatim | .githooks/pre-commit | pack block at P10:331, byte equal: True | P10:331 | consistent
+T45 | verbatim | .claude/skills/new-use-case/SKILL.md | pack block at P10:339, byte equal: True | P10:339 | consistent
+T46 | verbatim | .claude/commands/ship.md | pack block at P10:372, byte equal: True | P10:372 | consistent
+T47 | verbatim | .claude/agents/architecture-reviewer.md | pack block at P10:391, byte equal: True | P10:391 | consistent
+T48 | skill name | new-use-case | frontmatter name=new-use-case, folder=new-use-case | P10:337,340,365,407,426 WP:274 G04:184 Gcheat:19 | consistent
+T49 | skill description | Adds or changes a bookstore use case end to end through the ... | 279 characters (docs cap 1,536 for description and when_to_use) | equal to the pack block (see verbatim row) | consistent
+T50 | skill allowed-tools | Read | tool name in tools reference: True | P10 skill block | consistent
+T51 | skill allowed-tools | Grep | tool name in tools reference: True | P10 skill block | consistent
+T52 | skill allowed-tools | Glob | tool name in tools reference: True | P10 skill block | consistent
+T53 | skill allowed-tools | Edit | tool name in tools reference: True | P10 skill block | consistent
+T54 | skill allowed-tools | Write | tool name in tools reference: True | P10 skill block | consistent
+T55 | skill allowed-tools | Bash(./mvnw *) | tool name in tools reference: True; rule also in permissions.allow: True | P10 skill block | consistent
+T56 | skill supporting file | reference.md (linked from SKILL.md) | on tree: 100644; SKILL.md links it: True | P10:362,362,365 WP:277 G04:184 | consistent
+T57 | skill body token | NotFoundException | bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/NotFoundException.java:10:public class NotFoundException extends RuntimeException { | SKILL.md steps 3 and 7 | consistent
+T58 | skill body token | ConflictException | bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/ConflictException.java:10:public class ConflictException extends RuntimeException { | SKILL.md steps 3 and 7 | consistent
+T59 | skill body token | InvalidInputException | bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/InvalidInputException.java:10:public class InvalidInputException extends RuntimeException { | SKILL.md steps 3 and 7 | consistent
+T60 | skill body token | UnavailableException | bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/UnavailableException.java:10:public class UnavailableException extends RuntimeException { | SKILL.md steps 3 and 7 | consistent
+T61 | skill body token | ArchitectureTest | bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:28:class ArchitectureTest { | SKILL.md steps 3 and 7 | consistent
+T62 | skill body token | ProblemDetail | bookstore/src/main/java/nl/openvalue/bookstore/assistant/AssistantExceptionHandler.java:11:import org.springframework.http.ProblemDetail; | SKILL.md | consistent
+T63 | skill body token | Flyway | bookstore/src/main/resources/db/migration/V0__baseline.sql:1:-- Baseline: an empty schema under Flyway control. Later specs add tables in new versioned migrations. | SKILL.md | consistent
+T64 | skill body token | commands/{action} route | bookstore/src/main/java/nl/openvalue/bookstore/command/BookCommands.java:26:    @PostMapping("/commands/add") | SKILL.md step 5 | consistent
+T65 | skill body token | 202 Accepted for commands | bookstore/src/main/java/nl/openvalue/bookstore/command/BookCommands.java:27:    @ResponseStatus(HttpStatus.ACCEPTED) | SKILL.md step 5 | consistent
+T66 | skill body token | *Flow class suffix | 3 classes on level-0-start, e.g. CatalogueFlow.java | SKILL.md | consistent
+T67 | skill body token | *DataService class suffix | 3 classes on level-0-start, e.g. BookDataService.java | SKILL.md | consistent
+T68 | skill body token | *Payload class suffix | 8 classes on level-0-start, e.g. ChatPayload.java | SKILL.md | consistent
+T69 | skill body token | *View class suffix | 11 classes on level-0-start, e.g. AssistantReplyView.java | SKILL.md | consistent
+T70 | /ship allowed-tools | the five Bash(...) entries equal permissions.allow | allowed-tools: 5 entries, permissions.allow: 5, equal: True | P10 ship block | consistent
+T71 | /ship frontmatter | disable-model-invocation: true | frontmatter value: true; skills docs name the field: True | P10:375 WP:279 G04:198 | consistent
+T72 | /ship name | /ship from .claude/commands/ship.md | commands folder file on tree: 100644; docs: commands and skills both create the command (skills.md) | P10:370,407,481 WP:279,282,285,290,320 G04:198,198,200,204,216 G05:48,95,98,148,151,185+ Gcheat:15,15,31 | consistent
+T73 | /ship argument | $ARGUMENTS | skills docs name $ARGUMENTS: True | P10:384,385 WP:280 G04:198 Gcheat:15 | consistent
+T74 | /ship injected command | git status --short | static match: ALLOW Bash(git status *) | P10 ship block | consistent
+T75 | /ship injected command | git diff --stat HEAD | static match: ALLOW Bash(git diff *) | P10 ship block | consistent
+T76 | /ship step command | ./mvnw verify | static match: ALLOW Bash(./mvnw *) | P10 ship block | consistent
+T77 | /ship step command | git commit -m "feat: x" | static match: ALLOW Bash(git commit *) | P10 ship block | consistent
+T78 | /ship step command | git add -A | static match: ALLOW Bash(git add *) | P10 ship block | consistent
+T79 | agent name | architecture-reviewer | frontmatter name=architecture-reviewer, file stem architecture-reviewer.md | P10:389,392 WP:284 G04:204 Gcheat:19 | consistent
+T80 | agent tools | Read, Glob, Grep, Bash | every tool in the tools reference: True | G04 stretch: tools: Read, Glob, Grep, Bash | consistent
+T81 | agent model | sonnet | sub-agents docs name the alias: True | - | consistent
+T82 | agent and skill source | docs/architecture.md (named by agent, skill reference and CLAUDE.md) | on level-0-start: True | P10:44,115,368,398,400,442+ WP:145,146 G02:55,57,75 G05:126,223 Garch:8,8,8 Gcheat:17 | consistent
+T83 | git hook activation | git config core.hooksPath .githooks | proved by run F of real-hook-runs.txt and harness cases githook-* | P10:335 WP:263 G04:141 Gcheat:19 | consistent
+T84 | git hook body | .githooks/pre-commit runs ./mvnw -q verify | script text has 'mvnw -q verify': True; mode 100755 | P10:331-333 | consistent
+T85 | git hook line endings | .githooks/* LF on level-0-start | .gitattributes:3:.githooks/* text eol=lf | windows-hooks.md section 3 | consistent
+T86 | hook code token | ./mvnw | on built tree, mode 100755 | P10:14,33,35,36,36,39+ WP:56,105,126,141,141,165+ Gsetup:81,162 G01:59 G02:49,50,109 G03:116,155 G04:45,105,120,125 G05:238 Garch:70 Gtrouble:67,75 | consistent
+T87 | hook code token | -pl bookstore | pom.xml:19:    <module>bookstore</module> | P10 Stop block | consistent
+T88 | hook code token | -Dtest=ArchitectureTest | class file on level-0-start: True | P10 Stop block | consistent
+T89 | hook code token | -Dsurefire.failIfNoSpecifiedTests=false | executed by the real Stop-hook run (real-hook-runs-stop.txt); property name is Surefire's | P10 Stop block | consistent
+T90 | secrets token | .env (git-ignored, no tracked .env file) | .gitignore:27:.env* | P10:420 G04:71 | consistent
+T91 | scenario text | git commit -m "test" | - | P10:412 G04:161 | consistent
+T92 | scenario text | git commit --no-verify -m "x" | - | P10:416 G04:62 | consistent
+T93 | scenario text | git commit -n -m "x" | - | P10:416 G04:69 | consistent
+T94 | scenario text | git push | - | P10:238,239,416 WP:242,242 G04:46,46,69 | consistent
+T95 | scenario text | Customers must be able to cancel an order that has not shipped yet. | - | P10:425 WP:278 G04:191 | consistent
+T96 | scenario text | change Money to round HALF_UP on purpose and commit | - | WP:265 G04:151 | consistent
+T97 | scenario text | Read the .env file in the repository root. | - | G04:76 | consistent
+T98 | scenario text | cancel-order sentence: no variant spelling in pack or guide | loose search for 'customers must be able to cancel an order' in every source | LOOSE: none | consistent
+T99 | windows token | Git for Windows (Git Bash) | windows-hooks.md section 1; docs Q1 setup page | P10:323 WP:344 Gsetup:23 G04:132 Gtrouble:13 | consistent
+T100 | stale text (D16) | PowerShell variants | D16 dropped every PowerShell hook variant | P10:322,500 | mismatch-pack-or-guide
+T101 | stale text (D16) | PowerShell hook variants | D16 dropped every PowerShell hook variant | P10:219 | mismatch-pack-or-guide
+T102 | stale text (D16) | `.ps1` variants | D16 dropped every PowerShell hook variant | WP:344 | mismatch-pack-or-guide
+T103 | stale text (D16) | Hook script tabs: bash and PowerShell | D16 dropped every PowerShell hook variant | P11:56 | mismatch-pack-or-guide
+T104 | stale text (D16) | write the PowerShell variants | D16 dropped every PowerShell hook variant | P10:500 | mismatch-pack-or-guide
+T105 | stale text (PF-QA-T7-1) | Any other non-zero code does NOT block | onFailure block also blocks on exit codes other than 0 and 2 (hooks docs line 972) | P10:283 G04:112 | mismatch-pack-or-guide
+T106 | stale text (PF-QA-T7-1) | Any other non-zero exit code would NOT block | onFailure block also blocks on exit codes other than 0 and 2 (hooks docs line 972) | WP:262 G04:105 | mismatch-pack-or-guide
+T107 | stale text (PF-QA-T7-1) | any other non-zero exit code does not | onFailure block also blocks on exit codes other than 0 and 2 (hooks docs line 972) | Gcheat:21 | mismatch-pack-or-guide
+rows: 107  consistent=99  mismatch-pack-or-guide=8
+mismatches in the staged files or the code (own): 0
+mismatches in pack or guide text (product findings): 8
+  DOC T100 text names PowerShell variants although D16 dropped them: P10:322,500
+  DOC T101 text names PowerShell hook variants although D16 dropped them: P10:219
+  DOC T102 text names `.ps1` variants although D16 dropped them: WP:344
+  DOC T103 text names Hook script tabs: bash and PowerShell although D16 dropped them: P11:56
+  DOC T104 text names write the PowerShell variants although D16 dropped them: P10:500
+  DOC T105 text says a non-zero code other than 2 does not block: P10:283 G04:112
+  DOC T106 text says a non-zero code other than 2 does not block: WP:262 G04:105
+  DOC T107 text says a non-zero code other than 2 does not block: Gcheat:21
+== negative controls: one token misspelled in a copy, the same checks must report it
+C1 hook path in the staged settings: tests-before-commit.sh -> test-before-commit.sh -> REPORTED: T24 hook command path .claude/hooks/test-before-commit.sh is not an executable file on the built tree
+C2 permission rule in the staged settings: Bash(git push *) -> Bash(git push*) -> REPORTED: T11 permissions differs from the pack block
+C3 skill name in the staged SKILL.md: new-use-case -> new-use-cases -> REPORTED: T48 skill name and folder differ
+C4 /ship allowed-tools in the staged ship.md: Bash(git add *) -> Bash(git adds *) -> REPORTED: T70 ship.md allowed-tools ['Bash(./mvnw *)', 'Bash(git adds *)', 'Bash(git commit *)', 'Bash(git diff *)', 'Bash(git status *)'] differ from permissions.allow ['Bash(./mvnw *)', 'Bash(git add *)', 'Bash(git commit *)', 'Bash(git diff *)', 'Bash(git status *)']
+C5 hook field in the staged settings: onFailure -> onFailur -> REPORTED: T28 PreToolUse handler fields ['command', 'if', 'onFailur', 'timeout', 'type'] differ from ['command', 'if', 'onFailure', 'timeout', 'type']
+C6 guide page 04: tests-before-commit -> tests-before-comit (a copy in memory) -> REPORTED: T24 hook script name tests-before-commit spelled differently at G04:96
+C7 workshop plan: core.hooksPath -> core.hookPath (a copy in memory) -> REPORTED: T83 activation command spelling: P10:335 G04:141 Gcheat:19 ['WP:263']
+C8 guide page 04: .claude/skills/new-use-case/SKILL.md -> .claude/skills/new-usecase/SKILL.md (a copy in memory) -> REPORTED: T48 skill name spelled differently at G04:184
+controls: all reported
+exit code: 0

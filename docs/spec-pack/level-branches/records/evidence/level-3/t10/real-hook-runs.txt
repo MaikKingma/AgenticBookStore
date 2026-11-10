@@ -1,0 +1,147 @@
+# real runs on the scratch level-3 sandbox (sbx-3 HEAD 8a0ccd8), started 2026-11-10T14:21:35Z
+# JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR (HR1) is set for every mvnw run below
+
+## A. cold ./mvnw -q verify (fresh sandbox, no target folders, warm ~/.m2, Docker running)
+before: ls: bookstore/target: No such file or directory
+before: ls: distributor/target: No such file or directory
+before: ls: frontend/target: No such file or directory
+before: ls: target: No such file or directory
+cold ./mvnw -q verify: exit=0 wall_clock_seconds=38 (hook timeout in settings: 180)
+output lines: 3258
+output tail:
+  2026-11-10T15:22:13.293+01:00  INFO 63498 --- [distributor] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.distributor.HealthEndpointTest]: HealthEndpointTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+  2026-11-10T15:22:13.294+01:00  INFO 63498 --- [distributor] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.distributor.DistributorApplication for test class nl.openvalue.distributor.HealthEndpointTest
+  2026-11-10T15:22:13.295+01:00  INFO 63498 --- [distributor] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.distributor.HealthEndpointTest]: HealthEndpointTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+  2026-11-10T15:22:13.295+01:00  INFO 63498 --- [distributor] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.distributor.DistributorApplication for test class nl.openvalue.distributor.HealthEndpointTest
+  2026-11-10T15:22:13.309+01:00  WARN 63498 --- [distributor] [1-auto-1-exec-8] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.HttpRequestMethodNotSupportedException: Request method 'POST' is not supported]
+
+## B. commit hook, green build (warm), plain commit, started from another folder with CLAUDE_PROJECT_DIR set
+[green-plain] exit=0 seconds=29 stdout_bytes=0 stderr_lines=0
+[green-plain] stderr line 1: 
+
+## C. a command that is not a commit (git status): hook must not build
+[other] exit=0 seconds=0 stdout_bytes=0 stderr_lines=0
+[other] stderr line 1: 
+
+## D. red build: a deliberately failing test (new file RehearsalRedTest.java in the domain test package)
+?? bookstore/src/test/java/nl/openvalue/bookstore/domain/RehearsalRedTest.java
+commits before: 4
+### D1 plain: git commit -m "test"
+[red-plain] exit=2 seconds=25 stdout_bytes=0 stderr_lines=41
+[red-plain] stderr line 1: Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+### D2 chained: git add -A && git commit -m "test"
+[red-chained] exit=2 seconds=25 stdout_bytes=0 stderr_lines=41
+[red-chained] stderr line 1: Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+### D3 position variant: git commit -m "x" -n (the commit hook still matches; the deny rule is a separate layer)
+[red-n-after] exit=2 seconds=26 stdout_bytes=0 stderr_lines=41
+[red-n-after] stderr line 1: Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+### D4 PF-T8-1 form: cd "<folder>" && git commit (quote before git commit)
+[red-quoted-cd] exit=0 seconds=0 stdout_bytes=0 stderr_lines=0
+[red-quoted-cd] stderr line 1: 
+### D5 position variant: git -C . commit
+[red-dash-c] exit=0 seconds=0 stdout_bytes=0 stderr_lines=0
+[red-dash-c] stderr line 1: 
+commits after the hook runs (hooks never commit): 4
+
+## E. the stderr of D1, byte copy (what Claude receives on exit code 2)
+Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+2026-11-10T15:23:06.363+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no ean
+2026-11-10T15:23:06.364+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no titleName
+2026-11-10T15:23:06.364+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no contributors
+2026-11-10T15:23:06.365+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no listPriceCents
+2026-11-10T15:23:06.366+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no currency
+2026-11-10T15:23:06.366+01:00  WARN 64340 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no releaseDate
+2026-11-10T15:23:06.368+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.DatabaseCleanerIntegrationTest]: DatabaseCleanerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.369+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.DatabaseCleanerIntegrationTest
+2026-11-10T15:23:06.369+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.DatabaseCleanerIntegrationTest]: DatabaseCleanerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.369+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.370+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.DatabaseCleanerIntegrationTest
+2026-11-10T15:23:06.395+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBaseHooksTest]: IntegrationTestBaseHooksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.396+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.IntegrationTestBaseHooksTest
+2026-11-10T15:23:06.396+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBaseHooksTest]: IntegrationTestBaseHooksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.396+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.396+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.IntegrationTestBaseHooksTest
+2026-11-10T15:23:06.421+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.BookstoreApplicationTests]: BookstoreApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.421+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.BookstoreApplicationTests
+2026-11-10T15:23:06.422+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.BookstoreApplicationTests]: BookstoreApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.422+01:00  INFO 64340 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:23:06.422+01:00  INFO 64340 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.BookstoreApplicationTests
+[ERROR] Failures: 
+[ERROR]   RehearsalRedTest.deliberatelyRed:11 
+expected: 3
+ but was: 2
+[ERROR] Tests run: 1429, Failures: 1, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project bookstore: There are test failures.
+[ERROR] 
+[ERROR] See $SBX3/bookstore/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :bookstore
+## E. grep of D1 and D2 stderr for the failing test name
+$RAW/hook-red-plain.stderr:1
+$RAW/hook-red-chained.stderr:1
+
+## F. git hook with a real build (core.hooksPath .githooks), red tree
+git commit -m "test" with the git hook, red: exit=1 seconds=24 commits=4
+first line: pre-commit: ./mvnw -q verify
+last line:  pre-commit: build failed, commit aborted
+--no-verify skips it (sandbox only, scratch history):
+git commit --no-verify -m x: exit=0 commits=5
+
+## G. the guide prompt 'change Money to round HALF_UP on purpose': one-line edit of Money.java line 27, hook on that tree
+reset to start 8a0ccd8995c6865ca4d0296a00a409d15c7cef21; status lines: 0
+ bookstore/src/main/java/nl/openvalue/bookstore/domain/Money.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[money-half-up] exit=2 seconds=24 stdout_bytes=0 stderr_lines=41
+[money-half-up] stderr line 1: Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+### stderr, byte copy
+Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+2026-11-10T15:24:46.018+01:00  WARN 65531 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no listPriceCents
+2026-11-10T15:24:46.019+01:00  WARN 65531 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no currency
+2026-11-10T15:24:46.019+01:00  WARN 65531 --- [bookstore] [           main] n.o.b.acl.DistributorAppServiceImpl      : Distributor answer for EAN 9780141439518 is unusable: no releaseDate
+2026-11-10T15:24:46.021+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.DatabaseCleanerIntegrationTest]: DatabaseCleanerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.022+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.DatabaseCleanerIntegrationTest
+2026-11-10T15:24:46.022+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.DatabaseCleanerIntegrationTest]: DatabaseCleanerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.022+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.023+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.DatabaseCleanerIntegrationTest
+2026-11-10T15:24:46.050+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBaseHooksTest]: IntegrationTestBaseHooksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.050+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.IntegrationTestBaseHooksTest
+2026-11-10T15:24:46.050+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBaseHooksTest]: IntegrationTestBaseHooksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.050+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.051+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.IntegrationTestBaseHooksTest
+2026-11-10T15:24:46.076+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.BookstoreApplicationTests]: BookstoreApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.076+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.BookstoreApplicationTests
+2026-11-10T15:24:46.076+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.BookstoreApplicationTests]: BookstoreApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.076+01:00  INFO 65531 --- [bookstore] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.bookstore.IntegrationTestBase]: IntegrationTestBase does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-10T15:24:46.077+01:00  INFO 65531 --- [bookstore] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.bookstore.BookstoreApplication for test class nl.openvalue.bookstore.BookstoreApplicationTests
+[ERROR] Failures: 
+[ERROR]   CatalogueIntegrationTest.pricesAreRoundedHalfEven:95 
+expected: "10.00"
+ but was: "10.01"
+[ERROR]   MoneyTest.roundsHalfEvenToTwoDecimals:17 
+expected: "10.00"
+ but was: "10.01"
+[ERROR] Tests run: 1428, Failures: 2, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project bookstore: There are test failures.
+[ERROR] 
+[ERROR] See $SBX3/bookstore/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR] 
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :bookstore
+reset to start; status lines: 0

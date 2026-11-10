@@ -24,6 +24,7 @@ docs/spec-pack/level-branches/
     lib-steps.sh            step names, chain, messages and branch names (sourced)
   tests/
     test-staging.sh         offline self-test of the four scripts
+    test-hooks.sh           offline harness of the Level 3 hooks (stub mvnw and stdin fixtures in tests/hooks-fixtures/)
   level-1/                  one folder per step
     manifest.tsv
     files/                  staged copies of added or replaced files
@@ -159,6 +160,19 @@ checks that no ref of a source repository changes. Failures that a fixture canno
 mode change, a restore or cleanup step that fails) are forced with a small shim of that command, first on `PATH` for
 one run. It finds the scripts relative to its own path, so a copy of this folder can be tested anywhere; outside the
 repository set `SPEC09_FILE` to the spec 09 file. `KEEP_TMP=1` keeps the temp folder.
+
+The Level 3 hooks have their own harness. It runs the staged `level-3/files/dot-claude/hooks/*.sh` and
+`level-3/files/dot-githooks/pre-commit` against a stub `mvnw` and stdin fixtures, and checks the exit code, the stub's
+arguments, the first stderr line, the tail and the temp files of each case:
+
+```
+bash docs/spec-pack/level-branches/tests/test-hooks.sh
+```
+
+Offline, about 15 seconds, needs bash 3.2 or later and git; the last line is `PASSED: <n> of <n>` and the exit code is 0
+when every case passes. Run it on bash 5 and on macOS `/bin/bash` 3.2 with
+`env PATH=/bin:/usr/bin:/usr/sbin:/sbin /bin/bash docs/spec-pack/level-branches/tests/test-hooks.sh`. It finds the staged
+files relative to its own path, and `KEEP_TMP=1` keeps its temp folder. `test-staging.sh` does not run it.
 
 ## Line endings
 
