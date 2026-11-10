@@ -1,0 +1,37 @@
+T15 root cause: the strip list in the staging tooling stayed at 11 entries after spec 09 step 2 grew to 13 (decision D15).
+
+Source of truth: docs/spec-pack/specs/09-workshop-baseline.md, "Publishing main", step 2, and STRIPPED_PATHS in
+scripts/publish-workshop-main.sh (13 paths; the new ones are `guide/` and `.github/workflows/guide.yml`).
+
+What each failing case reads (see staging-red-bash5.txt and staging-red-bash3.txt, identical failures):
+
+  case 1  "built-in strip list equals spec 09 step 2"
+          reads: BUILTIN_STRIP_LIST in scripts/simulate-level-0.sh (the ref is a fixture without a publish script)
+          failure: the diff lists `guide/` and `.github/workflows/guide.yml` as missing from the built-in list.
+
+  case 2  "strips every listed path, keeps the rest, one tree"
+          reads: the built-in list again (fixture has no publish script). The fixture source repo is generated from
+          spec09_list (parsed live from spec 09), so it now contains guide/ and .github/workflows/guide.yml; the
+          built-in list does not remove them, so $out/guide survives.
+          second stale spot, visible once the built-in list is fixed: the expected-tree filter in the case still
+          named only the 11 old paths and would have kept guide/* and the workflow in the expected set.
+
+  case 4  "uses --list-paths of the ref when it answers"
+          reads: the list printed by the fixture's fake scripts/publish-workshop-main.sh, hard-coded in the test with
+          the 11 old paths plus extra-strip/. The list is used as printed, so guide/ survives.
+
+  case 5  "falls back to the built-in list when --list-paths fails"
+          reads: the built-in list (fake publish script exits 3). guide/ survives for the same reason as case 2.
+
+Fix, three places, all following spec 09 step 2 word for word (order and spelling of the spec: `guide/`,
+`.github/workflows/guide.yml`):
+  - scripts/simulate-level-0.sh: two entries appended to BUILTIN_STRIP_LIST (cases 1, 2, 5)
+  - tests/test-staging.sh: the fake --list-paths of case 4 prints the two entries; the expected-tree filter of
+    case 2 names guide/* and .github/workflows/guide.yml; the sanity floor on the parsed spec list is 13 instead of
+    11 (stricter, not looser)
+No case was removed, skipped or loosened.
+
+Why the real tags were not affected: level-0-start and the spec tip contain scripts/publish-workshop-main.sh, which
+answers --list-paths with all 13 paths, so simulate-level-0.sh never reached its built-in list on them (see
+simulate-and-cut-before.txt: "list: scripts/publish-workshop-main.sh --list-paths"). Only the fixture-driven cases
+use the built-in list.

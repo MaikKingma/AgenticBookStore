@@ -1,0 +1,19 @@
+== mutant drop-guide
+12d11
+< guide/
+self-test exit: 1
+not ok 1 - simulate: built-in strip list equals spec 09 step 2
+not ok 2 - simulate: strips every listed path, keeps the rest, one tree
+not ok 5 - simulate: falls back to the built-in list when --list-paths fails
+FAILED 3 of 58:
+== mutant drop-guide-workflow
+12,13c12
+< guide/
+< .github/workflows/guide.yml'
+---
+> guide/'
+self-test exit: 1
+not ok 1 - simulate: built-in strip list equals spec 09 step 2
+not ok 2 - simulate: strips every listed path, keeps the rest, one tree
+not ok 5 - simulate: falls back to the built-in list when --list-paths fails
+FAILED 3 of 58:

@@ -1,0 +1,16 @@
+built-in list of simulate-level-0.sh, trailing slash removed, versus publish-workshop-main.sh --list-paths
+identical (13 paths)
+-- the list:
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+.claude
+.mcp.json
+openspec
+.specify
+specs
+agent-os
+.githooks
+docs/spec-pack
+guide
+.github/workflows/guide.yml

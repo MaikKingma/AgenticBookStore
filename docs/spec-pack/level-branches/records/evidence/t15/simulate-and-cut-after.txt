@@ -1,0 +1,60 @@
+== simulate level-0-start
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $SP/s10-t15-impl-work-after/l0 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+tree: ceed869521412386f25f069daa1346dbabab8c5e
+== simulate spec tip (HEAD)
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+removed: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+removed: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+removed: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+removed: docs/spec-pack
+strip-path: guide
+removed: guide
+strip-path: .github/workflows/guide.yml
+removed: .github/workflows/guide.yml
+simulated level-0: $SP/s10-t15-impl-work-after/tip at 2d89c6a3f93a21c87d73689bb68ae3c0d65a5c15 (from HEAD 0b141044b6a80fc216578ac403d6ea6fb78cc9a7)
+tree: 00b8471dd4125930342165f97ff31d595756bd0a
+== ls-tree HEAD: guide and workflows (source)
+.github/workflows/ci.yml
+.github/workflows/guide.yml
+.github/workflows/no-agent-config.yml
+guide
+== ls-tree of the simulated spec tip: guide and workflows
+.github/workflows/ci.yml
+.github/workflows/no-agent-config.yml
+== cut dry run
+cut-level-branches: dry run; nothing is created. Re-run with --execute to create the branches.
+cut-level-branches: level-0 = level-0-start (b668073eb44bfea453c291509a615f6de081e54a)
+create refs/heads/solution/level-1 <commit of solution/level-1>
+create refs/heads/solution/level-2 <commit of solution/level-2>
+create refs/heads/solution/level-3 <commit of solution/level-3>
+create refs/heads/start/level-4-openspec <commit of start/level-4-openspec>
+create refs/heads/start/level-4-speckit <commit of start/level-4-speckit>
+create refs/heads/start/level-4-agentos <commit of start/level-4-agentos>
+EOF
+cut-level-branches: dry run complete. Re-run with --execute to create the branches.
+exit: 0
