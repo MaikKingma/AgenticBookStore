@@ -118,12 +118,12 @@ class OrderIntegrationTest extends IntegrationTestBase {
         Map<String, Object> order = getOrder(id);
 
         assertThat(order.keySet()).containsExactlyInAnyOrder(
-                "id", "customerEmail", "status", "placedAt", "shippedAt", "lines", "total", "currency");
+                "id", "customerEmail", "status", "placedAt", "shippedAt", "cancelledAt", "lines", "total", "currency");
         assertThat(order).extractingByKey("lines", InstanceOfAssertFactories.LIST)
                 .allSatisfy(line -> assertThat(line).asInstanceOf(InstanceOfAssertFactories.MAP)
                         .containsOnlyKeys("isbn", "title", "quantity", "unitPrice", "lineTotal"));
         assertThat(order).isEqualTo(orderView(id, "avid.reader@example.net", "PLACED",
-                "2026-06-15T10:00:00.123456Z", null,
+                "2026-06-15T10:00:00.123456Z", null, null,
                 List.of(
                         lineView("9780141439518", "Pride and Prejudice", 3, "7.25", "21.75"),
                         lineView("9780141439662", "Sense and Sensibility", 1, "11.40", "11.40"),
@@ -371,6 +371,124 @@ class OrderIntegrationTest extends IntegrationTestBase {
         assertProblem(onShip, "order-not-found", "Order not found");
         assertProblem(onRead, "order-not-found", "Order not found");
         assertNothingStoredAndNoEvent();
+    }
+
+    @Test
+    void cancellingAPlacedOrderReleasesTheReservedStockOfEveryLine() {
+        // Request order Pride, Sense, Emma: book id (5, 1, 3), quantity (3, 1, 2) and stock on hand (12, 8, 10) each go
+        // up and down, so releasing only some lines, or the wrong quantity for a line, shows in a stock view. Every
+        // book stays above its reorder level, so the placement registers no stock event.
+        UUID pride = UUID.fromString("50000000-0000-4000-8000-0000000000c1");
+        UUID sense = UUID.fromString("10000000-0000-4000-8000-0000000000c2");
+        UUID emma = UUID.fromString("30000000-0000-4000-8000-0000000000c3");
+        seedBook(pride, "9780141439518", "Pride and Prejudice", "7.25", 12, 0);
+        seedBook(sense, "9780141439662", "Sense and Sensibility", "11.40", 8, 0);
+        seedBook(emma, "9780141439587", "Emma", "6.30", 10, 0);
+        UUID id = placeOrder("Reader@Example.com", List.of(line(pride, 3), line(sense, 1), line(emma, 2)));
+        assertThat(getStock(pride)).isEqualTo(stockView(pride, 12, 3, 9, false));
+        assertThat(getStock(sense)).isEqualTo(stockView(sense, 8, 1, 7, false));
+        assertThat(getStock(emma)).isEqualTo(stockView(emma, 10, 2, 8, false));
+        Instant before = clock.instant();
+
+        cancel(id).expectStatus().isAccepted().expectBody().isEmpty();
+
+        Instant after = clock.instant();
+        Map<String, Object> order = getOrder(id);
+        assertThat(order.get("status")).isEqualTo("CANCELLED");
+        assertThat(Instant.parse((String) order.get("cancelledAt")))
+                .isBetween(before.truncatedTo(ChronoUnit.MICROS), after);
+        assertThat(order).containsEntry("shippedAt", null);
+        assertThat(jdbcTemplate.queryForObject("select cancelled_at from customer_order where id = ?",
+                OffsetDateTime.class, id).toInstant()).isEqualTo(Instant.parse((String) order.get("cancelledAt")));
+        assertThat(getStock(pride)).isEqualTo(stockView(pride, 12, 0, 12, false));
+        assertThat(getStock(sense)).isEqualTo(stockView(sense, 8, 0, 8, false));
+        assertThat(getStock(emma)).isEqualTo(stockView(emma, 10, 0, 10, false));
+        assertThat(version(id)).isEqualTo(1L);
+        // Cancelling registers no event: the order event is the one of the placement and no stock event follows.
+        assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
+        assertThat(orderEvents.rolledBack()).isEmpty();
+        assertThat(stockEvents.committed()).isEmpty();
+        assertThat(stockEvents.rolledBack()).isEmpty();
+    }
+
+    @Test
+    void cancellingAnUnknownOrderIsNotFound() {
+        Map<String, Object> problem = problem(cancel(UNKNOWN_ID), 404);
+
+        assertProblem(problem, "order-not-found", "Order not found");
+        assertNothingStoredAndNoEvent();
+    }
+
+    @Test
+    void cancellingAShippedOrderIsRejectedWith409AndChangesNothing() {
+        UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
+        receive(a, 9);
+        UUID id = placeOrder("reader@example.com", List.of(line(a, 2)));
+        ship(id).expectStatus().isAccepted();
+        Object shippedAt = getOrder(id).get("shippedAt");
+        long version = version(id);
+
+        Map<String, Object> problem = problem(cancel(id), 409);
+
+        assertProblem(problem, "order-already-shipped", "Order already shipped");
+        Map<String, Object> order = getOrder(id);
+        assertThat(order.get("status")).isEqualTo("SHIPPED");
+        assertThat(order.get("shippedAt")).isNotNull().isEqualTo(shippedAt);
+        assertThat(order).containsEntry("cancelledAt", null);
+        assertThat(version(id)).isEqualTo(version);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 7, 0, 7, false));
+        assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
+        assertThat(orderEvents.rolledBack()).isEmpty();
+        assertThat(stockEvents.committed()).isEmpty();
+        assertThat(stockEvents.rolledBack()).isEmpty();
+    }
+
+    @Test
+    void cancellingTwiceIsRejectedWith409AndChangesNothing() {
+        UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
+        receive(a, 9);
+        UUID id = placeOrder("reader@example.com", List.of(line(a, 2)));
+        cancel(id).expectStatus().isAccepted();
+        Object cancelledAt = getOrder(id).get("cancelledAt");
+        long version = version(id);
+
+        Map<String, Object> problem = problem(cancel(id), 409);
+
+        assertProblem(problem, "order-already-cancelled", "Order already cancelled");
+        Map<String, Object> order = getOrder(id);
+        assertThat(order.get("status")).isEqualTo("CANCELLED");
+        assertThat(order.get("cancelledAt")).isNotNull().isEqualTo(cancelledAt);
+        assertThat(order).containsEntry("shippedAt", null);
+        assertThat(version(id)).isEqualTo(version);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 9, 0, 9, false));
+        assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
+        assertThat(orderEvents.rolledBack()).isEmpty();
+        assertThat(stockEvents.committed()).isEmpty();
+        assertThat(stockEvents.rolledBack()).isEmpty();
+    }
+
+    @Test
+    void shippingACancelledOrderIsRejectedWith409AndChangesNothing() {
+        UUID a = addBook("9780141439600", "A Tale of Two Cities", "12.50");
+        receive(a, 9);
+        UUID id = placeOrder("reader@example.com", List.of(line(a, 2)));
+        cancel(id).expectStatus().isAccepted();
+        Object cancelledAt = getOrder(id).get("cancelledAt");
+        long version = version(id);
+
+        Map<String, Object> problem = problem(ship(id), 409);
+
+        assertProblem(problem, "order-already-cancelled", "Order already cancelled");
+        Map<String, Object> order = getOrder(id);
+        assertThat(order.get("status")).isEqualTo("CANCELLED");
+        assertThat(order.get("cancelledAt")).isNotNull().isEqualTo(cancelledAt);
+        assertThat(order).containsEntry("shippedAt", null);
+        assertThat(version(id)).isEqualTo(version);
+        assertThat(getStock(a)).isEqualTo(stockView(a, 9, 0, 9, false));
+        assertThat(orderEvents.committed()).extracting(OrderPlacedEvent::orderId).containsExactly(id);
+        assertThat(orderEvents.rolledBack()).isEmpty();
+        assertThat(stockEvents.committed()).isEmpty();
+        assertThat(stockEvents.rolledBack()).isEmpty();
     }
 
     @Test
@@ -652,15 +770,18 @@ class OrderIntegrationTest extends IntegrationTestBase {
         return view;
     }
 
-    /** The order view as JSON gives it; the shipped time may be null, so the map allows a null value. */
+    /**
+     * The order view as JSON gives it; the shipped and cancelled times may be null, so the map allows a null value.
+     */
     private static Map<String, Object> orderView(UUID id, String customerEmail, String status, String placedAt,
-            String shippedAt, List<Map<String, Object>> lines, String total, String currency) {
+            String shippedAt, String cancelledAt, List<Map<String, Object>> lines, String total, String currency) {
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("id", id.toString());
         view.put("customerEmail", customerEmail);
         view.put("status", status);
         view.put("placedAt", placedAt);
         view.put("shippedAt", shippedAt);
+        view.put("cancelledAt", cancelledAt);
         view.put("lines", lines);
         view.put("total", total);
         view.put("currency", currency);
@@ -740,6 +861,10 @@ class OrderIntegrationTest extends IntegrationTestBase {
 
     private RestTestClient.ResponseSpec ship(UUID orderId) {
         return restTestClient.post().uri("/orders/{id}/commands/ship", orderId).exchange();
+    }
+
+    private RestTestClient.ResponseSpec cancel(UUID orderId) {
+        return restTestClient.post().uri("/orders/{id}/commands/cancel", orderId).exchange();
     }
 
     private Map<String, Object> getOrder(UUID id) {

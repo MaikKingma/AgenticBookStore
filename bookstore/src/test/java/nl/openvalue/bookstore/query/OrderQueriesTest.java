@@ -51,7 +51,13 @@ class OrderQueriesTest {
     private static OrderDTO order(UUID id, String customerEmail, String status, String placedAt, String shippedAt,
             OrderLineDTO... lines) {
         return new OrderDTO(id, customerEmail, status, Instant.parse(placedAt),
-                shippedAt == null ? null : Instant.parse(shippedAt), List.of(lines));
+                shippedAt == null ? null : Instant.parse(shippedAt), null, List.of(lines));
+    }
+
+    private static OrderDTO cancelledOrder(UUID id, String customerEmail, String placedAt, String cancelledAt,
+            OrderLineDTO... lines) {
+        return new OrderDTO(id, customerEmail, "CANCELLED", Instant.parse(placedAt), null,
+                Instant.parse(cancelledAt), List.of(lines));
     }
 
     private static Map<String, Object> jsonObject(ResultActions result) throws Exception {
@@ -74,17 +80,19 @@ class OrderQueriesTest {
         ResultActions result = mockMvc.perform(get("/orders/{id}", ORDER_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
-                .andExpect(jsonPath("$.*", hasSize(8)));
+                .andExpect(jsonPath("$.*", hasSize(9)));
 
         Map<String, Object> view = jsonObject(result);
         assertThat(view.keySet()).containsExactlyInAnyOrder("id", "customerEmail", "status", "placedAt", "shippedAt",
-                "lines", "total", "currency");
+                "cancelledAt", "lines", "total", "currency");
         assertThat(view.get("id")).isEqualTo("7d3e9a10-2b4c-4f51-8c6d-1a0b3c5d7e92");
         assertThat(view.get("customerEmail")).isEqualTo("reader@example.com");
         assertThat(view.get("status")).isEqualTo("PLACED");
         assertThat(view.get("placedAt")).isEqualTo("2026-06-15T10:00:00.123456Z");
         assertThat(view).containsKey("shippedAt");
         assertThat(view.get("shippedAt")).isNull();
+        assertThat(view).containsKey("cancelledAt");
+        assertThat(view.get("cancelledAt")).isNull();
         assertThat(view.get("total")).isEqualTo("33.00");
         assertThat(view.get("currency")).isEqualTo("EUR");
         @SuppressWarnings("unchecked")
@@ -124,8 +132,35 @@ class OrderQueriesTest {
         assertThat(view.get("status")).isEqualTo("SHIPPED");
         assertThat(view.get("placedAt")).isEqualTo("2026-03-01T08:30:00.000001Z");
         assertThat(view.get("shippedAt")).isEqualTo("2026-03-02T17:45:10.654321Z");
+        assertThat(view.get("cancelledAt")).isNull();
         assertThat(view.get("total")).isEqualTo("64.20");
         assertThat(view.get("currency")).isEqualTo("EUR");
+    }
+
+    @Test
+    void getRendersTheCancelledTimeOfACancelledOrder() throws Exception {
+        UUID first = UUID.fromString("3c7d1e85-0a29-4f64-b8e3-5d2a9c0f6b41");
+        UUID second = UUID.fromString("6f0a4c27-d813-4b95-a2e6-9b1c7d3e0a58");
+        when(flow.findById(first)).thenReturn(cancelledOrder(first, "cancel.one@shop.example",
+                "2026-04-03T09:00:00.000004Z", "2026-04-03T11:22:33.445566Z",
+                line(SOME_BOOK, "9780141439747", "Wuthering Heights", "15.00", "EUR", 2)));
+        when(flow.findById(second)).thenReturn(cancelledOrder(second, "cancel.two@shop.example",
+                "2025-11-30T23:00:00Z", "2025-12-01T00:00:00.000001Z",
+                line(SOME_BOOK, "9780141439662", "Sense and Sensibility", "8.00", "EUR", 1)));
+
+        Map<String, Object> firstView = jsonObject(mockMvc.perform(get("/orders/{id}", first))
+                .andExpect(status().isOk()));
+        Map<String, Object> secondView = jsonObject(mockMvc.perform(get("/orders/{id}", second))
+                .andExpect(status().isOk()));
+
+        assertThat(firstView.get("status")).isEqualTo("CANCELLED");
+        assertThat(firstView.get("cancelledAt")).isEqualTo("2026-04-03T11:22:33.445566Z");
+        assertThat(firstView).containsEntry("shippedAt", null);
+        assertThat(firstView.get("total")).isEqualTo("30.00");
+        assertThat(secondView.get("status")).isEqualTo("CANCELLED");
+        assertThat(secondView.get("cancelledAt")).isEqualTo("2025-12-01T00:00:00.000001Z");
+        assertThat(secondView).containsEntry("shippedAt", null);
+        assertThat(secondView.get("placedAt")).isEqualTo("2025-11-30T23:00:00Z");
     }
 
     /**

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 import nl.openvalue.bookstore.domain.EmailAddress;
 import nl.openvalue.bookstore.domain.Money;
+import nl.openvalue.bookstore.domain.OrderAlreadyCancelledException;
 import nl.openvalue.bookstore.domain.OrderAlreadyShippedException;
 import nl.openvalue.bookstore.domain.OrderId;
 import nl.openvalue.bookstore.domain.OrderLine;
@@ -128,7 +129,7 @@ class OrderFlowTest {
         verify(orders).save(savedOrder.capture());
         assertThat(id).isNotNull().isEqualTo(savedOrder.getValue().id());
         assertThat(savedOrder.getValue()).isEqualTo(new OrderDTO(id, "reader@example.com", "PLACED",
-                Instant.parse("2026-06-15T10:00:00Z"), null, List.of(
+                Instant.parse("2026-06-15T10:00:00Z"), null, null, List.of(
                         new OrderLineDTO(BOOK_3, "9780141439518", "Pride and Prejudice", new BigDecimal("9.99"),
                                 "EUR", 2),
                         new OrderLineDTO(BOOK_1, "9780141439600", "A Tale of Two Cities", new BigDecimal("12.50"),
@@ -490,7 +491,7 @@ class OrderFlowTest {
 
         verify(orders).save(savedOrder.capture());
         assertThat(savedOrder.getValue()).isEqualTo(new OrderDTO(ORDER_ID, "shopper@example.org", "SHIPPED",
-                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-15T10:00:00.123456Z"),
+                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-15T10:00:00.123456Z"), null,
                 STORED_LINES));
         verify(stockItems, times(3)).save(savedStock.capture());
         assertThat(savedStock.getAllValues()).containsExactly(
@@ -523,7 +524,7 @@ class OrderFlowTest {
     @Test
     void shipRejectsAShippedOrderWith409BeforeTouchingStock() {
         when(orders.findById(ORDER_ID)).thenReturn(new OrderDTO(ORDER_ID, "shopper@example.org", "SHIPPED",
-                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-14T18:30:00.000001Z"),
+                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-14T18:30:00.000001Z"), null,
                 STORED_LINES));
 
         Throwable thrown = catchThrowable(() -> flow.ship(ORDER_ID));
@@ -595,7 +596,7 @@ class OrderFlowTest {
         OrderLineDTO line3 = STORED_LINES.get(0);
         OrderLineDTO line1 = STORED_LINES.get(1);
         assertStoredOrderRejected(new OrderDTO(ORDER_ID, "not-an-email", "PLACED",
-                Instant.parse("2026-06-14T09:08:07.654321Z"), null, STORED_LINES),
+                Instant.parse("2026-06-14T09:08:07.654321Z"), null, null, STORED_LINES),
                 "invalid-email", "Invalid e-mail address", "customerEmail");
         assertStoredOrderRejected(placedOrder(List.of(line1, line3, new OrderLineDTO(BOOK_1, "9780141439600",
                         "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 4))),
@@ -614,9 +615,9 @@ class OrderFlowTest {
 
     @Test
     void shipLeavesAnUnknownStoredStatusUntranslated() {
-        // Accepted as a 500 by the plan: a stored status outside PLACED and SHIPPED is corrupted data.
+        // Accepted as a 500 by the plan: a stored status outside PLACED, SHIPPED and CANCELLED is corrupted data.
         when(orders.findById(ORDER_ID)).thenReturn(new OrderDTO(ORDER_ID, "shopper@example.org", "BOGUS",
-                Instant.parse("2026-06-14T09:08:07.654321Z"), null, STORED_LINES));
+                Instant.parse("2026-06-14T09:08:07.654321Z"), null, null, STORED_LINES));
 
         Throwable thrown = catchThrowable(() -> flow.ship(ORDER_ID));
 
@@ -667,9 +668,167 @@ class OrderFlowTest {
     }
 
     @Test
+    void cancelOrderCancelsTheOrderAndReleasesTheStockOfEveryLine() {
+        // Stored lines 3, 1, 2 with the quantities 2, 1, 3: every line releases its own quantity.
+        OrderFlow flowOnNanoClock = new OrderFlow(orders, books, stockItems, events, NANO_CLOCK);
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(STORED_LINES));
+        stubStock(SHIP_STOCK_3, SHIP_STOCK_1, SHIP_STOCK_2);
+
+        flowOnNanoClock.cancelOrder(ORDER_ID);
+
+        verify(orders).save(savedOrder.capture());
+        assertThat(savedOrder.getValue()).isEqualTo(new OrderDTO(ORDER_ID, "shopper@example.org", "CANCELLED",
+                Instant.parse("2026-06-14T09:08:07.654321Z"), null, Instant.parse("2026-06-15T10:00:00.123456Z"),
+                STORED_LINES));
+        verify(stockItems, times(3)).save(savedStock.capture());
+        assertThat(savedStock.getAllValues()).containsExactly(
+                new StockItemDTO(BOOK_1, 20, 4, 3, 10, false),
+                new StockItemDTO(BOOK_2, 9, 0, 2, 12, false),
+                new StockItemDTO(BOOK_3, 30, 7, 4, 8, false));
+        verifyNoInteractions(books, events);
+    }
+
+    @Test
+    void cancelOrderStampsTheCancelledTimeFromTheFlowClock() {
+        OrderFlow flowOnEventClock = new OrderFlow(orders, books, stockItems, events, EVENT_CLOCK);
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(STORED_LINES.get(1))));
+        stubStock(SHIP_STOCK_1);
+
+        flowOnEventClock.cancelOrder(ORDER_ID);
+
+        verify(orders).save(savedOrder.capture());
+        assertThat(savedOrder.getValue().cancelledAt()).isEqualTo(Instant.parse("2024-02-29T23:59:58.987654Z"));
+    }
+
+    @Test
+    void cancelOrderSavesTheOrderFirstThenTheStockItemsInBookIdOrder() {
+        // Stored lines 3, 1, 2; the stock items are read and saved in book-id order 1, 2, 3, after the order.
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(STORED_LINES));
+        stubStock(SHIP_STOCK_3, SHIP_STOCK_1, SHIP_STOCK_2);
+
+        flow.cancelOrder(ORDER_ID);
+
+        InOrder inOrder = inOrder(orders, stockItems, events);
+        inOrder.verify(orders).findById(ORDER_ID);
+        inOrder.verify(stockItems).findByBookId(BOOK_1);
+        inOrder.verify(stockItems).findByBookId(BOOK_2);
+        inOrder.verify(stockItems).findByBookId(BOOK_3);
+        inOrder.verify(orders).save(any());
+        inOrder.verify(stockItems).save(new StockItemDTO(BOOK_1, 20, 4, 3, 10, false));
+        inOrder.verify(stockItems).save(new StockItemDTO(BOOK_2, 9, 0, 2, 12, false));
+        inOrder.verify(stockItems).save(new StockItemDTO(BOOK_3, 30, 7, 4, 8, false));
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void cancelOrderRejectsAShippedOrderWith409BeforeTouchingStock() {
+        when(orders.findById(ORDER_ID)).thenReturn(new OrderDTO(ORDER_ID, "shopper@example.org", "SHIPPED",
+                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-14T18:30:00.000001Z"), null,
+                STORED_LINES));
+
+        Throwable thrown = catchThrowable(() -> flow.cancelOrder(ORDER_ID));
+
+        assertConflict(thrown, "order-already-shipped", "Order already shipped",
+                new OrderAlreadyShippedException(new OrderId(ORDER_ID)).getMessage());
+        verifyNoInteractions(stockItems, events);
+        verify(orders, never()).save(any());
+    }
+
+    @Test
+    void cancelOrderRejectsACancelledOrderWith409BeforeTouchingStock() {
+        when(orders.findById(ORDER_ID)).thenReturn(cancelledOrder());
+
+        Throwable thrown = catchThrowable(() -> flow.cancelOrder(ORDER_ID));
+
+        assertConflict(thrown, "order-already-cancelled", "Order already cancelled",
+                new OrderAlreadyCancelledException(new OrderId(ORDER_ID)).getMessage());
+        verifyNoInteractions(stockItems, events);
+        verify(orders, never()).save(any());
+    }
+
+    @Test
+    void shipRejectsACancelledOrderWith409BeforeTouchingStock() {
+        when(orders.findById(ORDER_ID)).thenReturn(cancelledOrder());
+
+        Throwable thrown = catchThrowable(() -> flow.ship(ORDER_ID));
+
+        assertConflict(thrown, "order-already-cancelled", "Order already cancelled",
+                new OrderAlreadyCancelledException(new OrderId(ORDER_ID)).getMessage());
+        verifyNoInteractions(stockItems, events);
+        verify(orders, never()).save(any());
+    }
+
+    @Test
+    void cancelOrderPassesOrderNotFoundThrough() {
+        OrderDataService.OrderNotFoundException notFound = new OrderDataService.OrderNotFoundException(ORDER_ID);
+        when(orders.findById(ORDER_ID)).thenThrow(notFound);
+
+        Throwable thrown = catchThrowable(() -> flow.cancelOrder(ORDER_ID));
+
+        assertThat(thrown).isSameAs(notFound);
+        verifyNoInteractions(stockItems, events);
+        verify(orders, never()).save(any());
+    }
+
+    @Test
+    void cancelOrderTranslatesInsufficientReservedStockTo409() {
+        // Book 2 is second in book-id order: book 1 is already released in memory, yet nothing is saved.
+        StockItemDTO tooFewReserved = new StockItemDTO(BOOK_2, 9, 1, 2, 12, false);
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(STORED_LINES));
+        stubStock(SHIP_STOCK_1, tooFewReserved);
+
+        Throwable thrown = catchThrowable(() -> flow.cancelOrder(ORDER_ID));
+
+        assertConflict(thrown, "insufficient-reserved-stock", "Insufficient reserved stock", domainMessage(
+                () -> StockItemDomainMapper.toDomain(tooFewReserved, CLOCK).release(new Quantity(3))));
+        verify(stockItems, never()).findByBookId(BOOK_3);
+        verifyNothingSavedOrPublished();
+    }
+
+    @Test
+    void cancelOrderResetsTheLowStockSignalWhenTheAvailableStockRisesAboveTheReorderLevel() {
+        // Releasing 2 of 2 reserved lifts the available stock from 2 to 4, above the reorder level 3.
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(new OrderLineDTO(BOOK_1, "9780141439600",
+                "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 2))));
+        stubStock(new StockItemDTO(BOOK_1, 4, 2, 3, 10, true, PENDING));
+
+        flow.cancelOrder(ORDER_ID);
+
+        verify(stockItems).save(new StockItemDTO(BOOK_1, 4, 0, 3, 10, false, PENDING));
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void cancelOrderKeepsTheLowStockSignalWhenTheAvailableStockEndsAtTheReorderLevel() {
+        // Releasing 2 of 2 reserved lifts the available stock from 1 to 3, exactly the reorder level 3.
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(new OrderLineDTO(BOOK_1, "9780141439600",
+                "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 2))));
+        stubStock(new StockItemDTO(BOOK_1, 3, 2, 3, 10, true, OTHER_PENDING));
+
+        flow.cancelOrder(ORDER_ID);
+
+        verify(stockItems).save(new StockItemDTO(BOOK_1, 3, 0, 3, 10, true, OTHER_PENDING));
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void cancelOrderPublishesNoEventEvenWhenTheStockStaysLowAndUnsignalled() {
+        // Available rises from 1 to 2, still below the reorder level 3, with the signal unset: no event.
+        when(orders.findById(ORDER_ID)).thenReturn(placedOrder(List.of(new OrderLineDTO(BOOK_1, "9780141439600",
+                "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 1))));
+        stubStock(new StockItemDTO(BOOK_1, 3, 2, 3, 10, false));
+
+        flow.cancelOrder(ORDER_ID);
+
+        verify(orders).save(any());
+        verify(stockItems).save(new StockItemDTO(BOOK_1, 3, 1, 3, 10, false));
+        verifyNoInteractions(events);
+    }
+
+    @Test
     void findByIdReturnsTheStoredOrder() {
         OrderDTO stored = new OrderDTO(ORDER_ID, "shopper@example.org", "SHIPPED",
-                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-14T18:30:00.000001Z"),
+                Instant.parse("2026-06-14T09:08:07.654321Z"), Instant.parse("2026-06-14T18:30:00.000001Z"), null,
                 STORED_LINES);
         when(orders.findById(ORDER_ID)).thenReturn(stored);
 
@@ -695,14 +854,14 @@ class OrderFlowTest {
         // The port's order is sorted in no column, ascending or descending: id 2, 3, 1; placed 12, 14, 11 June;
         // status PLACED, SHIPPED, PLACED; quantity 2, 1, 3; total 25.00, 8.00, 29.97. The flow must keep it.
         OrderDTO first = new OrderDTO(UUID.fromString("2e000000-0000-4000-8000-0000000000e2"), "reader@example.com",
-                "PLACED", Instant.parse("2026-06-12T08:00:00.000002Z"), null, List.of(new OrderLineDTO(BOOK_1,
+                "PLACED", Instant.parse("2026-06-12T08:00:00.000002Z"), null, null, List.of(new OrderLineDTO(BOOK_1,
                         "9780141439600", "A Tale of Two Cities", new BigDecimal("12.50"), "EUR", 2)));
         OrderDTO second = new OrderDTO(UUID.fromString("3e000000-0000-4000-8000-0000000000e3"),
                 "reader@example.com", "SHIPPED", Instant.parse("2026-06-14T08:00:00Z"),
-                Instant.parse("2026-06-14T12:00:00Z"), List.of(new OrderLineDTO(BOOK_2, "9780141439563",
+                Instant.parse("2026-06-14T12:00:00Z"), null, List.of(new OrderLineDTO(BOOK_2, "9780141439563",
                         "Wuthering Heights", new BigDecimal("8.00"), "EUR", 1)));
         OrderDTO third = new OrderDTO(UUID.fromString("1e000000-0000-4000-8000-0000000000e1"), "reader@example.com",
-                "PLACED", Instant.parse("2026-06-11T08:00:00Z"), null, List.of(new OrderLineDTO(BOOK_3,
+                "PLACED", Instant.parse("2026-06-11T08:00:00Z"), null, null, List.of(new OrderLineDTO(BOOK_3,
                         "9780141439518", "Pride and Prejudice", new BigDecimal("9.99"), "EUR", 3)));
         when(orders.findByCustomerEmail("reader@example.com")).thenReturn(List.of(first, second, third));
 
@@ -732,7 +891,13 @@ class OrderFlowTest {
 
     private static OrderDTO placedOrder(List<OrderLineDTO> lines) {
         return new OrderDTO(ORDER_ID, "shopper@example.org", "PLACED", Instant.parse("2026-06-14T09:08:07.654321Z"),
-                null, lines);
+                null, null, lines);
+    }
+
+    private static OrderDTO cancelledOrder() {
+        return new OrderDTO(ORDER_ID, "shopper@example.org", "CANCELLED",
+                Instant.parse("2026-06-14T09:08:07.654321Z"), null, Instant.parse("2026-06-14T11:45:00.000002Z"),
+                STORED_LINES);
     }
 
     private static void assertBookNotOrderable(Throwable thrown, UUID bookId) {

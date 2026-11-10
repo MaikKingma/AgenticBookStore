@@ -32,6 +32,7 @@ class OrderDomainMapperTest {
 
     private static final Instant PLACED_AT = Instant.parse("2026-06-15T10:00:00.123456Z");
     private static final Instant SHIPPED_AT = Instant.parse("2026-06-16T09:30:15.654321Z");
+    private static final Instant CANCELLED_AT = Instant.parse("2026-06-15T18:05:40.000987Z");
 
     private static final UUID ORDER_ID = UUID.fromString("2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77");
 
@@ -41,7 +42,11 @@ class OrderDomainMapperTest {
     private static final UUID BOOK_C = UUID.fromString("1f6c8a24-5b97-4e01-a3d8-9e2b7c4d6a05");
 
     private static OrderDTO threeLineOrder(String status, Instant shippedAt) {
-        return new OrderDTO(ORDER_ID, "reader@example.com", status, PLACED_AT, shippedAt, List.of(
+        return threeLineOrder(status, shippedAt, null);
+    }
+
+    private static OrderDTO threeLineOrder(String status, Instant shippedAt, Instant cancelledAt) {
+        return new OrderDTO(ORDER_ID, "reader@example.com", status, PLACED_AT, shippedAt, cancelledAt, List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "EUR", 2),
                 new OrderLineDTO(BOOK_B, "9780140449136", "Emma", new BigDecimal("8.00"), "EUR", 7),
                 new OrderLineDTO(BOOK_C, "9780192833598", "Persuasion", new BigDecimal("21.99"), "EUR", 3)));
@@ -74,6 +79,37 @@ class OrderDomainMapperTest {
         Order order = OrderDomainMapper.toDomain(original);
 
         assertThat(new OrderDTO(order)).isEqualTo(original);
+    }
+
+    @Test
+    void roundTripsACancelledOrder() {
+        OrderDTO original = threeLineOrder("CANCELLED", null, CANCELLED_AT);
+
+        Order order = OrderDomainMapper.toDomain(original);
+
+        assertThat(new OrderDTO(order)).isEqualTo(original);
+    }
+
+    @Test
+    void toDomainKeepsTheStatusAndCancelledTimeOfACancelledOrder() {
+        Order order = OrderDomainMapper.toDomain(threeLineOrder("CANCELLED", null, CANCELLED_AT));
+
+        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.cancelledAt()).isEqualTo(Instant.parse("2026-06-15T18:05:40.000987Z"));
+        assertThat(order.shippedAt()).isNull();
+    }
+
+    @Test
+    void newOrderDTOCopiesTheStatusAndCancelledTimeOfAnOrderCancelledByTheClock() {
+        Order order = Order.place(new EmailAddress("reader@example.com"), threeRequests(), NANO_CLOCK);
+        order.cancel(Clock.fixed(Instant.parse("2026-06-17T07:20:05.246813579Z"), ZoneOffset.UTC));
+
+        OrderDTO dto = new OrderDTO(order);
+
+        assertThat(dto.status()).isEqualTo("CANCELLED");
+        assertThat(dto.cancelledAt()).isEqualTo(Instant.parse("2026-06-17T07:20:05.246813Z"));
+        assertThat(dto.shippedAt()).isNull();
+        assertThat(dto.placedAt()).isEqualTo(Instant.parse("2026-06-15T10:00:00.123456Z"));
     }
 
     @Test
@@ -118,7 +154,7 @@ class OrderDomainMapperTest {
     @Test
     void toDomainKeepsAnotherIdAndPlacedTime() {
         OrderDTO dto = new OrderDTO(UUID.fromString("9b5e1c3a-6d2f-4a87-b0e4-3c7f9a1d5e68"), "reader@example.com",
-                "PLACED", Instant.parse("2025-12-31T23:59:59.987654Z"), null, List.of(
+                "PLACED", Instant.parse("2025-12-31T23:59:59.987654Z"), null, null, List.of(
                         new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "EUR", 2)));
 
         Order order = OrderDomainMapper.toDomain(dto);
@@ -138,6 +174,7 @@ class OrderDomainMapperTest {
         assertThat(dto.status()).isEqualTo("PLACED");
         assertThat(dto.placedAt()).isEqualTo(Instant.parse("2026-06-15T10:00:00.123456Z"));
         assertThat(dto.shippedAt()).isNull();
+        assertThat(dto.cancelledAt()).isNull();
         assertThat(dto.lines()).hasSize(3);
         OrderLineDTO first = dto.lines().get(0);
         assertThat(first.bookId()).isEqualTo(UUID.fromString("3a1d5e90-7c24-4b6f-8e13-5d9a2c4f0b61"));
@@ -200,7 +237,7 @@ class OrderDomainMapperTest {
     }
 
     private static OrderDTO order(String email, List<OrderLineDTO> lines) {
-        return new OrderDTO(ORDER_ID, email, "PLACED", PLACED_AT, null, lines);
+        return new OrderDTO(ORDER_ID, email, "PLACED", PLACED_AT, null, null, lines);
     }
 
     @Test
@@ -215,7 +252,7 @@ class OrderDomainMapperTest {
 
     @Test
     void toDomainRejectsAnUnknownStoredStatus() {
-        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "BOGUS", PLACED_AT, null, List.of(
+        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "BOGUS", PLACED_AT, null, null, List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "EUR", 2)));
 
         assertThatThrownBy(() -> OrderDomainMapper.toDomain(dto)).isInstanceOf(IllegalArgumentException.class);
@@ -325,7 +362,7 @@ class OrderDomainMapperTest {
 
     @Test
     void totalHasScaleTwoForAnyStoredScale() {
-        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, List.of(
+        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, null, List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.5"), "EUR", 2),
                 new OrderLineDTO(BOOK_B, "9780140449136", "Emma", new BigDecimal("8"), "EUR", 1)));
 
@@ -335,7 +372,7 @@ class OrderDomainMapperTest {
 
     @Test
     void currencyIsTheCurrencyOfTheLines() {
-        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, List.of(
+        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, null, List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "USD", 2),
                 new OrderLineDTO(BOOK_B, "9780140449136", "Emma", new BigDecimal("8.00"), "USD", 1)));
 
@@ -344,7 +381,7 @@ class OrderDomainMapperTest {
 
     @Test
     void currencyIsTheCurrencyOfTheFirstLine() {
-        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, List.of(
+        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, null, List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "USD", 2),
                 new OrderLineDTO(BOOK_B, "9780140449136", "Emma", new BigDecimal("8.00"), "EUR", 1),
                 new OrderLineDTO(BOOK_C, "9780192833598", "Persuasion", new BigDecimal("21.99"), "EUR", 3)));
@@ -356,7 +393,7 @@ class OrderDomainMapperTest {
     void orderDTOCopiesTheLineList() {
         List<OrderLineDTO> source = new ArrayList<>(List.of(
                 new OrderLineDTO(BOOK_A, "9780141439518", "Middlemarch", new BigDecimal("12.50"), "EUR", 2)));
-        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, source);
+        OrderDTO dto = new OrderDTO(ORDER_ID, "reader@example.com", "PLACED", PLACED_AT, null, null, source);
 
         source.add(new OrderLineDTO(BOOK_B, "9780140449136", "Emma", new BigDecimal("8.00"), "EUR", 1));
         source.remove(0);

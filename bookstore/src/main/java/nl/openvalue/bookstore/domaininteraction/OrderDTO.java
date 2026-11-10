@@ -9,10 +9,11 @@ import nl.openvalue.bookstore.domain.Order;
 
 /**
  * An order as it crosses a port: JDK types only. The status is the enum name, the shipped time is null until the order
- * is shipped, the lines keep their order. It carries no version and no events.
+ * is shipped, the cancelled time is null until the order is cancelled, the lines keep their order. It carries no
+ * version and no events.
  */
 public record OrderDTO(UUID id, String customerEmail, String status, Instant placedAt, Instant shippedAt,
-        List<OrderLineDTO> lines) {
+        Instant cancelledAt, List<OrderLineDTO> lines) {
 
     public OrderDTO {
         lines = List.copyOf(lines);
@@ -20,7 +21,7 @@ public record OrderDTO(UUID id, String customerEmail, String status, Instant pla
 
     public OrderDTO(Order order) {
         this(order.id().value(), order.customerEmail().value(), order.status().name(), order.placedAt(),
-                order.shippedAt(), order.lines().stream().map(OrderLineDTO::new).toList());
+                order.shippedAt(), order.cancelledAt(), order.lines().stream().map(OrderLineDTO::new).toList());
     }
 
     /** The sum of the line totals, with two decimals. The same rule as {@code Order}. */

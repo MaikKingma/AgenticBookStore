@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * The stored shape of an order. Id, e-mail address, placed time and lines are fixed at creation; only the status and
- * the shipped time change afterwards. The version is managed by Hibernate for optimistic locking and never set by
- * code. Lines are lazy, so map to a DTO inside a transaction.
+ * The stored shape of an order. Id, e-mail address, placed time and lines are fixed at creation; only the status, the
+ * shipped time and the cancelled time change afterwards. The version is managed by Hibernate for optimistic locking
+ * and never set by code. Lines are lazy, so map to a DTO inside a transaction.
  */
 @Entity
 @Table(name = "customer_order")
@@ -38,6 +38,9 @@ public class OrderJPA {
 
     @Column(name = "shipped_at")
     private Instant shippedAt;
+
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -79,6 +82,10 @@ public class OrderJPA {
         return shippedAt;
     }
 
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
     public List<OrderLineJPA> getLines() {
         return List.copyOf(lines);
     }
@@ -89,5 +96,9 @@ public class OrderJPA {
 
     void setShippedAt(Instant shippedAt) {
         this.shippedAt = shippedAt;
+    }
+
+    void setCancelledAt(Instant cancelledAt) {
+        this.cancelledAt = cancelledAt;
     }
 }

@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,12 @@ import java.util.Set;
 import java.util.UUID;
 import nl.openvalue.bookstore.DatabaseCleaner;
 import nl.openvalue.bookstore.PostgresTestConfig;
+import nl.openvalue.bookstore.domain.BookId;
+import nl.openvalue.bookstore.domain.EmailAddress;
+import nl.openvalue.bookstore.domain.Money;
+import nl.openvalue.bookstore.domain.Order;
+import nl.openvalue.bookstore.domain.OrderLineRequest;
+import nl.openvalue.bookstore.domain.Quantity;
 import nl.openvalue.bookstore.domaininteraction.OrderDTO;
 import nl.openvalue.bookstore.domaininteraction.OrderDataService;
 import nl.openvalue.bookstore.domaininteraction.OrderLineDTO;
@@ -71,7 +79,7 @@ class OrderDataServiceImplTest {
     void savesANewOrderAndFindsItWithItsLinesInOrder() {
         // Lines for books C, A, B: sorted in no column in either direction.
         OrderDTO order = new OrderDTO(orderId("31"), "reader@example.com", "PLACED",
-                Instant.parse("2026-06-15T10:00:00.123456Z"), null, List.of(
+                Instant.parse("2026-06-15T10:00:00.123456Z"), null, null, List.of(
                         line(BOOK_C, "9780000000002", "Middlemarch", "12.50", "EUR", 2),
                         line(BOOK_A, "9780000000003", "Persuasion", "8.00", "GBP", 1),
                         line(BOOK_B, "9780000000001", "Beloved", "19.99", "EUR", 10)));
@@ -92,7 +100,8 @@ class OrderDataServiceImplTest {
     @Test
     void storesEveryColumn() {
         saveOrder(new OrderDTO(orderId("62"), "shipped.reader@example.org", "SHIPPED",
-                Instant.parse("2026-05-01T08:30:15.654321Z"), Instant.parse("2026-05-02T17:45:59.000001Z"), List.of(
+                Instant.parse("2026-05-01T08:30:15.654321Z"), Instant.parse("2026-05-02T17:45:59.000001Z"), null,
+                List.of(
                         line(BOOK_D, "9781111111117", "Dubliners", "23.45", "USD", 3),
                         line(BOOK_F, "9782222222228", "Ulysses", "5.10", "EUR", 7),
                         line(BOOK_E, "9783333333339", EM_SPACE + "Orlando", "499.99", "USD", 4))));
@@ -103,6 +112,7 @@ class OrderDataServiceImplTest {
         assertThat(order.get("status")).isEqualTo("SHIPPED");
         assertThat(instant(order.get("placed_at"))).isEqualTo(Instant.parse("2026-05-01T08:30:15.654321Z"));
         assertThat(instant(order.get("shipped_at"))).isEqualTo(Instant.parse("2026-05-02T17:45:59.000001Z"));
+        assertThat(order.get("cancelled_at")).isNull();
         assertThat(order.get("version")).isEqualTo(0L);
         UUID storedId = UUID.fromString("62000000-0000-0000-0000-0000000000a1");
         assertThat(storedLines(orderId("62"))).containsExactly(
@@ -117,12 +127,13 @@ class OrderDataServiceImplTest {
                 line(BOOK_B, "9780000000027", "Emma", "7.25", "EUR", 5),
                 line(BOOK_A, "9780000000034", "Sense and Sensibility", "31.00", "EUR", 6));
         saveOrder(new OrderDTO(orderId("43"), "second.reader@example.net", "PLACED",
-                Instant.parse("2026-06-01T12:00:00.000500Z"), null, lines));
+                Instant.parse("2026-06-01T12:00:00.000500Z"), null, null, lines));
         entityManager.clear();
         List<Map<String, Object>> linesBefore = storedLines(orderId("43"));
 
         orderDataService.save(new OrderDTO(orderId("43"), "second.reader@example.net", "SHIPPED",
-                Instant.parse("2026-06-01T12:00:00.000500Z"), Instant.parse("2026-06-03T09:15:30.250001Z"), lines));
+                Instant.parse("2026-06-01T12:00:00.000500Z"), Instant.parse("2026-06-03T09:15:30.250001Z"), null,
+                lines));
 
         Map<String, Object> order = storedOrder(orderId("43"));
         assertThat(order.get("status")).isEqualTo("SHIPPED");
@@ -132,13 +143,86 @@ class OrderDataServiceImplTest {
     }
 
     @Test
+    void cancellingUpdatesStatusAndCancelledAtAndBumpsTheVersion() {
+        List<OrderLineDTO> lines = List.of(
+                line(BOOK_C, "9780000000331", "Mansfield Park", "13.40", "EUR", 4),
+                line(BOOK_A, "9780000000348", "Northanger Abbey", "6.60", "EUR", 1),
+                line(BOOK_B, "9780000000355", "Lady Susan", "21.10", "EUR", 2));
+        saveOrder(new OrderDTO(orderId("47"), "cancelling.reader@example.net", "PLACED",
+                Instant.parse("2026-06-01T13:00:00.000700Z"), null, null, lines));
+        entityManager.clear();
+        List<Map<String, Object>> linesBefore = storedLines(orderId("47"));
+
+        orderDataService.save(new OrderDTO(orderId("47"), "cancelling.reader@example.net", "CANCELLED",
+                Instant.parse("2026-06-01T13:00:00.000700Z"), null, Instant.parse("2026-06-02T08:45:12.340002Z"),
+                lines));
+
+        Map<String, Object> order = storedOrder(orderId("47"));
+        assertThat(order.get("status")).isEqualTo("CANCELLED");
+        assertThat(instant(order.get("cancelled_at"))).isEqualTo(Instant.parse("2026-06-02T08:45:12.340002Z"));
+        assertThat(order.get("shipped_at")).isNull();
+        assertThat(order.get("version")).isEqualTo(1L);
+        assertThat(storedLines(orderId("47"))).isEqualTo(linesBefore).hasSize(3);
+    }
+
+    @Test
+    void storesAndFindsTheCancelledTimeOfACancelledOrder() {
+        OrderDTO cancelled = new OrderDTO(orderId("53"), "cancelled.reader@example.org", "CANCELLED",
+                Instant.parse("2026-05-11T10:20:30.405060Z"), null, Instant.parse("2026-05-12T19:08:07.060504Z"),
+                List.of(line(BOOK_D, "9780000000362", "Sanditon", "17.70", "EUR", 5)));
+        saveOrder(cancelled);
+        entityManager.clear();
+
+        Map<String, Object> order = storedOrder(orderId("53"));
+        assertThat(order.get("status")).isEqualTo("CANCELLED");
+        assertThat(instant(order.get("cancelled_at"))).isEqualTo(Instant.parse("2026-05-12T19:08:07.060504Z"));
+        assertThat(order.get("shipped_at")).isNull();
+        OrderDTO reloaded = orderDataService.findById(orderId("53"));
+        assertThat(reloaded).isEqualTo(cancelled);
+        assertThat(reloaded.cancelledAt()).isEqualTo(Instant.parse("2026-05-12T19:08:07.060504Z"));
+    }
+
+    /**
+     * The domain truncates the clock to microseconds, the precision of {@code timestamptz}, so an order cancelled by a
+     * clock with nanoseconds reloads equal to the order that was saved.
+     */
+    @Test
+    void anOrderCancelledByAClockWithNanosecondsReloadsUnchanged() {
+        Order order = Order.place(new EmailAddress("reload.reader@example.com"),
+                List.of(new OrderLineRequest(new BookId(BOOK_E), "9780000000379", "Persuasion", Money.of("9.25"),
+                        new Quantity(2))),
+                Clock.fixed(Instant.parse("2026-06-24T08:00:00.123456789Z"), ZoneOffset.UTC));
+        order.cancel(Clock.fixed(Instant.parse("2026-06-24T09:30:00.987654321Z"), ZoneOffset.UTC));
+        OrderDTO cancelled = new OrderDTO(order);
+        saveOrder(cancelled);
+        entityManager.clear();
+
+        OrderDTO reloaded = orderDataService.findById(cancelled.id());
+
+        assertThat(reloaded).isEqualTo(cancelled);
+        assertThat(reloaded.cancelledAt()).isEqualTo(Instant.parse("2026-06-24T09:30:00.987654Z"));
+    }
+
+    @Test
+    void v5AddsANullableCancelledAtColumnWithoutDefault() {
+        Map<String, Object> column = jdbcTemplate.queryForMap("select data_type, is_nullable, column_default"
+                + " from information_schema.columns where table_schema = 'public' and table_name = 'customer_order'"
+                + " and column_name = 'cancelled_at'");
+
+        assertThat(column.get("data_type")).isEqualTo("timestamp with time zone");
+        assertThat(column.get("is_nullable")).isEqualTo("YES");
+        assertThat(column.get("column_default")).isNull();
+    }
+
+    @Test
     void savingAnUnchangedOrderKeepsItsVersion() {
         saveOrder(new OrderDTO(orderId("24"), "placed.reader@example.com", "PLACED",
-                Instant.parse("2026-06-02T14:20:00.000020Z"), null, List.of(
+                Instant.parse("2026-06-02T14:20:00.000020Z"), null, null, List.of(
                         line(BOOK_C, "9780000000041", "Jane Eyre", "11.11", "EUR", 1),
                         line(BOOK_D, "9780000000058", "Villette", "22.22", "EUR", 2))));
         saveOrder(new OrderDTO(orderId("35"), "shipped.reader@example.com", "SHIPPED",
-                Instant.parse("2026-06-02T15:00:00.000030Z"), Instant.parse("2026-06-04T16:00:00.000040Z"), List.of(
+                Instant.parse("2026-06-02T15:00:00.000030Z"), Instant.parse("2026-06-04T16:00:00.000040Z"), null,
+                List.of(
                         line(BOOK_E, "9780000000065", "Shirley", "33.33", "USD", 3),
                         line(BOOK_F, "9780000000072", "Agnes Grey", "44.44", "USD", 4))));
         entityManager.clear();
@@ -151,16 +235,18 @@ class OrderDataServiceImplTest {
     }
 
     @Test
-    void updateCopiesOnlyStatusAndShippedAt() {
+    void updateCopiesOnlyStatusShippedAtAndCancelledAt() {
         seedBook(BOOK_F);
         saveOrder(new OrderDTO(orderId("54"), "first.reader@example.com", "PLACED",
-                Instant.parse("2026-04-20T07:05:00.000007Z"), null, List.of(
+                Instant.parse("2026-04-20T07:05:00.000007Z"), null, null, List.of(
                         line(BOOK_E, "9784444444440", "Rebecca", "14.00", "EUR", 2))));
         entityManager.clear();
 
         // Same id; every other value differs, the lines in book id, isbn, title, price, currency and quantity.
         orderDataService.save(new OrderDTO(orderId("54"), "changed.reader@example.com", "SHIPPED",
-                Instant.parse("2026-04-21T00:00:00Z"), Instant.parse("2026-04-22T11:11:11.111111Z"), List.of(
+                Instant.parse("2026-04-21T00:00:00Z"), Instant.parse("2026-04-22T11:11:11.111111Z"),
+                Instant.parse("2026-04-23T12:12:12.121212Z"),
+                List.of(
                         line(BOOK_F, "9785555555551", "Jamaica Inn", "99.99", "USD", 9))));
 
         Map<String, Object> order = storedOrder(orderId("54"));
@@ -168,6 +254,7 @@ class OrderDataServiceImplTest {
         assertThat(instant(order.get("placed_at"))).isEqualTo(Instant.parse("2026-04-20T07:05:00.000007Z"));
         assertThat(order.get("status")).isEqualTo("SHIPPED");
         assertThat(instant(order.get("shipped_at"))).isEqualTo(Instant.parse("2026-04-22T11:11:11.111111Z"));
+        assertThat(instant(order.get("cancelled_at"))).isEqualTo(Instant.parse("2026-04-23T12:12:12.121212Z"));
         UUID storedId = UUID.fromString("54000000-0000-0000-0000-0000000000a1");
         assertThat(storedLines(orderId("54"))).containsExactly(
                 lineRow(storedId, 0, BOOK_E, "9784444444440", "Rebecca", "14.00", "EUR", 2));
@@ -176,14 +263,14 @@ class OrderDataServiceImplTest {
     @Test
     void rejectsAStaleUpdate() {
         saveOrder(new OrderDTO(orderId("15"), "stale.reader@example.com", "PLACED",
-                Instant.parse("2026-06-05T06:00:00.000600Z"), null, List.of(
+                Instant.parse("2026-06-05T06:00:00.000600Z"), null, null, List.of(
                         line(BOOK_A, "9780000000089", "Cranford", "9.50", "EUR", 3))));
         entityManager.clear();
         OrderDTO loaded = orderDataService.findById(orderId("15"));
         // Another transaction updates the order after this one loaded it.
         jdbcTemplate.update("update customer_order set version = version + 1 where id = ?", orderId("15"));
         OrderDTO shipped = new OrderDTO(loaded.id(), loaded.customerEmail(), "SHIPPED", loaded.placedAt(),
-                Instant.parse("2026-06-06T06:00:00.000600Z"), loaded.lines());
+                Instant.parse("2026-06-06T06:00:00.000600Z"), null, loaded.lines());
 
         assertThatThrownBy(() -> orderDataService.save(shipped))
                 .isInstanceOf(OptimisticLockingFailureException.class);
@@ -192,7 +279,7 @@ class OrderDataServiceImplTest {
     @Test
     void findByIdThrowsOrderNotFoundForAnUnknownId() {
         saveOrder(new OrderDTO(orderId("16"), "known.reader@example.com", "PLACED",
-                Instant.parse("2026-06-07T07:00:00.000700Z"), null, List.of(
+                Instant.parse("2026-06-07T07:00:00.000700Z"), null, null, List.of(
                         line(BOOK_B, "9780000000096", "North and South", "10.00", "EUR", 1))));
         UUID unknownId = orderId("77");
 
@@ -206,7 +293,7 @@ class OrderDataServiceImplTest {
         seedBook(BOOK_A);
         UUID unknownBook = UUID.fromString("70000000-0000-0000-0000-0000000000b1");
         OrderDTO withUnknownBook = new OrderDTO(orderId("17"), "fk.reader@example.com", "PLACED",
-                Instant.parse("2026-06-08T08:00:00.000800Z"), null, List.of(
+                Instant.parse("2026-06-08T08:00:00.000800Z"), null, null, List.of(
                         line(BOOK_A, "9780000000102", "Wives and Daughters", "12.00", "EUR", 1),
                         line(unknownBook, "9780000000119", "Unknown Book", "13.00", "EUR", 2)));
 
@@ -222,7 +309,7 @@ class OrderDataServiceImplTest {
         seedBook(BOOK_B);
         // The duplicate book is not adjacent: A, B, A.
         OrderDTO withDuplicateBook = new OrderDTO(orderId("18"), "duplicate.reader@example.com", "PLACED",
-                Instant.parse("2026-06-09T09:00:00.000900Z"), null, List.of(
+                Instant.parse("2026-06-09T09:00:00.000900Z"), null, null, List.of(
                         line(BOOK_A, "9780000000126", "Mary Barton", "15.00", "EUR", 1),
                         line(BOOK_B, "9780000000133", "Ruth", "16.00", "EUR", 2),
                         line(BOOK_A, "9780000000126", "Mary Barton", "15.00", "EUR", 3)));
@@ -239,16 +326,18 @@ class OrderDataServiceImplTest {
         // shipped time run in no order either, nor do the line values (quantities 3, 4, 1 in the expected order).
         // Another customer's order is the newest of all and is excluded.
         saveOrder(new OrderDTO(orderId("51"), "history.reader@example.com", "PLACED",
-                Instant.parse("2026-06-11T09:00:00.000002Z"), null, List.of(
+                Instant.parse("2026-06-11T09:00:00.000002Z"), null, null, List.of(
                         line(BOOK_A, "9780000000140", "Kim", "6.00", "EUR", 4))));
         saveOrder(new OrderDTO(orderId("11"), "history.reader@example.com", "SHIPPED",
-                Instant.parse("2026-06-10T09:00:00.000001Z"), Instant.parse("2026-06-14T09:00:00Z"), List.of(
+                Instant.parse("2026-06-10T09:00:00.000001Z"), Instant.parse("2026-06-14T09:00:00Z"), null,
+                List.of(
                         line(BOOK_B, "9780000000157", "Nostromo", "7.00", "EUR", 1))));
         saveOrder(new OrderDTO(orderId("33"), "history.reader@example.com", "SHIPPED",
-                Instant.parse("2026-06-12T09:00:00.000003Z"), Instant.parse("2026-06-13T09:00:00Z"), List.of(
+                Instant.parse("2026-06-12T09:00:00.000003Z"), Instant.parse("2026-06-13T09:00:00Z"), null,
+                List.of(
                         line(BOOK_C, "9780000000164", "Lord Jim", "8.00", "EUR", 3))));
         saveOrder(new OrderDTO(orderId("44"), "other.reader@example.com", "PLACED",
-                Instant.parse("2026-06-20T09:00:00Z"), null, List.of(
+                Instant.parse("2026-06-20T09:00:00Z"), null, null, List.of(
                         line(BOOK_D, "9780000000171", "Victory", "9.00", "EUR", 1))));
         entityManager.clear();
 
@@ -267,15 +356,17 @@ class OrderDataServiceImplTest {
         // isbn ...201, ...317, ...188; title L, O, H). The later order (id 0...) goes in last and comes first.
         Instant tie = Instant.parse("2026-06-16T16:16:16.161616Z");
         saveOrder(new OrderDTO(orderId("10"), "tie.reader@example.com", "SHIPPED", tie,
-                Instant.parse("2026-06-18T10:00:00Z"), List.of(
+                Instant.parse("2026-06-18T10:00:00Z"), null,
+                List.of(
                         line(BOOK_E, "9780000000188", "Hard Times", "20.00", "EUR", 9))));
-        saveOrder(new OrderDTO(orderId("20"), "tie.reader@example.com", "PLACED", tie, null, List.of(
+        saveOrder(new OrderDTO(orderId("20"), "tie.reader@example.com", "PLACED", tie, null, null, List.of(
                 line(BOOK_D, "9780000000317", "Our Mutual Friend", "19.00", "EUR", 1))));
         saveOrder(new OrderDTO(orderId("30"), "tie.reader@example.com", "SHIPPED", tie,
-                Instant.parse("2026-06-17T10:00:00Z"), List.of(
+                Instant.parse("2026-06-17T10:00:00Z"), null,
+                List.of(
                         line(BOOK_C, "9780000000201", "Little Dorrit", "22.00", "EUR", 3))));
         saveOrder(new OrderDTO(orderId("00"), "tie.reader@example.com", "PLACED",
-                Instant.parse("2026-06-18T08:00:00Z"), null, List.of(
+                Instant.parse("2026-06-18T08:00:00Z"), null, null, List.of(
                         line(BOOK_F, "9780000000195", "Bleak House", "21.00", "EUR", 4))));
         entityManager.clear();
 
@@ -289,12 +380,13 @@ class OrderDataServiceImplTest {
         // The address keeps a leading U+2003, which the domain accepts and keeps; the adapter must not trim it.
         String customerEmail = EM_SPACE + "lines.reader@example.com";
         OrderDTO older = new OrderDTO(orderId("26"), customerEmail, "SHIPPED",
-                Instant.parse("2026-03-01T10:10:10.101010Z"), Instant.parse("2026-03-02T20:20:20.202020Z"), List.of(
+                Instant.parse("2026-03-01T10:10:10.101010Z"), Instant.parse("2026-03-02T20:20:20.202020Z"), null,
+                List.of(
                         line(BOOK_B, "9780000000218", "Adam Bede", "17.50", "USD", 4),
                         line(BOOK_C, "9780000000225", "Silas Marner", "3.75", "USD", 1),
                         line(BOOK_A, "9780000000232", "Romola", "26.00", "EUR", 8)));
         OrderDTO newer = new OrderDTO(orderId("62"), customerEmail, "PLACED",
-                Instant.parse("2026-03-05T05:05:05.050505Z"), null, List.of(
+                Instant.parse("2026-03-05T05:05:05.050505Z"), null, null, List.of(
                         line(BOOK_E, "9780000000249", EM_SPACE + "Daniel Deronda", "18.25", "EUR", 6),
                         line(BOOK_D, "9780000000256", "Felix Holt", "4.40", "EUR", 2),
                         line(BOOK_F, "9780000000263", "Scenes of Clerical Life", "27.30", "EUR", 7)));
@@ -316,10 +408,10 @@ class OrderDataServiceImplTest {
         // The adapter never normalises: the flow passes an already normalised address. An order saved with a
         // mixed-case address as given is found by that exact string only.
         saveOrder(new OrderDTO(orderId("37"), "exact.reader@example.com", "PLACED",
-                Instant.parse("2026-06-19T19:00:00.000019Z"), null, List.of(
+                Instant.parse("2026-06-19T19:00:00.000019Z"), null, null, List.of(
                         line(BOOK_A, "9780000000270", "Tess", "11.00", "EUR", 1))));
         saveOrder(new OrderDTO(orderId("57"), "Mixed.Reader@Example.COM", "PLACED",
-                Instant.parse("2026-06-19T20:00:00.000020Z"), null, List.of(
+                Instant.parse("2026-06-19T20:00:00.000020Z"), null, null, List.of(
                         line(BOOK_B, "9780000000287", "Jude the Obscure", "12.00", "EUR", 2))));
         entityManager.clear();
 
@@ -334,10 +426,11 @@ class OrderDataServiceImplTest {
     @Test
     void findByCustomerEmailReturnsAnEmptyListForAnUnknownCustomer() {
         saveOrder(new OrderDTO(orderId("38"), "first.customer@example.com", "PLACED",
-                Instant.parse("2026-06-21T21:00:00Z"), null, List.of(
+                Instant.parse("2026-06-21T21:00:00Z"), null, null, List.of(
                         line(BOOK_C, "9780000000294", "Far from the Madding Crowd", "13.00", "EUR", 1))));
         saveOrder(new OrderDTO(orderId("58"), "second.customer@example.com", "SHIPPED",
-                Instant.parse("2026-06-22T22:00:00Z"), Instant.parse("2026-06-23T23:00:00Z"), List.of(
+                Instant.parse("2026-06-22T22:00:00Z"), Instant.parse("2026-06-23T23:00:00Z"), null,
+                List.of(
                         line(BOOK_D, "9780000000300", "The Woodlanders", "14.00", "EUR", 2))));
         entityManager.clear();
 
@@ -373,13 +466,15 @@ class OrderDataServiceImplTest {
                 "quantity", quantity);
     }
 
+    /** The stored instant of a {@code timestamptz} value; a missing value fails here as an assertion. */
     private static Instant instant(Object timestamp) {
+        assertThat(timestamp).isInstanceOf(Timestamp.class);
         return ((Timestamp) timestamp).toInstant();
     }
 
     private Map<String, Object> storedOrder(UUID id) {
-        return jdbcTemplate.queryForMap("select id, customer_email, status, placed_at, shipped_at, version"
-                + " from customer_order where id = ?", id);
+        return jdbcTemplate.queryForMap("select id, customer_email, status, placed_at, shipped_at, cancelled_at,"
+                + " version from customer_order where id = ?", id);
     }
 
     private List<Map<String, Object>> storedLines(UUID orderId) {

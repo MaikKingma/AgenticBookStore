@@ -57,6 +57,10 @@ class OrderCommandsTest {
     private static final UUID OTHER_SHIP_ID = UUID.fromString("e7b30d95-2a6c-4f18-b4d1-8c5e9a0f3d62");
     private static final UUID THIRD_SHIP_ID = UUID.fromString("0f6d2b83-91e4-4a7c-8d35-b2c7e4a1f906");
 
+    private static final UUID CANCEL_ID = UUID.fromString("6d1f4b92-3c08-4e7a-a5b6-0e9c2d8f7a13");
+    private static final UUID OTHER_CANCEL_ID = UUID.fromString("a3e58c07-4d91-4b26-8f0a-d7c1b9e2f455");
+    private static final UUID THIRD_CANCEL_ID = UUID.fromString("5b7c0e18-f2a6-4d39-9c84-1a6e3d0b8f27");
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -537,7 +541,77 @@ class OrderCommandsTest {
                 .andExpect(jsonPath("$.details").isEmpty());
     }
 
+    @Test
+    void shipMapsOrderAlreadyCancelledTo409() throws Exception {
+        doThrow(new ConflictException("order-already-cancelled", "Order already cancelled",
+                "Order " + THIRD_SHIP_ID + " has already been cancelled"))
+                .when(flow).ship(THIRD_SHIP_ID);
+
+        ResultActions result = postShip(THIRD_SHIP_ID);
+
+        expectProblem(result, 409, "order-already-cancelled", "Order already cancelled")
+                .andExpect(jsonPath("$.detail").value("Order " + THIRD_SHIP_ID + " has already been cancelled"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    // --- cancel ---
+
+    @Test
+    void cancelReturns202WithoutBodyAndPassesTheId() throws Exception {
+        postCancel(CANCEL_ID)
+                .andExpect(status().isAccepted())
+                .andExpect(content().string(""));
+
+        verify(flow).cancelOrder(UUID.fromString("6d1f4b92-3c08-4e7a-a5b6-0e9c2d8f7a13"));
+        verifyNoMoreInteractions(flow);
+    }
+
+    @Test
+    void cancelMapsOrderNotFoundTo404() throws Exception {
+        doThrow(new OrderDataService.OrderNotFoundException(OTHER_CANCEL_ID)).when(flow).cancelOrder(OTHER_CANCEL_ID);
+
+        ResultActions result = postCancel(OTHER_CANCEL_ID);
+
+        expectProblem(result, 404, "order-not-found", "Order not found")
+                .andExpect(jsonPath("$.detail").value("No order with id " + OTHER_CANCEL_ID))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void cancelMapsOrderAlreadyShippedTo409() throws Exception {
+        doThrow(new ConflictException("order-already-shipped", "Order already shipped",
+                "Order " + THIRD_CANCEL_ID + " has already been shipped"))
+                .when(flow).cancelOrder(THIRD_CANCEL_ID);
+
+        ResultActions result = postCancel(THIRD_CANCEL_ID);
+
+        expectProblem(result, 409, "order-already-shipped", "Order already shipped")
+                .andExpect(jsonPath("$.detail").value("Order " + THIRD_CANCEL_ID + " has already been shipped"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
+    @Test
+    void cancelMapsOrderAlreadyCancelledTo409() throws Exception {
+        doThrow(new ConflictException("order-already-cancelled", "Order already cancelled",
+                "Order " + CANCEL_ID + " has already been cancelled"))
+                .when(flow).cancelOrder(CANCEL_ID);
+
+        ResultActions result = postCancel(CANCEL_ID);
+
+        expectProblem(result, 409, "order-already-cancelled", "Order already cancelled")
+                .andExpect(jsonPath("$.detail").value("Order " + CANCEL_ID + " has already been cancelled"))
+                .andExpect(jsonPath("$.details").isArray())
+                .andExpect(jsonPath("$.details").isEmpty());
+    }
+
     // --- helpers ---
+
+    private ResultActions postCancel(UUID id) throws Exception {
+        return mockMvc.perform(post("/orders/{id}/commands/cancel", id));
+    }
 
     private ResultActions postPlace(String body) throws Exception {
         return mockMvc.perform(post("/orders/commands/place")

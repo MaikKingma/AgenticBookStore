@@ -536,6 +536,7 @@ class StockItemTest {
         assertThatThrownBy(() -> item.ship(new Quantity(5)))
                 .isInstanceOf(InsufficientReservedStockException.class)
                 .satisfies(e -> assertThat(e.getMessage()).isNotBlank())
+                .hasMessage("Book " + BOOK_ID.value() + " has 4 copies reserved, so 5 cannot be shipped")
                 .satisfies(e -> {
                     InsufficientReservedStockException rejection = (InsufficientReservedStockException) e;
                     assertThat(rejection.bookId()).isEqualTo(BOOK_ID);
@@ -945,6 +946,112 @@ class StockItemTest {
         StockItem item = StockItem.restore(BOOK_ID, 3, 0, 3, 10, true, PENDING, CLOCK);
 
         assertThatThrownBy(() -> item.reserve(new Quantity(4))).isInstanceOf(InsufficientStockException.class);
+
+        assertThat(item.pendingRestock()).hasValue(PENDING);
+    }
+
+    @Test
+    void releasingLowersReservedAndKeepsOnHand() {
+        StockItem item = StockItem.restore(BOOK_ID, 10, 6, 3, 10, false, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(4));
+
+        assertThat(item.onHand()).isEqualTo(10);
+        assertThat(item.reserved()).isEqualTo(2);
+        assertThat(item.available()).isEqualTo(8);
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingMoreThanReservedThrowsAndLeavesStockUnchanged() {
+        StockItem item = StockItem.restore(BOOK_ID, 10, 4, 3, 10, true, NO_PENDING_RESTOCK, CLOCK);
+
+        assertThatThrownBy(() -> item.release(new Quantity(5)))
+                .isInstanceOf(InsufficientReservedStockException.class)
+                .hasMessage("Book " + BOOK_ID.value() + " has 4 copies reserved, so 5 cannot be released")
+                .satisfies(e -> {
+                    InsufficientReservedStockException rejection = (InsufficientReservedStockException) e;
+                    assertThat(rejection.bookId()).isEqualTo(BOOK_ID);
+                    assertThat(rejection.requested()).isEqualTo(5);
+                    assertThat(rejection.reserved()).isEqualTo(4);
+                });
+        assertUnchanged(item, 10, 4, true);
+    }
+
+    @Test
+    void releasingExactlyTheReservedQuantitySucceeds() {
+        StockItem item = StockItem.restore(BOOK_ID, 10, 4, 3, 10, false, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(4));
+
+        assertThat(item.onHand()).isEqualTo(10);
+        assertThat(item.reserved()).isEqualTo(0);
+        assertThat(item.available()).isEqualTo(10);
+    }
+
+    @Test
+    void releasingToExactlyTheReorderLevelKeepsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 5, 4, 3, 10, true, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(2));
+
+        assertThat(item.reserved()).isEqualTo(2);
+        assertThat(item.available()).isEqualTo(3);
+        assertThat(item.lowStockSignalled()).isTrue();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingToOneAboveTheReorderLevelResetsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 5, 4, 3, 10, true, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(3));
+
+        assertThat(item.reserved()).isEqualTo(1);
+        assertThat(item.available()).isEqualTo(4);
+        assertThat(item.lowStockSignalled()).isFalse();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingAboveTheDefaultButNotAboveAHigherOwnReorderLevelKeepsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 6, 4, 5, 7, true, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(2));
+
+        assertThat(item.available()).isEqualTo(4);
+        assertThat(item.lowStockSignalled()).isTrue();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingAboveALowerOwnReorderLevelButNotAboveTheDefaultResetsTheSignal() {
+        StockItem item = StockItem.restore(BOOK_ID, 3, 3, 1, 10, true, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(2));
+
+        assertThat(item.available()).isEqualTo(2);
+        assertThat(item.lowStockSignalled()).isFalse();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingWhileLowAndUnsignalledRegistersNoEventAndKeepsTheSignalUnset() {
+        StockItem item = StockItem.restore(BOOK_ID, 5, 4, 3, 10, false, NO_PENDING_RESTOCK, CLOCK);
+
+        item.release(new Quantity(1));
+
+        assertThat(item.available()).isEqualTo(2);
+        assertThat(item.lowStock()).isTrue();
+        assertThat(item.lowStockSignalled()).isFalse();
+        assertThat(item.pullDomainEvents()).isEmpty();
+    }
+
+    @Test
+    void releasingKeepsAPendingRestock() {
+        StockItem item = StockItem.restore(BOOK_ID, 8, 6, 3, 10, true, PENDING, CLOCK);
+
+        item.release(new Quantity(5));
 
         assertThat(item.pendingRestock()).hasValue(PENDING);
     }

@@ -32,7 +32,8 @@ public final class OrderDomainMapper {
                 lines,
                 OrderStatus.valueOf(dto.status()),
                 dto.placedAt(),
-                dto.shippedAt());
+                dto.shippedAt(),
+                dto.cancelledAt());
     }
 
     /** Snapshots the isbn, title and current price of the book; the quantity is the one asked for. */

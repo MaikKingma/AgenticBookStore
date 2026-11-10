@@ -1,6 +1,6 @@
 package nl.openvalue.bookstore.domain;
 
-/** Thrown when an order that has already been shipped is shipped again. */
+/** Thrown when an order that has already been shipped is shipped again or cancelled. */
 public class OrderAlreadyShippedException extends RuntimeException {
 
     private final OrderId orderId;

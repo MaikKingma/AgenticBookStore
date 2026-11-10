@@ -25,10 +25,11 @@ public final class Order {
     private OrderStatus status;
     private final Instant placedAt;
     private Instant shippedAt;
+    private Instant cancelledAt;
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     private Order(OrderId id, EmailAddress customerEmail, List<OrderLineRequest> lines, OrderStatus status,
-            Instant placedAt, Instant shippedAt) {
+            Instant placedAt, Instant shippedAt, Instant cancelledAt) {
         this.id = Objects.requireNonNull(id, "An order needs an id");
         this.customerEmail = Objects.requireNonNull(customerEmail, "An order needs a customer e-mail address");
         Objects.requireNonNull(lines, "An order needs lines");
@@ -36,6 +37,7 @@ public final class Order {
         this.placedAt = Objects.requireNonNull(placedAt, "An order needs a placed time");
         this.lines = toLines(lines);
         this.shippedAt = shippedAt;
+        this.cancelledAt = cancelledAt;
     }
 
     /**
@@ -44,7 +46,7 @@ public final class Order {
      */
     public static Order place(EmailAddress customerEmail, List<OrderLineRequest> lines, Clock clock) {
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
-        Order order = new Order(OrderId.newId(), customerEmail, lines, OrderStatus.PLACED, now, null);
+        Order order = new Order(OrderId.newId(), customerEmail, lines, OrderStatus.PLACED, now, null, null);
         order.domainEvents.add(
                 new OrderPlacedEvent(order.id.value(), order.customerEmail.value(), order.total().amount(), now));
         return order;
@@ -52,22 +54,43 @@ public final class Order {
 
     /** Rebuilds a stored order with every value as given, checking every rule again; it registers no event. */
     public static Order restore(OrderId id, EmailAddress customerEmail, List<OrderLineRequest> lines,
-            OrderStatus status, Instant placedAt, Instant shippedAt) {
-        return new Order(id, customerEmail, lines, status, placedAt, shippedAt);
+            OrderStatus status, Instant placedAt, Instant shippedAt, Instant cancelledAt) {
+        return new Order(id, customerEmail, lines, status, placedAt, shippedAt, cancelledAt);
     }
 
     /**
      * Ships a placed order: the status becomes SHIPPED and the shipped time is the instant of the clock, truncated to
-     * microseconds. An order that is already shipped throws {@link OrderAlreadyShippedException} and keeps its status
-     * and shipped time. Never registers an event.
+     * microseconds. An order that is already shipped throws {@link OrderAlreadyShippedException}, a cancelled one
+     * {@link OrderAlreadyCancelledException}; both keep their status and times. Never registers an event.
      */
     public void ship(Clock clock) {
         if (status == OrderStatus.SHIPPED) {
             throw new OrderAlreadyShippedException(id);
         }
+        if (status == OrderStatus.CANCELLED) {
+            throw new OrderAlreadyCancelledException(id);
+        }
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
         status = OrderStatus.SHIPPED;
         shippedAt = now;
+    }
+
+    /**
+     * Cancels an order that has not shipped yet: the status becomes CANCELLED and the cancelled time is the instant of
+     * the clock, truncated to microseconds like the shipped time. An order that is already shipped throws
+     * {@link OrderAlreadyShippedException}, a cancelled one {@link OrderAlreadyCancelledException}; both keep their
+     * status and times. Never registers an event: nothing reacts to a cancellation.
+     */
+    public void cancel(Clock clock) {
+        if (status == OrderStatus.SHIPPED) {
+            throw new OrderAlreadyShippedException(id);
+        }
+        if (status == OrderStatus.CANCELLED) {
+            throw new OrderAlreadyCancelledException(id);
+        }
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        status = OrderStatus.CANCELLED;
+        cancelledAt = now;
     }
 
     /** Returns the events registered since the last pull, and forgets them. */
@@ -101,6 +124,11 @@ public final class Order {
     /** The shipped time, or null while the order is not shipped. */
     public Instant shippedAt() {
         return shippedAt;
+    }
+
+    /** The cancelled time, or null while the order is not cancelled. */
+    public Instant cancelledAt() {
+        return cancelledAt;
     }
 
     /** The sum of the line totals. */

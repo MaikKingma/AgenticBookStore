@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Commands that place and ship orders. Every command is accepted with 202. */
+/** Commands that place, ship and cancel orders. Every command is accepted with 202. */
 @RestController
 @RequestMapping("/orders")
 public class OrderCommands {
@@ -37,5 +37,11 @@ public class OrderCommands {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void ship(@PathVariable UUID id) {
         orders.ship(id);
+    }
+
+    @PostMapping("/{id}/commands/cancel")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void cancel(@PathVariable UUID id) {
+        orders.cancelOrder(id);
     }
 }

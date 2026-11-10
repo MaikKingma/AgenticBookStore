@@ -108,6 +108,22 @@ public final class StockItem {
     }
 
     /**
+     * Releases reserved copies, for example of a cancelled order: reserved drops and on hand stays, so the available
+     * stock rises. When fewer copies are reserved, nothing changes. When the available stock ends above the reorder
+     * level, the low-stock signal is reset, as on a delivery, so that the next dip registers a new event. A pending
+     * restock stays. Never registers an event.
+     */
+    public void release(Quantity quantity) {
+        if (reserved < quantity.value()) {
+            throw new InsufficientReservedStockException(bookId, quantity.value(), reserved, "released");
+        }
+        reserved -= quantity.value();
+        if (available() > reorderLevel) {
+            lowStockSignalled = false;
+        }
+    }
+
+    /**
      * Sets the stock on hand after a stocktake. The reason has 3 to 200 characters of any kind and is checked before
      * the reserved stock; on hand never drops below reserved. A rejected correction changes nothing. Registers a
      * {@link StockRunningLowEvent} when this correction starts a dip to or below the reorder level, and never resets

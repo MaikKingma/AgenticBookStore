@@ -7,8 +7,8 @@ import java.util.UUID;
 public interface OrderDataService {
 
     /**
-     * Stores the order: inserts it when the id is unknown, otherwise updates only the status and the shipped time.
-     * The lines and the other values never change after the insert.
+     * Stores the order: inserts it when the id is unknown, otherwise updates only the status, the shipped time and the
+     * cancelled time. The lines and the other values never change after the insert.
      */
     void save(OrderDTO order);
 
