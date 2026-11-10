@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: distributor
+  ai:
+    mcp:
+      server:
+        name: distributor-catalog
+        version: 1.0.0
+        type: SYNC
+        protocol: STREAMABLE        # always set: SSE is deprecated
+        instructions: >
+          Read-only catalogue of the book distributor. Use search_titles to find titles, get_title for details,
+          check_availability before suggesting a title to stock. Prices are in cents.
+
+server:
+  address: 127.0.0.1
+  port: 8090
+
+distributor:
+  chaos:                  # demo knobs for /api/**, both off by default
+    latency-ms: 0         # milliseconds every call waits before it is handled
+    failure-rate: 0.0     # share of calls answered with 503 TEMPORARILY_UNAVAILABLE, 0.0 to 1.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

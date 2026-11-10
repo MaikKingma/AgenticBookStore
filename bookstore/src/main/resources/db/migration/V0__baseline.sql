@@ -1,0 +1,1 @@
+-- Baseline: an empty schema under Flyway control. Later specs add tables in new versioned migrations.

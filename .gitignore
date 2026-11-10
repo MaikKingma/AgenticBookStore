@@ -1,0 +1,37 @@
+# Maven / Java
+target/
+*.log
+hs_err_pid*
+.flattened-pom.xml
+
+# Node / Vite (frontend/)
+node_modules/
+dist/
+frontend/node/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# Docusaurus (guide/)
+guide/.docusaurus/
+guide/build/
+
+# IDE and OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.swp
+
+# Secrets and local overrides
+.env*
+!.env.example
+CLAUDE.local.md
+
+# Local working notes (never committed)
+notes/
+
+# Claude Code session state (never committed)
+.claude/comms/
+.claude/worktrees/
+.claude/settings.local.json

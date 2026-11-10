@@ -1,0 +1,15 @@
+[
+  {"code": "COM000000", "label": "Computers / General"},
+  {"code": "FIC002000", "label": "Fiction / Action and Adventure"},
+  {"code": "FIC004000", "label": "Fiction / Classics"},
+  {"code": "FIC009000", "label": "Fiction / Fantasy"},
+  {"code": "FIC014000", "label": "Fiction / Historical"},
+  {"code": "FIC015000", "label": "Fiction / Horror"},
+  {"code": "FIC022000", "label": "Fiction / Mystery and Detective"},
+  {"code": "FIC027000", "label": "Fiction / Romance"},
+  {"code": "FIC028000", "label": "Fiction / Science Fiction"},
+  {"code": "HIS000000", "label": "History / General"},
+  {"code": "JUV000000", "label": "Juvenile Fiction / General"},
+  {"code": "POE000000", "label": "Poetry / General"},
+  {"code": "SCI000000", "label": "Science / General"}
+]
