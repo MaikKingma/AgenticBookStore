@@ -24,29 +24,10 @@ metadata:
   `@MockitoSpyBean` on a port and a plain class in the base `@Import` keep it that way.
 - The base cleans BEFORE each test, not after: a `PER_CLASS` subclass's non-static `@BeforeAll` runs on the previous
   class's leftover rows, so any row it inserts needs keys (ISBN, id) that no other test uses.
-- Verifier inspection greps (`assert|fail\(`, forbidden annotations) also match Javadoc and comments: keep those
-  tokens out of the prose of the file they grep.
-- Order claims over a whole list with fixed "added first / added last" rows: with three rows the insertion order is
-  then always monotone, so use at least four. Columns no use case changes (reserved, reorder level) are set by
-  `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check.
 - MockMvc `jsonPath("$.details").value(List.of(...))` converts the actual array to the expected value's class and then
   reports `but was:<null>`. Wrap it: `.value(equalTo(List.of(Map.of(...))))` (Hamcrest, no conversion).
 - Payload records: `@Valid List<@NotNull X>` logs Hibernate Validator warning HV000271 (container-level `@Valid`
   deprecated). Write `List<@Valid @NotNull X>`; field paths stay `lines[1]` and `lines[1].bookId`.
-- Order claims over books whose ids the app generates: seed `book`, `book_author` and `stock_item` by SQL with fixed
-  ids (first hex digit 0 to 7), so the id column can be made non-monotone too; keep the pack scenarios on HTTP adds.
-  Set instants (`placed_at`) by `jdbcTemplate.update(..., OffsetDateTime.ofInstant(i, ZoneOffset.UTC), id)` so views
-  can be compared with literal ISO strings and newest-first never depends on request timing.
-- Root-order claims over a fetch-joined query (orders with lines): QA also sorts by each child column (book id,
-  isbn, title, price, quantity) asc and desc over the flat joined rows, where the root keeps its first appearance,
-  ties enumerated. Root-level columns alone are not enough. Give each listed root its own books, and put the
-  smallest and largest child value of every column in the middle root. Tabulate with a script before running.
-- Verifier greps `^\s*@` on integration classes allow only `@Test`/`@Autowired`: a generic varargs helper needs
-  `@SafeVarargs` (or logs an unchecked note), so pass `List<Map<String, Object>>` instead.
-- QA greps `LocalDate(Time)?\.now\(` over `bookstore/src/test` and allows only the base's default-answer line. A
-  test that needs "today by the application Clock" autowires its own `Clock` and writes
-  `LocalDate.ofInstant(clock.instant(), clock.getZone())`. Stub the shared `@MockitoBean` default in the base
-  `@BeforeEach` with `doAnswer(...).when(mock)`; it causes no strict-stubbing failure in tests that never call it.
 - Null-valued JSON key pins: wrap the unchanged `Map.of(...)` literal in one `withNoPending...(Map)` helper that copies
   into a `LinkedHashMap` and puts the null, so existing pin lines keep their figures. `Map.equals` treats a missing key
   as different from a null value, so `isEqualTo` is itself a presence check. In slices,
@@ -57,20 +38,9 @@ metadata:
   without filtering: `containsPattern(" WARN .*" + x)` plus `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`.
 - Spring's after-commit listener failure logs `ERROR ... TransactionSynchronization.afterCompletion threw exception`,
   then a BLANK line, then `java.lang.X: <message>`: join them with `\\R+`, not `\\R`. Logged per failing listener call.
-- Re-stubbing the shared mock replaces the base default; for "fail first, then the default", rebuild the default answer
-  locally (`doThrow(e).doAnswer(this::defaultConfirmation)`), since the base's lambda cannot be chained.
-- JDBC witnesses for nullable column groups: a `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
-  rs.getObject(2, Integer.class), rs.getObject(3, LocalDate.class), rs.getObject(4, Boolean.class)), id)` row gives
-  nulls for SQL NULL (pgjdbc), so "all cleared" is `isEqualTo(Arrays.asList(null, null, null, null))`. "Row unchanged
-  after a rejected command": `queryForMap("select * ...")` before and after, compared with `isEqualTo`. Run every
-  "unchanged" claim from each start of the flag it could flip (`@ValueSource(booleans = {true, false})`): from one
-  start, a reset-with-rollback-suppressed mutant changes nothing and survives (QA rule C0-17).
 - A forked full context off `IntegrationTestBase` (own `@TestPropertySource` plus `@Import(PlainTestDouble.class)` plus a
   `@MockitoSpyBean` on a transactional flow) just works: the subclass annotations add to the base's, the spy on the
   proxied flow keeps its transactions, and it costs one extra Started line. Drive the Spring AI tool loop from
   `ScriptedChatModel` and read the tool result from the received prompt's `ToolResponseMessage.responseData()` (raw
   JSON of the tool's return value, parse it with Jackson 3 `JsonMapper.readValue(json, TypeReference)`).
-- Deterministic "never two threads inside" witness for a synchronized method: a test `Clock` whose `instant()` bumps an
-  `AtomicInteger`, records the max, then waits `CountDownLatch.await(50, ms)` on a latch nobody opens; two threads
-  released from one start latch call the method.
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

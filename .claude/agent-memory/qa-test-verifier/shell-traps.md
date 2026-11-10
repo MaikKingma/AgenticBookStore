@@ -36,4 +36,5 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
   with TMPDIR set). For HR1 runs of `./mvnw` (referee, sandboxes) export
   `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>`; Surefire forks inherit it.
 - The worktree guard also refuses `bash ~/.claude/scripts/with-budget.sh 900 bash <script>` typed directly ("cannot be shown not to run git"). Put the budget call inside a small wrapper script (`bash <wrapper>` is accepted), and give it its own times file.
+- macOS `cmp -n N old new` printed "EOF on old" and exit 1 although new starts with old (old = exactly N bytes). Prove an append-only edit with `python3 -I` (`new.startswith(old)`, print `new[len(old):]`) or `head -c N new | cmp - old`; keep a one-byte-flipped control. BSD `sed -i.bak` plus `rm "$D"/*.bak` is refused by the rm guard: rewrite scripts with python instead of sed -i.
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]], [[bash-script-qa-probes]]
