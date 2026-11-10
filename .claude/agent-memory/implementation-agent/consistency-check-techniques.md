@@ -35,13 +35,7 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
   keys and values, URLs, identifiers) diffed against the record, and a quote pass (quoted strings of 12+ characters)
   against pack, plan, guide and fetched pages; add mutated-quote controls.
 - The `grep` of this shell (ugrep) has no `-P` and rejects `.{0,200}` context patterns; print context with `python3 -I`.
-- A wrapper's per-platform behaviour (jdtls cache folder: Darwin `~/Library/Caches`, Linux `~/.cache`) means one
-  cold-cache proof per OS in a rehearsal row; quote the platform lines of the script, not only the folder line.
 - `origin/factory` can move while a task runs (shared clone): pin the sha the sandbox was built from in every script.
-- Pack text can contradict itself on wording (spec 09 says Level 1 "imports" `docs/architecture.md`, spec 10 forbids the
-  `@` import): record it as a product finding, never edit verbatim staged files.
-- A rehearsal row that times a "cold start" cites the docs sentence on what starts the process (LSP: first edit of a
-  matching file) and has a branch for "nothing started".
 - **Insertion-only proof** for long one-line rows: old tokens must be a greedy subsequence of the new tokens (difflib
   reports "replace" for insertions); keep a mutant that changes one number; wrap old words instead of rewording.
 - **Public docs as evidence**: append `.md` to a docs URL (`/docs/en/hooks.md`) for the markdown form and quote by line
@@ -66,8 +60,14 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
   url). Observable "hook cannot start": `chmod -x` the hook, `sh -c` of the settings command exits 126 `Permission
   denied`, status shows a mode change that `git add -A` would stage, `git reset --hard` restores the bit. Cite a
   hook-failure row from the docs block that prints the notice (`failed; blocking because onFailure is "block"`).
-- Claude Code docs drift: the permissions page now says Read deny rules cover `cat`/`head` in Bash and that project
-  allow rules wait for the trust dialog; re-read the page before repeating a plan's "rules do not cover X" premise.
-- Pack headings repeat: `### .claude/settings.json` is a prefix of the level-2 heading too, so match the level-3
-  section by exact line. When a level file merges a pack block into an earlier staged file, build the expected text
-  from the earlier file plus the pack lines and compare bytes, with one mutant per key and list.
+- When a level file merges a pack block into an earlier staged file, build the expected text from the earlier file
+  plus the pack lines and compare bytes, with one mutant per key and list; match pack headings by exact line.
+- **Generator or installer under isolation** (`npx`, `uvx`): HOME, every `XDG_*` and `npm_config_cache` in the scratch
+  folder; list files before and after and summarize by area (a cache holds thousands). A second plain run (HOME and XDG
+  only) shows what the user's own run writes: npm uses `$HOME/.npm`, OpenSpec adds `$XDG_CONFIG_HOME/openspec/config.json`
+  unless `OPENSPEC_TELEMETRY=0`. The npm package ships no `docs/`: read the docs file from the repository tag with curl.
+  OpenSpec 1.16.0 traps: bare `validate --strict` exits 1 without a terminal; `archive` writes a placeholder Purpose and
+  `validate --all --strict` then fails; staged `.gitkeep` encodes as `dot-gitkeep`.
+- **Staging a generated tree**: commit it in sandbox 1, stage from `git diff-tree` of that commit, prove with a fresh
+  sandbox 2 whose tree id equals sandbox 1's. Evidence scripts: `mask` BEFORE any `cut` (a cut path no longer matches);
+  never echo the leak or branch-name pattern into evidence (the file matches itself), print counts for controls.
