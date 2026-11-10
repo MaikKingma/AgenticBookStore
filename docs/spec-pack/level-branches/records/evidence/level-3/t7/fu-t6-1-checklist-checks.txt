@@ -1,0 +1,49 @@
+# FU-T6-1: records/rehearsal-checklist.md, Level 2 rows only. Base = HEAD (spec tip 7676f92 at the start of T7).
+$ python3 -I fu-check.py <worktree>
+changed lines: 9 (all after the Level 2 heading), insertion-only problems: []
+content problems: []
+evidence file holds the cited sentence: True
+
+Inserted segments (first 110 characters each; the last one is the closing paragraph, wrapped again, whitespace collapsed):
+  line 146: insert +274 chars: . In the "No server running yet" branch of R2-3 the order changes: R2-2 prompt 1 is sent inside R2-3, R2-2 the
+  line 178: insert +417 chars: In the "No server running yet" branch of R2-3, prompt 1 was already sent there, at its step (3): do not send i
+  line 196: insert +1829 chars: Branch B (added here: R2-2 prompt 1 prints no `Found N new diagnostic issues` line under the edit, t0 = Enter
+  line 196: insert +356 chars: Extra source for the error case (added here): the Claude Code tools page says "Claude Code returns an error re
+  line 197: insert +42 chars:  or after an empty first answer, (d) below
+  line 197: insert +901 chars: (d) is judged on the second answer: if that answer comes from the `LSP` tool and lists usages, (d) is only the
+  line 199: insert +69 chars: ; in branch B also t1 and the step (4) result: running server or none
+  line 199: insert +97 chars: ; after an empty first answer, failure (d), the clock times t0 to t3 and the range reported there
+  line 208: insert +519 chars: If prompt 1 printed no `Found N` line (branch B of R2-3) there is no stop event: when the server is running at
+  line 208: insert +206 chars: . If that answer was empty (R2-3 failure (d): the server started but was not ready), do not report t1-t0 alone
+  line 208: insert +269 chars:  (repeat the prompt that started the server: the R2-3 prompt, or in the "No server running yet" branch R2-2 pr
+  line 208: insert +42 chars:  and which of the two prompts you repeated
+  line 209: insert +378 chars: In the "No server running yet" branch of R2-3, run (b) only after the undo that ends R2-2, so that the tree is
+  line 212: insert +480 chars: Added here: when the first `LSP` answer was empty the cold time is the range "(d): between t1-t0 and t3-t0 sec
+  line 317: insert +506 chars: clock times t0 to t3 with the reported range for an empty first answer (R2-3 failure (d), R2-4), step (5) of t
+
+negative control Level 1 line changed                                 -> detected: Level 1 part differs
+negative control words of an old sentence changed                     -> detected: line 178: not insertion only (an old word is missing or changed)
+negative control sentence removed: do not send R2-2 prompt 1 again    -> detected: expected exactly once: 'do not send R2-2 prompt 1 again' (found 0)
+negative control sentence removed: "(d): between t1-t0 and t3-t0 seconds, inclu -> detected: expected exactly once: '"(d): between t1-t0 and t3-t0 seconds, include
+negative control sentence removed: record the time and which of the two prompts -> detected: expected exactly once: 'record the time and which of the two prompts y
+negative control sentence removed: Only after that undo run R2-4 Measure 2 (b) -> detected: expected exactly once: 'Then undo: `git reset --hard <start> && git cl
+negative control sentence removed: t3 = the answer that lists the references en -> detected: expected exactly once: 't0 = Enter on the R2-3 prompt, t1 = the empty
+negative control sentence removed: "no diagnostic under the first edit; server  -> detected: expected exactly once: '"no diagnostic under the first edit; server ru
+negative control sentence removed: (c) If there is no running server at step (4 -> detected: expected exactly once: '(c) If there is no running server at step (4)
+negative control sentence removed: R2-4 Measure 2 (b) is not judged, because a  -> detected: expected exactly once: 'R2-4 Measure 2 (b) is not judged, because a mi
+negative control sentence removed: that undo is the one after step (4), with no -> detected: expected exactly once: 'that undo is the one after step (4), with no p
+negative control sentence removed: If prompt 1 printed no `Found N` line (branc -> detected: expected exactly once: 'If prompt 1 printed no `Found N` line (branch
+negative control sentence removed: (5) Added here, only when the `Found N` line -> detected: expected exactly once: '(5) Added here, only when the `Found N` line o
+negative control closing paragraph: an old word changed (Surefire)    -> detected: closing paragraph: not insertion only (an old word is missing or chang
+negative control prompt 2 literal changed                             -> detected: R2-2 prompt 2 row changed
+dry-run quotes: 16, not found verbatim in the checklist: 0
+negative control altered quotes found in the checklist: 0 (0 expected)
+sub-cases of the dry run: ['B1', 'B2', 'B3']
+FU-T6-1 checks ok
+rc=0
+
+$ git diff --stat HEAD -- records/rehearsal-checklist.md
+ .../level-branches/records/rehearsal-checklist.md  | 27 +++++++++++++---------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
+$ env LC_ALL=C grep -c -E "[^ -~]" rehearsal-checklist.md   (non-ASCII lines; 0 means clean)
+0

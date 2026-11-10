@@ -46,3 +46,25 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
 - A rehearsal row that times a "cold start" must cite the docs sentence that says what starts the process (LSP: the
   first edit of a matching file, not a read-only references request). Without that citation the first request is only
   assumed to be the trigger; give the row a branch for "nothing started" and let the stopwatch follow the real start.
+- **Insertion-only proof for edits of long one-line table rows**: old tokens (`\w+|\s+|[^\w\s]`) must be a greedy
+  subsequence of the new tokens. `difflib.SequenceMatcher` reports "replace" for pure insertions (and a char-level
+  subsequence hides a replaced digit inside inserted text); keep a mutant that changes one number. Word choices in
+  an edit matter: replacing "ask again, record the time" by new wording is a replace, wrap the old words instead.
+- **Public docs as evidence**: the docs pages are Mintlify pages; strip tags, `html.unescape`, collapse whitespace,
+  quote from a start marker to an end marker (a fixed length cuts mid-word). The curly apostrophe becomes `?` in ASCII
+  evidence, so search with `can?t`. A field can be documented while the public settings JSON schema (schemastore)
+  lacks it and forbids unknown keys: check both, report the gap. The changelog page dates the release of a field.
+- **Universal claims in a staged cheat sheet** ("every", "only", "never", "a command is"): each needs a `git grep` for the
+  counterexample on the recorded tag, plus a control that must hit on the same pathspec. macOS `git grep -E` has no `\w`
+  or `\b`: such a pattern silently matches nothing, so spell `[A-Za-z0-9_]` and `(^|[^A-Za-z0-9_])`. Rewrite a descriptive
+  universal into a prescriptive form ("name a new X ...") and name the real exception (the assistant chat endpoint is a
+  `*Commands` class that is not `/commands/...` and answers 200). A class-name rule enforced by ArchUnit is not a naming
+  fact about tests: 5 of 16 `IntegrationTestBase` subclasses are not named `*IntegrationTest`. `git grep -P` works on
+  macOS and keeps `\b \w \s`. Keyword hunting ("every", "only") misses descriptive sentences such as "a flow loads,
+  maps, saves" or "outside the domain it is a BigDecimal": split the file into units (cells, sentences, bullet clauses),
+  require each unit to match exactly one table entry (P prescriptive, S searched, H label) and each entry a unit, and
+  add mutants (a new sentence, a reworded one) that must be reported. Price types differ per layer (DTO and JPA
+  BigDecimal, payload and view String, acl wire cents): search per layer pathspec before wording a money rule.
+- Pack headings repeat: `### .claude/settings.json` is a prefix of the level-2 heading too, so match the level-3
+  section by exact line. When a level file merges a pack block into an earlier staged file, build the expected text
+  from the earlier file plus the pack lines and compare bytes, with one mutant per key and list.

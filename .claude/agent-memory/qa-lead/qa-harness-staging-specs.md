@@ -77,6 +77,14 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    Judge a heading qualifier ("run 1 unless noted, no flags") by the file's own convention: a sibling heading whose
    noted row carries the same kind of deviation (a chaos flag) shows "unless noted" covers the whole parenthesis.
    A rework that replaces an evidence file with a fresh raw run re-leaks sandbox paths: mask while writing, re-grep.
+   The same nit-rating hits NEW authored files: a universal claim about the code ("every end to end test is named
+   `*IntegrationTest`") falls to one `git grep` on the base; a prescriptive rule from the standard is fine, the
+   descriptive "every" is not. Direct verifiers to counterexample-search every "every/all/only/never" (spec 10 T7).
+   Scope labels are no claims: a heading over imperative bullets that each carry their own trigger, or a column whose
+   own cells mix layer and library terms ("`domaininteraction` only; the only package that may use X"), is read by the
+   file's convention. A rule reworded to match the code can contradict the file's declared source of truth: route a
+   product finding against the source, never reword back. Demand a hash file of every changed file per round, or the
+   prior round's bytes are gone (spec 10 T7 r2: only an r0 staging copy let me close the drift check).
 
 12. **Lifecycle premises in rehearsal rows.** Rows state "added here" facts about WHEN Claude Code starts something
    (the first references request is the LSP cold start) and nobody checks them: implementer and verifier check paths,
@@ -89,3 +97,6 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    edit forward leaves the tree changed under a later "unchanged tree" premise, and a "started but not ready" first
    answer (empty while indexing) needs its own stop event and counting answer. Nobody caught either until the bounded
    round, where they could only go to a follow-up plus a reading note for the owner (spec 10 T6 r2).
+   A component started BY an edit has a second "not ready" form: no report under that edit (no `Found N` line), so the
+   stopwatch has no stop event and a "not running" failure label misjudges a running server. List both forms (empty
+   answer, missing report) and the "never started" case in every timing branch (spec 10 T7).
