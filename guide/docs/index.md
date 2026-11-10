@@ -49,12 +49,7 @@ Level 2 and Level 3 have stretch goals, and Level 3 has an optional Stop hook. I
 - Sync moments are the live demos. When the page says "Look up, Maik demos this now", look up.
 - Checkpoints give you a command and the output to expect.
 - Every level ends with "Level cleared when", a checklist you run yourself.
-- If you are far behind, run the catch-up command from the at a glance box at the start of a level. It has this form, with the branch the page names:
-
-```bash
-git stash -u && git switch <branch>
-```
-
+- If you are far behind, run the catch-up command from the at a glance box at the start of a level. Each level page names its own, and [I am far behind](./reference/troubleshooting.md#far-behind) lists them all.
 - The workshop API key is shown on the screen on the day. Never commit it.
 - The guide also works offline. If you have the zip, extract it and open `index.html` in a browser. If the first page is blank, see [Offline copy shows a blank page](./reference/troubleshooting.md#offline-copy-blank-page).
 - If something does not work, start with [Troubleshooting](./reference/troubleshooting.md). The [cheat sheet](./reference/cheat-sheet.md) lists the commands and files of the day.

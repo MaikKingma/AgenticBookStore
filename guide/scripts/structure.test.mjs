@@ -135,22 +135,34 @@ test('structure: the Time equals the plan minutes of the heading, not a part', (
 });
 
 test('structure: the Start branch equals the header table value', () => {
-  assertErrors(run({[L(1)]: replaceOnce(page(1), '**Start branch:** `main`', '**Start branch:** `develop`')}).errors, [/Start branch/]);
+  assertErrors(run({[L(1)]: replaceOnce(page(1), '**Start branch:** `level-0-start`', '**Start branch:** `develop`')}).errors, [/Start branch/]);
   assertErrors(run({[L(0)]: replaceOnce(page(0), ' (tag `level-0-start`)', '')}).errors, [/Start branch/]);
   assertErrors(run({[L(2)]: replaceOnce(page(2), 'your Level 1 result, or `solution/level-1`', 'your Level 1 result')}).errors, [/Start branch/]);
 });
 
-test('structure: the catch-up block is exactly git stash -u && git switch <branch>', () => {
+test("structure: the catch-up block is exactly the level's git stash -u && git switch command", () => {
   const wrongBranch = replaceOnce(page(2), 'git switch solution/level-1', 'git switch solution/level-2');
   assertErrors(run({[L(2)]: wrongBranch}).errors, [/Catch-up/]);
-  const extraCommand = replaceOnce(page(1), 'git switch main\n', 'git switch main\ngit pull\n');
+  const extraCommand = replaceOnce(page(1), 'git switch -C level-1 level-0-start\n', 'git switch -C level-1 level-0-start\ngit pull\n');
   assertErrors(run({[L(1)]: extraCommand}).errors, [/Catch-up/]);
-  const noStash = replaceOnce(page(1), 'git stash -u && git switch main', 'git switch main');
+  const noStash = replaceOnce(page(1), 'git stash -u && git switch -C level-1 level-0-start', 'git switch -C level-1 level-0-start');
   assertErrors(run({[L(1)]: noStash}).errors, [/Catch-up/]);
-  const noFence = replaceOnce(page(1), '```bash\ngit stash -u && git switch main\n```', '`git stash -u && git switch main`');
+  const noFence = replaceOnce(page(1), '```bash\ngit stash -u && git switch -C level-1 level-0-start\n```', '`git stash -u && git switch -C level-1 level-0-start`');
   assertErrors(run({[L(1)]: noFence}).errors, [/Catch-up/]);
   const wrongLang = replaceOnce(page(1), '```bash', '```text');
   assertErrors(run({[L(1)]: wrongLang}).errors, [/Catch-up/]);
+});
+
+test('structure: Levels 0 and 1 catch up at the tag on their own branch, not on main', () => {
+  const mainLevel0 = replaceOnce(page(0), 'git switch -C level-0 level-0-start', 'git switch main');
+  assertErrors(run({[L(0)]: mainLevel0}).errors, [/Catch-up/]);
+  const mainLevel1 = replaceOnce(page(1), 'git switch -C level-1 level-0-start', 'git switch main');
+  assertErrors(run({[L(1)]: mainLevel1}).errors, [/Catch-up/]);
+  const lowerC = replaceOnce(page(1), 'git switch -C level-1', 'git switch -c level-1');
+  assertErrors(run({[L(1)]: lowerC}).errors, [/Catch-up/]);
+  const swapped = replaceOnce(page(1), 'git switch -C level-1', 'git switch -C level-0');
+  assertErrors(run({[L(1)]: swapped}).errors, [/Catch-up/]);
+  assertErrors(run({[L(1)]: replaceOnce(page(1), '**Start branch:** `level-0-start`', '**Start branch:** `main`')}).errors, [/Start branch/]);
 });
 
 test('structure: Compare appears on Levels 1 to 3 only, with the right branch', () => {
@@ -339,7 +351,7 @@ test('structure: a second fenced block in the Catch-up entry fails, whichever si
   const bogus = '```bash\ngit reset --hard origin/main\n```\n\n';
   const above = replaceOnce(page(1), '**Catch-up:**\n\n```bash\n', `**Catch-up:**\n\n${bogus}\`\`\`bash\n`);
   assertErrors(run({[L(1)]: above}).errors, [/Catch-up/]);
-  const below = replaceOnce(page(1), 'git switch main\n```\n', 'git switch main\n```\n\n```bash\ngit pull\n```\n');
+  const below = replaceOnce(page(1), 'git switch -C level-1 level-0-start\n```\n', 'git switch -C level-1 level-0-start\n```\n\n```bash\ngit pull\n```\n');
   assertErrors(run({[L(1)]: below}).errors, [/Catch-up/]);
 });
 
@@ -380,7 +392,7 @@ test('structure: a setext H1 fails, a setext H2 and a === line inside a fence do
 // T5 (plan.md A5, FF-15): the Start branch line and the shortest setext underlines
 
 test('structure: a fenced block under the Start branch line fails', () => {
-  const start = replaceOnce(page(1), '**Start branch:** `main`\n', '**Start branch:** `main`\n\n```bash\ngit reset --hard origin/main\n```\n');
+  const start = replaceOnce(page(1), '**Start branch:** `level-0-start`\n', '**Start branch:** `level-0-start`\n\n```bash\ngit reset --hard origin/main\n```\n');
   assertErrors(run({[L(1)]: start}).errors, [/fenced block under the Start branch line/]);
 });
 

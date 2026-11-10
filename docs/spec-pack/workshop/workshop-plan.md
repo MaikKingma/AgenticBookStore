@@ -129,7 +129,7 @@ prices, no migration (app fails at startup with `ddl-auto=validate`), ArchUnit v
 
 **Goal:** give the agent the smallest set of high-signal context that makes the right thing the obvious thing.
 
-**Start:** `main` again (clean). Catch-up / compare: `solution/level-1`.
+**Start:** the tag `level-0-start` again (clean): `git stash -u && git switch -C level-1 level-0-start`. Catch-up / compare: `solution/level-1`.
 
 **Sync moment (5 min):** run `/init` live, then read the generated `CLAUDE.md` together and cross out everything
 Claude could have read from the code itself. Show `/context` and `/memory`.
@@ -344,4 +344,4 @@ spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes.
 | Windows participants | Claude Code runs natively; hooks are bash scripts, so recommend Git for Windows (Git Bash) or WSL2. Provide `.ps1` variants of the hook scripts in `solution/level-3`. Agent OS needs bash (WSL or Git Bash). jdtls via WSL. |
 | MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fallback: STDIO transport (`./mvnw -pl distributor package`, then `claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=stdio`). |
 | Corporate laptops block installs | Email asks for admin rights or a personal laptop. Pairing as fallback. |
-| Someone is far behind | `git stash -u && git switch solution/level-N` at the start of each level. |
+| Someone is far behind | At the start of each level: Level 0 `git stash -u && git switch -C level-0 level-0-start`, Level 1 `git stash -u && git switch -C level-1 level-0-start`, Levels 2 and 3 `git stash -u && git switch solution/level-N` (N one lower than the level), Level 4 `git stash -u && git switch start/level-4-<track>`. |

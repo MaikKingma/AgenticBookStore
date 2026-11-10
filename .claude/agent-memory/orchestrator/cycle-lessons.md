@@ -81,4 +81,9 @@ metadata:
   test resources in `target/test-classes`, so probes need `clean` or a manual move. Brief qa-final to run the whole
   module with the probe. Feed-forward only lands if copied into plan.md and the next task prompt (ledger-only items
   were skipped by verifiers). Lite bugfix with sonnet docs/test tasks and opus script task held in one round each.
+- **Guide wording bugs (fix-11):** the frozen guide checker often pins the defect itself (structure rule LEVELS,
+  coverage pageSnippet, the pack-literal sweep in coverage-manifest.test.mjs): grep `guide/scripts` before planning
+  and name each check change in the plan. Blast radius must grep ALL of `docs/spec-pack/` (product, specs, workshop)
+  for the old wording up front; qa-final failed once on an unrecorded `specs/11` line. A pack edit adds literals the
+  sweep flags: allow `SWEEP_EXCLUDED` keys in the task scope from the start. Lite path, sonnet impl/verifier, one round each.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.
