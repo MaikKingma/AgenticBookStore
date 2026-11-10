@@ -1,0 +1,579 @@
+guide sha: fb958b3e59e325e2fe27cae12b18a22750fdf90e (origin/sdd/11-workshop-guide/spec at the time of this check, read only); pack text: the worktree at the spec branch tip
+Line numbers are lines of the named file. Tokens that name the two plugin settings keys are not searched with Bash (HR2); see level-2.md.
+
+### mcpServers
+-- spec10 (all lines)
+131:  "mcpServers": {
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### distributor-catalog
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### mcp__distributor__
+-- spec10 (all lines)
+-- workshop-plan
+210:   up as `mcp__distributor__*`.
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:145:The tools show up as `mcp__distributor__*`.
+
+### claude mcp add
+-- spec10 (all lines)
+-- workshop-plan
+183:jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+345:| MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fal
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+reference/troubleshooting.md:83:claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=st
+
+### --transport http
+-- spec10 (all lines)
+-- workshop-plan
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+
+### --scope project
+-- spec10 (all lines)
+-- workshop-plan
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+
+### DISTRIBUTOR_MCP_URL
+-- spec10 (all lines)
+134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### http://localhost:8090/mcp
+-- spec10 (all lines)
+134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+-- workshop-plan
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+
+### 8090
+-- spec10 (all lines)
+36:- Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8090)
+134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+-- workshop-plan
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+reference/troubleshooting.md:66:Start the distributor first. It listens on port 8090:
+
+### search_titles
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:159:An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.ja
+
+### get_title
+-- spec10 (all lines)
+182:was taken from the distributor MCP (`get_title` on a title with a TRANSLATOR or ILLUSTRATOR contributor). It proves
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:159:An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.ja
+
+### list_subjects
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:159:An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.ja
+
+### check_availability
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:159:An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.ja
+
+### CatalogMcpTools
+-- spec10 (all lines)
+-- workshop-plan
+214:5. An MCP tool is little code: see `distributor/src/main/java/.../mcp/CatalogMcpTools.java`.
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:159:An MCP tool is little code. Look at `distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.ja
+
+### connected with 4 tools
+-- spec10 (all lines)
+209:- **THEN** `/mcp` shows `distributor` connected with 4 tools
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:135:Expected: `/mcp` shows `distributor` connected with 4 tools.
+
+### claude-plugins-official
+-- spec10 (all lines)
+144:    "claude-plugins-official": {
+145:      "source": { "source": "github", "repo": "anthropics/claude-plugins-official" }
+149:    "jdtls-lsp@claude-plugins-official": true
+162:`/plugin install jdtls-lsp@claude-plugins-official`.
+171:- Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official`; if the marketplace is missing, first
+172:  `/plugin marketplace add anthropics/claude-plugins-official`. On this branch the plugin is also declared in
+-- workshop-plan
+183:jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+191:2. Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official` (if the marketplace is missing, first
+192:   `/plugin marketplace add anthropics/claude-plugins-official`). Choose a scope: user scope keeps it out of the
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:64:- The Level 2 page holds the plugin install `/plugin install jdtls-lsp@claude-plugins-official` in Part A; Levels 0
+-- guide
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:56:/plugin install jdtls-lsp@claude-plugins-official
+03-level-2-give-your-agent-eyes.mdx:62:/plugin marketplace add anthropics/claude-plugins-official
+reference/cheat-sheet.md:13:- `/plugin marketplace add anthropics/claude-plugins-official` first, if missing, then `/plugin install jdtls-lsp@claude-p
+
+### anthropics/claude-plugins-official
+-- spec10 (all lines)
+145:      "source": { "source": "github", "repo": "anthropics/claude-plugins-official" }
+172:  `/plugin marketplace add anthropics/claude-plugins-official`. On this branch the plugin is also declared in
+-- workshop-plan
+192:   `/plugin marketplace add anthropics/claude-plugins-official`). Choose a scope: user scope keeps it out of the
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:62:/plugin marketplace add anthropics/claude-plugins-official
+reference/cheat-sheet.md:13:- `/plugin marketplace add anthropics/claude-plugins-official` first, if missing, then `/plugin install jdtls-lsp@claude-p
+
+### jdtls-lsp@claude-plugins-official
+-- spec10 (all lines)
+149:    "jdtls-lsp@claude-plugins-official": true
+162:`/plugin install jdtls-lsp@claude-plugins-official`.
+171:- Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official`; if the marketplace is missing, first
+-- workshop-plan
+183:jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+191:2. Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official` (if the marketplace is missing, first
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:64:- The Level 2 page holds the plugin install `/plugin install jdtls-lsp@claude-plugins-official` in Part A; Levels 0
+-- guide
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:56:/plugin install jdtls-lsp@claude-plugins-official
+reference/cheat-sheet.md:13:- `/plugin marketplace add anthropics/claude-plugins-official` first, if missing, then `/plugin install jdtls-lsp@claude-p
+
+### ./plugins/jdtls-lsp
+-- spec10 (all lines)
+159:as `./plugins/jdtls-lsp` in the official `marketplace.json`. The docs describe no install prompt: the plugin should
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### marketplace.json
+-- spec10 (all lines)
+159:as `./plugins/jdtls-lsp` in the official `marketplace.json`. The docs describe no install prompt: the plugin should
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### brew install jdtls
+-- spec10 (all lines)
+168:- Install the binary (the plugin does not ship it; JDK 17 or later): macOS `brew install jdtls`; Arch Linux
+-- workshop-plan
+63:| macOS | `brew install jdtls` |
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:61:- The setup page lists the `jdtls` install per OS in tabs (macOS: `brew install jdtls`; Arch Linux: `yay -S jdtls`;
+-- guide
+00-setup-check.md:98:brew install jdtls
+
+### yay -S jdtls
+-- spec10 (all lines)
+169:  `yay -S jdtls`; other Linux: extract a JDT LS release and put a `jdtls` wrapper script on the `PATH`; Windows: WSL.
+-- workshop-plan
+64:| Arch Linux | `yay -S jdtls` |
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:61:- The setup page lists the `jdtls` install per OS in tabs (macOS: `brew install jdtls`; Arch Linux: `yay -S jdtls`;
+-- guide
+00-setup-check.md:105:yay -S jdtls
+
+### which jdtls
+-- spec10 (all lines)
+170:  Check with `which jdtls` (PowerShell: `Get-Command jdtls`).
+-- workshop-plan
+54:which jdtls                 # Java language server on the PATH (Windows PowerShell: Get-Command jdtls)
+182:**Sync moment (3 min):** Maik shows the LSP install check (`which jdtls`, `/plugin install
+190:1. Check the binary: `which jdtls` (Windows: inside WSL). If it is missing, install it as in the setup check.
+343:| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`whic
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:63:  `which jdtls` (PowerShell: `Get-Command jdtls`). It does not install the plugin.
+-- guide
+00-setup-check.md:59:which jdtls
+00-setup-check.md:161:- `which jdtls` (or `Get-Command jdtls`) finds the language server.
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:46:which jdtls
+reference/troubleshooting.md:29:which jdtls
+
+### Get-Command jdtls
+-- spec10 (all lines)
+170:  Check with `which jdtls` (PowerShell: `Get-Command jdtls`).
+-- workshop-plan
+54:which jdtls                 # Java language server on the PATH (Windows PowerShell: Get-Command jdtls)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:63:  `which jdtls` (PowerShell: `Get-Command jdtls`). It does not install the plugin.
+-- guide
+00-setup-check.md:66:Get-Command jdtls
+00-setup-check.md:161:- `which jdtls` (or `Get-Command jdtls`) finds the language server.
+reference/troubleshooting.md:36:Get-Command jdtls
+
+### /plugin install
+-- spec10 (all lines)
+162:`/plugin install jdtls-lsp@claude-plugins-official`.
+171:- Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official`; if the marketplace is missing, first
+-- workshop-plan
+182:**Sync moment (3 min):** Maik shows the LSP install check (`which jdtls`, `/plugin install
+191:2. Install the plugin: `/plugin install jdtls-lsp@claude-plugins-official` (if the marketplace is missing, first
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+specs/11-workshop-guide-site.md:64:- The Level 2 page holds the plugin install `/plugin install jdtls-lsp@claude-plugins-official` in Part A; Levels 0
+-- guide
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:56:/plugin install jdtls-lsp@claude-plugins-official
+reference/cheat-sheet.md:13:- `/plugin marketplace add anthropics/claude-plugins-official` first, if missing, then `/plugin install jdtls-lsp@claude-p
+
+### /plugin marketplace add
+-- spec10 (all lines)
+172:  `/plugin marketplace add anthropics/claude-plugins-official`. On this branch the plugin is also declared in
+-- workshop-plan
+192:   `/plugin marketplace add anthropics/claude-plugins-official`). Choose a scope: user scope keeps it out of the
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:62:/plugin marketplace add anthropics/claude-plugins-official
+reference/cheat-sheet.md:13:- `/plugin marketplace add anthropics/claude-plugins-official` first, if missing, then `/plugin install jdtls-lsp@claude-p
+
+### claude --debug
+-- spec10 (all lines)
+175:- Troubleshooting: nothing appears, check `/plugin` (tab **Errors**) and `claude --debug`;
+-- workshop-plan
+200:5. Nothing appears? Check `/plugin` (tab **Errors**) and start `claude --debug`. The error
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:104:claude --debug
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+reference/troubleshooting.md:47:claude --debug
+
+### Executable not found in $PATH: "jdtls"
+-- spec10 (all lines)
+176:  `Executable not found in $PATH: "jdtls"` means the binary is missing.
+-- workshop-plan
+201:   `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes: watch the
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:107:The error `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes:
+reference/troubleshooting.md:50:The error `Executable not found in $PATH: "jdtls"` means the binary is missing.
+
+### Found N new diagnostic issues
+-- spec10 (all lines)
+174:- Verify: a deliberate type error in a `.java` file makes Claude Code print `Found N new diagnostic issues ...`.
+-- workshop-plan
+198:   the callers yet." Claude Code prints `Found N new diagnostic issues ...` under the edit. Then: "Fix the new
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:87:Expected: Claude Code prints `Found N new diagnostic issues ...` under the edit.
+
+### JDK 17
+-- spec10 (all lines)
+168:- Install the binary (the plugin does not ship it; JDK 17 or later): macOS `brew install jdtls`; Arch Linux
+-- workshop-plan
+59:Installing `jdtls` (the plugin does not ship the binary; it needs JDK 17 or later, participants have 25):
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+00-setup-check.md:92:The plugin does not ship the binary. `jdtls` needs JDK 17 or later, and you have 25.
+
+### JDK 21
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### Java 17
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### Java 21
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### Money.of
+-- spec10 (all lines)
+196:- **WHEN** Claude is asked to find all references to `Money.of`
+-- workshop-plan
+195:3. Use it: "Find all references to `Money.of`." The answer comes from the language server, not from a text search,
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:72:Find all references to `Money.of`.
+
+### price()
+-- spec10 (all lines)
+-- workshop-plan
+197:4. Make one deliberate type error: "In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:84:In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch the callers yet.
+
+### lsp-setup.md
+-- spec10 (all lines)
+164:### `docs/lsp-setup.md` (the LSP setup note, for humans, at most 40 lines)
+494:2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### solution/level-2
+-- spec10 (all lines)
+12:`solution/level-1`, `solution/level-2`, `solution/level-3`, `start/level-4-openspec`, `start/level-4-speckit`,
+18:  Part B on `solution/level-2` (it proves the MCP exercise works) and the "cancel order" use case on
+123:## Branch `solution/level-2`: give your agent eyes (LSP + MCP)
+186:On `solution/level-2`, Claude Code's LSP tool SHALL report diagnostics and resolve references for the bookstore
+190:- **GIVEN** `solution/level-2` and `jdtls` installed
+195:- **GIVEN** `solution/level-2` and `jdtls` installed
+200:- **GIVEN** a fresh clone of `solution/level-2`, `jdtls` on the `PATH`, and no user-scope install of `jdtls-lsp`
+212:- **WHEN** `./mvnw verify` runs on `solution/level-2`
+219:`solution/level-2` plus permissions, hooks, the git hook, the skill, the command, the subagent and the PowerShell
+223:Extends the file from `solution/level-2`: keep its `extraKnownMarketplaces` and `enabledPlugins` keys and add
+494:2. Create `solution/level-2`: `.mcp.json`, the plugin declaration, `docs/lsp-setup.md`; build the multi-role ACL
+-- workshop-plan
+180:**Start:** your Level 1 result, or `solution/level-1`. Catch-up / compare: `solution/level-2`.
+193:   repository, project scope writes it to `.claude/settings.json` (as on `solution/level-2`). Confirm it on the
+230:**Start:** your Level 2 result, or `solution/level-2`. Catch-up / compare: `solution/level-3`.
+237:(on `solution/level-2` it declares the `jdtls-lsp` plugin):
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:25:**Compare:** `solution/level-2`
+03-level-2-give-your-agent-eyes.mdx:169:When you are done, compare your result with the branch [solution/level-2](https://github.com/MaikKingma/Agenti
+04-level-3-behavioral-control.mdx:14:**Start branch:** your Level 2 result, or `solution/level-2`
+04-level-3-behavioral-control.mdx:19:git stash -u && git switch solution/level-2
+04-level-3-behavioral-control.mdx:28:Start from your Level 2 result, or from `solution/level-2`. In this level you add permissions, a hook that blocks
+
+### ENABLE_LSP_TOOL
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### 9789900010395
+-- spec10 (all lines)
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### DistributorAppServiceImpl
+-- spec10 (all lines)
+180:The multi-role contributor ACL contract test from Level 2 Part B: a test in `DistributorAppServiceImplTest` (spec
+-- workshop-plan
+212:   among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payload shape
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:152:Using the distributor MCP, find a title that has a translator or illustrator among its contributors. Write an 
+reference/architecture.md:38:| `acl` | Outbound anti-corruption layer to external systems. Implements `*AppService` ports. | `DistributorAppServiceImp
+
+### MockRestServiceServer
+-- spec10 (all lines)
+98:  PostgreSQL (`@Import(PostgresTestConfig.class)`, never an embedded database). ACL: `MockRestServiceServer`.
+181:06) with `MockRestServiceServer` and a response body under `src/test/resources/contracts/distributor/` whose shape
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### trust dialog
+-- spec10 (all lines)
+157:`extraKnownMarketplaces` only after the participant accepts the workspace trust dialog. A plugin that its
+201:- **WHEN** Claude Code starts in the repository and the participant accepts the workspace trust dialog
+-- workshop-plan
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+
+### Installed
+-- spec10 (all lines)
+-- workshop-plan
+183:jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+194:   **Installed** tab of `/plugin`.
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide)
+-- guide
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:65:Choose a scope: user scope keeps the plugin out of the repository, and project scope writes it to `.claude/sett
+reference/cheat-sheet.md:12:- `/clear`, `/compact focus on <topic>`: start fresh, compact a drifting task; `/plugin`: plugins, tabs **Installed** and
+
+# ---- r1 addition (QA r0 FAIL, required action 4): spec 05 added to the search, and the tokens the r0 table did not list
+# Same guide sha and pack tree as above. Every search section below also lists spec 05 (05-distributor-service.md).
+# Each section shows at most 6 lines. Spec 05 line 159 spells `claude mcp add` without `--scope project` (finding PF-QA-T6-1).
+
+### claude mcp add
+-- spec 05 (all lines)
+159:- **WHEN** the tester runs `claude mcp add --transport http distributor http://localhost:8090/mcp` and opens `/mcp` in Claude Code
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+183:jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+345:| MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fal
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+03-level-2-give-your-agent-eyes.mdx:33:Look up, Maik demos this now. Maik shows the LSP install check (`which jdtls`, `/plugin install jdtls-lsp@claud
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+reference/troubleshooting.md:83:claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=st
+
+### --scope project
+-- spec 05 (all lines)
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+
+### localhost:8090/mcp
+-- spec 05 (all lines)
+159:- **WHEN** the tester runs `claude mcp add --transport http distributor http://localhost:8090/mcp` and opens `/mcp` in Claude Code
+-- spec10 (first 6 lines)
+134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+-- workshop-plan (first 6 lines)
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:8090/mcp
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: writes `.mcp.json`; `/mcp`, `cl
+
+### mcpServers
+-- spec 05 (all lines)
+-- spec10 (first 6 lines)
+131:  "mcpServers": {
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### titleName
+-- spec 05 (all lines)
+33:  "titleName": "Pride and Prejudice",
+103:| `search_titles` | `query` (required), `subject` (optional code prefix), `limit` (optional, default 10, max 20) | compact list: ean, titleName, authors (AUTHOR role
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### contributors
+-- spec 05 (all lines)
+11:codes instead of genres, contributors with roles). That is what makes the anti-corruption layer meaningful.
+34:  "contributors": [ { "name": "Jane Austen", "role": "AUTHOR" } ],
+57:- At least 10 titles have TRANSLATOR or ILLUSTRATOR contributors (Level 2 contract-test exercise), at least 5 are
+59:- 20 titles are "shared" with the bookstore seed (spec 09): all IN_STOCK, all with AUTHOR-only contributors, one of
+168:  `bookstore-shared-isbns.txt` exists, is IN_STOCK and has only AUTHOR contributors).
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+212:   among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payload shape
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+03-level-2-give-your-agent-eyes.mdx:152:Using the distributor MCP, find a title that has a translator or illustrator among its contributors. Write an
+
+### subjectCodes
+-- spec 05 (all lines)
+35:  "subjectCodes": ["FIC004000"],
+46:- `subjectCodes`: BISAC-style codes; use these families so spec 06 can map them: `FIC` (fiction; `FIC028000`
+103:| `search_titles` | `query` (required), `subject` (optional code prefix), `limit` (optional, default 10, max 20) | compact list: ean, titleName, authors (AUTHOR role
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### listPriceCents
+-- spec 05 (all lines)
+37:  "listPriceCents": 999,
+103:| `search_titles` | `query` (required), `subject` (optional code prefix), `limit` (optional, default 10, max 20) | compact list: ean, titleName, authors (AUTHOR role
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### warehouseQuantity
+-- spec 05 (all lines)
+40:  "warehouseQuantity": 240,
+106:| `check_availability` | `ean` (required) | availability, warehouseQuantity, expected delivery for a restock of 10 |
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### releaseDate
+-- spec 05 (all lines)
+41:  "releaseDate": "1813-01-28"
+56:  `releaseDate` relative to the start date, so the data never ages.
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### HARDCOVER
+-- spec 05 (all lines)
+44:- `role`: AUTHOR, EDITOR, TRANSLATOR, ILLUSTRATOR. `format`: HARDCOVER, PAPERBACK, EBOOK.
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### EUR
+-- spec 05 (all lines)
+38:  "currency": "EUR",
+-- spec10 (first 6 lines)
+-- workshop-plan (first 6 lines)
+-- other pack text (spec 09, spec 11, level-4 briefs, sdd-framework-guide; first 6 lines)
+-- guide (first 6 lines)
+
+### the three docs URLs of the pack (spec 10 lines 154 to 156), spelled in spec 10 only
+154:(https://code.claude.com/docs/en/settings-reference#enabledplugins,
+155:https://code.claude.com/docs/en/settings-reference#extraknownmarketplaces, and "Require plugins per repository" at
+156:https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository). Claude Code honours
+(read with the file reader, not searched with Bash, HR2; the staged settings file names none of these URLs; the plan and the guide do not cite them)
+
+# spec 05 searched for the other tokens of the r0 list above (a token without a hit prints no line; the one non-ASCII
+# character of spec 05 line 3, a middle dot, is shown as ? twice, the evidence is ASCII only)
+[distributor-catalog] 3:> Module: `distributor` ? Depends on: 01 ? Capability: `distributor-catalog`
+[distributor-catalog] 89:        name: distributor-catalog
+[mcp__distributor__] 160:- **THEN** the server shows as connected with 4 tools, and the prompt "Use the distributor to find books by Mary Shelley" results in a call to `mc
+[--transport http] 159:- **WHEN** the tester runs `claude mcp add --transport http distributor http://localhost:8090/mcp` and opens `/mcp` in Claude Code
+[http://localhost:8090/mcp] 159:- **WHEN** the tester runs `claude mcp add --transport http distributor http://localhost:8090/mcp` and opens `/mcp` in Claude Code
+[8090] 83:  port: 8090
+[8090] 159:- **WHEN** the tester runs `claude mcp add --transport http distributor http://localhost:8090/mcp` and opens `/mcp` in Claude Code
+[search_titles] 94:          Read-only catalogue of the book distributor. Use search_titles to find titles, get_title for details,
+[search_titles] 103:| `search_titles` | `query` (required), `subject` (optional code prefix), `limit` (optional, default 10, max 20) | compact list: ean, titleName, authors (AUTHOR role
+[search_titles] 147:- **WHEN** a test MCP client, built programmatically with the MCP Java SDK's Streamable HTTP client transport against the `@LocalServerPort` (no c
+[search_titles] 151:- **WHEN** `search_titles` is called with query "a" and limit 50
+[search_titles] 160:- **THEN** the server shows as connected with 4 tools, and the prompt "Use the distributor to find books by Mary Shelley" results in a call to `mc
+[get_title] 94:          Read-only catalogue of the book distributor. Use search_titles to find titles, get_title for details,
+[get_title] 104:| `get_title` | `ean` (required) | the full Title JSON, or a tool error "No title with EAN ..." |
+[list_subjects] 105:| `list_subjects` | none | subject codes and labels |
+[check_availability] 95:          check_availability before suggesting a title to stock. Prices are in cents.
+[check_availability] 106:| `check_availability` | `ean` (required) | availability, warehouseQuantity, expected delivery for a restock of 10 |
+[CatalogMcpTools] 97:Tools (class `nl.openvalue.distributor.mcp.CatalogMcpTools`, Spring AI 2.0 `@McpTool` / `@McpToolParam`
+[connected with 4 tools] 160:- **THEN** the server shows as connected with 4 tools, and the prompt "Use the distributor to find books by Mary Shelley" results in a call to `mc
+[4 tools] 160:- **THEN** the server shows as connected with 4 tools, and the prompt "Use the distributor to find books by Mary Shelley" results in a call to `mc
+# end of the spec 05 pass
+
+# public docs for the new rows M14 and S9 of level-2.md (curl GET, read only, 2026-11-10, no Claude process)
+https://code.claude.com/docs/en/mcp                      HTTP 200, the word mcpServers occurs in the page
+https://code.claude.com/docs/en/settings-reference       HTTP 200, the two anchor ids of spec 10 lines 154 and 155 each exist once in the page
+https://code.claude.com/docs/en/plugins/org              HTTP 200, the anchor id of spec 10 line 156 exists once in the page
+

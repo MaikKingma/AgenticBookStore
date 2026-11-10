@@ -1,0 +1,149 @@
+factory: 2ab37a71cf423ac3af30c21cf09c77aff4ec5a68
+
+### R1 distributor MCP tools: names and count (CatalogMcpTools)
+distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java:38:    @McpTool(name = "search_titles",
+distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java:66:    @McpTool(name = "get_title",
+distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java:81:    @McpTool(name = "list_subjects",
+distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java:91:    @McpTool(name = "check_availability",
+count of @McpTool(name: 4
+other @McpTool( declarations in distributor main: 0 (must be 0)
+
+### R2 distributor config: port, address, protocol, server name
+application.yml:3:    name: distributor
+application.yml:7:        name: distributor-catalog
+application.yml:8:        version: 1.0.0
+application.yml:9:        type: SYNC
+application.yml:10:        protocol: STREAMABLE        # always set: SSE is deprecated
+application.yml:16:  address: 127.0.0.1
+application.yml:17:  port: 8090
+
+### R3 MCP endpoint property in application.yml (absent) and the test that pins /mcp
+(no hit above means the Spring AI default /mcp applies: see mcp-endpoint-default.txt)
+distributor/src/test/java/nl/openvalue/distributor/mcp/McpServerIntegrationTest.java:64:                .endpoint("/mcp")
+
+### R4 DISTRIBUTOR_MCP_URL on factory (only the pack text names it)
+docs/spec-pack/specs/10-harness-reference-solutions.md:134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+
+### R5 Money.of on factory main code, by layer (package folder)
+domain/Book.java:16:    private static final Money PRICE_LOWER_BOUND_EXCLUSIVE = Money.of("0.00");
+domain/Book.java:17:    private static final Money PRICE_UPPER_BOUND_INCLUSIVE = Money.of("500.00");
+domain/Order.java:108:        Money total = Money.of("0.00");
+domaininteraction/BookDomainMapper.java:27:                Money.of(dto.priceAmount(), dto.priceCurrency()),
+domaininteraction/CatalogueFlow.java:60:                authors.stream().map(AuthorName::new).toList(), Genre.parse(genre), Money.of(price),
+domaininteraction/CatalogueFlow.java:86:        Money override = priceOverride == null ? null : translatingDomainExceptions(() -> Money.of(priceOverride));
+domaininteraction/CatalogueFlow.java:100:                override != null ? override : Money.of(title.recommendedPrice(), title.currency()),
+domaininteraction/CatalogueFlow.java:110:            restored.changePrice(Money.of(price));
+domaininteraction/OrderDomainMapper.java:26:                        Money.of(line.unitPriceAmount(), line.unitPriceCurrency()),
+domaininteraction/OrderDomainMapper.java:44:                Money.of(book.priceAmount(), book.priceCurrency()),
+method references Money::of in main and test: 0 files
+--- definition
+domain/Money.java:34:    public static Money of(String amount) {
+domain/Money.java:45:    public static Money of(BigDecimal amount) {
+domain/Money.java:49:    public static Money of(BigDecimal amount, String currencyCode) {
+--- main-code layers with at least one call
+   2 domain
+   3 domaininteraction
+--- test code: files with a call, by package folder
+domain/BookTest.java
+domain/MoneyTest.java
+domain/OrderTest.java
+domaininteraction/BookDomainMapperTest.java
+domaininteraction/CatalogueFlowTest.java
+domaininteraction/OrderDomainMapperTest.java
+domaininteraction/OrderFlowTest.java
+
+### R6 Book.java and price()
+Book.java files on factory:
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java:91:    public Money price() {
+--- callers of price() that a String return type would break (main code and tests, receiver .price())
+main/java/nl/openvalue/bookstore/command/BookCommands.java:30:                new BigDecimal(payload.price()), payload.publicationYear());
+main/java/nl/openvalue/bookstore/command/BookCommands.java:37:        BigDecimal price = payload.price() == null ? null : new BigDecimal(payload.price());
+main/java/nl/openvalue/bookstore/command/BookCommands.java:45:        catalogue.changePrice(id, new BigDecimal(payload.price()));
+main/java/nl/openvalue/bookstore/domaininteraction/BookDTO.java:23:                book.price().amount(), book.price().currency().getCurrencyCode(), book.publicationYear(),
+test/java/nl/openvalue/bookstore/domain/BookTest.java:38:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:101:        assertThat(bookWithPrice(Money.of("0.01")).price()).isEqualTo(Money.of("0.01"));
+test/java/nl/openvalue/bookstore/domain/BookTest.java:106:        assertThat(bookWithPrice(Money.of("500.00")).price()).isEqualTo(Money.of("500.00"));
+test/java/nl/openvalue/bookstore/domain/BookTest.java:155:        assertThat(book.price()).isEqualTo(Money.of("12.50"));
+test/java/nl/openvalue/bookstore/domain/BookTest.java:164:        assertThat(book.price()).isEqualTo(Money.of("500.00"));
+test/java/nl/openvalue/bookstore/domain/BookTest.java:167:        assertThat(book.price()).isEqualTo(Money.of("0.01"));
+test/java/nl/openvalue/bookstore/domain/BookTest.java:176:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:185:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:195:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:206:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:226:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domain/BookTest.java:243:        assertThat(book.price()).isEqualTo(PRICE);
+test/java/nl/openvalue/bookstore/domaininteraction/BookDomainMapperTest.java:70:        assertThat(book.price()).isEqualTo(Money.of("12.50"));
+caller lines in main: 4
+caller lines in test: 13
+
+### R7 CatalogMcpTools path (named by plan line 214 and guide 03 line 159)
+distributor/src/main/java/nl/openvalue/distributor/mcp/CatalogMcpTools.java
+
+### R8 DistributorAppServiceImpl and its test, MockRestServiceServer
+bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java:56:import org.springframework.test.web.client.MockRestServiceServer;
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java:78:    private MockRestServiceServer server;
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java:84:        server = MockRestServiceServer.bindTo(builder).build();
+
+### R9 stretch tool list_new_releases is absent on factory (the guide asks participants to add it)
+hits: 0
+
+### R10 distributor http file named by the contract README
+http/distributor.http
+
+################ level-2 sandbox (0c4b31c)
+### S1 tracked files added or changed by the level-2 commit
+A	.claude/settings.json
+A	.mcp.json
+M	bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+M	bookstore/src/test/resources/contracts/distributor/README.md
+A	bookstore/src/test/resources/contracts/distributor/title-9789900010395.json
+A	docs/lsp-setup.md
+
+### S2 docs/lsp-setup.md: length, lines 25 and 26, character checks
+lines: 38 (limit 40)
+On this branch the plugin is also declared in `.claude/settings.json`, so Claude Code can load it after you accept
+the workspace trust dialog.
+non-ASCII bytes: 0
+em dash or en dash: 0
+ENABLE_LSP_TOOL hits: 0
+
+### S3 settings and mcp files parse as JSON; byte-compare with the staged files
+.mcp.json parses
+.claude/settings.json parses
+.mcp.json equals the staged file
+.claude/settings.json equals the staged file
+docs/lsp-setup.md equals the staged file
+top-level keys of .claude/settings.json: ["enabledPlugins","extraKnownMarketplaces"]
+level-3 settings staged yet? 0 (0 means T7 has not run on this branch)
+
+### S4 plugin lines of lsp-setup.md and the plugin id in it
+22:Run `/plugin install jdtls-lsp@claude-plugins-official` in Claude Code. If the marketplace is missing, first run
+23:`/plugin marketplace add anthropics/claude-plugins-official`.
+25:On this branch the plugin is also declared in `.claude/settings.json`, so Claude Code can load it after you accept
+
+### S5 the T5 test in the Surefire XML of the sandbox verify (written by the verify run)
+name="nl.openvalue.bookstore.acl.DistributorAppServiceImplTest" tests="131" errors="0" skipped="0" failures="0" 
+204: testcase name="keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator" classname="nl.openvalue.bookstore.acl.DistributorAppServiceImplTest" time="0.0"
+failure/skipped elements inside that testcase: 0
+
+### S6 the contract file against the README row, and the distributor seed
+{"ean":"9789900010395","titleName":"The Divine Comedy: Inferno","authors":["Dante Alighieri"],"roles":["AUTHOR","TRANSLATOR","ILLUSTRATOR"],"subjectCodes":["POE000000"],"listPriceCents":3499,"availability":"IN_STOCK","releaseDate":"1867-01-01"}
+7:- Capture date: 2026-11-08 (Sunday, Europe/Amsterdam). Every file below was captured on that day except `title-9789900010395.json`, which the title files section describes.
+8:- Distributor for every file except `title-9789900010395.json`: started from the repository root with `./mvnw -pl distributor spring-boot:run`, listening on port 8090 on 127.0.0.1. Run 1 used no flags (defaults). Run 2 used `--d
+9:- For every file except `title-9789900010395.json`: Requests were sent with curl, as written in `http/distributor.http` (the compact request bodies below carry the same keys and values as the pretty-printed bodies in that file).
+16:Every title has the currency EUR. Every title has only contributors with the role AUTHOR, except `title-9789900010395.json`, which also has a TRANSLATOR (Henry Wadsworth Longfellow) and an ILLUSTRATOR (Gustave Dore). That file 
+30:| `title-9789900010210.json` | GET /api/titles/9789900010210 | The Raven and Other Poems | Edgar Allan Poe | POE000000 | 1499 | IN_STOCK | 1845-01-01 |
+34:| `title-9789900010395.json` | GET /api/titles/9789900010395 | The Divine Comedy: Inferno | Dante Alighieri | POE000000 | 3499 | IN_STOCK | 1867-01-01 |
+56:| `restock-confirmed-request.json` | `restock-confirmed-response.json` | `{"ean":"9780141439518","quantity":10,"retailerReference":"workshop-order-1"}` | 201 | restockOrderId 7597c6da-0041-473d-861a-d4b84c7fb204, ean 9780141439
+
+### S7 distributor goal resolves in the sandbox (spring-boot:run), without starting an app
+spring-boot:run
+  Run an application in place.
+[INFO] BUILD SUCCESS
+exit: 0
+
+### S8 jdtls on this machine (information only; the rehearsal machine is Maik's)
+which jdtls: not on the PATH of this check
