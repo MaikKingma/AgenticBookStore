@@ -1,7 +1,7 @@
 ---
 spec: 11-workshop-guide
 source: docs/spec-pack/specs/11-workshop-guide-site.md (factory 52c4f6b, includes D7)
-status: done
+status: in-progress
 accepted-by: orchestrator (autonomous)
 created: 2026-11-08T21:07:46Z
 gate1: 2026-11-08T21:07:46Z
@@ -51,6 +51,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
 | T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | PASS r1, REJECT r1 reworked, PASS r2 | #129 | sdd/11-workshop-guide/T12 | ENDORSE r2 |
+| T13 | D16 (F2): no PowerShell hook text on the Level 3 and troubleshooting pages; Git Bash wording on wrap-up; JDK 21 floor on the setup page (A15) | guide | [T12] | B13 | elevated | sonnet | sonnet | PASS r1 | #156 | sdd/11-workshop-guide/T13 | ENDORSE |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
@@ -549,6 +550,21 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
   changes first, then an sdd-bugfix on the guide.
 - Follow-up F17 (post-cycle, D13): when the chat widget and streaming endpoint are built, re-check the architecture
   page's `assistant` rows against that change's ArchitectureTest.
+- FF-59 (qa-final r3, from the T13 r1 meta-review, qa-lead ENDORSE; hashes in `t13-hashes.txt`, file sha256
+  35dffe160b23...): the FF-49 chain reads `t13` 4 OK (setup, L3, wrap-up, troubleshooting), `t6` index, `t7` 2, `t10`
+  1, `t11` architecture and L2, `t12` cheat sheet OK; expected FAILED lines exactly t6 setup and wrap-up, t11 L3,
+  cheat sheet and troubleshooting, t12 setup and L3, each re-bound through the fb958b3 bytes. Re-run the qa-t13 layer
+  (fidelity 4/4, the D16 grep with exactly 10 allowed hits, built scan with `.ps1` only in the OpenSpec installer,
+  must-fail copy) and the earlier scratch layers that read a T13 page; an assertion pinning a line A15 deleted or
+  replaced is a decision pin, updated and quoted (FF-46).
+- Follow-up F16 extension (D16): nothing in the repo pins the absence of PowerShell hook text; add a checker rule or
+  manifest test with F16 so a restored `.ps1` hook sentence fails `npm run check`.
+- Follow-up F18 (owner, pack): WP:59 and S10:168 still say JDK 17 for `jdtls`; the guide's setup page says 21 from
+  spec 10 finding PF-T6-1. Stale pack text after D16 (owner): S11:56 "Hook script tabs: bash and PowerShell.",
+  S10:219, S10:322-326, S10:504, WP:344 ("Provide `.ps1` variants"). Not findings: L4:191 (verbatim SDD:136).
+- D17 (factory 936028d): links to the frozen level branches (level-0-start, solution/level-1..3,
+  start/level-4-openspec|speckit|agentos) may 404 until spec-10-done (R-G2 moves after spec-10-done); every other
+  broken link is a FAIL.
 - Gate 2 owner notes from T12: O-2 the L3 sentence says "hooks" where the pack says "handlers" (true of the settings
   fragment shown); O-5 the cheat sheet's one-page variant at 10 mm has 8 px of headroom; the D9 sentences have no repo
   pin until F16.
@@ -711,6 +727,34 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
   margin 0 and at 10 mm, and with the Level 4 section hidden on exactly 1 page at both margins, keeping all 52
   manifest tokens (the T11 O-4 finding); (4) FF-49 to FF-51 hold; the checker is not changed. Verified under FF-49 to
   FF-51, FF-35, FF-36, FF-38 (setup 1, L3 3), FF-41, FF-47.
+- A15 (2026-11-10, orchestrator, on decision D16 relayed by the coordinator, factory bd838b6 merged into the spec
+  branch as 3fb3310): new task T13 after T12 (follow-up F2). D16 drops every PowerShell hook. The guide never had a
+  PowerShell hook tab; its four Windows PowerShell tab lines are pack commands, not hooks (setup `Get-Command jdtls`
+  WP:54 and `$env:BOOKSTORE_AI_API_KEY="<key on screen>"` WP:75, troubleshooting `Get-Command jdtls` WP:54, wrap-up
+  `irm https://openspec.dev/cli/install.ps1 | iex` SDD:149), so they stay and `check:built` keeps printing 4 Windows
+  lines, which is the D16 state; the frozen checker (FF-49) does not change. fileScope:
+  `guide/docs/04-level-3-behavioral-control.mdx`, `guide/docs/reference/troubleshooting.md`,
+  `guide/docs/00-setup-check.md`, `guide/docs/06-wrap-up.md`. Acceptance criteria:
+  (1) L3: the paragraph "On Windows, `solution/level-3` also holds a PowerShell variant of the hook ..." (L3:134) and
+  one adjacent empty line are deleted; nothing else on L3 changes; L3:132 stays (D9 content, true under D16: it states
+  that no PowerShell hooks or rules exist) and the `[Windows hooks]` link still resolves.
+  (2) Troubleshooting: the paragraph "On Windows, `solution/level-3` also holds a PowerShell variant ..." (line 15)
+  and one adjacent empty line are deleted; the `## Windows hooks {/* #windows-hooks */}` heading and lines 13 and 17
+  (manifest tokens TS-03 and TS-04) stay byte for byte.
+  (3) Setup: line 92 reads "The plugin does not ship the binary. `jdtls` needs JDK 21 or later, and you have 25."
+  (only `17` becomes `21`; source spec 10 finding PF-T6-1: the upstream `jdtls` wrapper v1.63.0 refuses Java below 21;
+  the pack's WP:59 and S10:168 still say 17, owner follow-up F18).
+  (4) Wrap-up: line 124 reads "Agent OS needs bash (WSL or Git Bash)." (the TS-04 wording; one phrasing across pages).
+  (5) `grep -rniE "ps1|powershell" guide/docs` lists only the four Windows PowerShell tab labels and fences with the
+  four pack command lines above, the wrap-up `irm ... install.ps1 | iex` line and the L3:132 sentence; no `.ps1` hook
+  name, no PowerShell hook sentence remains on any page; pages say nothing new about PowerShell.
+  (6) All gates green with Node 26.13.0 (`npm ci`, `check` with anchored 304/304, 15 manual rows, 0 pending,
+  node:test floor 514, `typecheck`, `build`, `check:built` with "4 Windows PowerShell lines", `build:offline`) and the
+  referee; FF-49 (freeze 92 OK, `guide/scripts` tree b4886ba3) holds; `package.json` and the lockfile unchanged; no
+  file outside the fileScope; ASCII only, no em dash; every other change is a deletion except the two one-line
+  replacements in (3) and (4).
+  Verified by an elevated sonnet verifier and the QA lead (opus); model policy from 2026-11-10: sonnet for
+  implementation and verification, opus only for the QA lead and qa-final.
 
 ## Decision on the Stop hook (M-2, orchestrator, 2026-11-09)
 

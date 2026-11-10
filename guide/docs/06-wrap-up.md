@@ -121,6 +121,6 @@ Then, in your repository:
 ~/agent-os/scripts/project-install.sh
 ```
 
-Agent OS needs bash. On Windows use WSL or Git Bash.
+Agent OS needs bash (WSL or Git Bash).
 
 More on each framework is in its repository: [OpenSpec](https://github.com/Fission-AI/OpenSpec), [Spec Kit](https://github.com/github/spec-kit) and [Agent OS](https://github.com/buildermethods/agent-os).
