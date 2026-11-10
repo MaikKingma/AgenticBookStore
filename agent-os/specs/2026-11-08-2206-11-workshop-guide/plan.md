@@ -51,7 +51,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
 | T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | PASS r1, REJECT r1 reworked, PASS r2 | #129 | sdd/11-workshop-guide/T12 | ENDORSE r2 |
-| T13 | D16 (F2): no PowerShell hook text on the Level 3 and troubleshooting pages; Git Bash wording on wrap-up; JDK 21 floor on the setup page (A15) | guide | [T12] | B13 | elevated | sonnet | sonnet | in progress | | sdd/11-workshop-guide/T13 | |
+| T13 | D16 (F2): no PowerShell hook text on the Level 3 and troubleshooting pages; Git Bash wording on wrap-up; JDK 21 floor on the setup page (A15) | guide | [T12] | B13 | elevated | sonnet | sonnet | PASS r1 | (pending) | sdd/11-workshop-guide/T13 | ENDORSE |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
@@ -550,6 +550,21 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
   changes first, then an sdd-bugfix on the guide.
 - Follow-up F17 (post-cycle, D13): when the chat widget and streaming endpoint are built, re-check the architecture
   page's `assistant` rows against that change's ArchitectureTest.
+- FF-59 (qa-final r3, from the T13 r1 meta-review, qa-lead ENDORSE; hashes in `t13-hashes.txt`, file sha256
+  35dffe160b23...): the FF-49 chain reads `t13` 4 OK (setup, L3, wrap-up, troubleshooting), `t6` index, `t7` 2, `t10`
+  1, `t11` architecture and L2, `t12` cheat sheet OK; expected FAILED lines exactly t6 setup and wrap-up, t11 L3,
+  cheat sheet and troubleshooting, t12 setup and L3, each re-bound through the fb958b3 bytes. Re-run the qa-t13 layer
+  (fidelity 4/4, the D16 grep with exactly 10 allowed hits, built scan with `.ps1` only in the OpenSpec installer,
+  must-fail copy) and the earlier scratch layers that read a T13 page; an assertion pinning a line A15 deleted or
+  replaced is a decision pin, updated and quoted (FF-46).
+- Follow-up F16 extension (D16): nothing in the repo pins the absence of PowerShell hook text; add a checker rule or
+  manifest test with F16 so a restored `.ps1` hook sentence fails `npm run check`.
+- Follow-up F18 (owner, pack): WP:59 and S10:168 still say JDK 17 for `jdtls`; the guide's setup page says 21 from
+  spec 10 finding PF-T6-1. Stale pack text after D16 (owner): S11:56 "Hook script tabs: bash and PowerShell.",
+  S10:219, S10:322-326, S10:504, WP:344 ("Provide `.ps1` variants"). Not findings: L4:191 (verbatim SDD:136).
+- D17 (factory 936028d): links to the frozen level branches (level-0-start, solution/level-1..3,
+  start/level-4-openspec|speckit|agentos) may 404 until spec-10-done (R-G2 moves after spec-10-done); every other
+  broken link is a FAIL.
 - Gate 2 owner notes from T12: O-2 the L3 sentence says "hooks" where the pack says "handlers" (true of the settings
   fragment shown); O-5 the cheat sheet's one-page variant at 10 mm has 8 px of headroom; the D9 sentences have no repo
   pin until F16.
