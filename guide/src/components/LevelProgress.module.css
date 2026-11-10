@@ -1,0 +1,34 @@
+/* Colours come from the variables of src/css/custom.css only. The current level is a
+   filled step with a bold label, the other levels are outlined steps. */
+.progress {
+  margin-bottom: var(--ifm-spacing-vertical);
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The doubled class beats the page's `li + li` list spacing (Infima). */
+.steps > .step {
+  flex: 1 1 5.5rem;
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border: 2px solid var(--guide-level-inactive-border);
+  border-radius: var(--ifm-global-radius);
+  background: var(--guide-level-inactive-bg);
+  color: var(--guide-level-inactive-fg);
+  font-weight: 400;
+  text-align: center;
+}
+
+.steps > .current {
+  border-color: var(--guide-level-current-border);
+  background: var(--guide-level-current-bg);
+  color: var(--guide-level-current-fg);
+  font-weight: 700;
+}

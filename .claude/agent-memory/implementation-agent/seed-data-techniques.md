@@ -10,7 +10,7 @@ metadata:
   `jsonMapper.readerFor(T.class).with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).readValue(node)` and wrap the
   `JacksonException` (`getOriginalMessage()` keeps the property name). `asText()` is deprecated-final; use `asString`.
 - Prove the per-call strict reader by building the test's mapper with the feature DISABLED, so the mapper default
-  cannot decide the outcome (QA ledger G4 pattern).
+  cannot decide the outcome.
 - Keep each validation guard in exactly one class. A second, accidental guard downstream (for example
   `Collectors.toUnmodifiableMap` throwing on duplicate keys in the catalogue constructor) makes QA's "guard removed"
   probe survive, which QA reports as a missing test. Use `putIfAbsent` plus `Map.copyOf` in the downstream class.
@@ -30,5 +30,3 @@ metadata:
   lines unchanged" with an ordered-subsequence script (old non-comment lines in order, nothing between them, only the
   last row of each list gaining a comma) plus two negative-control copies. Unanchored `grep -c 'ON CONFLICT DO NOTHING'`
   also counts a header comment that quotes it; anchor with `^`. `grep -c '@Test'` counts `@TestInstance` too.
-- Data-as-test: write the seed guard test first (counts, checksums, consumer invariants), then author the data until
-  it passes; generate check digits with a scratchpad program, never committed.

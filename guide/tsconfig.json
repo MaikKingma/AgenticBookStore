@@ -1,0 +1,13 @@
+// This file is not used by "docusaurus start/build" commands.
+// It is here to improve your IDE experience (type-checking, autocompletion...),
+// and to run the package.json "typecheck" script.
+// The build output folders are excluded so that tsc never scans generated code.
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "strict": true
+  },
+  "exclude": [".docusaurus", "build", "build-offline"]
+}

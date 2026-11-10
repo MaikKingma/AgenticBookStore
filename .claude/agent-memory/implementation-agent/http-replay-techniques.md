@@ -19,6 +19,5 @@ metadata:
   error answer; an order that dips a stock item waits for the distributor call (about a second at most when it is up).
 - Isolated stack scripts belong in `.claude/comms/tmp/` (one simple command per Bash call): `docker run` on a free
   port, bookstore jar with `--spring.docker.compose.enabled=false` and `SPRING_DATASOURCE_*`, cwd in the scratchpad.
-- A spec branch that is ahead of the task branch can still be exercised read-only: `git archive <ref> | tar -x` into
-  the scratchpad, `./mvnw -q -DskipTests -pl bookstore package`, run it with `env -u BOOKSTORE_AI_API_KEY` for the
-  offline path (503 assistant-offline, 400 before offline, 429 only with a key).
+- Run the jar with `env -u BOOKSTORE_AI_API_KEY` for the offline assistant path (503 offline, 400 before offline, 429 only with
+  a key).

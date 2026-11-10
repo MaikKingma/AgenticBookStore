@@ -1,6 +1,6 @@
 ---
 name: qa-ci-config-specs
-description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, actions/cache save lines and cache scope across PRs); read before the strategy or final brief of any workflow or CI spec
+description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit, actions/cache save lines and cache scope across PRs, owner-armed deploy gates); read before the strategy or final brief of any workflow or CI spec
 metadata:
   type: feedback
 ---
@@ -21,9 +21,25 @@ Job summaries are not readable from the CLI. `gh run view --log` lacks them, and
    Before fixing a baseline run set for a timing gate, check that the runs are the same suite (per-module `Tests run:` totals). In ci-performance, four different suites were mixed: a per-class metric survives that, but job and Maven totals are not like-for-like. Add a same-suite control run (the previous task's green run).
    Research counts of log events (cold caches, pulls) need the exact text the tool prints and a restatable run set: setup-java prints `maven cache is not found`, not `Cache not found`. A figure missing either is "not recomputed" and supports no before/after claim; check this at strategy time, not at qa-final.
    Hang path: a job timeout, a manual cancel and a supersede all make `cancelled()` true; only a step `timeout-minutes` below the job's ends as failure. Gate it on the step-timeout annotation plus the absence of the job-timeout one. A hung test writes no `TEST-*.xml`, so the junit report shows all passed: never gate a hang on the report. Red/green probe pairs: green differs from the gated head only by the probe test. A red recipe that lowers the job timeout for speed must never be re-run literally on the fix (job 4 < step 10 cancels by design): in the final brief, name the green-after run as the "must not reproduce" re-run and gate on `git diff --exit-code <green head> <tip> -- <workflow>`.
+   Bookkeeping commits after a workflow task's verdict keep the evidence when three things hold: the diff lists only
+   bookkeeping paths, the workflow blob is unchanged, and the new head's runs are green. A `pull_request` path filter is
+   evaluated over the whole PR diff, so those commits re-trigger the workflow. A CI run stands in for the local gates
+   only when the task changes no file those gates read; otherwise local gates stay mandatory (spec 11 T2).
+   Linux-only red on a CI step that is green on macOS: suspect a Node CLI that calls `process.exit` right after
+   `console.error`/`console.log`. Over a Linux pipe the queued tail is lost (exit status kept), macOS never loses it, so
+   local loops and one green CI run prove nothing. Directive: reproduce in a Linux container on the CI Node version,
+   N runs before and after (spec 11 T11: 23/200 vs 0/320), plus a witness on the real pipe that dies on a tail cut. A
+   test-side fix reads the child's output through files (`stdio: ['ignore', fd, fd]`); the real fix is
+   `process.exitCode = 1`, pinned by a static no-`process.exit(` test. A red Linux log missing an error line is no
+   proof the error is absent.
    `actions/cache` evidence: gate on the post step's `Cache saved with key:` line plus `Path Validation Error` count 0, never on
    step success (a missing path only warns). A cache path literal in a card must be a directory the job itself creates or an
    explicit tool setting (`npm_config_cache` on the step); a guessed tool default (`~\AppData\Local\npm-cache` on windows-latest)
    saved nothing (spec 12 T3 r1). Cache-hit evidence across tasks: a pull_request run's caches are scoped to its merge ref, so a
    later PR only restores what a push run on its base branch (or the default branch) saved: ask for that push run's save lines
    plus the later run's restore lines, and whether the hit is on the primary key or a restore-key.
+   Deploy gates the owner arms (a repo variable, Pages, an environment) can flip between the final brief and the sweep.
+   Write side-effect items as "quote the state at the head and compare it with the approval record", never as fixed
+   404 / no-variable expectations. Armed is no PR defect, but Gate 2 must say the merge itself publishes (a release
+   created with `--target $GITHUB_SHA` tags the merge commit once) and list post-merge checks: push run jobs at attempt
+   1, site 200, release asset, archive root (spec 11 r3, D17).

@@ -19,15 +19,15 @@ metadata:
   first; keep that string in the malformed-id witnesses.
 - Jackson 3 (`tools.jackson.databind.json.JsonMapper`) keeps null record components in Spring AI's tool JSON, so
   "key present with null" holds without extra config.
-- Stream laziness: `sorted(..).map(lookup).filter(..).limit(n)` stops looking stock up after n hits, but a Mockito
-  strict-stub-per-book then fails on unused stubs: stub through one `thenAnswer` over a map instead.
+- A lazy stream (`sorted(..).map(lookup).filter(..).limit(n)`) leaves unused strict stubs per book: stub through one
+  `thenAnswer` over a map instead.
 - The whole ChatClient (tool loop, memory advisor) runs without a context: `ChatClient.builder(scriptedModel)`
   passed to the real `AssistantConfig` bean methods. `Prompt` keeps the caller's list by reference, so a recording
   double must `List.copyOf` the messages. A tool-call reply with content `""` and no tool loop gives `content()` `""`.
 - `MessageWindowChatMemory` moves its cut forward to the next USER message, so complete Q/A turns cannot tell window
   20 from 21. A window witness needs an odd count: a first call that throws leaves its question unanswered in memory.
 - `ToolCallingChatOptions.getToolCallbacks()` is null for a ChatClient without tools; a recording double must guard it.
-- `ChatClient.Builder.defaultSystem(Resource)` reads with the platform default charset; pass `UTF_8` explicitly.
+  `ChatClient.Builder.defaultSystem(Resource)` reads with the platform default charset; pass `UTF_8`.
 - Adding a bean method that injects `ChatClient.Builder` breaks every `ApplicationContextRunner` over that config:
   register a builder and the tools with `withBean(...)` (supporting beans only, the asserts stay unchanged).
 - Spring AI 2.0.2 here has no `spring-ai-retry`: `NonTransientAiException`/`TransientAiException` do not exist. A live
@@ -46,6 +46,3 @@ metadata:
   `Genre.parse` accepts `-`/`_` but not a space, so a readable "science fiction" in a search genre arg is rejected
   (the error lists the valid constants). `ScriptedChatModel` tool args are fixed JSON strings; `toolContentOf` in
   `AssistantIntegrationTest` needs exactly one tool message, so two tool rounds in one turn need a custom lookup.
-- Worktree Bash guard refuses redirects and `cd` in one command: put the mvnw run in a script under `.claude/comms/tmp/`.
-- `AssistantCommandsTest.useCaseExceptionsMapToTheirStatus` throws the four use-case exceptions out of the chat call:
-  a catch-all around that call must let them through or that pre-existing test goes red.

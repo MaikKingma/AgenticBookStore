@@ -6,3 +6,4 @@
 - [CI Testcontainers research techniques](ci-testcontainers-research-techniques.md) — run-log pull timings, registry digest HEADs, Ryuk env-only, cache branch scoping, mirror no-fallback
 - [Shell script and git research techniques](shell-script-git-research-techniques.md) — bash 3.2/5/GNU matrix via Docker, actionlint/shellcheck image, hermetic git tests, ls-tree cwd trap, atomic leased push
 - [JPA/PostgreSQL persistence traps](jpa-postgres-persistence-traps.md) — Instant micro rounding, Limit ignored with join fetch, element collection version bump, unsorted-update deadlocks, statistics probe
+- [Docusaurus offline traps](docusaurus-offline-traps.md) — hash router skips SSG and link checks, baseUrl '/', v4 flag kills `:::type Title`, WebKit prefetch noise, 3-engine file:// probe

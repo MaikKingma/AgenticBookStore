@@ -1,6 +1,6 @@
 ---
 name: domain-mutation-probes
-description: Mutation-probe techniques for bookstore domain value objects, aggregates, flow translators, port order, JSON view mappers and wrapped-cause detail pins
+description: Mutation-probe techniques for bookstore domain value objects and aggregates (checksum falsifiers, null guards, shared constructors), flow-layer probes (port order, translators, mapper hand-offs), JSON view mappers, wrapped-cause detail pins and test-only rework rounds
 metadata:
   type: feedback
 ---
@@ -38,8 +38,7 @@ Mapper hand-offs into validating factories (`Money.of(amount, code)`, `new Email
 - "Override replaces a default" (price override vs recommended price): list the override-vs-default relation in every test. When every override is above the default, the mutant "keep the higher of the two" survives; it needs an override below the default. Also probe "zero counts as absent" (`signum() == 0` treated like null) whenever the domain rejects zero only further downstream (exclusive lower bound in the aggregate, not in `Money`). A zero override witness kills both mutants. Run these families in round 0, not after the rework.
 - Before round 0 verdicts, build an input x relation matrix for the use case (each input against: null/non-null, above/below/equal to the value it replaces, zero, each domain bound just outside, element position, duplicates). Each empty cell is a mutant family: clamp to the bound (`min(500.00)`, `max(1450)`), `limit(MAX)`, `distinct()`, `dropWhile(blank)`, "use the override only when it differs". All survive unless a just-outside or equal-value witness exists.
 
-Nested use-case exceptions (port-nested `final class X extends NotFound/InvalidInput/Conflict/UnavailableException`):
-- The four bases share one constructor shape, so a superclass swap compiles. Probe per class: swap superclass, one-letter code typo, title text change, detail without the ISBN or constant detail, `final` dropped. A parameterized test with two inputs fails both rows per probe.
+- Nested use-case exceptions (port-nested `final class X extends NotFound/InvalidInput/Conflict/UnavailableException`) share one constructor shape, so a superclass swap compiles. Probe per class: swap superclass, one-letter code typo, title text change, detail without the ISBN or constant detail, `final` dropped.
 
 ## View mappers and wrapped-cause detail pins
 
@@ -55,6 +54,4 @@ Rule: a wrapped-cause detail message is pinned by `isEqualTo(prefix + domainMess
 
 **Why:** `startsWith(prefix)` left the part after `": "` free, so `e.toString()`, an appended suffix and the class name all survived; a cause pinned only by `isExactlyInstanceOf` also let a different exception of the same type survive.
 **How to apply:** probe the suffix expression (`getMessage`, `toString`, `getClass().getSimpleName()`, appended text, upper-cased, substring, dropped) and the cause (dropped, `getCause()`, wrapped, same type with another message). For a parameterized test derive the expected domain message per case inside the test.
-
-
 Related: [[env-switch-mutant-runner]], [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

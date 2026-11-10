@@ -16,8 +16,8 @@ metadata:
 - Boot 4.1.2 loads EPPs from `org.springframework.boot.EnvironmentPostProcessor` and still from the deprecated
   `org.springframework.boot.env.EnvironmentPostProcessor` key, but a class implementing the new interface registered
   under the old key is not assignable to it: startup fails (source: `SpringFactoriesEnvironmentPostProcessorsFactory`).
-- To make `addFirst` vs `addLast` observable in an EPP test, assert the last property source holds the added value,
-  and assert the source-name list is unchanged in the cases where nothing may be added.
+- `addFirst` vs `addLast` in an EPP test: assert the last property source holds the added value, and the source-name list is
+  unchanged where nothing may be added.
 - Full-context EPP order check: Boot adds an `applicationInfo` source AFTER every EPP, so "after every source whose
   name contains application" can never hold. Match the config files by `startsWith("Config resource")` instead
   (names look like `Config resource 'class path resource [application.yml]' via location ...`).

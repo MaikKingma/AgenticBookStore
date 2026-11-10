@@ -1,0 +1,109 @@
+---
+title: "Level 1: Context engineering"
+sidebar_position: 4
+---
+
+import LevelProgress from '@site/src/components/LevelProgress';
+
+<LevelProgress current={1} />
+
+:::note[At a glance]
+
+**Goal:** Give the agent the smallest set of high-signal context that makes the right thing the obvious thing.
+
+**Start branch:** `main`
+
+**Catch-up:**
+
+```bash
+git stash -u && git switch main
+```
+
+**Time:** 35 minutes
+
+**Compare:** `solution/level-1`
+
+:::
+
+Start on `main` again, clean. Levels 1 to 4 work through the columns of your Level 0 observation card.
+
+:::info[Sync moment]
+
+Look up, Maik demos this now. Maik runs `/init` live. Then we read the generated `CLAUDE.md` together and cross out everything Claude could have read from the code itself. Maik also shows `/context` and `/memory`. (5 minutes)
+
+:::
+
+## Steps
+
+### 1. Generate a first CLAUDE.md
+
+Run `/init`. Read the result critically. Anthropic's own guidance: every line costs attention on every task, and the most useful line is the command that runs the tests.
+
+### 2. Rewrite CLAUDE.md to at most 60 lines
+
+Rewrite `CLAUDE.md` to at most 60 lines. It must contain:
+
+- Build and test commands, for example:
+
+  ```bash
+  ./mvnw verify
+  ./mvnw -pl bookstore test -Dtest=BookTest
+  ```
+
+- A definition of done: verify green, including `ArchitectureTest`; never say "tests pass" without showing output.
+- The five rules an agent cannot infer quickly: domain is pure Java; money is `Money` (BigDecimal), never double; schema changes only via a *new* Flyway migration; inbound adapters only talk to flows; no Lombok.
+- A path instead of an essay: "Read docs/architecture.md before adding or moving classes."
+
+Compare that path with the import syntax `@docs/architecture.md`. An import loads the whole file at session start and costs context on every task. A plain path lets Claude read it only when needed. Try both and look at `/context`.
+
+### 3. Add path-scoped rules
+
+Add path-scoped rules in `.claude/rules/`. They load only when Claude touches matching files:
+
+- `domain.md` with `paths: ["bookstore/src/main/java/**/domain/**"]`
+- `data-and-migrations.md` with `paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]`
+- `testing.md` with `paths: ["**/src/test/**"]`
+
+:::tip[Checkpoint]
+
+Ask Claude a question that does not touch `domain`, then run:
+
+```text
+/context
+```
+
+Expected: `CLAUDE.md` is loaded, and neither `docs/architecture.md` nor `.claude/rules/domain.md` is. After Claude edits a file in `domain`, the rule is loaded. You can run `/memory` instead of `/context`.
+
+:::
+
+### 4. Explore the hierarchy
+
+Add a conflicting line to your user file `~/.claude/CLAUDE.md` (for example "Always use Lombok") and a personal `CLAUDE.local.md` (for example your preferred commit style). Start a new session and run `/memory` and `/context`.
+
+Observe: files are concatenated, not overridden. When instructions conflict, the agent has to choose. Remove the Lombok line afterwards.
+
+### 5. Watch for context rot
+
+Run `/context` and read the grid. Learn the three moves:
+
+- `/clear` between unrelated tasks.
+- `/compact focus on <topic>` when a long task drifts.
+- Delegate big reads to a subagent ("use a subagent to find every place that formats money") so only the summary lands in your context.
+
+A 1M-token window is not an attention guarantee.
+
+### 6. Redo the Level 0 task
+
+Redo the Level 0 task in a fresh session (`/clear`). Compare with your [observation card](./01-level-0-break-the-agent.mdx).
+
+When you are done, compare your result with the branch [solution/level-1](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-1).
+
+## Before you move on
+
+What improved, and what still went wrong even though it was written down? That last list is the bridge to Level 3: `CLAUDE.md` is guidance, the agent may decide a guideline does not apply.
+
+## Level cleared when
+
+- [ ] `CLAUDE.md` has at most 60 lines.
+- [ ] `/context` shows the path-scoped rules loading only for matching files.
+- [ ] In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no ArchUnit violation.

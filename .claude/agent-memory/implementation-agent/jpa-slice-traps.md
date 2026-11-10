@@ -31,15 +31,11 @@ metadata:
   other column" includes joined collection columns: with `join fetch o.lines l` a mutant can order by `l.isbn` or
   `l.title`, so tabulate each order and line column in asserted order before reporting. Check every exact-list
   test that has a tie, not just the one about ordering.
-- `JdbcTemplate.queryForMap` returns a `timestamptz` column as `java.sql.Timestamp`; `toInstant()` keeps the
-  microseconds, so a literal `Instant.parse("...123456Z")` compares exactly. `uuid` comes back as `UUID`, `numeric`
-  as `BigDecimal` with the column scale, so `Map.of(...)` rows compare with `containsExactly`.
+- `JdbcTemplate.queryForMap` returns `timestamptz` as `java.sql.Timestamp` (`toInstant()` keeps microseconds), `date` as
+  `java.sql.Date`, `uuid` as `UUID`, `numeric` as `BigDecimal` with the column scale.
 - Migration shape as a slice test: `information_schema.columns` (`data_type`, `character_maximum_length` as Integer,
-  `is_nullable` "YES", `column_default` null) plus `pg_constraint` with `contype <> 'n'` (PG 18 lists NOT NULL as
-  `n`). `queryForMap` gives a `date` as `java.sql.Date` (`toLocalDate()`). An over-long varchar insert is a
-  `DataIntegrityViolationException` naming `character varying(n)` and logs one HHH000247 (22001) for QA's inventory.
-- A find-then-insert `save` that skips the update branch fails with `DuplicateKeyException`
-  (`NonUniqueObjectException`) when the entity is already managed, not with an optimistic-lock error.
+  `is_nullable` "YES", `column_default` null) plus `pg_constraint` with `contype <> 'n'` (PG 18 lists NOT NULL as `n`). An
+  over-long varchar insert is a `DataIntegrityViolationException` and logs one HHH000247 (22001) for QA's inventory.
+- A find-then-insert `save` that skips the update branch fails with `DuplicateKeyException` when the entity is already managed.
 
-Pointer: verified Hibernate and Spring Data facts for spec 02 live in the spec folder's `references.md`.
 Related: [[maven-build-traps]].

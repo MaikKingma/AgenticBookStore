@@ -5,13 +5,9 @@ metadata:
   type: feedback
 ---
 
-Rule: besides the planned mutants, feed the adapter element-level malformed 2xx bodies through a temporary QA-only
-test class. Per-key "required" checks and a `catch (RestClientException)` do not cover them.
+Rule: besides the planned mutants, feed the adapter element-level malformed 2xx bodies through a temporary QA-only test class. Per-key "required" checks and a `catch (RestClientException)` do not cover them.
 
-**Why:** a mutation list derived from the code only removes checks that exist. The defects sat where no check exists:
-a `null` element in a list of nested records gave a raw NullPointerException from the public method, and Jackson 3
-coerces a JSON float into a `Long`/`Integer` component by default (`ACCEPT_FLOAT_AS_INT`), so cents `9.99` silently
-became price `0.09`. Neither is a RestClientException, so the adapter's catch never sees it.
+**Why:** a mutation list derived from the code only removes checks that exist. The defects sat where no check exists: a `null` element in a list of nested records gave a raw NullPointerException from the public method, and Jackson 3 coerces a JSON float into a `Long`/`Integer` component by default (`ACCEPT_FLOAT_AS_INT`), so cents `9.99` silently became price `0.09`. Neither is a RestClientException, so the adapter's catch never sees it.
 **How to apply:**
 - Witness list per payload: `[null]` element in every nested list, null value of every nested key the translation reads, a float in every integer component, a string in a number component, a top-level JSON array, a 3xx with a body.
 - Run the float witness on EVERY integer component of EVERY response payload in round 0 (title cents and the restock answer's `quantity` alike); checking only the money field leaves the twin for a later round.

@@ -1,0 +1,2 @@
+610b14c0d2e6fb3c70c02a7f140dd0a01507f4eb457246adf2e94d1efe8a592c  guide/docs/01-level-0-break-the-agent.mdx
+fad066c438987b44866f4263767cfed61186136dc7482b806427046b778abd8a  guide/docs/02-level-1-context-engineering.mdx
