@@ -25,6 +25,16 @@ metadata:
 - **Relaunched into an existing worktree as a subagent, cwd stays the main checkout** (`cd` does not persist), so
   every brief names the absolute project root and tells the agent to write memory only under
   `<root>/.claude/agent-memory/<agent>/`; check the main checkout's `git status` after each task (held for T9).
+- **Parallel tracks in scratch worktrees** (`git worktree add` under the scratchpad): agents keep comms in the main
+  worktree and memory in the track worktree; the QA lead writes memory in the main worktree, so copy its files into
+  the track's memory commit only AFTER its handback (an earlier copy lost a line), then `git checkout --` them in the
+  main worktree. Each later track merges the spec tip first; memory conflicts are union plus owner curation.
+- **Factory merge before a cut**: run every gate (self-tests, referee) on the merge result BEFORE pushing it, never in
+  parallel; a changed strip list (spec 09 D15) broke the staging self-test once. After a factory merge whose memory
+  union overflows budgets, spawn one curator per over-budget agent type in parallel.
+- **Prefer SendMessage to a finished child over a fresh spawn** for resume, rework and re-verification rounds: it
+  keeps context and saves tokens (also after a usage-limit stop). One SubagentHandback per run; later updates to the
+  main session go by SendMessage to "main".
 - **Owner decisions arrive mid-task** (D9, D14, D16): redirect a running agent with an urgent inbox directive plus
   SendMessage (an orchestrator cannot TaskStop its children's tasks), record a plan amendment, and bound the next QA
   round to the change.

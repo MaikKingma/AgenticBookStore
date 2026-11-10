@@ -22,3 +22,4 @@
 - [HTTP collection replay probes](http-collection-replay-probes.md) — .http replay driver, fresh DB per scenario, node handler harness, mutant pairing, rg -E trap
 - [Hook regex probes](hook-regex-probes.md) — grep-on-stdin hooks: mutate prefix, separator, class per side; chained-command fixture; equivalents; docs quotes
 - [Consistency-check verification](consistency-check-verification.md) — own token inventory, glob tests, row byte checks, row dry runs with the real clone recipe, fallback 2x2 proofs
+- [Level-branch cut verification](level-branch-cut-verification.md) — trees not shas, build-level on the real tag clone, simulate-vs-tag delta, manifest vs diff, push side effects

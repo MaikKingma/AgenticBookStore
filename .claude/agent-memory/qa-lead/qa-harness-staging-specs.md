@@ -30,7 +30,8 @@ memory; do not copy them.
    as a product finding and make the scenario task exercising the text record the absence and the re-check.
 8. **"Refs unchanged" in a shared repo.** Parallel spec runs move `sdd/*` refs and worktree HEADs during any verifier run, so a whole-repo
    `for-each-ref` before/after diff is never clean. Write "no ref the scripts can name exists" (branch and tag names from the step library) plus the
-   suite's own ref checks on TMPDIR repos; a moved `sdd/<other spec>` ref is then attributable, not a finding.
+   suite's own ref checks on TMPDIR repos; a moved `sdd/<other spec>` ref is then attributable, not a finding. Once the base tag is
+   published, compare built trees on the REAL tag: a simulate from a later source drifts by source-only changes (spec 10 T14: one `.gitignore` line).
 9. **When agents may not run Claude Code at all** (owner decision mid-cycle), re-plan verification three ways: (a) zero-token behaviour still executed
    (bash harnesses, curl JSON-RPC `initialize`/`tools/list` for MCP, generator inits, validators, glob tests of rule `paths`, `./mvnw verify`); (b)
    static consistency by the verifier's OWN token inventory (paths, commands, skills, hooks, settings keys, server and tool names, ports) resolved on

@@ -1,9 +1,10 @@
 ---
 spec: 10-harness-reference-solutions
 source: docs/spec-pack/specs/10-harness-reference-solutions.md
-status: in-progress
-phase: prepare
+status: done
+phase: cut and verified
 gate1: 2026-11-09T17:42:47Z
+gate2: 2026-11-10T23:47:10Z
 accepted-by: orchestrator (autonomous)
 qa-lead: on
 review: agent
@@ -23,11 +24,17 @@ runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run 
 `COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
-## Status (2026-11-10, before the cut)
+## Status (2026-11-10, Gate 2 self-accepted; spec PR #122 ready for the main session, merge: false)
 
-T1 to T13 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155, #157, #161, #163,
-#164, #166); `origin/factory` ab61c1d is merged in (0b14104); the fix task T15 is PR #168. Next: T14 cut and verify
-(A4, D17), qa-final and Gate 2. The run ledger (comms, not committed) holds the full resume point.
+T1 to T13 and T15 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155, #157, #161,
+#163, #164, #166, #168); `origin/factory` ab61c1d is merged in (0b14104). T14 cut the six D17 branches from
+`level-0-start` (b668073) and pushed them: `solution/level-1` 824aa66 (tree 7c0e012d), `solution/level-2` cd973bf
+(3f75a361), `solution/level-3` d68cada (309786e0), `start/level-4-openspec` 8ea03c6 (1c279415),
+`start/level-4-speckit` 737aeb6 (c9d758b9), `start/level-4-agentos` c8bab75 (0a55b23f); `main` and `level-0-start`
+unchanged. qa-final PASS (opus), QA lead final-review ENDORSE with Gate 2 QA assessment confidence MEDIUM: HIGH for
+everything agents could prove (staged bytes, the six branches, eight fresh-clone verifies, harnesses, zero-token runs,
+consistency checks), LOW for every Claude-session behaviour: 11 of the 12 pack acceptance scenarios are rehearsal rows
+for Maik (D14) and stay open until he rehearses. Residuals and follow-ups: `## Gate 2` below.
 
 ## Tasks
 
@@ -47,7 +54,7 @@ T1 to T13 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #15
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | #164 | sdd/10-harness-reference-solutions/T12 | ENDORSE (r1) |
 | T13 | Level 4 Agent OS track and the Level 4 closing round (A5, A11, A12) | root | [T10] | 13 | elevated | sonnet | sonnet | #166 | sdd/10-harness-reference-solutions/T13 | ENDORSE (r2) |
 | T15 | Fix: simulate strip list and self-test follow spec 09 after D15 (A13) | root | [T13] | 14 | elevated | sonnet | sonnet | #168 | sdd/10-harness-reference-solutions/T15 | ENDORSE (r0) |
-| T14 | Cut the six D17 branches from `level-0-start`, push, verify each (A4, D17) | root | [T15] | 15 | critical | sonnet (A8) | orchestrator | | | |
+| T14 | Cut the six D17 branches from `level-0-start`, push, verify each (A4, D17) | root | [T15] | 15 | critical | sonnet (A8) | orchestrator | (no PR: six pushed branches) | solution/level-1..3, start/level-4-* | ENDORSE (r0) |
 
 ### T1 Staging infrastructure and branch-cut tooling
 fileScope: `S/README.md`, `S/.gitattributes`, `S/scripts/**`, `S/tests/test-staging.sh`, `S/tests/fixtures/**`.
@@ -404,6 +411,44 @@ for all three tracks is a manual check for Maik.
 - Follow-ups from T1 for qa-final: FU-T1-1 (closed-stderr test of the three exit handlers; qa-final greps that each
   keeps `set +e`); F13 (README cut-procedure prose carries no push line, reading check); J12/F14 (backup removed on an
   incomplete rollback: residual for Maik).
+
+## Gate 2
+
+Self-accepted by the orchestrator (autonomous) on 2026-11-10T23:47:10Z: qa-final PASS (opus, no Required Actions,
+eight fresh-clone verifies green: tip, tag and `solution/level-1` 1379 + 190 tests, `solution/level-2` 1380,
+`solution/level-3` and the three `start/level-4-*` 1428, ArchitectureTest 22/0 everywhere; CI `verify` and
+`windows-build` green on the tip), endorsed by the QA lead's final review with confidence MEDIUM (see Status). Every
+task merged; no task dropped; the spec diff against factory touches only `docs/spec-pack/level-branches/`, this spec
+folder and `.claude/agent-memory/`.
+
+Residuals for Maik (none blocks the PR):
+- Rehearsal: 11 of the 12 pack acceptance scenarios are rehearsal rows in `S/records/rehearsal-checklist.md`
+  (including Windows Git Bash hooks and Linux/WSL LSP); they are open until Maik rehearses.
+- PF-T11-1: `start/level-4-openspec` installs no `openspec` program and the guide says Node is not needed; Maik decides
+  the install route (R4A-1 lists them) before the OpenSpec rehearsal.
+- PF-QA-T7-3: `docs/architecture.md` lines 65-66 on `level-0-start` are false for payloads and views (decimal
+  Strings); the branches are frozen (D17), so either a factory fix, republish and re-cut, or an accepted residual.
+- FU-T5-1 (J14): no test pins EDITOR exclusion in the Level 2 exercise.
+- FU-T13-1: the Level 4 checklist rows R4-A, R4-B and R4-C summarise their record rows incompletely (the checklist
+  says the record row wins); reading note below.
+- FU-T14-1: the staging README's sandbox section should say the tag is the base of record (a simulate from a later
+  factory can differ by factory-only changes such as the `.gitignore` line `guide/build-offline/`).
+- FU-T15-1, PF-T10-9, J12/F14, FU-T1-1 (closed: traps in place), the `.ps1` leftovers; product findings PF-T3-x to
+  PF-T13-x and decisions D-1 to D-6 in each record.
+- Any later change to a file on a level branch needs a re-cut.
+
+Reading notes for Maik before the Level 4 rehearsal (the T6, T10, T11 and T12 notes are in the checklist): in R4-A,
+R4-B and R4-C also record the observation items of R4A-3, RR-S3 and R4C-4; in R4-B, `/ship` asking about `specs/` or
+`.specify/` is a finding, not a failure; in R4-C, `/shape-spec` unusable in any form is a failure (the step refuses
+outside plan mode); decide how participants get the `openspec` program (PF-T11-1); `docs/architecture.md` lines
+65-66 are wrong about prices in payloads and views (PF-QA-T7-3), `reference.md` on level 3 states the code's form.
+
+Standards proposals from the QA lead (follow-ups for the main session, not Gate 2 blockers; full text in the QA
+ledger): SP-1 row literals come from the printed command and copied rows carry every field; SP-2 evidence rework
+bounds (insertion only with a pre-edit copy, byte proof for a regenerated cited file); SP-3 counterexample searches
+derive their expected set from the code; SP-4 three review classes for docs findings; SP-5 installer instructions list
+user-level paths with what they were measured under; SP-6 run self-tests on a merge result before pushing it and
+build sandboxes from the published tag.
 
 ## Amendments
 
