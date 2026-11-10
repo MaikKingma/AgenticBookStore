@@ -38,7 +38,8 @@ Steps for the new main session (read the Rules at the top of this file and CLAUD
 2. When spec 10's PR is ready: merge #122 into factory (merge commit), run `./mvnw clean verify` yourself with timing,
    a fresh read-only review, fixes through /sdd-bugfix, then tag `spec-10-done` and push factory --tags.
 3. Spec 11: resume its orchestrator in `.claude/worktrees/agent-ae5be2d5b360fd390` to merge origin/factory into
-   `sdd/11-workshop-guide/spec` and re-run the guide checks and the referee; then merge #68 (merge commit), review,
+   `sdd/11-workshop-guide/spec`, drop the PowerShell hook tabs and lines (decision D16, follow-up F2), and re-run
+   the guide checks and the referee; then merge #68 (merge commit), review,
    tag `spec-11-done`. Deploy (approved by Maik): enable GitHub Pages (source GitHub Actions), set repository variable
    `GUIDE_DEPLOY=true`, check https://maikkingma.github.io/AgenticBookStore/ answers 200 (the README on main links it)
    and the six solution-branch links (R-G2).
