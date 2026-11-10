@@ -90,7 +90,7 @@ to publish-safety critical with opus implementer and verifier; T1 and T2 are ele
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | (pending) | sdd/fix-09-baseline-review/T1 |
+| T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #151 | sdd/fix-09-baseline-review/T1 |
 | T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | pending | | | | |
 | T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | pending | | | | |
 
