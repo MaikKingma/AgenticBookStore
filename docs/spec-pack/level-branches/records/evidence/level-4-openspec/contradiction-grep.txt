@@ -1,0 +1,82 @@
+# Contradiction review input (acceptance criterion 6): grep of the 12 generated skills and commands. $SBX2 = sandbox 2. Classification is in level-4-openspec.md.
+pattern: lombok|mapstruct|double|float|--no-verify|git push|ddl-auto   (grep -n -i -E, case-insensitive)
+files: the 12 generated files under .claude/skills/openspec-*/ and .claude/commands/opsx/
+
+exit code: 1 (0 = hits printed above, 1 = none)
+
+== hit counts per file and per word
+lombok     0
+mapstruct  0
+double     0
+float      0
+no-verify  0
+git push   0
+ddl-auto   0
+
+== the same words in the staged CLAUDE.md and docs/architecture.md (for comparison of rules)
+CLAUDE.md:20:- `domain` is plain Java: no Spring, JPA, Jackson or Lombok imports.
+CLAUDE.md:21:- Money is always `Money` (BigDecimal, scale 2, HALF_EVEN). Never double or float.
+CLAUDE.md:24:- No Lombok, no MapStruct: records and small hand-written mappers.
+docs/architecture.md:64:- `NO_DOUBLE_OR_FLOAT_FOR_MONEY`: in `domain`, `domaininteraction`, `command` and `query`, no field and no method or
+docs/architecture.md:65:  constructor parameter has the type `double` or `float`, boxed or not. A price is `Money` in the domain and a
+docs/architecture.md:102:  (`BigDecimal`, scale 2, rounding `HALF_EVEN`, currency EUR), `Quantity`. Never use `double` or `float` for money.
+docs/architecture.md:224:- Lombok: records and plain Java are enough.
+docs/architecture.md:225:- MapStruct: mappers are written by hand, small and explicit.
+
+== also: git, commit, push, migration, test, mvn words in the generated files (other possible contradictions)
+.claude/skills/openspec-sync-specs/SKILL.md:153:        `git checkout` only when the spec lived in the caller's checkout;
+.claude/skills/openspec-sync-specs/SKILL.md:191:     either a pasteable `git checkout` or checkout-scoped recovery guidance
+.claude/commands/opsx/sync.md:149:        `git checkout` only when the spec lived in the caller's checkout;
+.claude/commands/opsx/sync.md:187:     either a pasteable `git checkout` or checkout-scoped recovery guidance
+exit code: 0
+
+# allowed-tools, disable-model-invocation and name lines of the generated files:
+.claude/skills/openspec-apply-change/SKILL.md:2:name: openspec-apply-change
+.claude/skills/openspec-apply-change/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/skills/openspec-archive-change/SKILL.md:2:name: openspec-archive-change
+.claude/skills/openspec-archive-change/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/skills/openspec-explore/SKILL.md:2:name: openspec-explore
+.claude/skills/openspec-explore/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/skills/openspec-propose/SKILL.md:2:name: openspec-propose
+.claude/skills/openspec-propose/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/skills/openspec-sync-specs/SKILL.md:2:name: openspec-sync-specs
+.claude/skills/openspec-sync-specs/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/skills/openspec-update-change/SKILL.md:2:name: openspec-update-change
+.claude/skills/openspec-update-change/SKILL.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/apply.md:2:name: "OPSX: Apply"
+.claude/commands/opsx/apply.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/archive.md:2:name: "OPSX: Archive"
+.claude/commands/opsx/archive.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/explore.md:2:name: "OPSX: Explore"
+.claude/commands/opsx/explore.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/propose.md:2:name: "OPSX: Propose"
+.claude/commands/opsx/propose.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/sync.md:2:name: "OPSX: Sync"
+.claude/commands/opsx/sync.md:4:allowed-tools: Bash(openspec:*)
+.claude/commands/opsx/update.md:2:name: "OPSX: Update"
+.claude/commands/opsx/update.md:4:allowed-tools: Bash(openspec:*)
+(no disable-model-invocation line in any of the 12 files)
+
+# Bash commands other than openspec that the archive skill and command run (mkdir, mv), with line numbers:
+.claude/skills/openspec-archive-change/SKILL.md:173:   mkdir -p "<planningHome.changesDir>/archive"
+.claude/skills/openspec-archive-change/SKILL.md:183:   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+.claude/commands/opsx/archive.md:169:   mkdir -p "<planningHome.changesDir>/archive"
+.claude/commands/opsx/archive.md:179:   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+
+# Level 3 permissions of the staged .claude/settings.json (allow and deny arrays) for comparison:
+allow: ['Bash(./mvnw *)', 'Bash(git status *)', 'Bash(git diff *)', 'Bash(git add *)', 'Bash(git commit *)']
+deny: ['Read(./.env)', 'Read(./.env.*)', 'Bash(git push)', 'Bash(git push *)', 'Bash(* --no-verify*)', 'Bash(git commit -n *)']
+
+# The staged /ship command, lines 1 to 12:
+---
+description: Verify, check scope and commit the current change with a conventional commit message
+argument-hint: [what this change does]
+disable-model-invocation: true
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git add *), Bash(git commit *), Bash(./mvnw *)
+---
+## Current state
+- Status: !`git status --short`
+- Changed files: !`git diff --stat HEAD`
+
+## Task
+1. Run `./mvnw verify` and show the final summary lines. Stop and report if it fails.

@@ -1,0 +1,140 @@
+# openspec/specs/ordering/spec.md (acceptance criterion 3). $SBX = sandbox 1.
+# 1. The staged file:
+# Ordering Specification
+
+## Purpose
+How customers place orders and how placed orders are shipped: stock reservation, price snapshots and the stock reduction at shipping.
+
+## Requirements
+
+### Requirement: Place an order
+The system SHALL place an order when every requested book exists, is available and has enough stock, reserving the stock and snapshotting prices.
+
+#### Scenario: Successful order
+- **GIVEN** book A (12.50, available 5) and book B (8.00, available 2)
+- **WHEN** a customer places an order for 2 x A and 1 x B
+- **THEN** the response is 202 with an order id, the order total is "33.00", A has reserved 2 and B has reserved 1, and one `OrderPlacedEvent` is published after commit
+
+#### Scenario: Price snapshot
+- **GIVEN** an order containing book A at 12.50
+- **WHEN** the price of A changes to 15.00
+- **THEN** the order still shows unitPrice "12.50"
+
+#### Scenario: Several shortages are reported together
+- **GIVEN** book A with available 1 and book B with available 0
+- **WHEN** a customer orders 2 x A and 1 x B
+- **THEN** the response is 409 with `code` `insufficient-stock` and `details` naming both books with requested and available quantities, and no stock is reserved
+
+#### Scenario: Duplicate lines are merged
+- **GIVEN** book A with available 8
+- **WHEN** a customer orders book A twice with quantity 3 each
+- **THEN** the order has one line for A with quantity 6 and A has reserved 6
+
+#### Scenario: Merged quantity too large
+- **WHEN** a customer orders book A twice with quantity 6 each
+- **THEN** the response is 422 with `code` `quantity-out-of-range` and nothing is reserved
+
+#### Scenario: Discontinued book
+- **GIVEN** book A is discontinued
+- **WHEN** a customer orders it
+- **THEN** the response is 409 and nothing is reserved
+
+### Requirement: Ship an order
+The system SHALL ship a placed order, turning its reservations into stock reductions.
+
+#### Scenario: Shipping reduces stock
+- **GIVEN** a placed order for 2 x A, with A onHand 5 and reserved 2
+- **WHEN** the order is shipped
+- **THEN** the order status is SHIPPED, and A has onHand 3 and reserved 0
+
+#### Scenario: Shipping twice
+- **GIVEN** a shipped order
+- **WHEN** it is shipped again
+- **THEN** the response is 409 and stock is unchanged
+
+# 2. check.py spec: trace of every line to spec 04 (docs/spec-pack/specs/04-orders.md) or to the added format lines:
+seed lines traced:
+  line   1  added (format)         # Ordering Specification
+  line   3  added (format)         ## Purpose
+  line   4  added (Purpose text)   How customers place orders and how placed orders are shipped...
+  line   6  added (format)         ## Requirements
+  line   8  spec 04 line 60        ### Requirement: Place an order
+  line   9  spec 04 line 61        The system SHALL place an order when every requested book ex...
+  line  11  spec 04 line 63        #### Scenario: Successful order
+  line  12  spec 04 line 64        - **GIVEN** book A (12.50, available 5) and book B (8.00, av...
+  line  13  spec 04 line 65        - **WHEN** a customer places an order for 2 x A and 1 x B
+  line  14  spec 04 line 66        - **THEN** the response is 202 with an order id, the order t...
+  line  16  spec 04 line 68        #### Scenario: Price snapshot
+  line  17  spec 04 line 69        - **GIVEN** an order containing book A at 12.50
+  line  18  spec 04 line 70        - **WHEN** the price of A changes to 15.00
+  line  19  spec 04 line 71        - **THEN** the order still shows unitPrice "12.50"
+  line  21  spec 04 line 73        #### Scenario: Several shortages are reported together
+  line  22  spec 04 line 74        - **GIVEN** book A with available 1 and book B with availabl...
+  line  23  spec 04 line 75        - **WHEN** a customer orders 2 x A and 1 x B
+  line  24  spec 04 line 76        - **THEN** the response is 409 with `code` `insufficient-sto...
+  line  26  spec 04 line 78        #### Scenario: Duplicate lines are merged
+  line  27  spec 04 line 79        - **GIVEN** book A with available 8
+  line  28  spec 04 line 80        - **WHEN** a customer orders book A twice with quantity 3 ea...
+  line  29  spec 04 line 81        - **THEN** the order has one line for A with quantity 6 and ...
+  line  31  spec 04 line 83        #### Scenario: Merged quantity too large
+  line  32  spec 04 line 84        - **WHEN** a customer orders book A twice with quantity 6 ea...
+  line  33  spec 04 line 85        - **THEN** the response is 422 with `code` `quantity-out-of-...
+  line  35  spec 04 line 87        #### Scenario: Discontinued book
+  line  36  spec 04 line 88        - **GIVEN** book A is discontinued
+  line  37  spec 04 line 89        - **WHEN** a customer orders it
+  line  38  spec 04 line 90        - **THEN** the response is 409 and nothing is reserved
+  line  40  spec 04 line 92        ### Requirement: Ship an order
+  line  41  spec 04 line 93        The system SHALL ship a placed order, turning its reservatio...
+  line  43  spec 04 line 95        #### Scenario: Shipping reduces stock
+  line  44  spec 04 line 96        - **GIVEN** a placed order for 2 x A, with A onHand 5 and re...
+  line  45  spec 04 line 97        - **WHEN** the order is shipped
+  line  46  spec 04 line 98        - **THEN** the order status is SHIPPED, and A has onHand 3 a...
+  line  48  spec 04 line 100       #### Scenario: Shipping twice
+  line  49  spec 04 line 101       - **GIVEN** a shipped order
+  line  50  spec 04 line 102       - **WHEN** it is shipped again
+  line  51  spec 04 line 103       - **THEN** the response is 409 and stock is unchanged
+requirements: 2, scenarios: 8
+PASS: every line traced, every requirement has scenarios, every scenario has WHEN and THEN
+exit code: 0
+
+# 3. openspec validate --all --strict --no-interactive, negative controls (scratch copies):
+== V1 validate --all --strict --no-interactive in the sandbox (authored files in place)
+? spec/ordering
+Totals: 1 passed, 0 failed (1 items)
+exit code: 0
+
+== V1b openspec list --specs
+Specs:
+  ordering     requirements 2
+
+== V2 negative control: scratch copy where the requirement 'Ship an order' has no scenario
+scratch spec now ends with:
+
+### Requirement: Ship an order
+The system SHALL ship a placed order, turning its reservations into stock reductions.
+? spec/ordering
+  ? [ERROR] requirements.1.scenarios: Requirement must have at least one scenario
+  ? [WARNING] requirements[1].scenarios: Requirement must have at least one scenario. Scenarios must use level-4 headers. Convert bullet lists into:
+#### Scenario: Short name
+- **WHEN** ...
+- **THEN** ...
+- **AND** ...
+Totals: 0 passed, 1 failed (1 items)
+Details: openspec validate ordering --type spec
+exit code: 1
+
+== V3 negative control 2: scratch copy where a scenario heading has three # instead of four
+? spec/ordering
+  ? [ERROR] requirements.2.scenarios: Requirement must have at least one scenario
+  ? [WARNING] requirements[2].scenarios: Requirement must have at least one scenario. Scenarios must use level-4 headers. Convert bullet lists into:
+#### Scenario: Short name
+- **WHEN** ...
+- **THEN** ...
+- **AND** ...
+Totals: 0 passed, 1 failed (1 items)
+Details: openspec validate ordering --type spec
+exit code: 1
+
+# 4. History requirement of spec 04 (line 105) is excluded: the task asks for Place an order and Ship an order only.
+### Requirement: Order history per customer
+The system SHALL list a customer's orders, newest first, matching the e-mail address case-insensitively.

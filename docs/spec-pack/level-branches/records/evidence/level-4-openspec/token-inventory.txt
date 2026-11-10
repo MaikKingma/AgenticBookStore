@@ -1,0 +1,131 @@
+# Token inventory (C0-13b and C0-13c) by tokens.py: every command, path, slash command, skill, CLI subcommand and flag, branch name, code token and version that the staged files and the pack and guide text name, resolved on the built tree of sandbox 2 (build-level.sh level-4-openspec).
+# Documents read: pack spec 10, sdd-framework-guide, workshop-plan, level-4-feature-briefs, spec 11 (working tree of the spec tip) and the guide files on origin/factory and origin/sdd/11-workshop-guide/spec (git show, read only). 'FINDING' = a mismatch that only pack or guide text carries.
+notation         ok      /opsx:...                                      5 places, first docs/spec-pack/workshop/sdd-framework-guide.md:114
+slash            ok      /opsx:apply                                    9 places, first docs/spec-pack/workshop/sdd-framework-guide.md:59
+slash            ok      /opsx:archive                                  9 places, first docs/spec-pack/workshop/sdd-framework-guide.md:60
+slash            ok      /opsx:explore                                  8 places, first docs/spec-pack/workshop/sdd-framework-guide.md:105
+slash            ok      /opsx:propose                                  9 places, first docs/spec-pack/workshop/sdd-framework-guide.md:56
+slash            ok      /opsx:update                                   8 places, first docs/spec-pack/workshop/sdd-framework-guide.md:109
+slash            ok      /ship                                          26 places in Level 4 docs, first docs/spec-pack/workshop/sdd-framework-guide.md:100
+skill            ok      openspec-apply-change                          named in docs or staged files
+skill            ok      openspec-archive-change                        named in docs or staged files
+skill            ok      openspec-explore                               named in docs or staged files
+skill            ok      openspec-propose                               named in docs or staged files
+skill            ok      openspec-sync-specs                            named in docs or staged files
+skill            ok      openspec-update-change                         named in docs or staged files
+cli              ok      openspec archive                               16 places, first staged:.claude/commands/opsx/archive.md:119
+cli              ok      openspec config                                1 places, first docs/spec-pack/workshop/sdd-framework-guide.md:50
+cli              ok      openspec context                               8 places, first staged:.claude/commands/opsx/propose.md:55
+cli              ok      openspec init                                  31 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:436
+cli              ok      openspec instructions                          32 places, first staged:.claude/commands/opsx/apply.md:49
+cli              ok      openspec list                                  28 places, first staged:.claude/commands/opsx/apply.md:13
+cli              ok      openspec new                                   28 places, first staged:.claude/commands/opsx/apply.md:13
+cli              ok      openspec schemas                               4 places, first staged:.claude/commands/opsx/propose.md:69
+cli              ok      openspec show                                  5 places, first docs/spec-pack/workshop/sdd-framework-guide.md:58
+cli              ok      openspec status                                40 places, first staged:.claude/commands/opsx/apply.md:11
+cli              ok      openspec store                                 12 places, first staged:.claude/commands/opsx/apply.md:11
+cli              ok      openspec validate                              14 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:453
+flag             ok      openspec init --tools                          help-init.txt
+flag             ok      openspec validate --strict                     help-validate.txt
+flag             ok      openspec validate --all                        help-validate.txt
+flag             ok      openspec validate --no-interactive             help-validate.txt
+flag             ok      openspec list --specs                          help-list.txt
+flag             ok      openspec instructions --change                 help-instructions.txt
+flag             ok      openspec status --change                       help-status.txt
+cli              ok      openspec new change                            help-new.txt
+path             ok      docs/architecture.md                           18 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:44
+path(template)   ok      openspec/changes/<name>                        1 places, first docs/spec-pack/workshop/sdd-framework-guide.md:18
+path(template)   ok      openspec/changes/add-book-reviews/specs/.../sp 3 places, first docs/spec-pack/workshop/sdd-framework-guide.md:109; created by /opsx:propose, parent checked
+path             ok      openspec/config.yaml                           3 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:437
+path             ok      openspec/specs                                 5 places, first docs/spec-pack/workshop/sdd-framework-guide.md:18
+path             ok      openspec/specs/ordering/spec.md                1 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:451
+path(generated)  ok      openspec/changes                               4 places, first staged:.claude/commands/opsx/explore.md:163
+path(generated)  ok      openspec/config.yaml                           14 places, first staged:.claude/commands/opsx/apply.md:15
+branch           FINDING solution/[x]level-4-<track>-<brief>               1 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:502 (step_branch prints start/level-4-openspec)
+branch           ok      start/level-4-<track>                          8 places, first docs/spec-pack/workshop/sdd-framework-guide.md:96 (step_branch prints start/level-4-openspec)
+branch           ok      start/level-4-openspec                         8 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:12 (step_branch prints start/level-4-openspec)
+code             ok      insufficient-stock                             <pkg>/domaininteraction: bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java:219:        return n
+code             ok      quantity-out-of-range                          <pkg>/domaininteraction: bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/InventoryFlow.java:184:            
+code             ok      OrderPlacedEvent                               <pkg>/domain: bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java:44:     * Places a new order with t
+code             ok      SHIPPED                                        <pkg>/domain: bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java:62:     * Ships a placed order: the
+code             ok      unitPrice                                      <pkg>: bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java:18:                .map(line
+code             ok      onHand                                         <pkg>/domain: bookstore/src/main/java/nl/openvalue/bookstore/domain/OnHandBelowReservedException.java:7:    privat
+code             ok      reserved                                       <pkg>/domain: bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java:3:/** 
+scenario         ok      Successful order                               OrderIntegrationTest.placingAnOrderReservesStockAndPublishesOneOrderPlacedEventAfterCommit (line 56; on level-0-start: yes)
+scenario         ok      Price snapshot                                 OrderIntegrationTest.orderKeepsThePriceItWasPlacedAt (line 144; on level-0-start: yes)
+scenario         ok      Several shortages are reported together        OrderIntegrationTest.severalShortagesAreReportedTogetherAndNothingIsReserved (line 168; on level-0-start: yes)
+scenario         ok      Duplicate lines are merged                     OrderIntegrationTest.duplicateLinesAreMergedIntoOneLine (line 220; on level-0-start: yes)
+scenario         ok      Merged quantity too large                      OrderIntegrationTest.aMergedQuantityAbove10IsRejectedWith422AndNothingIsReserved (line 240; on level-0-start: yes)
+scenario         ok      Discontinued book                              OrderIntegrationTest.aDiscontinuedBookIsRejectedWith409AndNothingIsReserved (line 253; on level-0-start: yes)
+scenario         ok      Shipping reduces stock                         OrderIntegrationTest.shippingTurnsReservationsIntoStockReductions (line 320; on level-0-start: yes)
+scenario         ok      Shipping twice                                 OrderIntegrationTest.shippingTwiceIsRejectedWith409AndChangesNothing (line 344; on level-0-start: yes)
+config           ok      ArchitectureTest                               bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java
+config           ok      docs/architecture.md                           docs/architecture.md
+config           ok      ./mvnw                                         mvnw
+config           ok      frontend                                       frontend/pom.xml
+config           ok      bookstore                                      bookstore/pom.xml
+config           ok      distributor                                    distributor/pom.xml
+version          ok      Java 25                                        pom.xml holds 25: True
+version          ok      Spring Boot 4.1.2                              pom.xml holds 4.1.2: True
+version          ok      Spring AI 2.0.2                                pom.xml holds 2.0.2: True
+
+tokens: 68, failures in staged or generated files: 0, findings in pack or guide text: 1
+FINDING branch solution/[x]level-4-<track>-<brief> (1 places, first docs/spec-pack/specs/10-harness-reference-solutions.md:502 (step_branch prints start/level-4-openspec)) differs from step_branch (pack or guide text promising a Level 4 solution branch, A10)
+
+# Negative control: the same script on a copy where one token of each kind is misspelled (docs/architecture.md, insufficient-stock, openspec status). Expect exit 1 and three FAIL lines:
+tokens: 69, failures in staged or generated files: 3, findings in pack or guide text: 1
+FAIL cli openspec statuz (1 places, first staged:.claude/commands/opsx/propose.md:25) not in `openspec --help` commands
+FAIL code insufficient-stock (<pkg>/domaininteraction: bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java:219:        return n) not found in main sources or not in the seeded spec
+FAIL config docs/architecture.md (docs/architecture.md  (NOT in config.yaml)) token missing or unresolved
+
+# CLI help captured for the subcommand and flag checks (openspec --help, top level):
+Usage: openspec [options] [command]
+
+AI-native system for spec-driven development
+
+Options:
+  -V, --version                      output the version number
+  --no-color                         Disable color output
+  -h, --help                         display help for command
+
+Commands:
+  version [options]                  Report the installed OpenSpec version and
+                                     update availability
+  init [options] [path]              Initialize OpenSpec in your project
+  update [options] [path]            Update OpenSpec instruction files
+  install [version]                  Install the standalone openspec, which runs
+                                     without Node.js (latest release unless
+                                     [version] is given)
+  list [options]                     List items (changes by default). Use
+                                     --specs to list specs.
+  view [options]                     Display an interactive dashboard of specs
+                                     and changes
+  change                             Manage OpenSpec change proposals
+  archive [options] [change-name]    Archive a completed change and update main
+                                     specs
+  spec                               Manage and view OpenSpec specifications
+  config [options]                   View and modify global OpenSpec
+                                     configuration
+  schema                             Manage workflow schemas [experimental]
+  store                              Create and manage stores - standalone
+                                     OpenSpec repos you register on this machine
+  doctor [options]                   Report relationship health for the resolved
+                                     OpenSpec root
+  context [options]                  Print the working context for the resolved
+                                     OpenSpec root
+  workset [options]                  Compose, keep, and open personal working
+                                     views (purely local)
+  validate [options] [item-name]     Validate changes and specs
+  show [options] [item-name]         Show a change or spec
+  feedback [options] <message>       Submit feedback about OpenSpec
+  completion                         Manage shell completions for OpenSpec CLI
+  status [options]                   Display artifact completion status for a
+                                     change
+  instructions [options] [artifact]  Output enriched instructions for artifacts,
+                                     apply, or archive
+  templates [options]                Show resolved template paths for all
+                                     artifacts in a schema
+  schemas [options]                  List available workflow schemas with
+                                     descriptions
+  new                                Create new items
+  help [command]                     display help for command

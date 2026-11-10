@@ -1,0 +1,17 @@
+# op	group	staged	target	mode	base
+add	config	files/dot-claude/commands/opsx/apply.md	.claude/commands/opsx/apply.md	644	-
+add	config	files/dot-claude/commands/opsx/archive.md	.claude/commands/opsx/archive.md	644	-
+add	config	files/dot-claude/commands/opsx/explore.md	.claude/commands/opsx/explore.md	644	-
+add	config	files/dot-claude/commands/opsx/propose.md	.claude/commands/opsx/propose.md	644	-
+add	config	files/dot-claude/commands/opsx/sync.md	.claude/commands/opsx/sync.md	644	-
+add	config	files/dot-claude/commands/opsx/update.md	.claude/commands/opsx/update.md	644	-
+add	config	files/dot-claude/skills/openspec-apply-change/SKILL.md	.claude/skills/openspec-apply-change/SKILL.md	644	-
+add	config	files/dot-claude/skills/openspec-archive-change/SKILL.md	.claude/skills/openspec-archive-change/SKILL.md	644	-
+add	config	files/dot-claude/skills/openspec-explore/SKILL.md	.claude/skills/openspec-explore/SKILL.md	644	-
+add	config	files/dot-claude/skills/openspec-propose/SKILL.md	.claude/skills/openspec-propose/SKILL.md	644	-
+add	config	files/dot-claude/skills/openspec-sync-specs/SKILL.md	.claude/skills/openspec-sync-specs/SKILL.md	644	-
+add	config	files/dot-claude/skills/openspec-update-change/SKILL.md	.claude/skills/openspec-update-change/SKILL.md	644	-
+add	config	files/openspec/changes/archive/dot-gitkeep	openspec/changes/archive/.gitkeep	644	-
+add	config	files/openspec/config.yaml	openspec/config.yaml	644	-
+add	config	files/openspec/specs/dot-gitkeep	openspec/specs/.gitkeep	644	-
+add	config	files/openspec/specs/ordering/spec.md	openspec/specs/ordering/spec.md	644	-

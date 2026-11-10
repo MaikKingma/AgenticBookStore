@@ -1,0 +1,28 @@
+# F5 on the built tree (acceptance criterion 5): the level-3 files are byte-identical on the level-4-openspec commit. $SBX2 = sandbox 2.
+F5 set: CLAUDE.md, .claude/** (settings, hooks, skills, commands, agents), .githooks/** as of the level-3 commit
+files in the set at level 3: 12
+files in the set at level 4: 24 (the difference is the 12 added OpenSpec files)
+level-3 rows missing or changed at level 4 (comm -23, expect none):
+(end)
+name-status of every tracked file, level 3 to level 4 (only A rows expected):
+  16 A
+specific files:
+CLAUDE.md                                            l3=018ac04cade4 l4=018ac04cade4 equal
+.claude/settings.json                                l3=930c77d476e6 l4=930c77d476e6 equal
+.claude/hooks/tests-before-commit.sh                 l3=dfc8d44c338b l4=dfc8d44c338b equal
+.claude/hooks/architecture-check-on-stop.sh          l3=004a8bba8a80 l4=004a8bba8a80 equal
+.githooks/pre-commit                                 l3=3a2a135a3a02 l4=3a2a135a3a02 equal
+.claude/skills/new-use-case/SKILL.md                 l3=7930f02217ee l4=7930f02217ee equal
+.claude/skills/new-use-case/reference.md             l3=96de267498e4 l4=96de267498e4 equal
+.claude/commands/ship.md                             l3=5dfc2e72ec9f l4=5dfc2e72ec9f equal
+.claude/agents/architecture-reviewer.md              l3=e5f91836bfbc l4=e5f91836bfbc equal
+.mcp.json                                            l3=638744a92ee5 l4=638744a92ee5 equal
+sha256 of the working files in sandbox 2 (shasum -a 256):
+310230867fd369c216874e1f99e830b42cd9eb24ebdef9cb4818f4fe7411b0e9  CLAUDE.md
+ef25c79abf739ef96c7254b1d46ff6aacae4891edb4351df7506bb9cd76923a6  .claude/settings.json
+55f7a6876cf5b0c476eca3fa5c65f54975769a1bb9c9f8f58ee44d6d5aa4e4b0  .claude/hooks/architecture-check-on-stop.sh
+950f19f43220c64d034775615b642c196e019e643a74cabb5bbc0fb1cc00eb46  .claude/hooks/tests-before-commit.sh
+b1ff4eb474960a124c50167695900d84a23f556fdcf2ebe6eb30ff9c6092f4e2  .githooks/pre-commit
+57778e9eb8a1333001b6577fe5e518ba9c06dad1244bfa04e182e464d9696aa7  .claude/commands/ship.md
+8952539647e2d81b4e8a1bc9aa208323b651dbac56749df2a0df1f41d316d88d  .claude/skills/new-use-case/SKILL.md
+a33ce005c01593a28a4bea5604f13f29543ba6441a8d96b2a1a4befc7bc9ceb9  .claude/agents/architecture-reviewer.md

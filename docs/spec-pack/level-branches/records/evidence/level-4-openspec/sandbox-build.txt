@@ -1,0 +1,126 @@
+# Sandbox builds of spec 10 task T11. Paths are masked: $SBX = sandbox 1, $SBX2 = sandbox 2, $WT = track worktree, $SP = session scratch folder.
+# Sandbox 1: simulate-level-0.sh level-0-start, then build-level.sh level-3 (the full level 3, cancel order included).
+# sandbox 1: simulate-level-0.sh level-0-start, then build-level.sh level-3
+level-0-start = b668073eb44bfea453c291509a615f6de081e54a
+spec tip = 74a6113c5b59907ae18419131c7ae8214479ddb9
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $SBX at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-1 as 0db69f5: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-2 as 3f0656b: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3 line 10: patch bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java (644, exercise)
+apply-level: level-3 line 11: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java (644, exercise)
+apply-level: level-3 line 12: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java (644, exercise)
+apply-level: level-3 line 13: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java (644, exercise)
+apply-level: level-3 line 14: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java (644, exercise)
+apply-level: level-3 line 15: add bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java (644, exercise)
+apply-level: level-3 line 16: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java (644, exercise)
+apply-level: level-3 line 17: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java (644, exercise)
+apply-level: level-3 line 18: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java (644, exercise)
+apply-level: level-3 line 19: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java (644, exercise)
+apply-level: level-3 line 20: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java (644, exercise)
+apply-level: level-3 line 21: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java (644, exercise)
+apply-level: level-3 line 22: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java (644, exercise)
+apply-level: level-3 line 23: patch bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java (644, exercise)
+apply-level: level-3 line 24: add bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql (644, exercise)
+apply-level: level-3 line 25: patch bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java (644, exercise)
+apply-level: level-3 line 26: patch bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java (644, exercise)
+apply-level: level-3 line 27: patch bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java (644, exercise)
+apply-level: level-3 line 28: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java (644, exercise)
+apply-level: level-3 line 29: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java (644, exercise)
+apply-level: level-3 line 30: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java (644, exercise)
+apply-level: level-3 line 31: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java (644, exercise)
+apply-level: level-3 line 32: patch bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java (644, exercise)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-3 as 77be2ef: Level 3 solution: behavioral control
+build-level: level-3 built in $SBX
+sandbox HEAD tree = 309786e063b813e0f9248714f404b927d277d879
+sandbox commits:
+77be2ef Level 3 solution: behavioral control
+3f0656b Level 2 solution: give your agent eyes (LSP + MCP)
+0db69f5 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+git status --porcelain (expect empty):
+
+# Sandbox 1 then gets openspec init and the two authored files (init-run.txt), and one commit with the step message.
+# Sandbox 2: a fresh simulate-level-0.sh level-0-start plus build-level.sh level-4-openspec from the staged files.
+# sandbox 2: simulate-level-0.sh level-0-start, then build-level.sh level-4-openspec
+build-level: committed level-1 as 0d0a309: Level 1 solution: context engineering
+build-level: committed level-2 as 51eaf85: Level 2 solution: give your agent eyes (LSP + MCP)
+build-level: committed level-3 as a1ba354: Level 3 solution: behavioral control
+apply-level: level-4-openspec: 16 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-4-openspec as b44e5db: Level 4 start: OpenSpec installed and initialised
+build-level: level-4-openspec built in $SBX2
+sandbox 2 HEAD tree = 1c279415e014454ab193a37849c64028ae5d247e
+sandbox 1 HEAD tree = 1c279415e014454ab193a37849c64028ae5d247e
+TREES EQUAL
+sandbox 2 commits:
+b44e5db Level 4 start: OpenSpec installed and initialised
+a1ba354 Level 3 solution: behavioral control
+51eaf85 Level 2 solution: give your agent eyes (LSP + MCP)
+0d0a309 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+git status --porcelain (expect empty):
+step commit changes (name-status vs HEAD~1):
+A	.claude/commands/opsx/apply.md
+A	.claude/commands/opsx/archive.md
+A	.claude/commands/opsx/explore.md
+A	.claude/commands/opsx/propose.md
+A	.claude/commands/opsx/sync.md
+A	.claude/commands/opsx/update.md
+A	.claude/skills/openspec-apply-change/SKILL.md
+A	.claude/skills/openspec-archive-change/SKILL.md
+A	.claude/skills/openspec-explore/SKILL.md
+A	.claude/skills/openspec-propose/SKILL.md
+A	.claude/skills/openspec-sync-specs/SKILL.md
+A	.claude/skills/openspec-update-change/SKILL.md
+A	openspec/changes/archive/.gitkeep
+A	openspec/config.yaml
+A	openspec/specs/.gitkeep
+A	openspec/specs/ordering/spec.md
+manifest targets sorted:
+name-status equals manifest rows
+level-3 commit of sandbox 2 tree: 309786e063b813e0f9248714f404b927d277d879
+
+# Refs and the base files that the config and the rows name (read only, git ls-tree on level-0-start):
+git ls-tree level-0-start -- docs/architecture.md:
+100644 blob 165e53270f71d00fb14785fe65515adcad01b841	docs/architecture.md
+git ls-tree level-0-start -- .claude/commands (expect nothing: level 0 has no Claude files):
+(end)
+origin/factory: 711dd9dcdc7562e1d7cae5f5ef7f45ca6fdd8f86
+origin/sdd/11-workshop-guide/spec: b7f053c7a9c64de408831179b44289404c8bb4e5
+spec tip (track worktree HEAD): 74a6113c5b59907ae18419131c7ae8214479ddb9
+level-0-start: b668073eb44bfea453c291509a615f6de081e54a
