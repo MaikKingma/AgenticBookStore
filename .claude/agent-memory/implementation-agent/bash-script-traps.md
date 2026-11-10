@@ -41,3 +41,9 @@ metadata:
   not word-split, so globs with spaces work. Make the glob specific (`-p */row-0 *` hits the restore, not the backup).
 - Unknown-option tests: give one argument too few (`--dry-run level-1`), else removing the `-*) usage` arm is masked
   by the argument-count check. Append new self-test cases at the end so QA's case numbers stay stable.
+- Worktree-isolated Bash refuses `git -C <other dir>`, redirects and `--output` into the worktree from another
+  checkout ("too complex"). Put such steps in a scratchpad script and run `bash <script>`. Evidence files written from a
+  script: pipe tool output through a `mask()` sed (sandbox, base, scratchpad, worktree paths, longest first) instead of
+  hand-editing afterwards, then grep the evidence folder for home-directory paths and the scratch root.
+- macOS grep has no `-P`: a non-ASCII check is `env LC_ALL=C grep -c -E '[^ -~]' <file>` (exit 1 and 0 = clean).
+  A `diff` with a backslash-escaped path is refused as too complex; quote the relative path instead.

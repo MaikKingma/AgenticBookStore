@@ -34,5 +34,9 @@ Framework facts behind these: res-3's `research-restclient-boot4.md` (spec 06 co
   Expected escaped text in source is `"\\u2028"` (the doubled backslash is not a unicode escape).
 - "Additions only" on a `Stream.of(...)` source: appending after the last element rewrites its closing `)));`
   line (1 deletion in numstat). Insert new rows before the last element instead.
+- Capturing a distributor title with curl: REST `GET /api/titles/{ean}` is the contract bytes as is (no trailing newline).
+  MCP `/mcp` needs `Accept: application/json, text/event-stream`; the `tools/call` answer is SSE
+  (`grep '^data:' | sed 's/^data://' | jq -j '.result.content[0].text'` gives the identical payload, `cmp` proves it).
+  The session id comes from the `Mcp-Session-Id` response header of `initialize`. macOS grep has no `-P`.
 - Missing-key variants: load the committed contract file into a `LinkedHashMap` with a Jackson 3
   `TypeReference` (a raw `Map.class` read gives an unchecked warning), change one key, write it back.

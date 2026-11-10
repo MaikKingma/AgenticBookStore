@@ -1,6 +1,6 @@
 ---
 name: qa-harness-staging-specs
-description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging
+description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, exercise reference tests and staged doc rows
 metadata:
   type: feedback
 ---
@@ -65,3 +65,15 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    A third witness lives outside the repo: Claude Code's per-project auto memory, keyed by the clone path, survives
    any reset in the same folder; require a new clone folder per run or a `/memory` check before each run. I missed it
    in r1, found it in the bounded r2 and could only route it as a follow-up: list all three witnesses up front.
+
+11. **Staged exercise reference tests over existing production (characterization tests).** A "red" from a missing
+   contract file proves nothing; the binding proof is a role-mutant ladder plus a control showing the pre-task suite
+   lets the main mutant live. At strategy time: (a) for an allow-list rule (`"AUTHOR".equals`), list the deny-list of
+   the values the data happens to hold as a falsifier and a witness value outside that set (EDITOR), and check the seed
+   for a title carrying it BEFORE the card pins "one contract file" (spec 10 T5: no historical title had EDITOR, so the
+   twin could only go to rule 4); (b) when the task adds a row to a participant-facing provenance doc, direct the
+   verifier to re-check every section claim for the new row ("captured on that day unless the table says otherwise",
+   run-naming headings, column headers, exhaustive enumerations). Verifiers rate such contradictions as nits.
+   Judge a heading qualifier ("run 1 unless noted, no flags") by the file's own convention: a sibling heading whose
+   noted row carries the same kind of deviation (a chaos flag) shows "unless noted" covers the whole parenthesis.
+   A rework that replaces an evidence file with a fresh raw run re-leaks sandbox paths: mask while writing, re-grep.
