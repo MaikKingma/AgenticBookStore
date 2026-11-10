@@ -2,7 +2,7 @@
 bug: fix-08-assistant-review
 severity: S2
 path: lite+research
-status: open
+status: fixed
 closes: [spec 08 residual R1, spec 08 residual R22, README answer language, integration tests online under exported SPRING_AI variables, live follow-up rejected for a thinking signature (A2)]
 ---
 # Bug: a failed live model call answers a generic 500 and leaves the question in the conversation

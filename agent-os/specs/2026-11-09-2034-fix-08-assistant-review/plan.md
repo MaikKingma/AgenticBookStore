@@ -1,12 +1,13 @@
 ---
 spec: fix-08-assistant-review
 source: docs/spec-pack/specs/08-bookstore-assistant.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-09T20:34:06Z
 origin: fresh spec 08 review at a56dfbc (main session); decision D10 (Maik 2026-11-09); spec 08 residuals R1 and R22
 gate1: 2026-11-09T20:36:30Z
 qa-lead: on
+gate2: 2026-11-10T00:25:46Z
 base: factory
 branch: sdd/fix-08-assistant-review/spec
 module-vocabulary: [root, bookstore, distributor, frontend, guide]
@@ -535,3 +536,38 @@ For T5 (orchestrator, from earlier lessons):
     first release (owner).
   - L5: a Dutch question gets a Dutch answer (25 words); every reply at most 73 words.
   - The owner also confirmed the storefront genre labels and the footer (factory fix-12 work).
+
+## Final QA and Gate 2
+
+- origin/factory 5fa5d19 merged into the spec branch as e97630a before the sweep (agent-memory conflicts only,
+  unioned); referee on the merged tip 25.0 s.
+- qa-final (opus, run 1, tip 0e7acf6): PASS. Referee 25.2 s plain and 25.3 s with only the dummy key and the decoy
+  base URL `127.0.0.2:9` exported (0 connection attempts); bookstore 1348 (base 1314, +34: T1 19, T4 3, T3 4, T5 8),
+  distributor 190, Vitest 23 files 689 passed + 2 expected fail (base 682 + 2, +7 T2). PR readiness: failing 0, skips
+  10 -> 10 on identical lines, gitlinks 0, base ancestor yes, CI green on 0e7acf6. All 18 product files carry the bytes
+  of their task merge. Branch-level negative controls at the tip, one task's files restored from origin/factory at a
+  time: N-T1 5 failures + 4 errors, N-T4 2, N-T3 2 plain and 5 exported, N-T5 5, N-T2 4, each exactly its named set
+  and shape; N-tip 127/0. Vite dev walk of `#/assistant` with a routed 503: exact alert text, server title absent,
+  typed text kept, console clean (residual R-h closed). JaCoCo: AssistantCommands 33/33 lines 6/6 branches,
+  AssistantConfig 12/12, BookstoreTools 49/49 and 14/14. Verdict: `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`.
+- qa-lead final review: ENDORSE, Gate 2 QA confidence high, every criterion traced (T1 1 to 10 and 6a, T4 1 to 8, T2 1
+  to 8, T3 1 to 7, T5 1 to 7 with 1(a) to 1(d)), no human overrides (ledger
+  `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-08-assistant-review.md`).
+- Gate 2 self-accepted by the orchestrator 2026-11-10T00:25:46Z: every task PR merged (#134, #138, #141, #143, #145),
+  no stragglers, the cycle diff against factory is confined to the five file scopes (18 files) plus spec docs and agent
+  memory.
+- Residuals: R-a memory restore not atomic (memory lock deferred); R-b provider message in the WARN log (accepted); R-c
+  cause kept and `Error` not caught proven by reading and grep (FU-1 open); R-e thinking off for every model (accepted
+  for the workshop default); R-g Spring AI 2.0.2 replay reorder latent, guarded by the contract test; R-i an exported
+  `SPRING_AI_MODEL_CHAT=anthropic` fails 7 tests locally (accepted by the main session); R-j `AssistantConfigContextTest`
+  reads the process environment (deferred, R17); R-k live model obedience (1 of 3 L4 runs added a false
+  self-correction; keeping tool calls in memory deferred to after the first release); R-l genre list is a copy of
+  `Genre` (drift test, intended); R-m two prompt phrases unpinned (FU-T5-1 open); R-n `Genre.parse` rejects a space
+  (pinned, intended); R-o a JDK `sun.misc.Unsafe` deprecation notice from byte-buddy at the contract test (informational).
+  Closed: R1, R22, R2, R-d, R-f, R-h.
+- Follow-ups for the main session: FU-1 (test the cause of the 503), FU-T5-1 (pin the two prompt phrases; missing space
+  at `AssistantIntegrationTest.java:332` and `:374`); the memory lock; the R17 context test; keeping tool calls in
+  memory (R-k); standards proposals in the QA ledger (test configuration in `@TestPropertySource` with a loopback base
+  URL; a stub-server contract test for model request options; failed model call -> `UnavailableException` with cause
+  and restored state; decorrelated fixtures for "our own text" UI tests; every working prompt clause pinned, enum
+  mirrors checked against the enum; QA scripts must print or assert).

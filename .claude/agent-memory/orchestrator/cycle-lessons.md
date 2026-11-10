@@ -33,8 +33,9 @@ metadata:
   field untouched needs that field asserted. Leaving these to the verifier cost two rework rounds per task.
 - **Before planning a defence-in-depth check, grep every fixture that feeds it** (fix-06 D3): one helper with a foreign
   isbn fed about twenty flow tests; aligning stub literals without touching assertions is within authority, log it.
-- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06) and for web config and
-  frontend state (fix-12); every rework was test-only. The main session's model rule (opus only for qa-lead,
+- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06), web config and frontend
+  state (fix-12), and chat-client options, test config and prompt text (fix-08; opus only for the boundary catch T1);
+  every rework was test-only. The main session's model rule (opus only for qa-lead,
   qa-final, critical tasks) overrides "rework >= 2 -> opus". Shared in-flight state: name "every reset branch has a
   test that sends again" in round 0 (fix-12 T2 r0 survivor). Bugfix criteria for new UI elements: "red set = the named
   tests plus any test of a new element; no pre-existing test red" up front (fix-12 plan.md A1). Also held in one
