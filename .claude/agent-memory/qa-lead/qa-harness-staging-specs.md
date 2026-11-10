@@ -1,6 +1,6 @@
 ---
 name: qa-harness-staging-specs
-description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, exercise reference tests and staged doc rows
+description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, lifecycle premises (LSP starts on first edit), exercise reference tests and staged doc rows
 metadata:
   type: feedback
 ---
@@ -77,3 +77,15 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    Judge a heading qualifier ("run 1 unless noted, no flags") by the file's own convention: a sibling heading whose
    noted row carries the same kind of deviation (a chaos flag) shows "unless noted" covers the whole parenthesis.
    A rework that replaces an evidence file with a fresh raw run re-leaks sandbox paths: mask while writing, re-grep.
+
+12. **Lifecycle premises in rehearsal rows.** Rows state "added here" facts about WHEN Claude Code starts something
+   (the first references request is the LSP cold start) and nobody checks them: implementer and verifier check paths,
+   cache folders and spellings. Claude Code's docs say the language server starts the first time Claude EDITS a file of
+   the plugin's extension (code-intelligence page, "Confirm the server starts"); a headless probe saw the same. A
+   read-only first request may meet no server and fail as "text search". At strategy time require every row's
+   lifecycle premise (LSP, MCP, plugin, hook, skill load) to be sourced in an evidence file, with a branch for the
+   other behaviour, and the measurement to start at the event that really starts the component (spec 10 T6 r1).
+   When I write such a branch as an RA, dry-run it through the NEXT row of the suggested order: a branch that pulls an
+   edit forward leaves the tree changed under a later "unchanged tree" premise, and a "started but not ready" first
+   answer (empty while indexing) needs its own stop event and counting answer. Nobody caught either until the bounded
+   round, where they could only go to a follow-up plus a reading note for the owner (spec 10 T6 r2).
