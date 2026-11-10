@@ -61,6 +61,17 @@ manual checks list below, spec 13 (assistant widget) and residual R-k after the 
 
 ## Manual checks for Maik
 
+Spec 10 rehearsal reading notes (orchestrator, 2026-11-10): R3-5, note `git rev-list --count HEAD` before prompt A, or
+judge only by `git log --oneline <start>..HEAD` printing nothing. R3-1 variant E (an added row, like C and D): expect
+`sh: <path>: Permission denied` after the notice; judge by `failed; blocking because onFailure is "block"`, an
+unchanged commit count and no build wait; run `chmod +x` first when restoring. "R3-5" in the skill-selection evidence
+header means R3-4. Follow-ups after spec 10 (product findings PF-T10-1..9, PF-T11-1..7, PF-T12-1..7 in the level
+records): skill description shares no content word with the cancel-order scenario; PowerShell leftovers after D16;
+stale "any other non-zero code does not block" under `onFailure: "block"`; Spec Kit tasks template marks tests
+optional; guide names an unpinned `uv tool install` and `--script ps`; guide setup page lacks OpenSpec; storefront
+shows "Not shipped yet" for a cancelled order; README line 70 and `http/orders.http` lack the cancel command.
+
+
 - Done 2026-11-07: the gh token now has the `workflow` scope (`gh auth refresh -h github.com -s workflow`), so the SSH workaround for workflow-touching branches is no longer needed.
 - Spec-pack suggestion from the spec 01 review (no action needed now): no ArchUnit rule rejects a ninth top-level package in the bookstore (for example `util`). The standard says there are exactly eight. If you want it enforced, a later spec can add the rule and its fixture.
 
