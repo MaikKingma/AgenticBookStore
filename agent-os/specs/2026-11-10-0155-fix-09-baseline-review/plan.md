@@ -92,7 +92,7 @@ to publish-safety critical with opus implementer and verifier; T1 and T2 are ele
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #151 | sdd/fix-09-baseline-review/T1 |
 | T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | #152 | sdd/fix-09-baseline-review/T2 |
-| T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | done | PASS r0 | ENDORSE | (pending) | sdd/fix-09-baseline-review/T3 |
+| T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | done | PASS r0 | ENDORSE | #153 | sdd/fix-09-baseline-review/T3 |
 
 T2 and T3 share the root module and run one after the other; one task at a time anyway (T1, T2, T3).
 
