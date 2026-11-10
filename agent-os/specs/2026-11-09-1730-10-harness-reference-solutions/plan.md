@@ -34,7 +34,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 | T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | #148 | sdd/10-harness-reference-solutions/T5 | ENDORSE (r2) |
 | T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | #150 | sdd/10-harness-reference-solutions/T6 | ENDORSE (r2) |
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | #154 | sdd/10-harness-reference-solutions/T7 | ENDORSE (r2) |
-| T8 | Level 3 hooks (sh, ps1, git hook), harness, Windows note | root | [T7] | 8 | critical | opus | opus | | | |
+| T8 | Level 3 hooks (sh, git hook), harness, Git Bash note (ps1 dropped, A6) | root | [T7] | 8 | critical | opus | opus | #155 | sdd/10-harness-reference-solutions/T8 | ENDORSE (r4) |
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | opus | opus | | | |
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | | | |
@@ -273,6 +273,18 @@ for all three tracks is a manual check for Maik.
   evidence, is marked in the trace ("code only" or the evidence line), and is reported as a product finding against
   the source; the file is never reworded back to a false source. Verifiers write per-round hash files
   (`t<n>-qa-r<k>-hashes.txt`) over every fileScope file.
+- FF-T8-a (from T8; T9, T10): a claim that two implementations behave the same is checked under participant
+  defaults (UTF-8 locale, Git Bash) or limited in the text ("for ASCII input", "in the harness").
+- FF-T8-b (from T8; T10, qa-final): wherever the T8 harness is cited as proof that a red build blocks Claude's
+  commit, cite `tbc-chained-git-add-and-git-commit` next to `tbc-commit-red`; every commit-hook rehearsal row runs one
+  plain and one chained commit (`git add -A && git commit -m x`) and lists PF-T8-1's quoted-path form
+  (`cd "<folder>" && git commit`) as the known exit-0 bypass.
+- FF-T8-c (from T8; verifiers of T9 to T13): probe each quantified part of a regex, glob or matcher widened and
+  deleted, and include the input form the real caller sends as a case that must hold.
+- Product findings from T8 for Maik: PF-T8-1 a quote before `git commit` in the command (`cd "<folder>" && git
+  commit`) makes the pack commit hook exit 0 without the build; PF-T8-2 the docs and D9 say that without Git Bash the
+  commit hook never fires (no gate at all), so Windows needs Git Bash; PF-T8-3 the Stop hook skips its check when
+  `git ls-files` fails; J16 and J17 in the run ledger. S/README.md does not yet list `tests/test-hooks.sh` (qa-final).
 - Product findings from T7 for Maik: PF-QA-T7-1 `onFailure: "block"` also blocks on unexpected exit codes, so the
   pack hook comment (pack line 283, "Any other non-zero code does NOT block") and guide
   `04-level-3-behavioral-control.mdx` line 105 are stale for the commit hook; the public schemastore settings schema
@@ -378,6 +390,20 @@ for all three tracks is a manual check for Maik.
   `.claude/settings.json` add row and the two plugin lines of `docs/lsp-setup.md` go, the level-3 settings file drops
   the two plugin keys (one Write, HR2), AND level-3 manifest row 2 flips from `replace` to `add`, otherwise
   build-level.sh level-3 fails.
+- A6 (2026-11-10, from Maik's decision D16 on factory 7ba87a9, "Skip the powershell stuff"): every PowerShell part is
+  dropped from T8 and all later tasks: no `.ps1` hook variants, no PowerShell parity cases, fixtures, mutants or
+  Windows PowerShell notes. Level 3 ships `tests-before-commit.sh`, `architecture-check-on-stop.sh` and
+  `.githooks/pre-commit` only; Windows participants run them through Git Bash (D9). `S/tests/test-hooks.sh` keeps only
+  the bash/sh cases (green on bash 5.3 and macOS /bin/bash 3.2); `S/records/windows-hooks.md` keeps only the Git Bash
+  prerequisite, the D9/onFailure facts and the Git Bash checks for Maik. T8's QA findings RA6, RA7, RA-r3-1 to RA-r3-3,
+  PF-QA-T8-4 and R-T8-1 are struck as moot; T8's last round is bounded to the removal (sh hooks and git hook
+  unchanged, harness green, no other drift). Gate 1 re-run and self-accepted: the scope narrows.
+- A7 (2026-11-10, orchestrator, from the T8 r3 meta-review, decision J18): one closed test-only round r4 for T8
+  after the D16 removal round: two fixtures and two harness cases (`git add -A && git commit -am wip` must be blocked;
+  `ls legitcommits` must not run the build), the evidence refreshed; hooks, pre-commit, manifest and the note stay
+  byte-unchanged. Reason: r3 was redirected by D16 from the escalated defect round to the removal, the gap (no text
+  before `git commit` in any fixture) lets the most common chained commit through a broken hook, and the fix is two
+  proven cases; a later fix task would leave T10 citing an incomplete harness. Gate 1 re-run and self-accepted.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME

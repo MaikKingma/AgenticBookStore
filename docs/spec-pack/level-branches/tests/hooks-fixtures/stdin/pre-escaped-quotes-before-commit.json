@@ -1,0 +1,1 @@
+{"session_id":"abc123","transcript_path":"/home/user/.claude/projects/my-project/transcript.jsonl","cwd":"/home/user/my-project","permission_mode":"default","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"cd \"/home/user/my project\" && git commit -am wip","description":"Commit the change"},"tool_use_id":"toolu_01ABC123"}

@@ -45,5 +45,8 @@ metadata:
   checkout ("too complex"). Put such steps in a scratchpad script and run `bash <script>`. Evidence files written from a
   script: pipe tool output through a `mask()` sed (sandbox, base, scratchpad, worktree paths, longest first) instead of
   hand-editing afterwards, then grep the evidence folder for home-directory paths and the scratch root.
+- macOS `cmp -n N` falsely reports "EOF on <first>" when that file is exactly N bytes: prefix-check with
+  `head -c N new | cmp -s - old`. Plain `diff` may shift an insert hunk up a line when the line above repeats as the
+  last inserted line (`diff --minimal` does not): pin the position with head/sed/tail splits and `cmp`.
 - macOS grep has no `-P`: a non-ASCII check is `env LC_ALL=C grep -c -E '[^ -~]' <file>` (exit 1 and 0 = clean).
   A `diff` with a backslash-escaped path is refused as too complex; quote the relative path instead.

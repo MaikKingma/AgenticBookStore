@@ -4,3 +4,6 @@ add	config	files/dot-claude/skills/new-use-case/SKILL.md	.claude/skills/new-use-
 add	config	files/dot-claude/skills/new-use-case/reference.md	.claude/skills/new-use-case/reference.md	644	-
 add	config	files/dot-claude/commands/ship.md	.claude/commands/ship.md	644	-
 add	config	files/dot-claude/agents/architecture-reviewer.md	.claude/agents/architecture-reviewer.md	644	-
+add	config	files/dot-claude/hooks/tests-before-commit.sh	.claude/hooks/tests-before-commit.sh	755	-
+add	config	files/dot-claude/hooks/architecture-check-on-stop.sh	.claude/hooks/architecture-check-on-stop.sh	755	-
+add	config	files/dot-githooks/pre-commit	.githooks/pre-commit	755	-
