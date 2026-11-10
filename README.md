@@ -25,9 +25,8 @@ at http://localhost:8080/shop/. The database keeps running when the bookstore st
 
 ### The jar against an existing PostgreSQL
 
-`./mvnw verify` also builds `bookstore/target/bookstore-0.0.1-SNAPSHOT.jar`. To run it against a PostgreSQL you already
-have, set the datasource (your own URL, user and password) and start it from the repository root. The migrations create
-the schema, and the demo data is loaded too.
+`./mvnw verify` also builds `bookstore/target/bookstore-0.0.1-SNAPSHOT.jar`. To run it against your own PostgreSQL, set the
+datasource (its URL, user and password) and start it from the repository root. The migrations create the schema.
 
     SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/bookstore \
     SPRING_DATASOURCE_USERNAME=bookstore SPRING_DATASOURCE_PASSWORD=bookstore \
@@ -96,11 +95,12 @@ The key comes only from `BOOKSTORE_AI_API_KEY`, set in the shell where you start
 your own subscription, so your usage there would be billed to the workshop key.
 
 The model is `claude-haiku-5-5` unless `BOOKSTORE_AI_MODEL` names another one. `application.yml` sets the base URL to
-https://api.anthropic.com (a Spring environment variable can still override it), and no temperature or other
-sampling setting is configured. Without a key the bookstore
-still starts, in offline mode, and `POST /assistant/chat` answers 503 with the code `assistant-offline`. A message has at
-most 1000 UTF-16 code units (an emoji counts as two). A longer, blank or missing message, or a missing `conversationId`,
-answers 400. At most 20 chat requests a minute per running instance reach the model; the rest answer 429.
+https://api.anthropic.com (a Spring environment variable can still override it), and no temperature or other sampling setting
+is configured. Without a key the bookstore still starts, in offline mode, and `POST /assistant/chat` answers 503 with the
+code `assistant-offline`. With a key set, a failed live model call (for example a wrong key, a spend or rate limit at
+Anthropic, or a timeout) answers 503 with the code `assistant-unavailable`. A message has at most 1000 UTF-16 code units (an
+emoji counts as two). A longer, blank or missing message, or a missing `conversationId`, answers 400. At most 20 chat
+requests a minute per running instance reach the model; the rest answer 429.
 
 ## Tests
 
