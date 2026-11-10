@@ -89,7 +89,7 @@ If something is red, see [Docker is not running](./reference/troubleshooting.md#
 
 ## Install jdtls
 
-The plugin does not ship the binary. `jdtls` needs JDK 17 or later, and you have 25.
+The plugin does not ship the binary. `jdtls` needs JDK 21 or later, and you have 25.
 
 <Tabs groupId="jdtls">
   <TabItem value="macos" label="macOS">

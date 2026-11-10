@@ -12,8 +12,6 @@ Find your symptom below. Each section holds the checks in the order to try them.
 
 Claude Code runs natively on Windows, but the hook scripts of Level 3 are bash scripts. Use Git for Windows (Git Bash) or WSL2.
 
-On Windows, `solution/level-3` also holds a PowerShell variant of the hook with the same behaviour, `tests-before-commit.ps1`. How Windows participants point the hook command at it is not verified yet. Until that is verified, run the bash hook from Git Bash or WSL2. The branch is at [solution/level-3](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-3).
-
 Agent OS needs bash (WSL or Git Bash). The Java language server `jdtls` runs through WSL, see [jdtls not starting](#jdtls-not-starting).
 
 ## jdtls not starting {/* #jdtls-not-starting */}
