@@ -1,9 +1,10 @@
 ---
 spec: 09-workshop-baseline
 source: docs/spec-pack/specs/09-workshop-baseline.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-09T16:23:06Z
+gate2: 2026-11-10T01:28:08Z
 qa-lead: on
 base: factory
 spec-branch: sdd/09-workshop-baseline/spec
