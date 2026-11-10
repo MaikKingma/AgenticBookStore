@@ -30,4 +30,8 @@ For a prose task the tests are a claim census plus gate greps. What held:
   Messages JSON; the stub's request count shows rejected calls never reach the model.
 - **Port 8080 may belong to someone else** (another agent's bookstore): preflight with `lsof`, never kill it, run the jar
   with `--server.port=<free>` and record it as the one deviation.
+- **Worktree Bash guard refuses paths with backslash-escaped spaces.** The project path holds a space: use relative
+  paths from the worktree root (`python3 -I <abs scratchpad script> . README.md http`, `bash .claude/comms/tmp/x.sh`);
+  the scratchpad and Read/Edit/Write absolute paths are fine. A count-sentence census script that reads the seed SQL
+  (parse the INSERT VALUES rows, derive 103/20/83/7/3/6/3) with copies altered one number at a time is the red/green test.
 - Keep a `README.md` under a line limit by unwrapping lines and inlining small code blocks, not by dropping sections.

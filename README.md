@@ -4,6 +4,7 @@
 
 An online bookstore built as a clean hexagonal onion: a Spring Boot REST backend on PostgreSQL, the OpenBook storefront
 (React) and a small distributor service. When a book's stock runs low, the bookstore asks the distributor to restock it.
+The [workshop guide site](https://maikkingma.github.io/AgenticBookStore/) is on GitHub Pages.
 
 ## Prerequisites
 
@@ -47,7 +48,6 @@ too when the bookstore fails at startup because an older local database already 
 | `distributor/` | A fictional book distributor with a REST API and MCP on port 8090, see `distributor/README.md` |
 | `frontend/` | The OpenBook storefront (React, TypeScript, Vite), see `frontend/README.md` |
 | `http/` | Request files in the JetBrains HTTP Client format, for the bookstore and the distributor |
-| `guide/` | The workshop guide site, a Docusaurus project built on its own, outside the Maven build |
 
 ## Architecture
 
@@ -109,11 +109,11 @@ answers 400. At most 20 chat requests a minute per running instance reach the mo
 
 ## Demo data
 
-A local run starts with 40 books, their stock and 6 orders for 3 customers. Every run of the bookstore loads this data
+A local run starts with 103 books, their stock and 6 orders for 3 customers. Every run of the bookstore loads this data
 (Maven or jar), and the tests never do. Seven books are at or below their reorder level, three of them sold out.
 
 - 20 books are also in the distributor catalogue. Their titles and authors are real classics; the stock figures are invented.
-- The other 20 books, their authors, the customers, their e-mail addresses and the orders are invented.
+- The other 83 books, their authors, the customers, their e-mail addresses and the orders are invented.
 - Sense and Sensibility (9789900010029) is left out on purpose, because `http/inventory.http` adds it.
 
 Run the files in `http/` in this order on one database: `catalogue.http`, `inventory.http`, `orders.http`,
