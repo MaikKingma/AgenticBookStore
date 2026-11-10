@@ -25,13 +25,12 @@ metadata:
 - When a criterion is checked by a token grep (`publishEvent\(`, `orders\.save\(`), write explicit calls, not method references
   (`events::publishEvent` hides from the grep). `inOrder.verify(events).publishEvent(any(Object.class))` binds the `Object`
   overload without a captor.
-- Order and "which element" tests (`containsExactly` on a port list, multi-aggregate flows): make the stubbed order monotonic in
-  NO column, asc or desc (id, every int field, derived values like available, booleans), else a re-sorting mutant survives.
-  Use three rows with the reported row in the middle; the asserted list itself (shortage `details`, published stock events)
-  needs three entries too. QA counts every attribute of the entity the flow holds in scope (isbn, title, price), not only the
-  asserted record's fields. A shared fixture list asserted in several orders: one changed literal can fix one order and make
-  another monotone, so tabulate every order the constant appears in. Constant columns (every reorder level 3) let a stable Java
-  sort survive: vary them unless pinned. Add the save-never/no-events check to read-side rejection tests (QA counts them).
+- Order and "which element" tests (`containsExactly` on a port list): make the stubbed order monotonic in NO column, asc or
+  desc (id, every int field, derived values, booleans), else a re-sorting mutant survives. Three rows, reported row in the
+  middle; the asserted list itself (shortage `details`, stock events) needs three entries. QA counts every attribute of the
+  entity in scope, not only the asserted record's fields. A shared fixture asserted in several orders: tabulate every order the
+  constant appears in. Constant columns let a stable sort survive: vary them. Add save-never/no-events checks to read-side
+  rejection tests.
 - Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with `perl -0pe` from
   a `cp -p` original in the scratchpad, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and compares `shasum`; flag
   "MUTANT NOT APPLIED" when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.

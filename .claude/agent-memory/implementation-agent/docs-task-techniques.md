@@ -26,7 +26,5 @@ For a prose task the tests are a claim census plus gate greps. What held:
   made-up key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub that answers a minimal
   Messages JSON; the stub's request count shows rejected calls never reach the model.
 - **Port 8080 may belong to someone else:** preflight with `lsof`, never kill it, run the jar with `--server.port=<free>`.
-- **Worktree Bash guard refuses paths with backslash-escaped spaces.** Use relative paths from the worktree root
-  (`python3 -I <abs scratchpad script> . README.md http`, `bash .claude/comms/tmp/x.sh`); the scratchpad and Read/Edit/Write
-  absolute paths are fine.
-- Keep a `README.md` under a line limit by unwrapping lines and inlining small code blocks, not by dropping sections.
+- **Worktree Bash guard refuses paths with backslash-escaped spaces:** use relative paths from the worktree root; the scratchpad
+  and Read/Edit/Write absolute paths are fine. Keep a `README.md` under a line limit by unwrapping lines, not dropping sections.
