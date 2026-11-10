@@ -92,7 +92,7 @@ to publish-safety critical with opus implementer and verifier; T1 and T2 are ele
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #151 | sdd/fix-09-baseline-review/T1 |
 | T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | #152 | sdd/fix-09-baseline-review/T2 |
-| T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | pending | | | | |
+| T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | done | PASS r0 | ENDORSE | (pending) | sdd/fix-09-baseline-review/T3 |
 
 T2 and T3 share the root module and run one after the other; one task at a time anyway (T1, T2, T3).
 
@@ -271,6 +271,18 @@ From the QA lead's T2 r0 meta-review:
   R-T2-2 the jar paragraph alone no longer says the run seeds the database (README "Demo data" does).
 - qa-final QF-3: at the spec tip the README and http hashes match the T2 baseline (or every later change is
   explained), README at most 120 lines, the grep pair prints at least 1 and 1, the sentence is under "## Assistant".
+From the QA lead's T3 r0 meta-review (no feed-forward, last task):
+- Residuals noted (owner, not a QA bar): R-T3-1 no test asserts the `--dry-run` "would remove:" listing (predates
+  T3); R-T3-2 `--check` calls guide files "agent configuration" (consistent with D15).
+- qa-final QF-4: at the spec tip both script hashes equal the T3 baseline (or every later change is explained); the
+  test ends `263 assertions, 0 failures` on `/bin/bash` and `/opt/homebrew/bin/bash`; `--list-paths` prints 13 lines,
+  the last two `guide` and `.github/workflows/guide.yml`; `.github/workflows/no-agent-config.yml` unchanged versus the
+  spec base; CI `publish-script-test` green on the spec PR.
+- qa-final QF-5: in a scratch clone of the tip with origin pointed at a scratch bare repo (`git remote -v` printed
+  first), a factory commit adding `guide/x.md` and `.github/workflows/guide.yml`: `--dry-run` shows
+  `would remove: guide` and `would remove: .github/workflows/guide.yml`; then the default run and `--check main`
+  exits 0; this project's refs (`git for-each-ref refs/heads/main refs/tags/level-0-start`,
+  `git ls-remote origin main level-0-start`) identical at start and end.
 - qa-final (QF-1, QF-2): the two direction probes of the T1 comparison at `:49` (extra location with a V7 -> not
   expected ["7"]; V9 with `spring.flyway.target: "4"` -> could not find ["9"]), each a `clean test` run in a
   throwaway tree; the T1 test file's hash at the spec tip equals `4960f2fd...a91f`.
