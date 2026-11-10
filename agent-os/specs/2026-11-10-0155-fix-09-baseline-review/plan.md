@@ -90,7 +90,7 @@ to publish-safety critical with opus implementer and verifier; T1 and T2 are ele
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | pending | | | | |
+| T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | (pending) | sdd/fix-09-baseline-review/T1 |
 | T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | pending | | | | |
 | T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | pending | | | | |
 
@@ -241,7 +241,24 @@ files, test = the grep pair; T3 `scripts/publish-workshop-main.sh`, test command
 
 ## QA feed-forward
 
-(none yet)
+From the QA lead's T1 r0 meta-review (ledger `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-09-baseline-review.md`):
+- FF-1 (T2, T3): `grep -ciE "warn|deprecat|self-attach" <log of ./mvnw clean verify>` prints 162; any other count:
+  diff the normalised lines against `f09-t1-qa-verify.log` (scratch) and classify every added line.
+- FF-2 (T2, T3): the verdict ends with repo-relative `shasum -a 256` lines for every fileScope file; scratch names
+  `f09-t<n>-qa-*`, cited by absolute path.
+- FF-3 (T2, T3): the T1 test file's SHA-256 is
+  `4960f2fdd5dea1732c9d65d5687b763f406d2cbae2173215bf848d3752d0a91f` at the start and end of the gate.
+- FF-4 (T3): besides the negative control, named mutants of the fixed script, one run each, `cp` restore with SHA
+  check, each failing on its quoted `not ok` name: (i) drop only `guide` (main holds nothing under guide, the
+  `--check` guide case); (ii) drop only `.github/workflows/guide.yml` (its `removed:` line, its `--check` case);
+  (iii) strip by prefix without a path separator (the look-alike keep assertions `guidelines.md`,
+  `.github/workflows/guide.yaml`). A look-alike assertion no mutant turns red has no evidence.
+- FF-5 (T2): trace each fact of the new sentences (503, `assistant-unavailable`, wrong key, spend or rate limit,
+  timeout, conversation unchanged if mentioned) to `AssistantCommands.java:60-80` and to an asserting test by
+  file:line; name any fact no test asserts.
+- qa-final (QF-1, QF-2): the two direction probes of the T1 comparison at `:49` (extra location with a V7 -> not
+  expected ["7"]; V9 with `spring.flyway.target: "4"` -> could not find ["9"]), each a `clean test` run in a
+  throwaway tree; the T1 test file's hash at the spec tip equals `4960f2fd...a91f`.
 
 ## Amendments
 
