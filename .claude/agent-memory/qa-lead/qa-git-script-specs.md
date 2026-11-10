@@ -31,6 +31,10 @@ Written at the spec 09 strategy (publish-workshop-main.sh), confirmed by the T4 
    `docs/specs-notes.md`, nested `x/specs/y`, `docs/spec-pack-old/`) kill prefix-grep mutants; a guard run from a
    subdirectory kills a missing cd to the top level (pathspecs are cwd-relative, the guard then passes silently).
    Root-only lists miss nested agent files (Claude Code reads nested CLAUDE.md): price it at Gate 1.
+   Over-match mutants differ per git command: `ls-files`/`rm` pathspecs glob (`"$p*"` takes `guidelines.md`), but
+   `git ls-tree -- "$p*"` is literal and finds nothing, so it is no look-alike witness for an ls-tree check; use a
+   string-prefix (`awk 'index($0,p)==1'`) and a substring (`grep -F`) mutant there. A strict `"$p*"` misses a `.yaml`
+   twin of a `.yml` path: ask for a whole-name-prefix look-alike (`x.yml.disabled`) plus a stem mutant (fix-09 T3).
 5. **Refusals need each shape.** Clean-tree: tracked, staged, untracked non-ignored (and an ignored file must not
    refuse), and untracked under `status.showUntrackedFiles=no` (kills a dropped `--untracked-files=normal`). Branch:
    detached HEAD at the branch's commit and a `name-x` branch. Remote equality: ahead, behind and diverged (kills an

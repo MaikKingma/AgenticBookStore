@@ -15,7 +15,9 @@ openspec
 specs
 agent-os
 .githooks
-docs/spec-pack'
+docs/spec-pack
+guide
+.github/workflows/guide.yml'
 
 PROGRAM=publish-workshop-main
 SOURCE_BRANCH=factory
