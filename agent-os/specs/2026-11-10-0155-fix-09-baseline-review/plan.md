@@ -91,7 +91,7 @@ to publish-safety critical with opus implementer and verifier; T1 and T2 are ele
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | the seed guard compares the migration history with the V files on the classpath, so a new migration stays green | bookstore | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #151 | sdd/fix-09-baseline-review/T1 |
-| T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | pending | | | | |
+| T2 | README and assistant.http say a failed live model call answers 503 `assistant-unavailable` | root | [] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | (pending) | sdd/fix-09-baseline-review/T2 |
 | T3 | the publish script's path list holds `guide` and `.github/workflows/guide.yml`, tested on bash 3.2 and 5 | root | [] | 3 | critical | opus | pending | | | | |
 
 T2 and T3 share the root module and run one after the other; one task at a time anyway (T1, T2, T3).
@@ -256,6 +256,21 @@ From the QA lead's T1 r0 meta-review (ledger `.claude/comms/mailboxes/qa-lead/ou
 - FF-5 (T2): trace each fact of the new sentences (503, `assistant-unavailable`, wrong key, spend or rate limit,
   timeout, conversation unchanged if mentioned) to `AssistantCommands.java:60-80` and to an asserting test by
   file:line; name any fact no test asserts.
+From the QA lead's T2 r0 meta-review:
+- FF-6 (T3): (a) the hash check also covers README `4f1f302ab48ebcad8d808605ed75089e18ed28c0d9f8a4f8cbda6e882fd768d5`
+  and `http/assistant.http` `71d88e210698949f866181071b3e2e319a11af2f6aa447fa3e199715d8360421` at start and end;
+  (b) the verdict reports the implementer artifact's `ls -lT` mtime next to its `updated` stamp (stamps from `date -u`).
+- FF-7 (T3): every new case calls the script through the existing `"$BASH" "$SCRIPT"` helper; `grep -n '"\$SCRIPT"'`
+  shows no call without `"$BASH"`; a logging PATH shim for `bash` records 0 calls in the `/bin/bash` run and the
+  summary reads `bash 3.2.57(1)-release`.
+- FF-8 (T3): each "names exactly that path" assertion (criteria 3c, 3d) fails on two mutants of the fixed script, one
+  run each, `cp` restore with SHA check: (i) `--check` exits non-zero but prints nothing; (ii) it prints every listed
+  path, or `guide` instead of the file. Also `bash scripts/publish-workshop-main.sh --check HEAD` on a published main
+  in a scratch repo exits 0. Git writes only in scratch repos.
+- Residuals noted (owner, not a QA bar): R-T2-1 no test names the SDK exception types behind the documented causes;
+  R-T2-2 the jar paragraph alone no longer says the run seeds the database (README "Demo data" does).
+- qa-final QF-3: at the spec tip the README and http hashes match the T2 baseline (or every later change is
+  explained), README at most 120 lines, the grep pair prints at least 1 and 1, the sentence is under "## Assistant".
 - qa-final (QF-1, QF-2): the two direction probes of the T1 comparison at `:49` (extra location with a V7 -> not
   expected ["7"]; V9 with `spring.flyway.target: "4"` -> could not find ["9"]), each a `clean test` run in a
   throwaway tree; the T1 test file's hash at the spec tip equals `4960f2fd...a91f`.
