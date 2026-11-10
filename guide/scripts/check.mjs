@@ -117,6 +117,7 @@ export function runChecks(root, options = {}) {
   report('contrast', site.contrast.errors, 0, site.contrast.summary);
   report('brand', site.brand.errors, 0, site.brand.summary);
   report('fonts', site.fonts.errors, 0, site.fonts.summary);
+  report('logo', site.logo.errors, 0, site.logo.summary);
 
   if (options.structure) {
     const structure = structureRules(root, options.workshopDir ?? WORKSHOP_DIR);

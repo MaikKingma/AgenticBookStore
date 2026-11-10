@@ -70,6 +70,8 @@ Rules in place:
   dropped quietly.
 - Brand and fonts: the seven brand values, the primary colours, the font stack, the three font faces and their
   provenance, the licence file, and no font CDN or font package anywhere in `guide/`.
+- Logo provenance (rule `logo`): every file under `static/img/` has a README line with its name and sha256 (see Logo and
+  provenance below).
 
 The checker builds its forbidden characters from code points (`String.fromCodePoint(0x2014)`) because the editor tools
 decode a typed backslash-u escape into the literal character.
@@ -119,6 +121,29 @@ pyftsubset Montserrat-<Weight>.woff2 --flavor=woff2 --layout-features='*' --outp
 The checker recomputes the sha256 of every woff2 in `src/css/fonts/` and fails when the last column of this table does
 not hold it. Check by hand with `shasum -a 256 src/css/fonts/*.woff2`. Never fetch a font through an npm package or a
 font CDN; replace a file by redoing the steps above and updating the table.
+
+### Logo and provenance
+
+The navbar shows the OpenValue wordmark in front of the title (decision D18). The two files in `static/img/` come from the
+keynote deck "Shift Left, Look Right" (`Shift Left, Look Right.pdf`, kept outside this repository; the PDF never enters it).
+The wordmark on page 1 is an embedded raster image (image XObject `/Im4`, 422x77 pixels, white) with a separate 8-bit soft
+mask that already is the anti-aliased alpha channel. A short Python 3 script with the standard library only (`re`, `zlib`,
+`struct`) inflates both streams and writes two RGBA PNGs at the native 422x77 size: the colour channels are one constant
+colour (white for the light file, slate `#1D242C` for the dark file) and the alpha channel is the soft mask, byte for byte,
+so the two files have identical alpha and alpha 0 in all four corners. There is no rendering, cropping, keying or
+resampling. The deck holds no larger copy of the wordmark, so 422x77 is the ceiling.
+
+Mode: the slate file shows in light mode (light navbar), the white file in dark mode (slate navbar). The navbar displays
+the logo at a height of 32 pixels.
+
+| File in `static/img/` | Source deck | Page | Image object | How it was made | File sha256 |
+|---|---|---|---|---|---|
+| openvalue-logo-light.png | Shift Left, Look Right.pdf | page 1 | /Im4 with soft mask | recoloured white (255,255,255), no resampling | a822369154fc67fb17bcce84ddd262fa3ecf6fa1daadddbc9e1254ca8568c472 |
+| openvalue-logo-dark.png | Shift Left, Look Right.pdf | page 1 | /Im4 with soft mask | recoloured slate (29,36,44), no resampling | 7609e6dcb361444a8ad8ab243bc9bc4891a36e712f20e9c5166f8192afb56933 |
+
+The checker (rule `logo`) fails when any file under `static/img/`, in any folder and with any extension, has no README line
+that holds both its name and its sha256 (the ok line states the number of images). Check by hand with
+`shasum -a 256 static/img/*.png`. To replace a logo, redo the steps above and update the table.
 
 ## Writing pages
 

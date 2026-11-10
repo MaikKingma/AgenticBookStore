@@ -10,7 +10,7 @@ const byName = (name) => CONTRAST_PAIRS.filter((pair) => pair.name === name);
 
 // The number of pairs when this test was written. It may only grow: raise it together
 // with a new pair, never lower it to make a removal pass.
-const MINIMUM_PAIR_COUNT = 53;
+const MINIMUM_PAIR_COUNT = 54;
 
 test('contrast pairs: the table holds at least the pinned number of pairs', () => {
   assert.ok(CONTRAST_PAIRS.length >= MINIMUM_PAIR_COUNT, `only ${CONTRAST_PAIRS.length} pairs`);
@@ -69,6 +69,14 @@ for (const [type, colour] of ADMONITIONS) {
     ]);
   });
 }
+
+// Spec 14, T1: the navbar logo is a graphic of one colour per mode (slate on the light bar, white on the
+// slate bar), so it is a non-text pair like any other accent; logo.test.mjs ties the variable to the PNG.
+test('contrast pairs: the navbar logo colour is a non-text pair on the navbar background', () => {
+  assert.deepEqual(byName('navbar logo'), [
+    {name: 'navbar logo', fg: '--guide-navbar-logo', bg: '--ifm-navbar-background-color', kind: 'nontext'},
+  ]);
+});
 
 test('contrast pairs: the admonition types are exactly the six of Docusaurus', () => {
   const types = CONTRAST_PAIRS.map((pair) => /^admonition (\w+) text$/.exec(pair.name)?.[1]).filter(Boolean);

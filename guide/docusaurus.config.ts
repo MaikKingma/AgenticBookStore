@@ -69,7 +69,24 @@ const config: Config = {
     },
     navbar: {
       title: 'Crafting your Agentic Harness',
-      items: [],
+      // The logo is not set here on purpose: src/theme/Navbar/Logo draws it as its own link
+      // to openvalue.eu, in front of the title link to the guide home page.
+      items: [
+        {
+          label: 'GitHub',
+          href: 'https://github.com/MaikKingma/AgenticBookStore',
+          position: 'right',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+        {
+          label: 'Follow on LinkedIn',
+          href: 'https://www.linkedin.com/in/maik-kingma/',
+          position: 'right',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
+      ],
     },
     prism: {
       theme: brandPrismTheme,
