@@ -23,11 +23,11 @@ runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run 
 `COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
-## Status (2026-11-10, paused before T9)
+## Status (2026-11-10, T9 in review)
 
-T1 to T8 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155). Next: T9, then T10,
-then T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4), qa-final and Gate 2.
-The run ledger (comms, not committed) holds the full resume point.
+T1 to T8 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155); T9 is PR #157. Next:
+T10, then T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4, D17), qa-final
+and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 
 ## Tasks
 
@@ -41,7 +41,7 @@ The run ledger (comms, not committed) holds the full resume point.
 | T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | #150 | sdd/10-harness-reference-solutions/T6 | ENDORSE (r2) |
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | #154 | sdd/10-harness-reference-solutions/T7 | ENDORSE (r2) |
 | T8 | Level 3 hooks (sh, git hook), harness, Git Bash note (ps1 dropped, A6) | root | [T7] | 8 | critical | opus | opus | #155 | sdd/10-harness-reference-solutions/T8 | ENDORSE (r4) |
-| T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | opus | opus | | | |
+| T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | sonnet (A8) | opus | #157 | sdd/10-harness-reference-solutions/T9 | ENDORSE (r0) |
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | | | |
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | | | |
@@ -287,6 +287,16 @@ for all three tracks is a manual check for Maik.
   (`cd "<folder>" && git commit`) as the known exit-0 bypass.
 - FF-T8-c (from T8; verifiers of T9 to T13): probe each quantified part of a regex, glob or matcher widened and
   deleted, and include the input form the real caller sends as a case that must hold.
+- FF-T9-a (from T9; T10 impl and QA directives): `S/records/level-3.md` carries one residual line: on
+  `solution/level-3`, README.md line 70 (the Orders endpoints) and `http/orders.http` do not mention
+  `POST /orders/{id}/commands/cancel`; plus a product note for Maik: the staged `new-use-case` skill never asks for
+  README or `http/` updates, so participants' solutions show the same gap (options: an owner-approved level-3 exercise
+  patch row for README.md with its base blob from `level-0-start`, or accept as residual). The T10 verifier checks the
+  line and note exist and are true (`git show level-0-start:README.md` names `commands/ship`).
+- FF-T9-b (from T9; qa-final and final-brief): T9's final bytes hash-equal the verifier's r0 hash file (32 files) or
+  every difference is explained; a fresh `build-level.sh level-3` gives tree `309786e0` while no later task touches the
+  level-3 exercise rows; Gate 2 lists the frontend residual (`OrderPage.tsx` line 29, `types.ts` line 18) and FF-T9-a;
+  seed compatibility with V5 stays inspection-only.
 - Product findings from T8 for Maik: PF-T8-1 a quote before `git commit` in the command (`cd "<folder>" && git
   commit`) makes the pack commit hook exit 0 without the build; PF-T8-2 the docs and D9 say that without Git Bash the
   commit hook never fires (no gate at all), so Windows needs Git Bash; PF-T8-3 the Stop hook skips its check when
@@ -410,6 +420,15 @@ for all three tracks is a manual check for Maik.
   byte-unchanged. Reason: r3 was redirected by D16 from the escalated defect round to the removal, the gap (no text
   before `git commit` in any fixture) lets the most common chained commit through a broken hook, and the fix is two
   proven cases; a later fix task would leave T10 citing an incomplete harness. Gate 1 re-run and self-accepted.
+- A8 (2026-11-10, Maik via the coordinator, to save tokens): from qa-t9 on, every per-task qa-test-verifier runs on
+  sonnet (critical tiers included), and the implementers of T10 to T14 and any research-agent run on sonnet; opus
+  stays only for the qa-lead (every meta-review, final-brief, final-review) and qa-final; a rework round 2 or later
+  may return to opus per the normal policy. impl-t9 finished on opus. The qaModel and impl model columns above are
+  overridden accordingly. Gate 1 re-run and self-accepted: no criterion changes.
+- D17 (2026-11-10, Maik, factory 936028d): the six level branch names and parents are a frozen contract (the guide
+  goes live before spec 10 ends): `solution/level-1` from `level-0-start`, `solution/level-2` from `solution/level-1`,
+  `solution/level-3` from `solution/level-2`, the three `start/level-4-*` branches from `solution/level-3`. T14 creates
+  exactly these; `S/scripts/lib-steps.sh` and `cut-level-branches.sh` already do.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
