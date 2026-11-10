@@ -288,3 +288,12 @@ documented equivalents for Spec Kit and OpenSpec), in the order the frameworks' 
 14 is merged.
 
 Changed files: new `specs/15-guide-content-revision.md`, `product/roadmap.md` (row 15).
+
+## D20. Bonus level on agent orchestration, deferred
+
+Maik, 2026-11-10: add a bonus level after Level 4 for fast participants: think through a feature's normal flow,
+define one research subagent and one QA subagent, run a simple team orchestration, then let Claude write it as code
+with Claude Code's workflow feature. An exercise without solutions. Deferred until specs 10, 14 and 15 are done, to
+keep enough tokens in the current usage window.
+
+Changed files: new `specs/16-bonus-level-orchestration.md`, `product/roadmap.md` (row 16).
