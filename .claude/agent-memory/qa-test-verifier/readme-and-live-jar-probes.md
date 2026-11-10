@@ -44,4 +44,8 @@ Rule: prove captured bodies are real by replaying them against a service you sta
 - Derived files: `sed '<one substitution>' <source> | cmp - <derived>` exits 0, plus a control `cat <source> | cmp - <derived>` exits 1. This proves "exactly one change" at byte level; list insertions (subjectCodes) and swaps (contributors) are a single README-named change but several flattened paths, so assert them as whole-key comparisons.
 - Genre/prefix tables: parse the spec line itself (regex on backticked codes) instead of retyping it; assert a falsifier where the second subject code would give a different genre.
 - Start/stop: `./mvnw -pl distributor spring-boot:run` via a script in `.claude/comms/tmp/`, `run_in_background`; the background task reports "failed exit 1" after you kill the child, which is expected. Health is UP even with failure-rate=1.0 (chaos covers only /api/**). Kill the java PID shown by `lsof -nP -iTCP:8090 -sTCP:LISTEN`, then `lsof` exit 1 and `ps -p <pid>` empty prove teardown.
+- Before running a README jar command "as written" from a repo root that holds a `compose.yaml`, prove the fat jar
+  cannot start Compose (and so cannot touch a shared `bookstore-postgres-1`): `unzip -l <jar> "BOOT-INF/lib/spring-boot-docker*"`
+  lists 0 files, with `"BOOT-INF/lib/postgresql*"` as the positive control; then grep the run log for `compose` (none).
+  A busy 8080 gets `SERVER_PORT=<free>` as the one disclosed deviation besides the JDBC port.
 Related: [[scaffold-verification-techniques]], [[shell-traps]], [[mcp-tool-probes]], [[http-collection-replay-probes]]

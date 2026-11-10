@@ -49,3 +49,11 @@ Written at the spec 09 strategy (publish-workshop-main.sh), confirmed by the T4 
    failing program, other default branch, failing hooksPath, useConfigOnly, showUntrackedFiles no) must keep the
    test green. shellcheck and actionlint are not installed on this machine: docker images, digests recorded;
    actionlint on an existing workflow may carry base findings, so phrase the criterion as "adds no finding".
+9. **Safety record and the live reuse harness (final brief).** `git rev-parse --verify -q main level-0-start` with two
+   refs exits 1 even when main exists (I wrote it into a strategy); record local refs with `git for-each-ref <refs>`
+   (an absent tag prints nothing) and the remote with `git ls-remote origin <refs>`, start and end. A reuse-precedence
+   harness needs a second clone that holds no local main AND no origin/main (`git clone --single-branch --branch
+   factory <bare>`), because a default run must make its own baseline; equal SHAs then mean the same commit-tree second,
+   so wait and redo. Its control is the swapped-order script copy run against a separate bare remote, which must
+   force-move. A scratch clone of the project worktree has origin = the project path: `remote set-url` to the SP bare
+   repo and print `git remote -v` before any `--push`.

@@ -27,4 +27,5 @@ Rule: before you accept a "green on macOS /bin/bash 3.2" claim, find out which b
   shown to bite; otherwise a fixture drift silently turns the case vacuous for one mutant.
 - A run with only some jobs created and conclusion `failure`: the jobs API shows nothing. Download the public run page and grep the annotation (`Internal server error. Correlation ID`). Compare with other branches' runs in the same window before you blame the workflow file.
 
+- "No local main" harness: a `--single-branch --branch factory` clone of the bare still fetched the publish tag, so a default run moves it locally; check "no main, no origin/main". Keep mutated script copies OUTSIDE the clone (dirty-tree refusal); `sleep 2` before a default-mode commit in a control, else same second = same SHA.
 Related: [[shell-traps]], [[ci-workflow-verification]], [[env-switch-mutant-runner]]
