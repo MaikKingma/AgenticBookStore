@@ -1,0 +1,16 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+== $ cd $SBX2 && JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify   (sbx-2 = fresh build of level-4-speckit)
+start/stop UTC: 2026-11-10T16:11:17Z 2026-11-10T16:11:48Z   exit=0
+3327:[INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+3568:[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+3578:[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+3580:[INFO] agenticbookstore-parent ............................ SUCCESS [  0.039 s]
+3581:[INFO] frontend ........................................... SUCCESS [  7.806 s]
+3582:[INFO] bookstore .......................................... SUCCESS [ 17.922 s]
+3583:[INFO] distributor ........................................ SUCCESS [  4.531 s]
+3585:[INFO] BUILD SUCCESS
+3587:[INFO] Total time:  30.470 s
+3588:[INFO] Finished at: 2026-11-10T17:11:48+01:00
+== ArchitectureTest Surefire XML (bookstore/target/surefire-reports/TEST-nl.openvalue.bookstore.ArchitectureTest.xml)
+name="nl.openvalue.bookstore.ArchitectureTest" tests="22" errors="0" skipped="0" failures="0" 
+testcase elements: 22

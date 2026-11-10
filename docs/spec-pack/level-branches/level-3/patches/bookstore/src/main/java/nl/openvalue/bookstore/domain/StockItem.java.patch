@@ -1,0 +1,27 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java b/bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+index b350d055ceeab2f91da4b8c30a4de33e180a27ef..6ee9f523f08135be06ef7867e671b40d093c75e1 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+@@ -107,6 +107,22 @@ public final class StockItem {
+         reserved -= quantity.value();
+     }
+ 
++    /**
++     * Releases reserved copies, for example of a cancelled order: reserved drops and on hand stays, so the available
++     * stock rises. When fewer copies are reserved, nothing changes. When the available stock ends above the reorder
++     * level, the low-stock signal is reset, as on a delivery, so that the next dip registers a new event. A pending
++     * restock stays. Never registers an event.
++     */
++    public void release(Quantity quantity) {
++        if (reserved < quantity.value()) {
++            throw new InsufficientReservedStockException(bookId, quantity.value(), reserved, "released");
++        }
++        reserved -= quantity.value();
++        if (available() > reorderLevel) {
++            lowStockSignalled = false;
++        }
++    }
++
+     /**
+      * Sets the stock on hand after a stocktake. The reason has 3 to 200 characters of any kind and is checked before
+      * the reserved stock; on hand never drops below reserved. A rejected correction changes nothing. Registers a

@@ -1,0 +1,187 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# sandboxes: sbx-1 = level-3 build plus the init and the constitution (hand commit); sbx-2 = fresh build of level-4-speckit from the staged files
+== $ bash $S/scripts/simulate-level-0.sh level-0-start $SBX   (S = docs/spec-pack/level-branches, run in the track worktree)
+list: scripts/publish-workshop-main.sh --list-paths
+simulated level-0: $SBX at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+(strip-path lines: 13 lines, not copied)
+== $ bash $S/scripts/build-level.sh level-3 $SBX
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-1 as cf1c37d: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-2 as d8fe5ed: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3 line 10: patch bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java (644, exercise)
+apply-level: level-3 line 11: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java (644, exercise)
+apply-level: level-3 line 12: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java (644, exercise)
+apply-level: level-3 line 13: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java (644, exercise)
+apply-level: level-3 line 14: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java (644, exercise)
+apply-level: level-3 line 15: add bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java (644, exercise)
+apply-level: level-3 line 16: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java (644, exercise)
+apply-level: level-3 line 17: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java (644, exercise)
+apply-level: level-3 line 18: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java (644, exercise)
+apply-level: level-3 line 19: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java (644, exercise)
+apply-level: level-3 line 20: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java (644, exercise)
+apply-level: level-3 line 21: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java (644, exercise)
+apply-level: level-3 line 22: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java (644, exercise)
+apply-level: level-3 line 23: patch bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java (644, exercise)
+apply-level: level-3 line 24: add bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql (644, exercise)
+apply-level: level-3 line 25: patch bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java (644, exercise)
+apply-level: level-3 line 26: patch bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java (644, exercise)
+apply-level: level-3 line 27: patch bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java (644, exercise)
+apply-level: level-3 line 28: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java (644, exercise)
+apply-level: level-3 line 29: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java (644, exercise)
+apply-level: level-3 line 30: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java (644, exercise)
+apply-level: level-3 line 31: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java (644, exercise)
+apply-level: level-3 line 32: patch bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java (644, exercise)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-3 as 1326c9e: Level 3 solution: behavioral control
+build-level: level-3 built in $SBX
+== level-3 commit of sbx-1 (HEAD~1 after the Spec Kit commit)
+6aeae99 Level 4 start: Spec Kit installed and initialised
+1326c9e Level 3 solution: behavioral control
+d8fe5ed Level 2 solution: give your agent eyes (LSP + MCP)
+cf1c37d Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+level-3 commit 1326c9ed1ed794e8773cd726feaecbc3bd43b9eb tree 309786e063b813e0f9248714f404b927d277d879
+== sbx-1 Spec Kit commit (init run plus the written constitution)
+sbx-1 HEAD 6aeae990b4805d54fcf07a5e21567b91105d503b tree c9d758b95c060a9cb24a8c1c7260920fbcea5cef
+== $ bash $S/scripts/simulate-level-0.sh level-0-start $SBX2 and build-level.sh level-4-speckit $SBX2
+list: scripts/publish-workshop-main.sh --list-paths
+simulated level-0: $SBX2 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-1 as 5207343: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-2 as ae2b77d: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3 line 10: patch bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java (644, exercise)
+apply-level: level-3 line 11: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java (644, exercise)
+apply-level: level-3 line 12: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java (644, exercise)
+apply-level: level-3 line 13: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java (644, exercise)
+apply-level: level-3 line 14: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java (644, exercise)
+apply-level: level-3 line 15: add bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java (644, exercise)
+apply-level: level-3 line 16: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java (644, exercise)
+apply-level: level-3 line 17: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java (644, exercise)
+apply-level: level-3 line 18: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java (644, exercise)
+apply-level: level-3 line 19: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java (644, exercise)
+apply-level: level-3 line 20: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java (644, exercise)
+apply-level: level-3 line 21: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java (644, exercise)
+apply-level: level-3 line 22: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java (644, exercise)
+apply-level: level-3 line 23: patch bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java (644, exercise)
+apply-level: level-3 line 24: add bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql (644, exercise)
+apply-level: level-3 line 25: patch bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java (644, exercise)
+apply-level: level-3 line 26: patch bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java (644, exercise)
+apply-level: level-3 line 27: patch bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java (644, exercise)
+apply-level: level-3 line 28: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java (644, exercise)
+apply-level: level-3 line 29: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java (644, exercise)
+apply-level: level-3 line 30: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java (644, exercise)
+apply-level: level-3 line 31: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java (644, exercise)
+apply-level: level-3 line 32: patch bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java (644, exercise)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-3 as e6c9ae8: Level 3 solution: behavioral control
+apply-level: level-4-speckit line 2: add .claude/skills/speckit-analyze/SKILL.md (644, config)
+apply-level: level-4-speckit line 3: add .claude/skills/speckit-checklist/SKILL.md (644, config)
+apply-level: level-4-speckit line 4: add .claude/skills/speckit-clarify/SKILL.md (644, config)
+apply-level: level-4-speckit line 5: add .claude/skills/speckit-constitution/SKILL.md (644, config)
+apply-level: level-4-speckit line 6: add .claude/skills/speckit-converge/SKILL.md (644, config)
+apply-level: level-4-speckit line 7: add .claude/skills/speckit-implement/SKILL.md (644, config)
+apply-level: level-4-speckit line 8: add .claude/skills/speckit-plan/SKILL.md (644, config)
+apply-level: level-4-speckit line 9: add .claude/skills/speckit-specify/SKILL.md (644, config)
+apply-level: level-4-speckit line 10: add .claude/skills/speckit-tasks/SKILL.md (644, config)
+apply-level: level-4-speckit line 11: add .specify/.gitignore (644, config)
+apply-level: level-4-speckit line 12: add .specify/init-options.json (644, config)
+apply-level: level-4-speckit line 13: add .specify/integration.json (644, config)
+apply-level: level-4-speckit line 14: add .specify/integrations/claude.manifest.json (644, config)
+apply-level: level-4-speckit line 15: add .specify/integrations/speckit.manifest.json (644, config)
+apply-level: level-4-speckit line 16: add .specify/memory/.constitution-template.json (644, config)
+apply-level: level-4-speckit line 17: add .specify/memory/constitution.md (644, config)
+apply-level: level-4-speckit line 18: add .specify/scripts/bash/check-prerequisites.sh (755, config)
+apply-level: level-4-speckit line 19: add .specify/scripts/bash/common.sh (755, config)
+apply-level: level-4-speckit line 20: add .specify/scripts/bash/create-new-feature.sh (755, config)
+apply-level: level-4-speckit line 21: add .specify/scripts/bash/resolve-template.sh (755, config)
+apply-level: level-4-speckit line 22: add .specify/scripts/bash/setup-plan.sh (755, config)
+apply-level: level-4-speckit line 23: add .specify/scripts/bash/setup-tasks.sh (755, config)
+apply-level: level-4-speckit line 24: add .specify/templates/checklist-template.md (644, config)
+apply-level: level-4-speckit line 25: add .specify/templates/constitution-template.md (644, config)
+apply-level: level-4-speckit line 26: add .specify/templates/plan-template.md (644, config)
+apply-level: level-4-speckit line 27: add .specify/templates/spec-template.md (644, config)
+apply-level: level-4-speckit line 28: add .specify/templates/tasks-template.md (644, config)
+apply-level: level-4-speckit line 29: add .specify/workflows/speckit/workflow.yml (644, config)
+apply-level: level-4-speckit line 30: add .specify/workflows/workflow-registry.json (644, config)
+apply-level: level-4-speckit: 29 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-4-speckit as b98d908: Level 4 start: Spec Kit installed and initialised
+build-level: level-4-speckit built in $SBX2
+b98d908 Level 4 start: Spec Kit installed and initialised
+e6c9ae8 Level 3 solution: behavioral control
+ae2b77d Level 2 solution: give your agent eyes (LSP + MCP)
+5207343 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+sbx-2 HEAD b98d908e74a9f11caf832d472f83c6150a496cfb tree c9d758b95c060a9cb24a8c1c7260920fbcea5cef
+== trees equal?
+tree of sbx-1 commit == tree of sbx-2 commit
+== $ git -C $SBX2 diff --name-status HEAD~1 HEAD   (equals sbx-1: yes)
+A	.claude/skills/speckit-analyze/SKILL.md
+A	.claude/skills/speckit-checklist/SKILL.md
+A	.claude/skills/speckit-clarify/SKILL.md
+A	.claude/skills/speckit-constitution/SKILL.md
+A	.claude/skills/speckit-converge/SKILL.md
+A	.claude/skills/speckit-implement/SKILL.md
+A	.claude/skills/speckit-plan/SKILL.md
+A	.claude/skills/speckit-specify/SKILL.md
+A	.claude/skills/speckit-tasks/SKILL.md
+A	.specify/.gitignore
+A	.specify/init-options.json
+A	.specify/integration.json
+A	.specify/integrations/claude.manifest.json
+A	.specify/integrations/speckit.manifest.json
+A	.specify/memory/.constitution-template.json
+A	.specify/memory/constitution.md
+A	.specify/scripts/bash/check-prerequisites.sh
+A	.specify/scripts/bash/common.sh
+A	.specify/scripts/bash/create-new-feature.sh
+A	.specify/scripts/bash/resolve-template.sh
+A	.specify/scripts/bash/setup-plan.sh
+A	.specify/scripts/bash/setup-tasks.sh
+A	.specify/templates/checklist-template.md
+A	.specify/templates/constitution-template.md
+A	.specify/templates/plan-template.md
+A	.specify/templates/spec-template.md
+A	.specify/templates/tasks-template.md
+A	.specify/workflows/speckit/workflow.yml
+A	.specify/workflows/workflow-registry.json
+== rows of level-4-speckit/manifest.tsv: 29

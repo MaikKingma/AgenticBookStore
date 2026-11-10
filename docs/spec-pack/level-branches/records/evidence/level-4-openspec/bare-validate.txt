@@ -1,0 +1,26 @@
+# The bare form 'openspec validate --strict' (no item, no --all) against the built tree, no terminal on stdin. $SBX3 = the fresh clone of row-setup-dry-run.txt.
+git rev-parse HEAD: b44e5dbfb04679d5f9715e89508f5c1a0c1443d6   (the clone of the dry run; tree untouched by this check)
+-- openspec validate --strict   (stdin /dev/null, so no terminal: the form named in pack spec 10 line 453, workshop-plan line 305, cheat sheet line 27)
+Nothing to validate. Try one of:
+  openspec validate --all
+  openspec validate --changes
+  openspec validate --specs
+  openspec validate <item-name>
+Or run in an interactive terminal.
+exit code: 1
+-- openspec validate --strict --no-interactive
+Nothing to validate. Try one of:
+  openspec validate --all
+  openspec validate --changes
+  openspec validate --specs
+  openspec validate <item-name>
+Or run in an interactive terminal.
+exit code: 1
+-- openspec validate ordering --strict   (the form with an item name, as guide page 05 line 74 uses for a change)
+Specification 'ordering' is valid
+exit code: 0
+-- openspec validate --specs --strict
+? spec/ordering
+Totals: 1 passed, 0 failed (1 items)
+exit code: 0
+git status --short (expect empty): []

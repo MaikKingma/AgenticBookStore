@@ -1,0 +1,24 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java b/bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
+index 3a8ae9835429d23315522192752a46c0d9a80067..81345cfbf444eb7766e66bf380af8b92a349fb91 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
+@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.ResponseStatus;
+ import org.springframework.web.bind.annotation.RestController;
+ 
+-/** Commands that place and ship orders. Every command is accepted with 202. */
++/** Commands that place, ship and cancel orders. Every command is accepted with 202. */
+ @RestController
+ @RequestMapping("/orders")
+ public class OrderCommands {
+@@ -38,4 +38,10 @@ public class OrderCommands {
+     public void ship(@PathVariable UUID id) {
+         orders.ship(id);
+     }
++
++    @PostMapping("/{id}/commands/cancel")
++    @ResponseStatus(HttpStatus.ACCEPTED)
++    public void cancel(@PathVariable UUID id) {
++        orders.cancelOrder(id);
++    }
+ }

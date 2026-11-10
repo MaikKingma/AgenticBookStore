@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# The written index.yml is what the installed index builder (create_index in project-install.sh, run with --commands-only)
+# regenerates from the standards files and the existing descriptions: byte equal modulo trailing blank lines.
+# Control: an index without one entry gets that entry back as "Needs description - run /index-standards".
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+SHIM=$SP/s10-t13-impl-shim
+P=$SP/s10-t13-impl-idx
+rm -rf "$P"
+mkdir -p "$P"
+cp -R "$SBX1/agent-os" "$P/agent-os"
+mkdir -p "$P/.claude/commands"
+cp -R "$SBX1/.claude/commands/agent-os" "$P/.claude/commands/agent-os"
+strip_trailing_blank() { awk '{a[NR]=$0} END{n=NR; while(n>0 && a[n]=="") n--; for(i=1;i<=n;i++) print a[i]}' "$1"; }
+cp "$P/agent-os/standards/index.yml" "$P/index.before"
+(cd "$P" && PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" --commands-only) 2>&1 | ascii | mask | sed 's|'"$P"'|$PROJ|g'
+strip_trailing_blank "$P/index.before" > "$P/a.txt"
+strip_trailing_blank "$P/agent-os/standards/index.yml" > "$P/b.txt"
+if cmp -s "$P/a.txt" "$P/b.txt"; then echo "RESULT index.yml unchanged by the index builder (equal modulo trailing blank lines)"; else echo "RESULT index.yml DIFFERS:"; diff "$P/a.txt" "$P/b.txt"; fi
+echo "== control: remove the entry architecture/class-naming from a copy and rebuild"
+cp "$P/index.before" "$P/agent-os/standards/index.yml"
+awk 'BEGIN{skip=0} /^  class-naming:$/ {skip=1; next} skip>0 {skip--; next} {print}' "$P/index.before" > "$P/agent-os/standards/index.yml"
+grep -c 'class-naming' "$P/agent-os/standards/index.yml" | sed 's/^/entries named class-naming before the rebuild: /'
+(cd "$P" && PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" --commands-only) 2>&1 | ascii | mask | sed 's|'"$P"'|$PROJ|g' | grep -i 'index'
+grep -n -A1 'class-naming' "$P/agent-os/standards/index.yml"
+echo "== control: a standards file without an entry (copy of a file) is added with the placeholder text"
+cp "$P/index.before" "$P/agent-os/standards/index.yml"
+cp "$P/agent-os/standards/testing/layer-tests.md" "$P/agent-os/standards/testing/extra-probe.md"
+(cd "$P" && PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" --commands-only) 2>&1 | ascii | mask | sed 's|'"$P"'|$PROJ|g' | grep -i 'index'
+grep -n -A1 'extra-probe' "$P/agent-os/standards/index.yml"
+rm -rf "$P"

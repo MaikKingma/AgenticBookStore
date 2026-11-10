@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""token-inventory.py: every Spec Kit token named by the pack, the guide sources and the staged files, resolved and
+spell-checked across documents (task T12, criteria 5 and 6, checks C0-13b and C0-13c).
+
+Usage (python3 -I): token-inventory.py run <wt> <sbx> <init-help.txt> | selftest <wt> <sbx> <init-help.txt>
+"""
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+REFS = ["origin/sdd/11-workshop-guide/spec", "origin/factory"]
+PACK_DOCS = [
+    "specs/10-harness-reference-solutions.md",
+    "specs/11-workshop-guide-site.md",
+    "workshop/sdd-framework-guide.md",
+    "workshop/workshop-plan.md",
+    "workshop/level-4-feature-briefs.md",
+    "product/tech-stack.md",
+]
+RE_SKILL = re.compile(r"/speckit-([A-Za-z]+)")
+RE_DOTTED = re.compile(r"\bspeckit\.([a-z]+(?:\.[a-z]+)*)")
+RE_CLI = re.compile(r"specify-cli(==[0-9.]+)?")
+RE_INIT = re.compile(r"specify init[^`\n]*")
+RE_FLAG = re.compile(r"(?<![A-Za-z0-9-])--[a-z][a-z-]*")
+RE_PATH = re.compile(r"\.specify/[A-Za-z0-9_./-]*[A-Za-z0-9_]")
+RE_BRANCH = re.compile(r"start/level-4-[a-z<>]+")
+
+
+def git_show(wt, ref, path):
+    return subprocess.run(["git", "-C", wt, "show", f"{ref}:{path}"], capture_output=True, text=True, check=True).stdout
+
+
+def documents(wt):
+    docs = []
+    for rel in PACK_DOCS:
+        p = Path(wt) / "docs/spec-pack" / rel
+        docs.append((f"pack:{rel}", p.read_text(encoding="utf-8").split("\n")))
+    for ref in REFS:
+        names = subprocess.run(["git", "-C", wt, "ls-tree", "-r", "--name-only", ref, "--", "guide/docs"],
+                               capture_output=True, text=True, check=True).stdout.split()
+        for n in names:
+            if n.endswith((".md", ".mdx")):
+                docs.append((f"{ref}:{n}", git_show(wt, ref, n).split("\n")))
+    return docs
+
+
+def tree_paths(sbx):
+    out = subprocess.run(["git", "-C", sbx, "ls-tree", "-r", "--name-only", "HEAD"], capture_output=True, text=True, check=True).stdout
+    return set(out.split("\n"))
+
+
+def init_flags(helpfile):
+    return set(RE_FLAG.findall(Path(helpfile).read_text(encoding="utf-8")))
+
+
+def scan(docs, skills, flags, tree, intopts=frozenset()):
+    """rows: (token, doc, lineno, status, note)"""
+    rows = []
+    runtime_paths = {".specify/feature.json"}  # written by /speckit-specify at run time (skill line 101), git-ignored
+    for label, lines in docs:
+        for n, ln in enumerate(lines, 1):
+            for m in RE_SKILL.finditer(ln):
+                tok = "/speckit-" + m.group(1)
+                ok = m.group(1) in skills
+                rows.append((tok, label, n, "ok" if ok else "MISMATCH", "skill dir exists" if ok else "no such skill in the init output"))
+            for m in RE_DOTTED.finditer(ln):
+                rows.append(("speckit." + m.group(1), label, n, "notation", "dotted documentation notation (guide gotcha)"))
+            for m in RE_CLI.finditer(ln):
+                ver = m.group(1)
+                if ver is None:
+                    rows.append(("specify-cli", label, n, "unpinned", "no version: the pack pins ==1.3.1"))
+                else:
+                    ok = ver == "==1.3.1"
+                    rows.append(("specify-cli" + ver, label, n, "ok" if ok else "MISMATCH", "pinned 1.3.1" if ok else "version differs from 1.3.1"))
+            for m in RE_INIT.finditer(ln):
+                cmd = m.group(0)
+                for im in re.finditer(r'--integration-options="([^"]*)"', cmd):
+                    for f in RE_FLAG.findall(im.group(1)):
+                        ok = f in intopts
+                        rows.append(("integration option " + f, label, n, "ok" if ok else "MISMATCH", "recorded in .specify/integration.json raw_options" if ok else "not the recorded integration option"))
+                    cmd = cmd.replace(im.group(0), "--integration-options")
+                for f in RE_FLAG.findall(cmd):
+                    ok = f in flags
+                    rows.append(("specify init " + f, label, n, "ok" if ok else "MISMATCH", "flag in `specify init --help`" if ok else "flag not in init help"))
+            for m in RE_PATH.finditer(ln):
+                p = m.group(0).rstrip("/.")
+                if p == ".specify":
+                    continue
+                if p in runtime_paths:
+                    rows.append((p, label, n, "runtime", "created at run time by /speckit-specify, git-ignored"))
+                    continue
+                ok = p in tree or any(t.startswith(p + "/") for t in tree)
+                rows.append((p, label, n, "ok" if ok else "MISMATCH", "exists on the built tree" if ok else "not on the built tree"))
+            for m in RE_BRANCH.finditer(ln):
+                b = m.group(0)
+                if "<" in b:
+                    rows.append((b, label, n, "notation", "placeholder form of the branch name"))
+                else:
+                    ok = b == "start/level-4-speckit" or b in ("start/level-4-openspec", "start/level-4-agentos")
+                    rows.append((b, label, n, "ok" if ok else "MISMATCH", "step_branch name" if ok else "not a step_branch name"))
+    return rows
+
+
+def main():
+    if len(sys.argv) != 5 or sys.argv[1] not in ("run", "selftest"):
+        print(__doc__)
+        return 2
+    mode, wt, sbx, helpfile = sys.argv[1:]
+    docs = documents(wt)
+    tree = tree_paths(sbx)
+    skills = {p.split("/")[2][len("speckit-"):] for p in tree if p.startswith(".claude/skills/speckit-") and p.endswith("/SKILL.md")}
+    flags = init_flags(helpfile)
+    raw = subprocess.run(["git", "-C", sbx, "show", "HEAD:.specify/integration.json"], capture_output=True, text=True, check=True).stdout
+    import json
+    intopts = frozenset(json.loads(raw)["integration_settings"]["claude"]["raw_options"].split())
+    rows = scan(docs, skills, flags, tree, intopts)
+    if mode == "run":
+        print("skills on the built tree:", " ".join(sorted(skills)), f"({len(skills)})")
+        print("documents scanned:", len(docs))
+        for tok, doc, n, st, note in rows:
+            print(f"{st}\t{tok}\t{doc}:{n}\t{note}")
+        bad = [r for r in rows if r[3] == "MISMATCH"]
+        from collections import Counter
+        print("COUNTS:", dict(Counter(r[3] for r in rows)))
+        print("RESULT:", "mismatches found" if bad else "no mismatch")
+        return 0
+    # selftest: each misspelled token, planted in an in-memory copy of one document, must be reported
+    controls = [
+        ("skill name misspelled", "/speckit-constitution", "/speckit-consitution", "MISMATCH", "/speckit-consitution"),
+        ("version differs", "specify-cli==1.3.1", "specify-cli==1.3.0", "MISMATCH", "specify-cli==1.3.0"),
+        ("flag misspelled", "--integration-options", "--integration-option", "MISMATCH", "specify init --integration-option"),
+        ("integration option misspelled", "--no-model-invocation", "--no-model-invokation", "MISMATCH", "integration option --no-model-invokation"),
+        ("path misspelled", ".specify/memory/constitution.md", ".specify/memory/constitutoin.md", "MISMATCH", ".specify/memory/constitutoin.md"),
+        ("branch misspelled", "start/level-4-speckit", "start/level-4-speckitt", "MISMATCH", "start/level-4-speckitt"),
+    ]
+    ok = True
+    base = [r for r in rows if r[3] == "MISMATCH"]
+    print("real mismatches before controls:", len(base))
+    for name, old, new, st, want in controls:
+        # first pack document that contains the old token
+        for i, (label, lines) in enumerate(docs):
+            if any(old in ln for ln in lines):
+                mut = [(l, [ln.replace(old, new) for ln in ls]) if j == i else (l, ls) for j, (l, ls) in enumerate(docs)]
+                got = [r for r in scan(mut, skills, flags, tree, intopts) if r[3] == "MISMATCH" and want in r[0]]
+                print(f"CONTROL {name} in {label}: {'reported' if got else 'MISSED'}" + (f" ({got[0][0]})" if got else ""))
+                ok = ok and bool(got)
+                break
+        else:
+            print(f"CONTROL {name}: no document holds {old}")
+            ok = False
+    print("SELFTEST:", "OK" if ok else "FAIL")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

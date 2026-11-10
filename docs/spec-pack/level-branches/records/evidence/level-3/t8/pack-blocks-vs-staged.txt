@@ -1,0 +1,18 @@
+# Pack blocks against staged files (byte compare). Pack: docs/spec-pack/specs/10-harness-reference-solutions.md
+docs/spec-pack/level-branches/level-3/files/dot-claude/hooks/tests-before-commit.sh
+  pack lines 281-300, 692 bytes; staged 692 bytes; equal: True
+  control (one byte changed) equal: False; control (no final newline) equal: False
+docs/spec-pack/level-branches/level-3/files/dot-claude/hooks/architecture-check-on-stop.sh
+  pack lines 305-319, 724 bytes; staged 724 bytes; equal: True
+  control (one byte changed) equal: False; control (no final newline) equal: False
+docs/spec-pack/level-branches/level-3/files/dot-githooks/pre-commit
+  pack lines 331-333, 139 bytes; staged 139 bytes; equal: True
+  control (one byte changed) equal: False; control (no final newline) equal: False
+
+# Staged hook files: mode, line endings, ASCII
+files in level-3/files/dot-claude/hooks: architecture-check-on-stop.sh tests-before-commit.sh
+dot-claude/hooks/architecture-check-on-stop.sh mode 0o755 lines-crlf 0 lines-lf-only 15 ascii True ends-with-newline True
+dot-claude/hooks/tests-before-commit.sh mode 0o755 lines-crlf 0 lines-lf-only 20 ascii True ends-with-newline True
+dot-githooks/pre-commit mode 0o755 lines-crlf 0 lines-lf-only 3 ascii True ends-with-newline True
+
+RESULT: all three verbatim files equal their pack blocks

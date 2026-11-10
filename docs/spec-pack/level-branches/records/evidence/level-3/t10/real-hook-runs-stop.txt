@@ -1,0 +1,56 @@
+# real runs of the Stop hook on the scratch level-3 sandbox (sbx-3 HEAD 8a0ccd8), started 2026-11-10T14:28:53Z
+# command run by the hook: ./mvnw -q -pl bookstore test -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false
+
+## 1. no Java change: the hook must not build
+status lines: 0
+[no-java] exit=0 seconds=0 stdout_bytes=0 stderr_lines=0
+[no-java] stderr line 1: 
+
+## 2. a harmless untracked Java file: the hook runs ArchitectureTest only, green
+?? bookstore/src/test/java/nl/openvalue/bookstore/domain/RehearsalStopTest.java
+[java-green] exit=0 seconds=5 stdout_bytes=0 stderr_lines=0
+[java-green] stderr line 1: 
+
+## 3. an untracked main class that breaks the domain layer (Spring annotation in domain): ArchitectureTest red
+?? bookstore/src/main/java/nl/openvalue/bookstore/domain/RehearsalLayerBreak.java
+?? bookstore/src/test/java/nl/openvalue/bookstore/domain/RehearsalStopTest.java
+[java-red] exit=2 seconds=5 stdout_bytes=0 stderr_lines=31
+[java-red] stderr line 1: ArchitectureTest fails. Fix the layering before you finish:
+### stderr of the red run, byte copy
+ArchitectureTest fails. Fix the layering before you finish:
+Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=$TMPDIR
+15:29:03.289 [main] INFO com.tngtech.archunit.core.PluginLoader -- Detected Java version 25.0.4
+[ERROR] Tests run: 22, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.626 s <<< FAILURE! -- in nl.openvalue.bookstore.ArchitectureTest
+[ERROR] nl.openvalue.bookstore.ArchitectureTest.DOMAIN_DEPENDS_ON_JAVA_ONLY -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: 
+Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package 'nl.openvalue..domain..' should only depend on classes that reside in any package ['java..', 'nl.openvalue..domain..']' was violated (1 times):
+Class <nl.openvalue.bookstore.domain.RehearsalLayerBreak> is annotated with <org.springframework.stereotype.Service> in (RehearsalLayerBreak.java:0)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.assertNoViolation(ArchRule.java:94)
+	at com.tngtech.archunit.lang.ArchRule$Assertions.check(ArchRule.java:86)
+	at com.tngtech.archunit.lang.ArchRule$Factory$SimpleArchRule.check(ArchRule.java:165)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:168)
+	at com.tngtech.archunit.junit.internal.ArchUnitTestDescriptor$ArchUnitRuleDescriptor.execute(ArchUnitTestDescriptor.java:151)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[ERROR] Failures: 
+[ERROR]   ArchitectureTest.DOMAIN_DEPENDS_ON_JAVA_ONLY Architecture Violation [Priority: MEDIUM] - Rule 'classes that reside in a package 'nl.openvalue..domain..' should only depend on classes that reside in any package ['java..', 'nl.openvalue..domain..']' was violated (1 times):
+Class <nl.openvalue.bookstore.domain.RehearsalLayerBreak> is annotated with <org.springframework.stereotype.Service> in (RehearsalLayerBreak.java:0)
+[ERROR] Tests run: 22, Failures: 1, Errors: 0, Skipped: 0
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.6:test (default-test) on project bookstore: There are test failures.
+[ERROR] 
+[ERROR] See $SBX3/bookstore/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+
+## 4. same red tree, stop_hook_active true: the hook must stop at once (loop guard)
+[red-but-active] exit=0 seconds=0 stdout_bytes=0 stderr_lines=0
+[red-but-active] stderr line 1: 
+
+reset; status lines: 0

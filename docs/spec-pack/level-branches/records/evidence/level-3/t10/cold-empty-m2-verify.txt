@@ -1,0 +1,10 @@
+# fresh clone of the level-3 sandbox (HEAD a20c4ad), EMPTY local Maven repository, started 14:33:37Z UTC
+# command: ./mvnw -q -Dmaven.repo.local=$SP/s10-t10-impl-m2-cold verify   (the hook runs ./mvnw -q verify; the flag only empties the cache)
+# the Maven wrapper distribution under ~/.m2/wrapper was already present (the setup check of the guide runs the build once); Docker images for Testcontainers were already present
+# exit code: 0   wall clock seconds: 57   hook timeout in settings: 180
+# local repository after the run: 256452 KiB, 301 jar files
+# output lines: 3258
+# last 3 output lines:
+2026-11-10T15:34:33.844+01:00  INFO 72812 --- [distributor] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [nl.openvalue.dis
+2026-11-10T15:34:33.844+01:00  INFO 72812 --- [distributor] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration nl.openvalue.distributor.DistributorApplication 
+2026-11-10T15:34:33.857+01:00  WARN 72812 --- [distributor] [1-auto-1-exec-7] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.HttpRequestMethodNotSupportedException: Reque

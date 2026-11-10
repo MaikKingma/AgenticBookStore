@@ -1,0 +1,26 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java b/bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
+index 080b6a8311f8985f43320809629407638ab9fa64..ce0ae5df7181083d5b8ec5300390ebbdc12714c7 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
+@@ -5,16 +5,17 @@ import java.util.UUID;
+ import nl.openvalue.bookstore.domaininteraction.OrderDTO;
+ 
+ /**
+- * An order as a reader sees it: who placed it, its status, when it was placed and shipped (as ISO-8601 strings, the
+- * shipped time is null until the order is shipped), its lines in order, the total as a plain decimal string and the
+- * currency of the lines.
++ * An order as a reader sees it: who placed it, its status, when it was placed, shipped and cancelled (as ISO-8601
++ * strings, the shipped time is null until the order is shipped and the cancelled time is null until the order is
++ * cancelled), its lines in order, the total as a plain decimal string and the currency of the lines.
+  */
+ public record OrderView(UUID id, String customerEmail, String status, String placedAt, String shippedAt,
+-        List<OrderLineView> lines, String total, String currency) {
++        String cancelledAt, List<OrderLineView> lines, String total, String currency) {
+ 
+     public static OrderView from(OrderDTO order) {
+         return new OrderView(order.id(), order.customerEmail(), order.status(), order.placedAt().toString(),
+                 order.shippedAt() == null ? null : order.shippedAt().toString(),
++                order.cancelledAt() == null ? null : order.cancelledAt().toString(),
+                 order.lines().stream().map(OrderLineView::from).toList(), order.total().toPlainString(),
+                 order.currency());
+     }

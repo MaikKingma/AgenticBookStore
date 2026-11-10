@@ -1,0 +1,28 @@
+# Dry run of the rehearsal setup, reset and judging commands against a local bare repository that holds the built level-4 commit as branch start/level-4-agentos.
+# (The real branch does not exist until task T14 cuts it; this run proves the commands, not the real branch.) Zero tokens, no Claude Code.
+# step 1: git clone --branch start/level-4-agentos <remote> <new folder>
+# step 2: record the start commit: git rev-parse HEAD
+START=23308c6116301a181da8931cf017f8411326b0be   tree b533a9a10f37e0308304401befb266e7b78d0234   branch start/level-4-agentos
+tracked files 467, agent-os files 16, command files 5
+# step 3: simulate a run: a stale git-ignored build output, an edit, a new file, and a commit made by the run (the FF-T3-a witnesses)
+# step 4: judge against START including commits (not against the working tree alone):
+git diff --stat START (working tree against START):
+   agent-os/product/mission.md                             | 1 +
+   agent-os/specs/2026-11-10-1200-add-book-reviews/plan.md | 1 +
+   agent-os/standards/testing/test-conventions.md          | 2 ++
+   3 files changed, 4 insertions(+)
+git log --oneline START..HEAD (commits made by the run):
+  c17423a feat: a commit made by the run
+git status --porcelain (ignored output is not listed; -uall):
+   M agent-os/product/mission.md
+ignored stale file present: yes
+# step 5: reset between repeated runs: git reset --hard START && git clean -fdx
+HEAD after reset equals START: yes
+git status --porcelain after reset: 0 entries
+ignored stale file after clean -fdx: gone
+agent-os/specs after the reset: gone
+tree after the reset equals the start tree: yes
+# control: without clean -fdx the stale ignored file would stay (git reset --hard alone):
+after reset --hard only: stale file STILL PRESENT
+# auto memory (FF-T3-b): Claude Code's auto memory is keyed by the clone path and lives outside the repository; a reset does not touch it.
+# The rows therefore use a new clone folder per run (the default) or a /memory check before each run. Not testable here (no Claude run).

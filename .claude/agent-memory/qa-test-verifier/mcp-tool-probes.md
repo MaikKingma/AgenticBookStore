@@ -4,20 +4,15 @@ description: Probing Spring AI @McpTool servers (unit plus integration class per
 metadata:
   type: feedback
 ---
-
 Rule: run every MCP tool mutant against BOTH the unit class and the SDK-client integration class in one Maven call (`-Dtest=<Unit>,<Integration>`, about 4 s with `clean`), and attribute kills per class from the Surefire summary.
-
 **Why:** some card criteria live only at one level (get_title has no unit test; annotations, yml and schema only exist over the wire). A single-class run reports false survivors or misses that the integration test does not catch a trim removal.
 **How to apply:**
 - Annotation and yml mutants need the live context: removing `protocol: STREAMABLE` gives 404 on `/mcp` (SSE transport), removing `annotations = @McpAnnotations(...)` falls back to the defaults (readOnly false, destructive true, idempotent false, openWorld true; confirm with `javap -v` of `McpTool$McpAnnotations`).
 - Spring AI validates `@McpToolParam` requiredness at runtime (`ToolInputValidator ... required property 'x' not found`, tool result isError). `required = false` on a required param is therefore a testable mutant: probe it, and a test needs `tool.inputSchema()` (a `Map<String,Object>`, read `getOrDefault("required", ...)`) or a call without the argument.
 - Output caps ("text under N characters", trim loop): compute the fixture's prefix lengths first (a small `python3 -I` replay of the JSON). Uniform items step by a constant, so `>=` vs `>` and `N-1` survive unless a fixture lands exactly on N and N-1. Prove the gap with a temporary witness test that pads the last item with the same mapper as oracle until the text is exactly N (expect one item fewer) and N-1 (expect all).
 - A thrown exception from an `@McpTool` method surfaces as an isError result whose text repeats the message twice on two lines; an exact single-line text assertion kills "throw instead of error result".
-
 ## In-process STDIO test in a shared Surefire fork
-
 Rule: an in-process test that swaps `System.out` and re-initialises Boot logging can leak into later test classes while every test stays green. So probe its harness lines in the class order where a class FOLLOWS it (`-Dsurefire.runOrder=reversealphabetical` when it sorts last), and read the console `Started .* in` count as the kill signal, not the test result.
-
 **Why:** with `System.setOut(original)` or the system-property restore removed, the module stays all green, but the console Started count drops to 0. Leaked `CONSOLE_LOG_*` properties or a dead capture stream silence every later context. In alphabetical order the class ran last and the same mutants showed nothing.
 **How to apply:**
 - Put three real-code runs at the top of the probe manifest: `-Dtest=<Class>` alone, alphabetical and reverse. Have the runner print the `Running` class order, the console Started count, the count of the known stderr status line and the Started count in the test's target log file per run. A changed status-line count (4 to 8) also reveals a leak.

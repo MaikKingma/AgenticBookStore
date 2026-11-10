@@ -1,2 +1,3 @@
 - [Repo conventions](repo-conventions.md) — factory base branch, merge-commit rule for spec PRs, module vocabulary, no allowlist, pack spec is the source of truth
 - [Cycle lessons](cycle-lessons.md) — SSH push, CI check names, moved base and parallel worktree cycles, headless Claude Code proxy, memory guard, model choices
+- [Harness staging lessons](harness-staging-lessons.md) — spec 10: no headless Claude login, staged agent config, plugin guard, sandbox hygiene, doc rework traps

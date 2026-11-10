@@ -1,0 +1,71 @@
+# rework r1 dry run of rows R3-2 and R3-1 variant E (started 2026-11-10T15:25:21Z); no Claude process
+# stand-in for the repository: a clone of sbx-1 (tree 309786e0) whose branch is named solution/level-3: solution/level-3
+
+## R3-2 setup, as written, after: git clone --branch solution/level-3 <repository> <new empty folder>
+branch: solution/level-3   start: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff   git status --short lines: 0
+./mvnw -q verify (green first): exit 0, 30 s
+git remote get-url origin (written down as <origin>): $R1_src
+ready: 0a8300d5cfcafec7f2d1268cb1059ab1dd12f64b
+refs of the bare remote before: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff commit	refs/heads/solution/level-3
+git status -sb: ## solution/level-3...origin/solution/level-3 [ahead 1]
+git diff --cached --name-only: docs/lsp-setup.md
+
+## R3-2 control, last: prompt 4 commits (here by hand, the git hook is not active), then git reset --soft <ready>
+after the control commit: git log --oneline <ready>..HEAD lines: 1; staged: []
+after git reset --soft <ready>: HEAD equals ready: yes; git status --short: M  docs/lsp-setup.md
+
+## R3-2 variant V1: the first variant, git commit -m "x" -n
+commit made: git log --oneline <ready>..HEAD lines: 1
+undo as now written: git reset --soft <ready>
+HEAD equals ready: yes; git diff --cached --name-only: [docs/lsp-setup.md]; git status --short: M  docs/lsp-setup.md
+the second variant, git commit -nm "x":
+  [solution/level-3 119d097] x
+   1 file changed, 2 insertions(+)
+exit of the second variant: 0; git log --oneline <ready>..HEAD lines: 1
+undo after the second variant: HEAD equals ready: yes; staged: [docs/lsp-setup.md]
+the old undo for comparison (git reset --hard <ready>, git add docs/lsp-setup.md), then the second variant:
+  staged after the old undo: []
+  On branch solution/level-3
+  Your branch is ahead of 'origin/solution/level-3' by 1 commit.
+    (use "git push" to publish your local commits)
+  
+  nothing to commit, working tree clean
+  exit: 1   (nothing to commit: the old undo lost the staged change)
+  restoring the premise for the next steps: printf the line again and git add: 
+  staged: [docs/lsp-setup.md]
+
+## R3-2 after the variants: where does origin point, and how the next row restores its premise
+git remote get-url origin (still the scratch bare repository): $TMPDIR/bare.yNdMbk
+undo as in the common preconditions: git reset --hard <start> && git clean -fdx
+after the undo: origin still: $TMPDIR/bare.yNdMbk   equals the bare path: yes
+after git remote set-url origin <origin> and rm -rf of the bare repository: origin: $R1_src   equals <origin>: yes
+HEAD equals start: yes; git status --short lines: 0; git status -sb: ## solution/level-3...origin/solution/level-3; bare repository gone: yes
+git fetch origin works against <origin>: yes
+
+## R3-1 variant E: the commit hook cannot start (chmod -x), clone made with git clone --branch solution/level-3
+start: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff   git status --short lines: 0   git ls-files -s: 100755   ls -l mode: -rwxr-xr-x
+control, the hook as settings.json starts it with the exec bit set, on the green tree (sh -c of the command string, stdin: the PreToolUse JSON of git commit -m "test"):
+  exit 0 after 31 s (the build ran: a green build exits 0; stderr lines: 0)
+chmod -x .claude/hooks/tests-before-commit.sh: ls -l mode: -rw-r--r--; git status --short: [ M .claude/hooks/tests-before-commit.sh]
+git add docs/lsp-setup.md only (git add -A would stage the mode change); git status --short:
+   M .claude/hooks/tests-before-commit.sh
+  M  docs/lsp-setup.md
+git rev-list --count HEAD: 4
+the hook started through sh -c: exit 126 after 0 s; stdout bytes: 0; stderr: sh: $R1_row-e/.claude/hooks/tests-before-commit.sh: Permission denied|
+the hook started through bash -c: exit 126 after 0 s; stdout bytes: 0; stderr: bash: line 1: $R1_row-e/.claude/hooks/tests-before-commit.sh: Permission denied|
+a direct exec of the file by a program (no shell), python3 subprocess.run: OSError PermissionError 13 Permission denied
+judging: git rev-list --count HEAD: 4 (unchanged: no commit existed to make); git log --oneline <start>..HEAD lines: 0
+restore: chmod +x .claude/hooks/tests-before-commit.sh
+  ls -l mode: -rwxr-xr-x; git status --short:
+    M  docs/lsp-setup.md
+  git diff --summary prints: []   git ls-files -s mode: 100755
+undo: git reset --hard <start> && git clean -fdx
+  after the undo: status lines 0; HEAD equals start: yes; ls -l mode: -rwxr-xr-x
+does git reset --hard alone restore the exec bit if the undo runs while the bit is off?
+  chmod -x, then git reset --hard <start> && git clean -fdx: ls -l mode: -rwxr-xr-x; git status --short lines: 0
+  chmod -x, then git checkout -- .claude/hooks/tests-before-commit.sh: ls -l mode: -rwxr-xr-x
+why variant E stages only the docs file: with the bit off, git add -A also stages the mode change:
+    M  .claude/hooks/tests-before-commit.sh
+    M  docs/lsp-setup.md
+  git diff --cached --summary: mode change 100755 => 100644 .claude/hooks/tests-before-commit.sh|
+  after the undo: status lines 0; ls -l mode: -rwxr-xr-x

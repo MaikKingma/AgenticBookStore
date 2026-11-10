@@ -1,0 +1,11 @@
+# referee: ./mvnw clean verify in the project root (the T10 worktree), after the T10 edits
+# exit code: 0   wall clock seconds: 25; JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR (HR1)
+total: [INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+total: [INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.045 s]
+[INFO] frontend ........................................... SUCCESS [  4.833 s]
+[INFO] bookstore .......................................... SUCCESS [ 14.829 s]
+[INFO] distributor ........................................ SUCCESS [  4.297 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  24.170 s
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.152 s -- in nl.openvalue.bookstore.ArchitectureTest

@@ -1,0 +1,59 @@
+# project-install.sh run in sandbox 1 (level-3 tree 309786e0) with HOME, XDG_* and TMPDIR under $SP (criterion 2).
+# command: cd $SBX && PATH=$SHIM:$PATH $HOME/agent-os/scripts/project-install.sh   (no flags; it asked no question: the standards folder did not exist)
+# $SHIM holds one script named mktemp: it logs each call and gives a call without arguments a template under $TMPDIR,
+# because the upstream script calls bare mktemp, which macOS sends to the per-user temp folder outside $SP (HR1).
+# --- output (colour codes removed, non-ASCII characters shown as ?):
+
+=== Agent OS Project Installation ===
+
+
+Configuration:
+  Profile: default
+  Commands only: false
+
+Creating project structure...
+? Created agent-os/ directory structure
+
+Installing standards...
+? No standards to install (profile is empty)
+
+Updating standards index...
+? Created index.yml (no standards to index)
+
+Installing commands...
+? Installed 5 commands to .claude/commands/agent-os/
+
+? Agent OS installed successfully!
+
+Next steps:
+  1. Run /discover-standards to extract patterns from your codebase
+  2. Run /inject-standards to inject standards into your context
+
+# --- exit code: 0
+# --- mktemp calls seen by the shim:
+mktemp called with 0 argument(s): 
+mktemp created $TMPDIR/tmp.4F3SR4
+# --- git status --porcelain of the sandbox after the run:
+?? .claude/commands/agent-os/
+?? agent-os/
+# --- files the run added to the sandbox work tree (sha256 after minus before):
+a3218bba20d11ea143b7f15c3b921991ab562d66ae30ee3b32e448c941e06c15  ./.claude/commands/agent-os/discover-standards.md
+adf483013262a33a3f8adc591f5a665e3fb677bacd9bbd8d0293d3ec577a12d8  ./.claude/commands/agent-os/index-standards.md
+334ff2ac64b56e704c46b1570d4b61650d1cf889a98ae9b1aab27a729f5cb6e5  ./.claude/commands/agent-os/inject-standards.md
+ecd1abef7c3b7f12e886ee444e373f9ec7ad526c1a3ec41760088010e89e20e3  ./.claude/commands/agent-os/plan-product.md
+fbe80764a0b39eea0b94cc1ba293b05b4584fa1dfbadcbc5d45da5f0b7ed4d57  ./.claude/commands/agent-os/shape-spec.md
+ddea0a778316f670cc4f693954ca36755dd288ce1ab00fc7e4e2ffce8acfe5f7  ./agent-os/standards/index.yml
+# --- file lists before and after, $HOME, $XDG and $TMPDIR (diff of the sorted find output; empty means no change):
+# home:
+(no difference)
+# xdg:
+(no difference)
+# tmpdir (only the shim's own log file is new; the temp file of the script was created and removed again):
+1a2
+> ./mktemp-calls.log
+# --- xdg folders after the run:
+.
+./cache
+./config
+./data
+./state

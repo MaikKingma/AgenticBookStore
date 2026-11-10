@@ -1,0 +1,495 @@
+# Mutant probe of the T8 hook harness tests/test-hooks.sh (68 cases). Each mutant changes one behaviour of a
+# verbatim .sh hook or of .githooks/pre-commit on its own copy of the staging folder, never on the staged files
+# (each copy is checked to differ from the staged file), and the harness runs from that copy (bash 5). The hook
+# files are verbatim pack text and never a rework target (FF-T1-b): the mutants only show that the harness sees
+# each behaviour it asserts. CONTROL is an unmutated copy. A mutant is killed when the harness exits non-zero;
+# the failing cases are listed. Script: impl-t8-mutants-r3.sh (comms tmp).
+# Whitespace around the colon of both grep patterns: a space, a tab, a lone CR and a mixed run on either side
+# match, an LF does not (grep reads line by line). S04, S05, A03 and A04 narrow the class to a space on one side,
+# S06 and A05 cut the run before the colon to one character.
+# date: 2026-11-10T11:37:37Z (raw run finished)
+
+== CONTROL (no mutation) harness-exit=0
+PASSED: 68 of 68
+== S01 file=TBC (tail length 40) harness-exit=1
+-- diff (staged vs mutant):
+   17c17
+   <   tail -n 40 "$log"
+   ---
+   >   tail -n 39 "$log"
+not ok 4 - tbc-commit-red-long-output-tail-40
+FAILED: 1 of 68
+== S02 file=TBC (case-sensitive match) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eiq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+not ok 22 - tbc-uppercase-command
+FAILED: 1 of 68
+== S03 file=TBC (match ends at the first double quote) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*".*git[[:space:]]+commit'; then
+not ok 11 - tbc-escaped-quotes-before-commit
+not ok 23 - tbc-git-commit-only-in-description
+FAILED: 2 of 68
+== S04 file=TBC (whitespace class before the colon) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[ ]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+not ok 15 - tbc-tab-before-command-colon
+not ok 17 - tbc-cr-before-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+FAILED: 3 of 68
+== S05 file=TBC (whitespace class after the colon) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[ ]*"[^"]*git[[:space:]]+commit'; then
+not ok 14 - tbc-tab-after-command-colon
+not ok 16 - tbc-cr-after-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+FAILED: 3 of 68
+== S06 file=TBC (a whitespace run before the colon) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]?:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+FAILED: 1 of 68
+== S07 file=TBC (exit 1 when the project folder cannot be entered) harness-exit=1
+-- diff (staged vs mutant):
+   9c9
+   < cd "${CLAUDE_PROJECT_DIR:-.}" || exit 1
+   ---
+   > cd "${CLAUDE_PROJECT_DIR:-.}" || exit 3
+not ok 27 - tbc-could-not-cd
+FAILED: 1 of 68
+== S08 file=TBC (wrapper arguments) harness-exit=1
+-- diff (staged vs mutant):
+   11c11
+   < if ./mvnw -q verify >"$log" 2>&1; then
+   ---
+   > if ./mvnw verify >"$log" 2>&1; then
+not ok 1 - tbc-commit-green
+not ok 2 - tbc-commit-green-long-output
+not ok 3 - tbc-commit-red
+not ok 4 - tbc-commit-red-long-output-tail-40
+not ok 5 - tbc-commit-red-output-on-stderr
+not ok 6 - tbc-commit-red-no-output
+not ok 7 - tbc-commit-red-exit-3
+not ok 8 - tbc-commit-red-trailing-empty-lines
+not ok 10 - tbc-escaped-quotes-after-commit
+not ok 12 - tbc-spaces-in-json-and-command
+not ok 13 - tbc-pretty-printed-json
+not ok 14 - tbc-tab-after-command-colon
+not ok 15 - tbc-tab-before-command-colon
+not ok 16 - tbc-cr-after-command-colon
+not ok 17 - tbc-cr-before-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+not ok 25 - tbc-project-dir-unset
+not ok 26 - tbc-project-dir-empty
+FAILED: 18 of 68
+== S09 file=TBC (build stderr goes into the log) harness-exit=1
+-- diff (staged vs mutant):
+   11c11
+   < if ./mvnw -q verify >"$log" 2>&1; then
+   ---
+   > if ./mvnw -q verify >"$log"; then
+not ok 5 - tbc-commit-red-output-on-stderr
+FAILED: 1 of 68
+== S10 file=TBC (log removed on a green build) harness-exit=1
+-- diff (staged vs mutant):
+   12d11
+   <   rm -f "$log"
+not ok 1 - tbc-commit-green
+not ok 2 - tbc-commit-green-long-output
+FAILED: 2 of 68
+== S11 file=TBC (log removed on a red build) harness-exit=1
+-- diff (staged vs mutant):
+   19d18
+   < rm -f "$log"
+not ok 3 - tbc-commit-red
+not ok 4 - tbc-commit-red-long-output-tail-40
+not ok 5 - tbc-commit-red-output-on-stderr
+not ok 6 - tbc-commit-red-no-output
+not ok 7 - tbc-commit-red-exit-3
+not ok 8 - tbc-commit-red-trailing-empty-lines
+not ok 10 - tbc-escaped-quotes-after-commit
+not ok 12 - tbc-spaces-in-json-and-command
+not ok 13 - tbc-pretty-printed-json
+not ok 14 - tbc-tab-after-command-colon
+not ok 15 - tbc-tab-before-command-colon
+not ok 16 - tbc-cr-after-command-colon
+not ok 17 - tbc-cr-before-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+not ok 25 - tbc-project-dir-unset
+not ok 26 - tbc-project-dir-empty
+not ok 28 - tbc-could-not-start-mvnw-missing
+not ok 29 - tbc-could-not-start-mvnw-not-executable
+FAILED: 18 of 68
+== S12 file=TBC (exit 2 blocks the commit) harness-exit=1
+-- diff (staged vs mutant):
+   20c20
+   < exit 2
+   ---
+   > exit 1
+not ok 3 - tbc-commit-red
+not ok 4 - tbc-commit-red-long-output-tail-40
+not ok 5 - tbc-commit-red-output-on-stderr
+not ok 6 - tbc-commit-red-no-output
+not ok 7 - tbc-commit-red-exit-3
+not ok 8 - tbc-commit-red-trailing-empty-lines
+not ok 10 - tbc-escaped-quotes-after-commit
+not ok 12 - tbc-spaces-in-json-and-command
+not ok 13 - tbc-pretty-printed-json
+not ok 14 - tbc-tab-after-command-colon
+not ok 15 - tbc-tab-before-command-colon
+not ok 16 - tbc-cr-after-command-colon
+not ok 17 - tbc-cr-before-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+not ok 25 - tbc-project-dir-unset
+not ok 26 - tbc-project-dir-empty
+not ok 28 - tbc-could-not-start-mvnw-missing
+not ok 29 - tbc-could-not-start-mvnw-not-executable
+not ok 30 - tbc-could-not-make-temp-log
+FAILED: 19 of 68
+== S13 file=TBC (stderr header text) harness-exit=1
+-- diff (staged vs mutant):
+   16c16
+   <   echo "Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again."
+   ---
+   >   echo "Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again!"
+not ok 3 - tbc-commit-red
+not ok 4 - tbc-commit-red-long-output-tail-40
+not ok 5 - tbc-commit-red-output-on-stderr
+not ok 6 - tbc-commit-red-no-output
+not ok 7 - tbc-commit-red-exit-3
+not ok 8 - tbc-commit-red-trailing-empty-lines
+not ok 10 - tbc-escaped-quotes-after-commit
+not ok 12 - tbc-spaces-in-json-and-command
+not ok 13 - tbc-pretty-printed-json
+not ok 14 - tbc-tab-after-command-colon
+not ok 15 - tbc-tab-before-command-colon
+not ok 16 - tbc-cr-after-command-colon
+not ok 17 - tbc-cr-before-command-colon
+not ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+not ok 25 - tbc-project-dir-unset
+not ok 26 - tbc-project-dir-empty
+not ok 28 - tbc-could-not-start-mvnw-missing
+not ok 29 - tbc-could-not-start-mvnw-not-executable
+not ok 30 - tbc-could-not-make-temp-log
+FAILED: 19 of 68
+== S14 file=TBC (exit 0 for a command that is not a git commit) harness-exit=1
+-- diff (staged vs mutant):
+   7c7
+   <   exit 0
+   ---
+   >   exit 2
+not ok 9 - tbc-other-command
+not ok 11 - tbc-escaped-quotes-before-commit
+not ok 19 - tbc-newline-before-command-colon
+not ok 20 - tbc-key-and-value-on-two-lines
+not ok 21 - tbc-raw-newline-in-command-string
+not ok 22 - tbc-uppercase-command
+not ok 23 - tbc-git-commit-only-in-description
+not ok 24 - tbc-empty-stdin
+FAILED: 8 of 68
+== S15 file=TBC (fallback folder when CLAUDE_PROJECT_DIR is unset) harness-exit=1
+-- diff (staged vs mutant):
+   9c9
+   < cd "${CLAUDE_PROJECT_DIR:-.}" || exit 1
+   ---
+   > cd "${CLAUDE_PROJECT_DIR:-..}" || exit 1
+not ok 25 - tbc-project-dir-unset
+not ok 26 - tbc-project-dir-empty
+FAILED: 2 of 68
+== A01 file=ACS (tail length 30) harness-exit=1
+-- diff (staged vs mutant):
+   12c12
+   <   { echo "ArchitectureTest fails. Fix the layering before you finish:"; printf '%s\n' "$out" | tail -n 30; } >&2
+   ---
+   >   { echo "ArchitectureTest fails. Fix the layering before you finish:"; printf '%s\n' "$out" | tail -n 29; } >&2
+not ok 33 - acs-java-change-red-long-output-tail-30
+FAILED: 1 of 68
+== A02 file=ACS (case-sensitive loop guard) harness-exit=1
+-- diff (staged vs mutant):
+   4c4
+   < if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+   ---
+   > if printf '%s' "$input" | grep -Eiq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+not ok 53 - acs-stop-hook-active-uppercase-key
+FAILED: 1 of 68
+== A03 file=ACS (whitespace class before the colon) harness-exit=1
+-- diff (staged vs mutant):
+   4c4
+   < if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+   ---
+   > if printf '%s' "$input" | grep -Eq '"stop_hook_active"[ ]*:[[:space:]]*true'; then
+not ok 47 - acs-stop-hook-active-true-tab-before-colon
+not ok 49 - acs-stop-hook-active-true-cr-before-colon
+not ok 50 - acs-stop-hook-active-true-mixed-whitespace-runs
+FAILED: 3 of 68
+== A04 file=ACS (whitespace class after the colon) harness-exit=1
+-- diff (staged vs mutant):
+   4c4
+   < if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+   ---
+   > if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[ ]*true'; then
+not ok 46 - acs-stop-hook-active-true-with-a-tab
+not ok 48 - acs-stop-hook-active-true-cr-after-colon
+not ok 50 - acs-stop-hook-active-true-mixed-whitespace-runs
+FAILED: 3 of 68
+== A05 file=ACS (a whitespace run before the colon) harness-exit=1
+-- diff (staged vs mutant):
+   4c4
+   < if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+   ---
+   > if printf '%s' "$input" | grep -Eq '"stop_hook_active"[[:space:]]?:[[:space:]]*true'; then
+not ok 50 - acs-stop-hook-active-true-mixed-whitespace-runs
+FAILED: 1 of 68
+== A06 file=ACS (exit 0 when stop_hook_active is true) harness-exit=1
+-- diff (staged vs mutant):
+   5c5
+   <   exit 0   # we already blocked once in this turn; avoid loops
+   ---
+   >   exit 2   # we already blocked once in this turn; avoid loops
+not ok 44 - acs-stop-hook-active-true
+not ok 45 - acs-stop-hook-active-true-with-spaces
+not ok 46 - acs-stop-hook-active-true-with-a-tab
+not ok 47 - acs-stop-hook-active-true-tab-before-colon
+not ok 48 - acs-stop-hook-active-true-cr-after-colon
+not ok 49 - acs-stop-hook-active-true-cr-before-colon
+not ok 50 - acs-stop-hook-active-true-mixed-whitespace-runs
+FAILED: 7 of 68
+== A07 file=ACS (untracked files counted) harness-exit=1
+-- diff (staged vs mutant):
+   8c8
+   < if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+   ---
+   > if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --exclude-standard -- '*.java')" ]; then
+not ok 38 - acs-no-java-change
+not ok 39 - acs-clean-tree
+not ok 40 - acs-untracked-java-file
+not ok 41 - acs-ignored-java-file
+not ok 62 - acs-git-ls-files-fails
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 6 of 68
+== A08 file=ACS (ignored files not counted) harness-exit=1
+-- diff (staged vs mutant):
+   8c8
+   < if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+   ---
+   > if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --others -- '*.java')" ]; then
+not ok 38 - acs-no-java-change
+not ok 39 - acs-clean-tree
+not ok 40 - acs-untracked-java-file
+not ok 41 - acs-ignored-java-file
+not ok 62 - acs-git-ls-files-fails
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 6 of 68
+== A09 file=ACS (staged changes counted (diff against HEAD)) harness-exit=1
+-- diff (staged vs mutant):
+   8c8
+   < if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+   ---
+   > if git diff --quiet -- '*.java' && [ -z "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+not ok 31 - acs-java-change-green
+not ok 32 - acs-java-change-red
+not ok 33 - acs-java-change-red-long-output-tail-30
+not ok 34 - acs-java-change-red-output-on-stderr
+not ok 35 - acs-java-change-red-no-output
+not ok 36 - acs-java-change-red-exit-3
+not ok 37 - acs-java-change-red-trailing-empty-lines
+not ok 38 - acs-no-java-change
+not ok 39 - acs-clean-tree
+not ok 40 - acs-untracked-java-file
+not ok 41 - acs-ignored-java-file
+not ok 42 - acs-staged-java-file
+not ok 43 - acs-deleted-java-file
+not ok 51 - acs-stop-hook-active-newline-before-colon
+not ok 52 - acs-stop-hook-active-string
+not ok 53 - acs-stop-hook-active-uppercase-key
+not ok 54 - acs-stop-hook-active-on-two-lines
+not ok 55 - acs-empty-stdin
+not ok 56 - acs-project-dir-unset
+not ok 57 - acs-project-dir-empty
+not ok 59 - acs-git-diff-fails-not-a-repo
+not ok 60 - acs-git-diff-fails-no-commit
+not ok 62 - acs-git-ls-files-fails
+not ok 63 - acs-could-not-start-mvnw-missing
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 25 of 68
+== A10 file=ACS (exit 1 when the project folder cannot be entered) harness-exit=1
+-- diff (staged vs mutant):
+   7c7
+   < cd "${CLAUDE_PROJECT_DIR:-.}" || exit 1
+   ---
+   > cd "${CLAUDE_PROJECT_DIR:-.}" || exit 3
+not ok 58 - acs-could-not-cd
+FAILED: 1 of 68
+== A11 file=ACS (test stderr in the tail) harness-exit=1
+-- diff (staged vs mutant):
+   11c11
+   < if ! out="$(./mvnw -q -pl bookstore test -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false 2>&1)"; then
+   ---
+   > if ! out="$(./mvnw -q -pl bookstore test -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false )"; then
+not ok 34 - acs-java-change-red-output-on-stderr
+not ok 63 - acs-could-not-start-mvnw-missing
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 3 of 68
+== A12 file=ACS (exit 2 keeps Claude working) harness-exit=1
+-- diff (staged vs mutant):
+   13c13
+   <   exit 2
+   ---
+   >   exit 1
+not ok 32 - acs-java-change-red
+not ok 33 - acs-java-change-red-long-output-tail-30
+not ok 34 - acs-java-change-red-output-on-stderr
+not ok 35 - acs-java-change-red-no-output
+not ok 36 - acs-java-change-red-exit-3
+not ok 37 - acs-java-change-red-trailing-empty-lines
+not ok 40 - acs-untracked-java-file
+not ok 42 - acs-staged-java-file
+not ok 43 - acs-deleted-java-file
+not ok 51 - acs-stop-hook-active-newline-before-colon
+not ok 52 - acs-stop-hook-active-string
+not ok 53 - acs-stop-hook-active-uppercase-key
+not ok 54 - acs-stop-hook-active-on-two-lines
+not ok 55 - acs-empty-stdin
+not ok 56 - acs-project-dir-unset
+not ok 57 - acs-project-dir-empty
+not ok 59 - acs-git-diff-fails-not-a-repo
+not ok 60 - acs-git-diff-fails-no-commit
+not ok 61 - acs-could-not-start-git
+not ok 63 - acs-could-not-start-mvnw-missing
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 21 of 68
+== A13 file=ACS (wrapper arguments) harness-exit=1
+-- diff (staged vs mutant):
+   11c11
+   < if ! out="$(./mvnw -q -pl bookstore test -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false 2>&1)"; then
+   ---
+   > if ! out="$(./mvnw -q -pl bookstore test -Dtest=ArchitectureTests -Dsurefire.failIfNoSpecifiedTests=false 2>&1)"; then
+not ok 31 - acs-java-change-green
+not ok 32 - acs-java-change-red
+not ok 33 - acs-java-change-red-long-output-tail-30
+not ok 34 - acs-java-change-red-output-on-stderr
+not ok 35 - acs-java-change-red-no-output
+not ok 36 - acs-java-change-red-exit-3
+not ok 37 - acs-java-change-red-trailing-empty-lines
+not ok 40 - acs-untracked-java-file
+not ok 42 - acs-staged-java-file
+not ok 43 - acs-deleted-java-file
+not ok 51 - acs-stop-hook-active-newline-before-colon
+not ok 52 - acs-stop-hook-active-string
+not ok 53 - acs-stop-hook-active-uppercase-key
+not ok 54 - acs-stop-hook-active-on-two-lines
+not ok 55 - acs-empty-stdin
+not ok 56 - acs-project-dir-unset
+not ok 57 - acs-project-dir-empty
+not ok 59 - acs-git-diff-fails-not-a-repo
+not ok 60 - acs-git-diff-fails-no-commit
+not ok 61 - acs-could-not-start-git
+FAILED: 20 of 68
+== A14 file=ACS (an untracked Java file is a change) harness-exit=1
+-- diff (staged vs mutant):
+   8c8
+   < if git diff --quiet HEAD -- '*.java' && [ -z "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+   ---
+   > if git diff --quiet HEAD -- '*.java' && [ -n "$(git ls-files --others --exclude-standard -- '*.java')" ]; then
+not ok 38 - acs-no-java-change
+not ok 39 - acs-clean-tree
+not ok 40 - acs-untracked-java-file
+not ok 41 - acs-ignored-java-file
+not ok 62 - acs-git-ls-files-fails
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 6 of 68
+== A15 file=ACS (stderr header text) harness-exit=1
+-- diff (staged vs mutant):
+   12c12
+   <   { echo "ArchitectureTest fails. Fix the layering before you finish:"; printf '%s\n' "$out" | tail -n 30; } >&2
+   ---
+   >   { echo "ArchitectureTest fails. Fix the layering before you finish."; printf '%s\n' "$out" | tail -n 30; } >&2
+not ok 32 - acs-java-change-red
+not ok 33 - acs-java-change-red-long-output-tail-30
+not ok 34 - acs-java-change-red-output-on-stderr
+not ok 35 - acs-java-change-red-no-output
+not ok 36 - acs-java-change-red-exit-3
+not ok 37 - acs-java-change-red-trailing-empty-lines
+not ok 40 - acs-untracked-java-file
+not ok 42 - acs-staged-java-file
+not ok 43 - acs-deleted-java-file
+not ok 51 - acs-stop-hook-active-newline-before-colon
+not ok 52 - acs-stop-hook-active-string
+not ok 53 - acs-stop-hook-active-uppercase-key
+not ok 54 - acs-stop-hook-active-on-two-lines
+not ok 55 - acs-empty-stdin
+not ok 56 - acs-project-dir-unset
+not ok 57 - acs-project-dir-empty
+not ok 59 - acs-git-diff-fails-not-a-repo
+not ok 60 - acs-git-diff-fails-no-commit
+not ok 61 - acs-could-not-start-git
+not ok 63 - acs-could-not-start-mvnw-missing
+not ok 64 - acs-could-not-start-mvnw-untracked-java-file
+FAILED: 21 of 68
+== G01 file=PRE-COMMIT (wrapper arguments) harness-exit=1
+-- diff (staged vs mutant):
+   3c3
+   < ./mvnw -q verify || { echo "pre-commit: build failed, commit aborted" >&2; exit 1; }
+   ---
+   > ./mvnw verify || { echo "pre-commit: build failed, commit aborted" >&2; exit 1; }
+not ok 65 - githook-green-commit-goes-through
+not ok 66 - githook-red-commit-aborted
+FAILED: 2 of 68
+== G02 file=PRE-COMMIT (a red build aborts the commit) harness-exit=1
+-- diff (staged vs mutant):
+   3c3
+   < ./mvnw -q verify || { echo "pre-commit: build failed, commit aborted" >&2; exit 1; }
+   ---
+   > ./mvnw -q verify || { echo "pre-commit: build failed, commit aborted" >&2; exit 0; }
+not ok 66 - githook-red-commit-aborted
+FAILED: 1 of 68
+== G03 file=PRE-COMMIT (first stderr line) harness-exit=1
+-- diff (staged vs mutant):
+   2c2
+   < echo "pre-commit: ./mvnw -q verify"
+   ---
+   > echo "pre-commit: ./mvnw verify"
+not ok 65 - githook-green-commit-goes-through
+not ok 66 - githook-red-commit-aborted
+FAILED: 2 of 68
+
+# r4 (F-QA-T8-r3-1): harness 70 cases
+# Two mutants of the grep in tests-before-commit.sh, run against the r4 harness (70 cases) with the same method as
+# above: each on its own copy of the staging folder (each copy checked to differ from the staged hook), bash 5.
+# QT02 drops the [^"]* before git (a match anchored at the start of the command string); the chained case
+# tbc-chained-git-add-and-git-commit kills it. QT01 turns the whitespace run between git and commit from + to *;
+# the case tbc-gitcommit-inside-a-word kills it. Script: impl-t8-mutants-r4.sh (comms tmp).
+# date: 2026-11-10T12:29:48Z (raw run finished)
+== CONTROL (no mutation) harness-exit=0
+PASSED: 70 of 70
+== QT02 file=TBC (mutant: "[^"]*git -> "git (prefix before git dropped)) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"git[[:space:]]+commit'; then
+not ok 24 - tbc-chained-git-add-and-git-commit
+FAILED: 1 of 70
+== QT01 file=TBC (mutant: git[[:space:]]+commit -> git[[:space:]]*commit (whitespace run may be empty)) harness-exit=1
+-- diff (staged vs mutant):
+   6c6
+   < if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]+commit'; then
+   ---
+   > if ! printf '%s' "$input" | grep -Eq '"command"[[:space:]]*:[[:space:]]*"[^"]*git[[:space:]]*commit'; then
+not ok 25 - tbc-gitcommit-inside-a-word
+FAILED: 1 of 70

@@ -1,0 +1,47 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java b/bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+index e566d8791c2e9a644691e63adf5da56dfa440f7f..38ce5df2de1750a03c2832ad3bf54cb4207a7090 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+@@ -15,9 +15,9 @@ import java.util.List;
+ import java.util.UUID;
+ 
+ /**
+- * The stored shape of an order. Id, e-mail address, placed time and lines are fixed at creation; only the status and
+- * the shipped time change afterwards. The version is managed by Hibernate for optimistic locking and never set by
+- * code. Lines are lazy, so map to a DTO inside a transaction.
++ * The stored shape of an order. Id, e-mail address, placed time and lines are fixed at creation; only the status, the
++ * shipped time and the cancelled time change afterwards. The version is managed by Hibernate for optimistic locking
++ * and never set by code. Lines are lazy, so map to a DTO inside a transaction.
+  */
+ @Entity
+ @Table(name = "customer_order")
+@@ -39,6 +39,9 @@ public class OrderJPA {
+     @Column(name = "shipped_at")
+     private Instant shippedAt;
+ 
++    @Column(name = "cancelled_at")
++    private Instant cancelledAt;
++
+     @Version
+     @Column(name = "version", nullable = false)
+     private Long version;
+@@ -79,6 +82,10 @@ public class OrderJPA {
+         return shippedAt;
+     }
+ 
++    public Instant getCancelledAt() {
++        return cancelledAt;
++    }
++
+     public List<OrderLineJPA> getLines() {
+         return List.copyOf(lines);
+     }
+@@ -90,4 +97,8 @@ public class OrderJPA {
+     void setShippedAt(Instant shippedAt) {
+         this.shippedAt = shippedAt;
+     }
++
++    void setCancelledAt(Instant cancelledAt) {
++        this.cancelledAt = cancelledAt;
++    }
+ }

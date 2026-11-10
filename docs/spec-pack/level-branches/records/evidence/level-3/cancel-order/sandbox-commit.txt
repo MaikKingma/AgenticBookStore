@@ -1,0 +1,72 @@
+# T9 sandbox exercise commit with the staged git hook active, made by the implementer outside Claude (criterion 8).
+# Raw: $SP/s10-t9-impl-raw-commit.txt (the hook's test output in between is left out; it holds no failure).
+== git -C $SBX config core.hooksPath .githooks
+core.hooksPath=.githooks
+== git -C $SBX add -A
+M  bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java
+A  bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+M  bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
+A  bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql
+M  bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java
+M  bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java
+== git -C $SBX commit (hook runs; budget 900 s)
+start 13:24:17Z
+pre-commit: ./mvnw -q verify
+# ... (hook verify output) ...
+[main 608f819] feat(orders): cancel an order that has not shipped yet
+ 23 files changed, 1038 insertions(+), 122 deletions(-)
+ create mode 100644 bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java
+ create mode 100644 bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql
+commit exit 0 at 13:24:50Z
+== git -C $SBX log --oneline
+608f819 feat(orders): cancel an order that has not shipped yet
+163e5d1 Level 3 solution: behavioral control
+aa8dba2 Level 2 solution: give your agent eyes (LSP + MCP)
+dadef2b Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+== git -C $SBX diff --name-status HEAD~1 HEAD
+M	bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java
+A	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
+A	bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql
+M	bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java
+== git -C $SBX status --porcelain
+sandbox HEAD: 608f819e253892b7d302465d74b730141996ee9e
+
+# Hook failure lines in the raw commit output (expected: none; the [ERROR] npm lines are npm warnings):
+0

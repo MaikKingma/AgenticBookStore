@@ -1,0 +1,28 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Universal and descriptive claims of level-4-speckit.md, each with a counterexample search on sbx-2 (HEAD = level-4-speckit) and a control that must hit.
+== CL1 every generated Spec Kit skill carries disable-model-invocation: true
+search: skill files lacking the line (expect none):
+control: skill files lacking the line 'user-invocable: false' (must list all 9, proves -L works):
+9
+== CL2 no PowerShell file is generated
+search: 0 matches; control, shell scripts in .specify/scripts: 6
+== CL3 the Spec Kit commit changes no existing file (all 29 rows are adds)
+search: rows not starting with A: 0; control, the level-3 commit (HEAD~1) has rows that are not adds: 22
+== CL4 only the six scripts are executable among the 29 added files
+search: added files with mode 100755:
+.specify/scripts/bash/check-prerequisites.sh
+.specify/scripts/bash/common.sh
+.specify/scripts/bash/create-new-feature.sh
+.specify/scripts/bash/resolve-template.sh
+.specify/scripts/bash/setup-plan.sh
+.specify/scripts/bash/setup-tasks.sh
+control: added files with mode 100644: 23
+== CL5 every added file ends with a newline and has no carriage return
+no final newline: .specify/workflows/workflow-registry.json
+search result: found
+control, a file without final newline is detected: yes
+== CL8 non-ASCII text in the added files (generated files are exempt from the ASCII rule of the task; the written constitution is not)
+files with non-ASCII bytes: 17 of 29; the written constitution among them: False
+== CL6 the init runs entirely offline except the download of the package (help text and run)
+help: 7: package, so initialization does not need network access and templates          
+== CL7 the fresh init output has the same 29 files and, apart from four timestamps, the same bytes: see regen-compare.txt

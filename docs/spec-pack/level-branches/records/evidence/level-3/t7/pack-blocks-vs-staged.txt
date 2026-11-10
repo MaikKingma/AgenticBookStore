@@ -1,0 +1,51 @@
+# T7 check: staged Level 3 files against the pack text of spec 10, "Branch solution/level-3"
+# The extractor (python3 -I, own code) takes the first fenced block after each pack heading; cmp compares bytes.
+# spec tip at the start of T7: 7676f92; the pack file is unchanged by T7: yes
+
+$ python3 -I pack-check.py <worktree> <work dir>
+extracted SKILL.md                    24 lines
+extracted ship.md                     15 lines
+extracted architecture-reviewer.md    10 lines
+pack settings block: 46 lines, inner 44
+settings.json staged: problems=[]
+negative control onFailure continue         -> detected
+negative control onFailure removed          -> detected
+negative control timeout 181                -> detected
+negative control one deny rule dropped      -> detected
+negative control allow order swapped        -> detected
+negative control no trailing newline        -> detected
+negative control tab indent                 -> detected
+negative control hooks before permissions   -> detected
+settings checks ok
+
+$ cmp <pack block> <staged SKILL.md>
+rc=0  (0 = byte-equal)
+$ cmp <staged SKILL.md> <sandbox target>
+rc=0
+mode of sandbox target: -rw-r--r--  bytes: 1753  CR count: 0  non-ASCII bytes: 0
+negative control, one byte changed: cmp reports a difference (as it must)
+negative control, extra trailing newline: cmp reports a difference (as it must)
+
+$ cmp <pack block> <staged ship.md>
+rc=0  (0 = byte-equal)
+$ cmp <staged ship.md> <sandbox target>
+rc=0
+mode of sandbox target: -rw-r--r--  bytes: 740  CR count: 0  non-ASCII bytes: 0
+negative control, one byte changed: cmp reports a difference (as it must)
+negative control, extra trailing newline: cmp reports a difference (as it must)
+
+$ cmp <pack block> <staged architecture-reviewer.md>
+rc=0  (0 = byte-equal)
+$ cmp <staged architecture-reviewer.md> <sandbox target>
+rc=0
+mode of sandbox target: -rw-r--r--  bytes: 682  CR count: 0  non-ASCII bytes: 0
+negative control, one byte changed: cmp reports a difference (as it must)
+negative control, extra trailing newline: cmp reports a difference (as it must)
+
+$ cmp <staged settings> <sandbox settings> (the replace row)
+rc=0
+mode of sandbox settings: -rw-r--r--
+$ python3 -I -c json.load(path)   (parses with the path only)
+parses as JSON
+
+check result: OK

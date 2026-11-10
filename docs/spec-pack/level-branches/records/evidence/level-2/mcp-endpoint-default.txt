@@ -1,0 +1,9 @@
+# Default of the MCP endpoint property, from the dependency of the distributor (spring-ai.version 2.0.2, root pom.xml:26)
+$ javap -v -c -p -classpath <spring-ai-autoconfigure-mcp-server-common-2.0.2.jar> org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerStreamableHttpProperties | grep (property prefix, field, constructor default)
+    ConstantValue: String spring.ai.mcp.server.streamable-http
+  private java.lang.String mcpEndpoint;
+         5: ldc           #7                  // String /mcp
+      value="spring.ai.mcp.server.streamable-http"
+
+Reading: prefix spring.ai.mcp.server.streamable-http, field mcpEndpoint, constructor default /mcp. The distributor
+application.yml sets protocol STREAMABLE (line 10) and does not set mcp-endpoint, so the endpoint path is /mcp.

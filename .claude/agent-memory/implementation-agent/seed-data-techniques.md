@@ -23,10 +23,7 @@ metadata:
 - "Keeps developer edits" rerun test: UPDATE at least one column in EVERY seeded table (ship an order: order row plus its
   stock rows; line quantity and price; book price; author name; stock flag and level), assert counts, then ONE equality
   over all tables. A deletion check is a separate test. Edits to a subset of tables let per-column `DO UPDATE SET`
-  mutants survive. Pin ASCII-only SQL with a byte scan of the classpath resource (reports the offset).
-- The distributor catalogue already uses ISBN prefixes 978990001 and 978990002; invent new ISBNs in 978990003.
-  macOS grep has no `-P`: use `perl -ne 'print if /[^\x00-\x7F]/'` for ASCII gates (and give it a positive control).
-- Growing a seed: append rows to the existing INSERT statements with a generator in the scratchpad, then prove "old
-  lines unchanged" with an ordered-subsequence script (old non-comment lines in order, nothing between them, only the
-  last row of each list gaining a comma) plus two negative-control copies. Unanchored `grep -c 'ON CONFLICT DO NOTHING'`
-  also counts a header comment that quotes it; anchor with `^`. `grep -c '@Test'` counts `@TestInstance` too.
+  mutants survive. Pin ASCII-only SQL with a byte scan of the classpath resource.
+- Growing a seed: append rows with a scratchpad generator, then prove "old lines unchanged" with an ordered-subsequence
+  script (only the last row of each list gains a comma) plus two negative-control copies. Anchor count greps with `^`
+  (`grep -c 'ON CONFLICT DO NOTHING'` also counts a header comment; `grep -c '@Test'` counts `@TestInstance`).

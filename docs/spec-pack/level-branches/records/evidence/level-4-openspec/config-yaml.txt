@@ -1,0 +1,233 @@
+# openspec/config.yaml (acceptance criterion 2). $SBX = sandbox 1.
+# 1. The generated file, unedited (init output):
+schema: spec-driven
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
+
+# 2. The staged file (authored per the pack: generated schema line, the pack block, the generated per-operation comment block):
+schema: spec-driven
+
+context: |
+  Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+  Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+  Definition of done: ./mvnw verify green, every scenario covered by a test.
+rules:
+  design:
+    - Name the onion layer of every new or changed class.
+  tasks:
+    - Order tasks domain, flow, data and migration, adapter, integration test.
+    - Every requirement scenario maps to at least one test task.
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
+
+# 3. check.py config: the dedented pack block (pack spec 10 lines 440 to 449) appears verbatim and contiguous; every other line is listed:
+pack block: 10 lines (pack file lines 440 to 449, dedented)
+PASS: block found at config lines 3 to 12
+other lines of the config file (15):
+  extra   1: schema: spec-driven
+  extra   2: 
+  extra  13: 
+  extra  14: # Per-operation guidance (optional)
+  extra  15: # Add advisory guidance for how apply and archive work should be conducted.
+  extra  16: # This is separate from artifact rules above.
+  extra  17: # Example:
+  extra  18: #   operations:
+  extra  19: #     apply:
+  extra  20: #       guidance:
+  extra  21: #         - Keep test summaries concise
+  extra  22: #     archive:
+  extra  23: #       guidance:
+  extra  24: #         - Summarize the archive outcome before finishing
+  extra  25: 
+exit code: 0
+
+# 4. The installed package has no docs folder; the docs file is read from the repository tag v1.16.0:
+top level of the installed package @fission-ai/openspec@1.16.0 (npx extraction folder):
+LICENSE
+README.md
+bin
+dist
+package.json
+schemas
+docs folder in the package: absent
+customization.md anywhere in the package: 0 files
+package.json version: 1.16.0
+
+# 5. docs/customization.md of OpenSpec v1.16.0 (quotes):
+source: https://raw.githubusercontent.com/Fission-AI/OpenSpec/v1.16.0/docs/customization.md (tag v1.16.0), fetched with curl on 2026-11-10
+sha256: adfc1277bab095289812bd3224010f362855c633796a7a928a155623916a8386
+lines: 435
+
+--- lines 13 to 47 (Project Configuration, Quick Setup)
+13: ## Project Configuration
+14: 
+15: The `openspec/config.yaml` file is the easiest way to customize OpenSpec for your team. It lets you:
+16: 
+17: - **Set a default schema** - Skip `--schema` on every command
+18: - **Inject project context** - AI sees your tech stack, conventions, etc.
+19: - **Add per-artifact rules** - Custom rules for specific artifacts
+20: - **Add per-operation guidance** - Advisory preferences for apply and archive work
+21: - **Remember integration choices** - e.g. the [GitHub Copilot cloud coding agent](supported-tools.md#github-copilot-cloud-coding-agent) opt-in
+22: 
+23: ### Quick Setup
+24: 
+25: ```bash
+26: openspec init
+27: ```
+28: 
+29: This walks you through creating a config interactively. Or create one manually:
+30: 
+31: ```yaml
+32: # openspec/config.yaml
+33: schema: spec-driven
+34: 
+35: context: |
+36:   Tech stack: TypeScript, React, Node.js, PostgreSQL
+37:   API style: RESTful, documented in docs/api.md
+38:   Testing: Jest + React Testing Library
+39:   We value backwards compatibility for all public APIs
+40: 
+41: rules:
+42:   proposal:
+43:     - Include rollback plan
+44:     - Identify affected teams
+45:   specs:
+46:     - Use Given/When/Then format
+47:     - Reference existing patterns before inventing new ones
+
+--- lines 75 to 96 (Context and rules injection)
+75: **Context and rules injection:**
+76: 
+77: When generating any artifact, your context and rules are injected into the AI prompt:
+78: 
+79: ```xml
+80: <context>
+81: Tech stack: TypeScript, React, Node.js, PostgreSQL
+82: ...
+83: </context>
+84: 
+85: <rules>
+86: - Include rollback plan
+87: - Identify affected teams
+88: </rules>
+89: 
+90: <template>
+91: [Schema's built-in template]
+92: </template>
+93: ```
+94: 
+95: - **Context** appears in ALL artifacts
+96: - **Rules** ONLY appear for the matching artifact
+
+# 6. Artifact ids of the schema spec-driven (the keys under rules:), from the installed CLI:
+Available schemas:
+
+  spec-driven
+    Default OpenSpec workflow - proposal ? specs ? design ? tasks
+    Artifacts: proposal ? specs ? design ? tasks
+
+    "name": "spec-driven",
+
+# 7. Proof by output: openspec instructions <artifact> --change probe-x in a scratch copy of the authored openspec folder (not staged).
+== P1 scratch change probe-x in a copy of the authored openspec folder; instructions per artifact
+- Creating change 'probe-x' with schema 'spec-driven'...
+Created change 'probe-x' at openspec/changes/probe-x/
+Schema: spec-driven
+Next: openspec status --change probe-x
+instructions proposal: exit 0 ,      106 lines
+instructions design: exit 0 ,      101 lines
+instructions tasks: exit 0 ,      125 lines
+
+== P2 rule text check (chk rules): design output must hold context + rules.design
+found: Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+found: Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+found: Definition of done: ./mvnw verify green, every scenario covered by a test.
+found: Name the onion layer of every new or changed class.
+exit code: 0
+
+== P3 rule text check: tasks output must hold context + rules.tasks
+found: Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+found: Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+found: Definition of done: ./mvnw verify green, every scenario covered by a test.
+found: Order tasks domain, flow, data and migration, adapter, integration test.
+found: Every requirement scenario maps to at least one test task.
+exit code: 0
+
+== P4 control: the proposal output holds the context but NOT the design rule (rules appear only for the matching artifact)
+found: Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+found: Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+found: Definition of done: ./mvnw verify green, every scenario covered by a test.
+MISSING: Name the onion layer of every new or changed class.
+exit code: 1 (1 expected: the design rule line must be MISSING in the proposal output)
+
+== P5 negative control: key 'rules:' misspelled as 'rule:' in a scratch config; design output must lose the rule text
+7:rule:
+- Creating change 'probe-x' with schema 'spec-driven'...
+Created change 'probe-x' at openspec/changes/probe-x/
+Schema: spec-driven
+Next: openspec status --change probe-x
+instructions design (rule: misspelled): exit 0
+found: Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+found: Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+found: Definition of done: ./mvnw verify green, every scenario covered by a test.
+MISSING: Name the onion layer of every new or changed class.
+exit code: 1 (1 expected)
+
+== P6 stderr of the design run (warnings about config keys?)
+- Generating instructions...
+(end of stderr)
+== P7 stderr of the misspelled run
+- Generating instructions...
+(end of stderr)
+
+# 8. Where the rule and context text sits in the real instructions output (grep -n of the first matching lines):
+-- instructions design: lines with the context line and the rule lines
+15:Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+20:<rules>
+22:- Name the onion layer of every new or changed class.
+-- instructions tasks: lines with the context line and the rule lines
+15:Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+20:<rules>
+22:- Order tasks domain, flow, data and migration, adapter, integration test.
+23:- Every requirement scenario maps to at least one test task.
+-- instructions proposal: lines with the context line and the rule lines
+10:Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.

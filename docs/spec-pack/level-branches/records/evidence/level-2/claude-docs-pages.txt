@@ -1,0 +1,72 @@
+# Claude Code documentation pages, read only (curl), 2026-11-10T00:49Z. No Claude process.
+# Non-ASCII glyphs of the docs pages (three places) are shown as ??? because this evidence is ASCII only; all other text is as printed.
+
+$ curl -sS -L -m 40 -o discover.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/discover-plugins
+HTTP 200
+$ grep -o -E '.{0,60}/plugin uninstall.{0,80}' discover.txt | head -4
+b to reach it, or run /plugin enable , /plugin disable , or /plugin uninstall to open the panel and make that change there. Disabled plugins are grouped unde
+ttings.json enables, whether from the Installed tab or with /plugin uninstall , Claude Code asks whether to disable it for you or uninstall it for everyone: 
+$ grep -o -E '.{0,80}(Installed tab|Installed).{0,80}' discover.txt | head -4
+dled MCP server can't start until you set its options. Select the plugin on the Installed tab in /plugin and choose Configure to set the server's options. 
+ Open the Installed tab in /plugin , which lists the plugin with its scope. 
+ntil you turn it on with claude plugin enable <name> in your shell, or from the Installed tab of /plugin in a session. 
+ The Installed tab in /plugin lists your plugins with actions to enable, disable, update, or unins
+$ grep -o -E '.{0,80}trust.{0,100}marketplace.{0,60}' discover.txt | head -4
+ Plugin security and trust : what to review before you install a plugin from a marketplace you don't know 
+
+$ curl -sS -L -m 40 -o mcp.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/mcp
+HTTP 200
+$ grep -o -E '.{0,80}approve.{0,40}project.{0,80}' mcp.txt | head -4
+ ??? Pending approval (run `claude` to approve) : a project-scoped server from .mcp.json that you haven't approved yet. Claude Code shows i
+$ grep -o -E '.{0,60}/mcp .{0,100}' mcp.txt | head -4
+ntial variables that read as empty How references appear in /mcp and CLI output Practical examples Example: Connect to GitHub for code reviews Example: Query your Po
+laude mcp add --transport http notion https://mcp.notion.com/mcp 
+ mcp add --transport http secure-api https://api.example.com/mcp \ 
+ A URL such as https://mcp.example.com/mcp : the server is remote. 
+$ grep -o -E '.{0,40}\.mcp\.json.{0,100}scope.{0,40}' mcp.txt | head -4
+the command or args of a project-scoped .mcp.json entry or a local- or user-scoped server entry in ~/.claude.json require
+ , or add the entry under mcpServers in .mcp.json at your project root and commit it. Project scope covers how Claude Code loads and approv
+boration by storing configurations in a .mcp.json file at your project's root directory. When you add a project-scoped server, Claude Code automatically crea
+n The plugin's root directory A project .mcp.json or a local-scope server The project directory the server
+
+$ curl -sS -L -m 40 -o memory.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/memory
+HTTP 200
+$ grep -o -E '.{0,80}auto memory.{0,100}' memory.txt | head -4
+ml body{background:transparent!important} On this page Back to top CLAUDE.md vs auto memory CLAUDE.md files When to add to CLAUDE.md Choose where to put CLAUDE.md files Set up a project CLAUD
+oding tools Migrate instructions from other tools Auto memory Enable or disable auto memory Storage location How it works Audit and edit your memory View and edit with /memory Troubleshoot me
+laude isn't following my CLAUDE.md My AGENTS.md isn't loading I don't know what auto memory saved My CLAUDE.md is too large Claude ignores the end of my subdirectory CLAUDE.md Instructions se
+E.md or AGENTS.md files, and let Claude accumulate learnings automatically with auto memory. Copy page Copy page Each Claude Code session begins with a fresh context window. Two mechanisms ca
+$ grep -o -E '.{0,60}/memory.{0,100}' memory.txt | head -4
+ How it works Audit and edit your memory View and edit with /memory Troubleshoot memory issues Claude isn't following my CLAUDE.md My AGENTS.md isn't loading I don't k
+ To toggle it, open /memory in a session and use the auto memory toggle, which saves autoMemoryEnabled to your user settings at
+y back on, run claude directly in your terminal and use the /memory toggle in that session. 
+ets its own memory directory at ~/.claude/projects/<project>/memory/ . The <project> path is derived from the git repository, so all worktrees and subdirectories withi
+
+$ curl -sS -L -m 40 -o tools.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/tools-reference
+HTTP 200
+$ grep -o -E '.{0,60}LSP.{0,120}' tools.txt | head -4
+orktree tool behavior Glob tool behavior Grep tool behavior LSP tool behavior Monitor tool WebSocket source Addresses and hosts denied to WebSocket watches Bash rules that deny or pro
+urces , which are pages for a host application to render No LSP Code intelligence via language servers: jump to definitions, find references, report type errors and warnings. See LSP 
+mmand pattern matching Read(~/secrets/**) Read, Grep, Glob, LSP Path pattern matching Edit(/src/**) Edit, Write, NotebookEdit Path pattern matching Skill(deploy *) Skill Skill name ma
+ ??? LSP tool behavior 
+
+# Claude Code docs, page "How Claude remembers your project": where auto memory lives and what /memory shows (read only, curl, 2026-11-10; same fetch as above)
+$ grep -o -E '.{0,100}projects/<project>/memory.{0,160}' memory.txt | head -3
+ Each project gets its own memory directory at ~/.claude/projects/<project>/memory/ . The <project> path is derived from the git repository, so all worktrees and subdirectories within the same repo share one auto memory directory. Outside a g
+ ~/.claude/projects/<project>/memory/ 
+led 2 memories??? in the Claude Code interface, Claude is actively updating or reading from ~/.claude/projects/<project>/memory/ . 
+$ grep -o -E '.{0,120}(git repo|same repository|worktree).{0,120}' memory.txt | head -3   (what the auto memory folder is keyed by)
+ If you work across multiple git worktrees of the same repository, a gitignored CLAUDE.local.md only exists in the worktree where you created it. To share personal instructions across worktrees, import a f
+ project gets its own memory directory at ~/.claude/projects/<project>/memory/ . The <project> path is derived from the git repository, so all worktrees and subdirectories within the same repo share one auto memory directory. Outside a git repo, the project root is used ins
+ Auto memory is machine-local. All worktrees and subdirectories within the same git repository share one auto memory directory. Files are not shared across machines or cloud environments. 
+$ grep -o -E '.{0,100}/memory command.{0,140}' memory.txt | head -3
+ Auto memory files are plain markdown you can edit or delete at any time. Run /memory to browse and open memory files from within a session. 
+ The /memory command lists your CLAUDE.md, CLAUDE.local.md, and other memory file locations across user and project scopes. The list includes user and project C
+ Run /memory and select the auto memory folder to browse what Claude has saved. Everything is plain markdown you can read, edit, or delete.
+
+# Claude Code docs, page "Code intelligence" (plugins), step "Confirm the server starts": when the language server starts (read only, curl, 2026-11-10; r2 addition, same method as above; ??? marks the one non-ASCII apostrophe)
+$ curl -sS -L -m 40 -o code-intelligence.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/plugins/code-intelligence
+HTTP 200
+$ grep -o -E '.{0,80}starts the first time.{0,120}' code-intelligence.txt | head -4   (the two lines that are page script source, not page text, are left out)
+ude Code, see Install plugins . 3 Confirm the server starts The language server starts the first time Claude edits a file with one of the plugin???s extensions. To see it work, ask Claude to introduce a type error in a file
+# Reading: the page names the first edit of a file with one of the plugin's extensions as the start trigger. No sentence on this page says that a read-only request (find references, go to definition) starts the server. 

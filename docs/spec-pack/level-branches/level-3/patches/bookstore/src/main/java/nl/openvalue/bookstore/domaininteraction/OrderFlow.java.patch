@@ -1,0 +1,112 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+index afb0d1a0b911d69e89df8c75ba30b407bc2a3007..6366a98e3b76ac363d3309fe220a9a3801e9c511 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.UUID;
++import java.util.function.BiConsumer;
+ import java.util.function.Supplier;
+ import nl.openvalue.bookstore.domain.BookStatus;
+ import nl.openvalue.bookstore.domain.DomainEvent;
+@@ -18,6 +19,7 @@ import nl.openvalue.bookstore.domain.InvalidMoneyException;
+ import nl.openvalue.bookstore.domain.InvalidQuantityException;
+ import nl.openvalue.bookstore.domain.OnHandBelowReservedException;
+ import nl.openvalue.bookstore.domain.Order;
++import nl.openvalue.bookstore.domain.OrderAlreadyCancelledException;
+ import nl.openvalue.bookstore.domain.OrderAlreadyShippedException;
+ import nl.openvalue.bookstore.domain.OrderLine;
+ import nl.openvalue.bookstore.domain.OrderLineCountOutOfRangeException;
+@@ -30,12 +32,12 @@ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
+ /**
+- * The order use cases. Placing and shipping an order change the order and the stock of several books in one
+- * transaction. Every check runs before anything is written; then the order is saved first and the stock items follow
+- * in book-id order, so concurrent orders lock the stock rows in the same order. The events of the order and of every
+- * stock item are published last, inside the same transaction, so listeners bound to the commit only see saved data.
+- * Every domain exception is translated here into one of the four use-case exceptions; port exceptions pass through
+- * unchanged.
++ * The order use cases. Placing, shipping and cancelling an order change the order and the stock of several books in
++ * one transaction. Every check runs before anything is written; then the order is saved first and the stock items
++ * follow in book-id order, so concurrent orders lock the stock rows in the same order. The events of the order and of
++ * every stock item are published last, inside the same transaction, so listeners bound to the commit only see saved
++ * data. Every domain exception is translated here into one of the four use-case exceptions; port exceptions pass
++ * through unchanged.
+  */
+ @Service
+ @Transactional
+@@ -113,21 +115,25 @@ public class OrderFlow {
+             restored.ship(clock);
+             return restored;
+         });
+-
+-        List<OrderLine> linesInBookIdOrder = new ArrayList<>(order.lines());
+-        linesInBookIdOrder.sort((first, second) -> first.bookId().value().compareTo(second.bookId().value()));
+-        List<StockItem> shipped = new ArrayList<>();
+-        for (OrderLine line : linesInBookIdOrder) {
+-            StockItemDTO storedItem = stockItems.findByBookId(line.bookId().value());
+-            shipped.add(translatingDomainExceptions(() -> {
+-                StockItem item = StockItemDomainMapper.toDomain(storedItem, clock);
+-                item.ship(line.quantity());
+-                return item;
+-            }));
+-        }
++        List<StockItem> shipped = changeStockOfEveryLine(order, (item, quantity) -> item.ship(quantity));
+         saveAndPublish(order, shipped);
+     }
+ 
++    /**
++     * Cancels an order that has not shipped yet: the order is cancelled before any stock item is read, then the
++     * reserved stock of every line is released in book-id order. A cancellation registers no event.
++     */
++    public void cancelOrder(UUID orderId) {
++        OrderDTO stored = orders.findById(orderId);
++        Order order = translatingDomainExceptions(() -> {
++            Order restored = OrderDomainMapper.toDomain(stored);
++            restored.cancel(clock);
++            return restored;
++        });
++        List<StockItem> released = changeStockOfEveryLine(order, (item, quantity) -> item.release(quantity));
++        saveAndPublish(order, released);
++    }
++
+     @Transactional(readOnly = true)
+     public OrderDTO findById(UUID orderId) {
+         return orders.findById(orderId);
+@@ -143,6 +149,25 @@ public class OrderFlow {
+         return orders.findByCustomerEmail(email.value());
+     }
+ 
++    /**
++     * Reads the stock item of every line of the order once, in book-id order, and applies the change with the line's
++     * quantity. The first domain exception stops the reading and is translated; nothing is saved here.
++     */
++    private List<StockItem> changeStockOfEveryLine(Order order, BiConsumer<StockItem, Quantity> change) {
++        List<OrderLine> linesInBookIdOrder = new ArrayList<>(order.lines());
++        linesInBookIdOrder.sort((first, second) -> first.bookId().value().compareTo(second.bookId().value()));
++        List<StockItem> changed = new ArrayList<>();
++        for (OrderLine line : linesInBookIdOrder) {
++            StockItemDTO storedItem = stockItems.findByBookId(line.bookId().value());
++            changed.add(translatingDomainExceptions(() -> {
++                StockItem item = StockItemDomainMapper.toDomain(storedItem, clock);
++                change.accept(item, line.quantity());
++                return item;
++            }));
++        }
++        return changed;
++    }
++
+     /**
+      * Saves the order, then every changed stock item in ascending book-id order, then publishes the events of the
+      * order and the events of every stock item in the same book-id order.
+@@ -211,6 +236,8 @@ public class OrderFlow {
+             throw invalidField("price-out-of-range", "Price out of range", "lines", e);
+         } catch (OrderAlreadyShippedException e) {
+             throw new ConflictException("order-already-shipped", "Order already shipped", e.getMessage());
++        } catch (OrderAlreadyCancelledException e) {
++            throw new ConflictException("order-already-cancelled", "Order already cancelled", e.getMessage());
+         } catch (InsufficientReservedStockException e) {
+             throw new ConflictException("insufficient-reserved-stock", "Insufficient reserved stock",
+                     e.getMessage());

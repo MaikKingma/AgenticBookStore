@@ -1,0 +1,97 @@
+# Static matching of the Level 3 deny and allow rules (criterion 4). Consistency evidence only: the behaviour in
+# Claude Code is rehearsal rows R3-4 to R3-8 in rehearsal-checklist.md. No Claude process was started.
+# Docs page: https://code.claude.com/docs/en/permissions.md  fetched with curl on 2026-11-10 (UTC)  sha256 86be6c5404b154e7dec0dc5aca2d145eb53e01c75d1cb9843fdce3da2f4a37f8
+# Quoted lines are lines of the fetched markdown file; non-ASCII characters show as '?'.
+
+## Docs sentences the matcher implements
+  56 | Rules are evaluated in order: deny, then ask, then allow. The first match in that order determines the outcome, and rule specificity doesn't change the order.
+  146 | A `*` in a Bash rule matches any text, including spaces, so one rule covers a family of commands. A rule with no `*` matches one exact command.
+  152 | Write the command you want Claude to run without asking, and replace the parts that vary with `*`. With this configuration, Claude Code runs npm scripts and git commits without asking and refuses commands that begin with `git push`. A push written another way, such as `git -C . push`, isn't matched; see [what a Bash rule doesn't match](#bash-rule-limits).
+  184 | * **A `*` at the end, with a space before it, also matches the bare command.** `Bash(ls *)` matches `ls`, and `Bash(git log *)` matches `git log`. That holds only when the trailing `*` is the rule's only wildcard: `Bash(* --help *)` matches `npm --help x` but not `npm --help`.
+  185 | * **The space before a trailing `*` is part of the rule.** `Bash(ls *)` requires a space after `ls`, so `lsof` doesn't match. `Bash(ls*)` has no space, so it matches `lsof` too.
+  219 | > Claude Code is aware of shell operators, so a rule like `Bash(safe-cmd *)` won't give it permission to run the command `safe-cmd && other-cmd`. The recognized command separators are `&&`, `||`, `;`, `|`, `|&`, `&`, and newlines. Every subcommand must be allowed for a compound command to run without a prompt, for example because the subcommand matches an allow rule or is a [read-only command](#read-only-commands).
+  221 | Deny and ask rules apply when any subcommand matches them, including a command nested inside a subshell, a command substitution, or a control-flow body such as a `for` loop. An ask rule like `Bash(git clean *)` still prompts you for `cd /tmp && git clean -f` or `echo "$(git clean -f)"`, even in [auto mode](https://code.claude.com/docs/en/permission-modes.md#eliminate-prompts-with-auto-mode).
+  229 | Before matching Bash rules, Claude Code strips a fixed set of wrappers, so a rule like `Bash(npm test *)` also matches `timeout 30 npm test`. The stripped wrappers are `timeout`, `time`, `nice`, `nohup`, and `stdbuf`, plus the shell builtins `command` and `builtin`, and zsh's `noglob`. Each runs its argument as the actual command. Two related forms aren't stripped: the query form `command -v`, which looks up a command rather than running one, and zsh's `nocorrect`.
+  231 | Claude Code also strips a leading assignment of certain known-safe environment variables, so `Bash(npm test *)` matches `NODE_ENV=test npm test`. An allow rule won't match past an assignment of any other variable. A deny or ask rule matches past any leading assignment, so `Bash(rm *)` in deny still matches `FOO=bar rm -rf tmp/`.
+  256 | | `Bash(git push *)` | `git push origin main` | `git -C . push origin main`, `git -c push.default=current push origin main` |
+  355 | > Read and Edit deny rules apply to Claude's built-in file tools, to file commands Claude Code recognizes in Bash, such as `cat`, `head`, `tail`, `sed`, and `tee`, and to the targets of Bash [redirections](#redirections) such as `> file` and `< file`. They don't apply to a command that reads files without naming them, such as `grep -r pattern .` run from the directory that holds the file, or to arbitrary subprocesses that read or write files indirectly, like a Python or Node script that opens files itself. For OS-level enforcement that blocks all processes from accessing a path, [enable the sandbox](https://code.claude.com/docs/en/sandboxing.md).
+  114 | | `Read(./.env)` | Matches reading the `.env` file in the current directory |
+  375 | | `path` or `./path` | Path relative to current directory | `Read(*.env)` | `<cwd>/*.env` |
+  445 | > In gitignore patterns, `*` matches within a single path segment and can appear at any position in the pattern, while `**` matches across directories.
+
+## Run 1: staged rules (level-3/files/dot-claude/settings.json), every case against the documented semantics
+rules used: allow 5, deny 6
+E1   DENY     git commit --no-verify -m "x"  <- Bash(* --no-verify*)  [ok]
+E2   DENY     git commit -n -m "x"  <- Bash(git commit -n *)  [ok]
+E3   DENY     git push  <- Bash(git push),Bash(git push *)  [ok]
+E4   DENY     git push origin HEAD:refs/heads/rehearsal  <- Bash(git push *)  [ok]
+V1   ALLOW    git commit -m "x" -n  <- Bash(git commit *)  [ok]
+V2   ALLOW    git commit -nm "x"  <- Bash(git commit *)  [ok]
+V3   DENY     git commit -m "x" --no-verify  <- Bash(* --no-verify*)  [ok]
+V4   DENY     git commit --no-verify  <- Bash(* --no-verify*)  [ok]
+V5   NO-RULE  git -C . push  <- -  [ok]
+V6   NO-RULE  git -C . push origin HEAD:refs/heads/rehearsal  <- -  [ok]
+V7   NO-RULE  git -c push.default=current push  <- -  [ok]
+V8   NO-RULE  /usr/bin/git push  <- -  [ok]
+V9   NO-RULE  sh -c 'git push'  <- -  [ok]
+V10  DENY     git add -A && git push  <- Bash(git push),Bash(git push *)  [ok]
+V11  DENY     FOO=bar git push  <- Bash(git push),Bash(git push *)  [ok]
+V12  DENY     timeout 30 git push  <- Bash(git push),Bash(git push *)  [ok]
+V13  DENY     cd "/some folder" && git commit --no-verify -m "x"  <- Bash(* --no-verify*)  [ok]
+V14  NO-RULE  git -C . commit -m "test"  <- -  [ok]
+A1   ALLOW    git status  <- Bash(git status *)  [ok]
+A2   ALLOW    git status --short  <- Bash(git status *)  [ok]
+A3   ALLOW    git diff --stat HEAD  <- Bash(git diff *)  [ok]
+A4   ALLOW    ./mvnw verify  <- Bash(./mvnw *)  [ok]
+A5   ALLOW    ./mvnw -q verify  <- Bash(./mvnw *)  [ok]
+A6   ALLOW    git commit -m "feat: x"  <- Bash(git commit *)  [ok]
+A7   ALLOW    git add -A  <- Bash(git add *)  [ok]
+A8   ALLOW    git add -A && git commit -m "feat: x"  <- Bash(git add *),Bash(git commit *)  [ok]
+S1   DENY     cat .env  <- Read(./.env)  [ok]
+S2   DENY     head .env  <- Read(./.env)  [ok]
+S3   DENY     cat ./.env  <- Read(./.env)  [ok]
+S4   DENY     cat .env.local  <- Read(./.env.*)  [ok]
+S5   DENY     tail -n 5 .env  <- Read(./.env)  [ok]
+S6   DENY     cat < .env  <- Read(./.env),Read(./.env)  [ok]
+S7   ALLOW    grep -r DUMMY .  <- (built-in read-only set)  [ok]
+S8   NO-RULE  python3 -c "print(open('.env').read())"  <- -  [ok]
+R1   DENY     Read tool: .env  <- Read(./.env)  [ok]
+R2   DENY     Read tool: ./.env  <- Read(./.env)  [ok]
+R3   DENY     Read tool: .env.local  <- Read(./.env.*)  [ok]
+R4   DENY     Read tool: .env.example  <- Read(./.env.*)  [ok]
+R5   NO-RULE  Read tool: README.md  <- -  [ok]
+mismatches against the documented semantics: 0
+exit code: 0
+
+## Control 1: drop the rule Bash(* --no-verify*): the --no-verify cases must stop being denied
+DROPPED (negative control): Bash(* --no-verify*)
+E1   ALLOW    git commit --no-verify -m "x"  <- Bash(git commit *)  [MISMATCH(expected DENY)]
+V3   ALLOW    git commit -m "x" --no-verify  <- Bash(git commit *)  [MISMATCH(expected DENY)]
+V4   ALLOW    git commit --no-verify  <- Bash(git commit *)  [MISMATCH(expected DENY)]
+V13  ALLOW    cd "/some folder" && git commit --no-verify -m "x"  <- (built-in read-only set),Bash(git commit *)  [MISMATCH(expected DENY)]
+mismatches against the documented semantics: 4
+
+## Control 2: drop both git push rules: the push cases must stop being denied
+DROPPED (negative control): Bash(git push), Bash(git push *)
+E3   NO-RULE  git push  <- -  [MISMATCH(expected DENY)]
+E4   NO-RULE  git push origin HEAD:refs/heads/rehearsal  <- -  [MISMATCH(expected DENY)]
+V10  NO-RULE  git add -A && git push  <- -  [MISMATCH(expected DENY)]
+V11  NO-RULE  FOO=bar git push  <- -  [MISMATCH(expected DENY)]
+V12  NO-RULE  timeout 30 git push  <- -  [MISMATCH(expected DENY)]
+mismatches against the documented semantics: 5
+
+## Control 3: drop only the exact rule Bash(git push): git push stays denied (the bare-command match of 'git push *', docs line 184)
+DROPPED (negative control): Bash(git push)
+E3   DENY     git push  <- Bash(git push *)  [ok]
+mismatches against the documented semantics: 0
+
+## Control 4: drop Read(./.env): the Read tool, cat and head cases must stop being denied
+DROPPED (negative control): Read(./.env)
+S1   ALLOW    cat .env  <- (built-in read-only set)  [MISMATCH(expected DENY)]
+S2   ALLOW    head .env  <- (built-in read-only set)  [MISMATCH(expected DENY)]
+S3   ALLOW    cat ./.env  <- (built-in read-only set)  [MISMATCH(expected DENY)]
+S5   ALLOW    tail -n 5 .env  <- (built-in read-only set)  [MISMATCH(expected DENY)]
+S6   ALLOW    cat < .env  <- (built-in read-only set)  [MISMATCH(expected DENY)]
+R1   NO-RULE  Read tool: .env  <- -  [MISMATCH(expected DENY)]
+R2   NO-RULE  Read tool: ./.env  <- -  [MISMATCH(expected DENY)]
+mismatches against the documented semantics: 7

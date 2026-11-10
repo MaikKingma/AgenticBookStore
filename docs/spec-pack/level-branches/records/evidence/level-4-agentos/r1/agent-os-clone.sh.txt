@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Clone Agent OS into the isolated HOME under SP, record the sha, then remove .git (pack step 1).
+set -eu
+SP=$SP
+H=$SP/s10-t13-impl-home
+mkdir -p "$H" "$SP/s10-t13-impl-tmp" "$SP/s10-t13-impl-evidence"
+export HOME="$H"
+export TMPDIR="$SP/s10-t13-impl-tmp"
+cd "$H"
+test ! -e "$H/agent-os"
+git clone https://github.com/buildermethods/agent-os.git "$H/agent-os"
+git -C "$H/agent-os" rev-parse HEAD > "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt"
+git -C "$H/agent-os" rev-parse --abbrev-ref HEAD >> "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt"
+git -C "$H/agent-os" log -1 --format='%H %cI %s' >> "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt"
+git -C "$H/agent-os" describe --tags --always >> "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt" || true
+cat "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt"
+# keep a pristine copy of the .git-less tree for later diffs
+rm -rf "$H/agent-os/.git"
+ls -la "$H/agent-os"

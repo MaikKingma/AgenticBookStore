@@ -24,8 +24,5 @@ metadata:
   broken element alone, first, last and in the middle (parameterized): a one-element list cannot kill
   `anyMatch`->`allMatch` or a getFirst/getLast-only check.
 - Log-forging tests: split captured output with `split("\\R")` (Java's `\R` includes U+2028, U+2029, U+0085, VT);
-  `String.lines()` does not. Write U+2028/U+2029 in source as the escape, but the Edit tool turns a typed
-  escape for those two into the raw char: `rg -n '[^\x00-\x7F]'` after every edit, fix by line with `perl -CSD`.
-  Expected escaped text in source is `"\\u2028"` (the doubled backslash is not a unicode escape).
-- Missing-key variants: load the committed contract file into a `LinkedHashMap` with a Jackson 3
-  `TypeReference` (a raw `Map.class` read gives an unchecked warning), change one key, write it back.
+  `String.lines()` does not. The Edit tool turns a typed U+2028/U+2029 escape into the raw char: grep for non-ASCII after every
+  edit, fix by line with `perl -CSD`. Expected escaped text in source is `"\\u2028"` (the doubled backslash is not an escape).

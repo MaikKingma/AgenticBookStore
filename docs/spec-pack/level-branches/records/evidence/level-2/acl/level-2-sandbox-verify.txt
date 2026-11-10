@@ -1,0 +1,100 @@
+# Fresh level-2 sandbox $SBX-c built from scratch with the T1 scripts, unmodified, then ./mvnw clean verify (rework r2b)
+# environment: TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir pointing into the scratchpad ($SP/t5/tmp); no claude process
+# factory sha: 5fa5d19a8a840a81a77b1925bb3cbd8c91172b77 (origin/factory); scripts and staged files from the working tree of branch sdd/10-harness-reference-solutions/T5 (spec tip 9ba4d0f plus T5 files)
+
+$ bash docs/spec-pack/level-branches/scripts/simulate-level-0.sh origin/factory $SBX-c
+simulate-level-0: no scripts/publish-workshop-main.sh in origin/factory; using the built-in list
+list: built-in
+strip-path: CLAUDE.md
+removed: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude/
+removed: .claude/
+strip-path: .mcp.json
+strip-path: openspec/
+strip-path: .specify/
+strip-path: specs/
+strip-path: agent-os/
+removed: agent-os/
+strip-path: .githooks/
+strip-path: docs/spec-pack/
+removed: docs/spec-pack/
+simulated level-0: $SBX-c at b3f455ddd3aa7efcbb62fb1fd13c2ff33cd2c4d0 (from origin/factory 5fa5d19a8a840a81a77b1925bb3cbd8c91172b77)
+$ bash docs/spec-pack/level-branches/scripts/build-level.sh level-2 $SBX-c
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX-c
+build-level: committed level-1 as 3e6a487: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX-c
+build-level: committed level-2 as 25d042c: Level 2 solution: give your agent eyes (LSP + MCP)
+build-level: level-2 built in $SBX-c
+
+$ git log --format="%h %s"
+25d042c Level 2 solution: give your agent eyes (LSP + MCP)
+3e6a487 Level 1 solution: context engineering
+b3f455d Agentic Bookstore: workshop baseline (simulated from 5fa5d19a8a840a81a77b1925bb3cbd8c91172b77)
+
+$ git diff --name-status HEAD~1 HEAD   (level-2 commit)
+A	.claude/settings.json
+A	.mcp.json
+M	bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+M	bookstore/src/test/resources/contracts/distributor/README.md
+A	bookstore/src/test/resources/contracts/distributor/title-9789900010395.json
+A	docs/lsp-setup.md
+
+$ git status --porcelain (expect empty)
+(end)
+
+$ git diff -U0 HEAD~1 HEAD -- bookstore/src/test/resources/contracts/distributor/README.md   (base README against the sandbox README)
+diff --git a/bookstore/src/test/resources/contracts/distributor/README.md b/bookstore/src/test/resources/contracts/distributor/README.md
+index 52a2b6b..9458432 100644
+--- a/bookstore/src/test/resources/contracts/distributor/README.md
++++ b/bookstore/src/test/resources/contracts/distributor/README.md
+@@ -7,4 +7,4 @@ How the capture was done:
+-- Capture date: 2026-11-08 (Sunday, Europe/Amsterdam). Every file below was captured on that day unless the table says otherwise.
+-- Distributor: started from the repository root with `./mvnw -pl distributor spring-boot:run`, listening on port 8090 on 127.0.0.1. Run 1 used no flags (defaults). Run 2 used `--distributor.chaos.failure-rate=1.0` and produced only `unavailable-503.json`.
+-- Requests were sent with curl, as written in `http/distributor.http` (the compact request bodies below carry the same keys and values as the pretty-printed bodies in that file). Every response body was written to its file untouched.
+-- Both distributor processes were stopped afterwards and port 8090 was free again.
++- Capture date: 2026-11-08 (Sunday, Europe/Amsterdam). Every file below was captured on that day except `title-9789900010395.json`, which the title files section describes.
++- Distributor for every file except `title-9789900010395.json`: started from the repository root with `./mvnw -pl distributor spring-boot:run`, listening on port 8090 on 127.0.0.1. Run 1 used no flags (defaults). Run 2 used `--distributor.chaos.failure-rate=1.0` and produced only `unavailable-503.json`.
++- For every file except `title-9789900010395.json`: Requests were sent with curl, as written in `http/distributor.http` (the compact request bodies below carry the same keys and values as the pretty-printed bodies in that file). Every response body was written to its file untouched.
++- Both of these distributor processes were stopped afterwards and port 8090 was free again.
+@@ -14 +14 @@ Dates and ids come from the capture day. The restock order ids are random, and t
+-## Title files (GET /api/titles/{ean}, status 200, run 1, no flags)
++## Title files (GET /api/titles/{ean}, status 200, run 1 unless noted, no flags)
+@@ -16 +16 @@ Dates and ids come from the capture day. The restock order ids are random, and t
+-Every title has only contributors with the role AUTHOR and the currency EUR. The first subject code is the one that decides the bookstore genre. Prices are `listPriceCents`.
++Every title has the currency EUR. Every title has only contributors with the role AUTHOR, except `title-9789900010395.json`, which also has a TRANSLATOR (Henry Wadsworth Longfellow) and an ILLUSTRATOR (Gustave Dore). That file was captured on 2026-11-10 with curl from a distributor on a free port: the REST body and the MCP `get_title` text were identical bytes. The first subject code is the one that decides the bookstore genre. Prices are `listPriceCents`.
+@@ -33,0 +34 @@ Every title has only contributors with the role AUTHOR and the currency EUR. The
++| `title-9789900010395.json` | GET /api/titles/9789900010395 | The Divine Comedy: Inferno | Dante Alighieri | POE000000 | 3499 | IN_STOCK | 1867-01-01 |
+@@ -37 +38 @@ Release years the tests assert: 1813, 1826, 1889, 1887, 1811, 1818, 1516, 1859,
+-First subject code prefixes covered: FIC004 (Pride and Prejudice, Bleak House), FIC028 (The Last Man), FIC009 (A Connecticut Yankee, with FIC028000 second), FIC022 (A Study in Scarlet), FIC027 (Sense and Sensibility, Pamela), FIC015 (Frankenstein, with FIC028000 second), HIS (Utopia), SCI (On the Origin of Species), COM (Passages from the Life of a Philosopher, Patterns for Patient Systems), JUV (Little Women) and POE (The Raven and Other Poems).
++First subject code prefixes covered: FIC004 (Pride and Prejudice, Bleak House), FIC028 (The Last Man), FIC009 (A Connecticut Yankee, with FIC028000 second), FIC022 (A Study in Scarlet), FIC027 (Sense and Sensibility, Pamela), FIC015 (Frankenstein, with FIC028000 second), HIS (Utopia), SCI (On the Origin of Species), COM (Passages from the Life of a Philosopher, Patterns for Patient Systems), JUV (Little Women) and POE (The Raven and Other Poems, The Divine Comedy: Inferno).
+
+# em dashes in sandbox README: 0
+
+$ ./mvnw -B -ntp clean verify   (in $SBX-c)
+start 00:14:13Z
+exit 0 at 00:14:40Z
+--- the new test class and the totals (full list is in the run output)
+[INFO] Running nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[INFO] Tests run: 131, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.116 s -- in nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[INFO] Tests run: 1315, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.040 s]
+[INFO] frontend ........................................... SUCCESS [  7.694 s]
+[INFO] bookstore .......................................... SUCCESS [ 14.539 s]
+[INFO] distributor ........................................ SUCCESS [  4.188 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  26.619 s

@@ -1,0 +1,198 @@
+# Glob test for the `paths` of the three Level 1 rules. Run: python3 -I glob-test.py.txt <level-1 sandbox>
+# (the file is kept as .txt on purpose: evidence files are never executable source).
+#
+# Glob semantics assumed for a Claude Code `paths` entry, taken from the Claude Code memory documentation: a pattern
+# is matched against the path relative to the project root, with forward slashes, over the WHOLE path; `*` and `?`
+# never cross a `/`; `**` as a whole path segment matches zero or more directories; a trailing `/**` matches every
+# file below that directory. Three independent implementations must agree on every pattern and file:
+#   A  a small regex translator written here
+#   B  pathlib.PurePosixPath.full_match (Python 3.13)
+#   C  git pathspec magic `:(glob)` (git ls-files on the sandbox), whose `**` rules are the documented ones above
+# fnmatch is NOT used for matching: its `*` crosses `/`, which would make every glob wider than Claude Code reads it.
+import pathlib
+import re
+import subprocess
+import sys
+
+sbx = pathlib.Path(sys.argv[1])
+failures = []
+
+
+def git(*args):
+    return subprocess.run(["git", "-C", str(sbx), *args], check=True, capture_output=True, text=True).stdout
+
+
+files = [f for f in git("ls-files", "-z").split("\0") if f]
+
+
+def frontmatter_paths(rule_file):
+    lines = (sbx / rule_file).read_text(encoding="utf-8").split("\n")
+    assert lines[0] == "---", f"{rule_file}: no frontmatter"
+    end = lines.index("---", 1)
+    block = lines[1:end]
+    assert block[0] == "paths:", f"{rule_file}: first key is not paths: {block[0]!r}"
+    found = []
+    for line in block[1:]:
+        m = re.fullmatch(r'  - "([^"]+)"', line)
+        assert m, f"{rule_file}: unexpected frontmatter line {line!r}"
+        found.append(m.group(1))
+    assert found, f"{rule_file}: empty paths"
+    return found
+
+
+def to_regex(pattern):
+    segs = pattern.split("/")
+    out = []
+    for i, seg in enumerate(segs):
+        last = i == len(segs) - 1
+        if seg == "**":
+            out.append(".+" if last else "(?:[^/]+/)*")
+            continue
+        rx = "".join("[^/]*" if c == "*" else "[^/]" if c == "?" else re.escape(c) for c in seg)
+        out.append(rx if last else rx + "/")
+    return re.compile("".join(out))
+
+
+def match_a(pattern):
+    rx = to_regex(pattern)
+    return {f for f in files if rx.fullmatch(f)}
+
+
+def match_b(pattern):
+    return {f for f in files if pathlib.PurePosixPath(f).full_match(pattern)}
+
+
+def match_c(pattern):
+    out = git("ls-files", "-z", "--", f":(glob){pattern}")
+    return {f for f in out.split("\0") if f}
+
+
+def matches(pattern):
+    a, b, c = match_a(pattern), match_b(pattern), match_c(pattern)
+    if not (a == b == c):
+        failures.append(f"implementations disagree on {pattern!r}: A={len(a)} B={len(b)} C={len(c)}")
+    return a
+
+
+MAIN = "bookstore/src/main/java/nl/openvalue/bookstore/"
+INTENDED = {
+    ".claude/rules/domain.md": lambda f: f.startswith(MAIN + "domain/"),
+    ".claude/rules/data-and-migrations.md": lambda f: f.startswith(MAIN + "data/")
+    or f.startswith("bookstore/src/main/resources/db/"),
+    ".claude/rules/testing.md": lambda f: re.search(r"(^|/)src/test/", f) is not None,
+}
+INTENDED_TEXT = {
+    ".claude/rules/domain.md": "files in the package folder bookstore/src/main/java/nl/openvalue/bookstore/domain/",
+    ".claude/rules/data-and-migrations.md": "files in the data package folder and in bookstore/src/main/resources/db/",
+    ".claude/rules/testing.md": "files below any src/test folder",
+}
+# widened or narrowed globs that must FAIL the check for the rule they are applied to
+CONTROLS = {
+    ".claude/rules/domain.md": [
+        ("widened: whole main tree", "bookstore/src/main/java/**"),
+        ("widened: segment prefix domain*", "bookstore/src/main/java/**/domain*/**"),
+        ("widened: no main anchor", "**/domain/**"),
+        ("narrowed: only Book*", "bookstore/src/main/java/nl/openvalue/bookstore/domain/Book*"),
+    ],
+    ".claude/rules/data-and-migrations.md": [
+        ("widened: whole main tree", "bookstore/src/main/**"),
+        ("widened: no main anchor", "**/data/**"),
+        ("narrowed: db/migration only for one file", "bookstore/src/main/resources/db/migration/V1*"),
+    ],
+    ".claude/rules/testing.md": [
+        ("widened: any src folder", "**/src/**"),
+        ("widened: everything", "**"),
+        ("narrowed: bookstore only", "bookstore/src/test/**"),
+    ],
+}
+
+
+def check(rule, patterns):
+    matched = set()
+    for p in patterns:
+        matched |= matches(p)
+    intended = {f for f in files if INTENDED[rule](f)}
+    return matched, intended, sorted(matched - intended), sorted(intended - matched)
+
+
+print(f"tree: {len(files)} tracked files in the level-1 sandbox, HEAD {git('rev-parse', '--short', 'HEAD').strip()}")
+all_matched = {}
+for rule in INTENDED:
+    pats = frontmatter_paths(rule)
+    matched, intended, extra, missing = check(rule, pats)
+    all_matched[rule] = matched
+    print(f"\n== {rule}")
+    print(f"paths: {pats}")
+    print(f"intended: {INTENDED_TEXT[rule]} ({len(intended)} files)")
+    print(f"matched: {len(matched)} files; outside the intended folder: {len(extra)}; intended but not matched: {len(missing)}")
+    ms = sorted(matched)
+    for f in ms[:3] + ms[-2:]:
+        print(f"  match      {f}")
+    if extra or missing:
+        failures.append(f"{rule}: extra={extra[:3]} missing={missing[:3]}")
+    if not matched:
+        failures.append(f"{rule}: matches nothing")
+
+print("\n== disjointness (an edit in one folder loads only that folder's rule)")
+names = list(INTENDED)
+for i in range(len(names)):
+    for j in range(i + 1, len(names)):
+        both = all_matched[names[i]] & all_matched[names[j]]
+        print(f"  {names[i]} and {names[j]}: {len(both)} common files")
+        if both:
+            failures.append(f"rules overlap: {names[i]} / {names[j]}: {sorted(both)[:3]}")
+
+print("\n== named non-matches (which rules, if any, a path loads)")
+probes = [
+    "CLAUDE.md",
+    "pom.xml",
+    "bookstore/pom.xml",
+    "bookstore/src/main/resources/application.yml",
+    MAIN + "domaininteraction/OrderFlow.java",
+    MAIN + "command/OrderCommands.java",
+    MAIN + "query/BookQueries.java",
+    MAIN + "acl/DistributorAppServiceImpl.java",
+    "frontend/src/main.tsx",
+    "distributor/src/main/java/nl/openvalue/distributor/DistributorApplication.java",
+]
+for f in probes:
+    if f not in files:
+        print(f"  (not in tree, skipped) {f}")
+        continue
+    hit = [r.split("/")[-1] for r in INTENDED if f in all_matched[r]]
+    print(f"  {f}: {hit or 'no rule'}")
+    if hit:
+        failures.append(f"unexpected rule match for {f}: {hit}")
+traps = {
+    "bookstore/src/test/java/nl/openvalue/archfixtures/domain/BookEntity.java": ["testing.md"],
+    "bookstore/src/test/java/nl/openvalue/archfixtures/data/BookDataServiceImpl.java": ["testing.md"],
+    MAIN + "domain/Money.java": ["domain.md"],
+    MAIN + "data/BookJPA.java": ["data-and-migrations.md"],
+    "bookstore/src/main/resources/db/migration/V4__add_pending_restock.sql": ["data-and-migrations.md"],
+    "bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java": ["testing.md"],
+    "distributor/src/test/java/nl/openvalue/distributor/api/TitlesApiTest.java": ["testing.md"],
+    "frontend/src/test/fetchMock.ts": ["testing.md"],
+}
+for f, want in traps.items():
+    hit = [r.split("/")[-1] for r in INTENDED if f in all_matched[r]]
+    print(f"  {f}: {hit}")
+    if hit != want:
+        failures.append(f"trap {f}: expected {want}, got {hit}")
+
+print("\n== negative controls (each must FAIL the check for its rule)")
+for rule, controls in CONTROLS.items():
+    for label, pat in controls:
+        matched, intended, extra, missing = check(rule, [pat])
+        failed = bool(extra or missing)
+        print(f"  {rule.split('/')[-1]} | {label} | {pat} -> extra {len(extra)}, missing {len(missing)}: "
+              f"{'check FAILS as it must' if failed else 'CHECK PASSED, CONTROL BROKEN'}")
+        if not failed:
+            failures.append(f"control did not fail: {rule} {pat}")
+
+print()
+if failures:
+    print("RESULT: FAIL")
+    for f in failures:
+        print("  -", f)
+    sys.exit(1)
+print("RESULT: PASS (3 rules matched only their intended folders; all controls failed as expected; A, B and C agree)")

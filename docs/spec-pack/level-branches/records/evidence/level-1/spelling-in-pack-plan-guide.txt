@@ -1,0 +1,374 @@
+### ./mvnw verify
+-- spec10 (all lines)
+14:Each branch adds files on top of the previous one. `./mvnw verify` stays green on all of them.
+33:- Build and test everything: `./mvnw verify` (Windows: `mvnw.cmd verify`). Docker must be running (Testcont
+39:- `./mvnw verify` is green, including `ArchitectureTest`. Show the last lines of the output.
+119:- **THEN** at least two runs end with `./mvnw verify` green and a `Money`-based discount in the domain wit
+212:- **WHEN** `./mvnw verify` runs on `solution/level-2`
+296:  echo "Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again."
+-- workshop-plan
+56:./mvnw verify               # green, under a minute (dependencies and the PostgreSQL image were downloaded 
+105:   - `./mvnw verify`: green? Which tests fail? Does `ArchitectureTest` fail?
+141:   - Build and test commands (`./mvnw verify`, single test: `./mvnw -pl bookstore test -Dtest=BookTest`).
+165:- In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no Arch
+319:- `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+338:| Conference wifi | Participants run `./mvnw verify` at home (Maven dependencies, the local Node.js, npm p
+-- guide
+03-level-2-give-your-agent-eyes.mdx:155:The existing tests deliberately do not cover this case. Run `./mvnw verify` to s
+01-level-0-break-the-agent.mdx:59:./mvnw verify
+00-setup-check.md:81:./mvnw verify
+00-setup-check.md:162:- `./mvnw verify` ends green.
+05-level-4-spec-driven-development.mdx:238:- [ ] `./mvnw verify` green, including `ArchitectureTest`, shown in the termi
+02-level-1-context-engineering.mdx:49:  ./mvnw verify
+
+### mvnw.cmd
+-- spec10 (all lines)
+33:- Build and test everything: `./mvnw verify` (Windows: `mvnw.cmd verify`). Docker must be running (Testcont
+-- workshop-plan
+-- guide
+
+### -pl bookstore test -Dtest=BookTest
+-- spec10 (all lines)
+35:- One test class: `./mvnw -pl bookstore test -Dtest=BookTest`
+-- workshop-plan
+141:   - Build and test commands (`./mvnw verify`, single test: `./mvnw -pl bookstore test -Dtest=BookTest`).
+-- guide
+02-level-1-context-engineering.mdx:50:  ./mvnw -pl bookstore test -Dtest=BookTest
+
+### BookTest
+-- spec10 (all lines)
+35:- One test class: `./mvnw -pl bookstore test -Dtest=BookTest`
+-- workshop-plan
+141:   - Build and test commands (`./mvnw verify`, single test: `./mvnw -pl bookstore test -Dtest=BookTest`).
+-- guide
+02-level-1-context-engineering.mdx:50:  ./mvnw -pl bookstore test -Dtest=BookTest
+
+### -pl bookstore spring-boot:run
+-- spec10 (all lines)
+36:- Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8
+-- workshop-plan
+-- guide
+
+### -pl distributor spring-boot:run
+-- spec10 (all lines)
+36:- Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8
+-- workshop-plan
+205:1. Start the distributor: `./mvnw -pl distributor spring-boot:run` (or `java -jar distributor.jar`).
+-- guide
+03-level-2-give-your-agent-eyes.mdx:116:./mvnw -pl distributor spring-boot:run
+reference/troubleshooting.md:69:./mvnw -pl distributor spring-boot:run
+
+### 8080
+-- spec10 (all lines)
+36:- Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8
+-- workshop-plan
+-- guide
+
+### 8090
+-- spec10 (all lines)
+36:- Run: `./mvnw -pl bookstore spring-boot:run` (port 8080), `./mvnw -pl distributor spring-boot:run` (port 8
+134:      "url": "${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"
+-- workshop-plan
+207:   `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
+-- guide
+03-level-2-give-your-agent-eyes.mdx:124:claude mcp add --transport http --scope project distributor http://localhost:809
+reference/cheat-sheet.md:14:- `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`: w
+reference/troubleshooting.md:66:Start the distributor first. It listens on port 8090:
+
+### /shop/
+-- spec10 (all lines)
+30:(module `distributor`) and a React storefront (module `frontend`, built by Maven, served at `/shop/`).
+-- workshop-plan
+-- guide
+
+### Testcontainers
+-- spec10 (all lines)
+33:- Build and test everything: `./mvnw verify` (Windows: `mvnw.cmd verify`). Docker must be running (Testcont
+97:- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testco
+-- workshop-plan
+-- guide
+
+### ArchitectureTest
+-- spec10 (all lines)
+39:- `./mvnw verify` is green, including `ArchitectureTest`. Show the last lines of the output.
+101:- Never weaken or delete an `ArchitectureTest` rule to make a build pass.
+306:# Stop hook: when Java files changed, run only the fast ArchitectureTest before Claude may finish.
+315:if ! out="$(./mvnw -q -pl bookstore test -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false 2
+316:  { echo "ArchitectureTest fails. Fix the layering before you finish:"; printf '%s\n' "$out" | tail -n 30;
+360:7. Verify: run `./mvnw verify` and paste the summary. If `ArchitectureTest` fails, fix the design, never t
+-- workshop-plan
+92:**Sync moment (3 min):** Maik opens the repo, shows the onion diagram and the `ArchitectureTest`, then give
+105:   - `./mvnw verify`: green? Which tests fail? Does `ArchitectureTest` fail?
+142:   - Definition of done: verify green, including `ArchitectureTest`; never say "tests pass" without showin
+270:Optional: a Stop hook that runs only the fast `ArchitectureTest` when Java files changed, and checks
+319:- `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+-- guide
+01-level-0-break-the-agent.mdx:30:Look up, Maik demos this now. Maik opens the repo, shows the onion diagram and the `Ar
+01-level-0-break-the-agent.mdx:62:Green? Which tests fail? Does `ArchitectureTest` fail?
+05-level-4-spec-driven-development.mdx:238:- [ ] `./mvnw verify` green, including `ArchitectureTest`, shown in the termi
+02-level-1-context-engineering.mdx:53:- A definition of done: verify green, including `ArchitectureTest`; never say "tes
+04-level-3-behavioral-control.mdx:176:You do not need this for the exercise. A Stop hook runs only the fast `Architectur
+reference/architecture.md:70:The layer, dependency and naming rules are checked by ArchUnit in `ArchitectureTest`. `./mv
+
+### docs/architecture.md
+-- spec10 (all lines)
+44:- Read docs/architecture.md before adding or moving classes. Inbound adapters (command, query, process, ass
+115:- **THEN** `CLAUDE.md` is loaded and neither `docs/architecture.md` nor `.claude/rules/domain.md` is; afte
+368:`Order`, `OrderDataServiceImpl`, `OrderIntegrationTest`). Generate it from `docs/architecture.md`; keep it
+398:Read docs/architecture.md first. Then review `git diff HEAD` and new untracked files.
+400:(quote it from docs/architecture.md), and a one-line fix suggestion. Do not report style nits.
+442:     Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+-- workshop-plan
+145:   - A path instead of an essay: "Read docs/architecture.md before adding or moving classes." Compare with
+146:     import syntax `@docs/architecture.md`: an import loads the whole file at session start and costs cont
+-- guide
+05-level-4-spec-driven-development.mdx:126:3. Plan it. Give the command this text: "Use the existing onion layers, see d
+05-level-4-spec-driven-development.mdx:223:2. **Via MCP:** use Spring AI's MCP client against our distributor MCP server
+02-level-1-context-engineering.mdx:55:- A path instead of an essay: "Read docs/architecture.md before adding or moving c
+02-level-1-context-engineering.mdx:57:Compare that path with the import syntax `@docs/architecture.md`. An import loads 
+02-level-1-context-engineering.mdx:75:Expected: `CLAUDE.md` is loaded, and neither `docs/architecture.md` nor `.claude/r
+reference/architecture.md:8:The full team version is the file `docs/architecture.md` in the workshop repository, see [do
+
+### @docs/architecture.md
+-- spec10 (all lines)
+-- workshop-plan
+146:     import syntax `@docs/architecture.md`: an import loads the whole file at session start and costs cont
+-- guide
+02-level-1-context-engineering.mdx:57:Compare that path with the import syntax `@docs/architecture.md`. An import loads 
+
+### domaininteraction
+-- spec10 (all lines)
+45:  only call flows in `domaininteraction`. Only flows touch domain objects.
+-- workshop-plan
+-- guide
+reference/architecture.md:18:                 |                 domaininteraction                         |  flows, port
+reference/architecture.md:32:| `domaininteraction` | Use-case orchestration ("flows"), the ports to the outside world, D
+reference/architecture.md:44:1. `domain` may only be accessed by `domaininteraction`.
+reference/architecture.md:45:2. `domaininteraction` may only be accessed by `command`, `query`, `process`, `assistant`, 
+reference/architecture.md:66:| `domaininteraction` | `Flow`, `DataService`, `AppService`, `DTO`, `DomainMapper`, `Except
+
+### HALF_EVEN
+-- spec10 (all lines)
+47:- Money is always `Money` (BigDecimal, scale 2, HALF_EVEN). Never double or float.
+-- workshop-plan
+-- guide
+
+### BigDecimal
+-- spec10 (all lines)
+47:- Money is always `Money` (BigDecimal, scale 2, HALF_EVEN). Never double or float.
+461:   > weakened. II. Tests first, per layer, one test per acceptance scenario. III. Money is exact (Money, B
+-- workshop-plan
+143:   - The five rules an agent cannot infer quickly: domain is pure Java; money is `Money` (BigDecimal), nev
+-- guide
+02-level-1-context-engineering.mdx:54:- The five rules an agent cannot infer quickly: domain is pure Java; money is `Mon
+
+### Lombok
+-- spec10 (all lines)
+46:- `domain` is plain Java: no Spring, JPA, Jackson or Lombok imports.
+50:- No Lombok, no MapStruct: records and small hand-written mappers.
+-- workshop-plan
+144:     schema changes only via a *new* Flyway migration; inbound adapters only talk to flows; no Lombok.
+153:   "Always use Lombok") and a personal `CLAUDE.local.md` (for example your preferred commit style). Start 
+155:   conflict, the agent has to choose. Remove the Lombok line afterwards.
+-- guide
+02-level-1-context-engineering.mdx:54:- The five rules an agent cannot infer quickly: domain is pure Java; money is `Mon
+02-level-1-context-engineering.mdx:81:Add a conflicting line to your user file `~/.claude/CLAUDE.md` (for example "Alway
+02-level-1-context-engineering.mdx:83:Observe: files are concatenated, not overridden. When instructions conflict, the a
+reference/architecture.md:47:4. `domain` depends on `java..` only. No Spring, no Jakarta Persistence, no Jackson, no Lom
+
+### MapStruct
+-- spec10 (all lines)
+50:- No Lombok, no MapStruct: records and small hand-written mappers.
+-- workshop-plan
+-- guide
+
+### DistributorAppService
+-- spec10 (all lines)
+51:- The distributor is an external system. Bookstore code reaches it only through the `DistributorAppService`
+180:The multi-role contributor ACL contract test from Level 2 Part B: a test in `DistributorAppServiceImplTest
+-- workshop-plan
+212:   among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payl
+-- guide
+03-level-2-give-your-agent-eyes.mdx:152:Using the distributor MCP, find a title that has a translator or illustrator amo
+05-level-4-spec-driven-development.mdx:222:1. **Within the architecture (recommended):** add a `searchTitles` method to 
+reference/architecture.md:32:| `domaininteraction` | Use-case orchestration ("flows"), the ports to the outside world, D
+reference/architecture.md:38:| `acl` | Outbound anti-corruption layer to external systems. Implements `*AppService` port
+
+### Flyway migration
+-- spec10 (all lines)
+48:- Schema changes only through a new Flyway migration in `bookstore/src/main/resources/db/migration`.
+355:4. Ports and data: extend a `*DataService` only if needed; implement it in `data`; add a new Flyway migrat
+462:   > never floating point. IV. Schema changes only through new Flyway migrations. V. Small, scoped changes
+-- workshop-plan
+107:   - Did it add a Flyway migration, or change an existing one, or rely on Hibernate DDL?
+144:     schema changes only via a *new* Flyway migration; inbound adapters only talk to flows; no Lombok.
+-- guide
+01-level-0-break-the-agent.mdx:75:- Did it add a Flyway migration, or change an existing one, or rely on Hibernate DDL?
+02-level-1-context-engineering.mdx:54:- The five rules an agent cannot infer quickly: domain is pure Java; money is `Mon
+
+### bookstore/src/main/resources/db/migration
+-- spec10 (all lines)
+48:- Schema changes only through a new Flyway migration in `bookstore/src/main/resources/db/migration`.
+-- workshop-plan
+-- guide
+
+### V{n}__
+-- spec10 (all lines)
+82:- Next migration number: the highest `V{n}__` file in `db/migration` plus one. File name `V{n}__{snake_case
+-- workshop-plan
+-- guide
+
+### db/seed/R__seed_demo_data.sql
+-- spec10 (all lines)
+84:- Seed data lives in `db/seed/R__seed_demo_data.sql` (repeatable, idempotent) and is not loaded in tests. D
+-- workshop-plan
+-- guide
+
+### numeric(10,2)
+-- spec10 (all lines)
+86:- Use `numeric(10,2)` plus a `varchar(3)` currency column for money.
+-- workshop-plan
+-- guide
+
+### varchar(3)
+-- spec10 (all lines)
+86:- Use `numeric(10,2)` plus a `varchar(3)` currency column for money.
+-- workshop-plan
+-- guide
+
+### ddl-auto=validate
+-- spec10 (all lines)
+83:- Hibernate only validates (`ddl-auto=validate`): every new column or table needs a migration, or startup f
+-- workshop-plan
+125:prices, no migration (app fails at startup with `ddl-auto=validate`), ArchUnit violations (JPA imports in
+-- guide
+
+### *DataServiceImpl
+-- spec10 (all lines)
+81:- `*DataServiceImpl` implements a `*DataService` port and speaks DTOs. JPA entities (`*JPA`) never leave `d
+-- workshop-plan
+-- guide
+
+### *JPA
+-- spec10 (all lines)
+81:- `*DataServiceImpl` implements a `*DataService` port and speaks DTOs. JPA entities (`*JPA`) never leave `d
+-- workshop-plan
+-- guide
+
+### restore(
+-- spec10 (all lines)
+65:- Aggregates: private constructor, an intention-revealing static factory for creation, `restore(...)` for r
+-- workshop-plan
+-- guide
+
+### pullDomainEvents()
+-- spec10 (all lines)
+68:- Register domain events in the aggregate; flows publish them after saving via `pullDomainEvents()`.
+-- workshop-plan
+-- guide
+
+### PostgresTestConfig
+-- spec10 (all lines)
+98:  PostgreSQL (`@Import(PostgresTestConfig.class)`, never an embedded database). ACL: `MockRestServiceServer
+-- workshop-plan
+-- guide
+
+### ScriptedChatModel
+-- spec10 (all lines)
+99:- Never call the real distributor or a real LLM. The assistant uses `ScriptedChatModel`.
+-- workshop-plan
+-- guide
+
+### @MockitoBean
+-- spec10 (all lines)
+97:- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testco
+-- workshop-plan
+-- guide
+
+### @WebMvcTest
+-- spec10 (all lines)
+97:- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testco
+-- workshop-plan
+-- guide
+
+### @DataJpaTest
+-- spec10 (all lines)
+97:- Web adapters: `@WebMvcTest` with `@MockitoBean` flows. Data adapters: `@DataJpaTest` on the shared Testco
+-- workshop-plan
+-- guide
+
+### MockRestServiceServer
+-- spec10 (all lines)
+98:  PostgreSQL (`@Import(PostgresTestConfig.class)`, never an embedded database). ACL: `MockRestServiceServer
+181:06) with `MockRestServiceServer` and a response body under `src/test/resources/contracts/distributor/` who
+-- workshop-plan
+-- guide
+
+### IntegrationTest
+-- spec10 (all lines)
+96:- One test class per production class, same package, suffix `Test`; end-to-end tests end with `IntegrationT
+368:`Order`, `OrderDataServiceImpl`, `OrderIntegrationTest`). Generate it from `docs/architecture.md`; keep it
+-- workshop-plan
+-- guide
+
+### rejectsOrderWhenStockIsInsufficient
+-- spec10 (all lines)
+100:- Name tests after behaviour: `rejectsOrderWhenStockIsInsufficient`.
+-- workshop-plan
+-- guide
+
+### CLAUDE.local.md
+-- spec10 (all lines)
+104:### `CLAUDE.local.md.example` (the real `CLAUDE.local.md` is git-ignored)
+106:# My personal preferences (copy to CLAUDE.local.md, never commit)
+-- workshop-plan
+153:   "Always use Lombok") and a personal `CLAUDE.local.md` (for example your preferred commit style). Start 
+-- guide
+02-level-1-context-engineering.mdx:81:Add a conflicting line to your user file `~/.claude/CLAUDE.md` (for example "Alway
+reference/cheat-sheet.md:16:- `CLAUDE.md`: the project instructions, at most 60 lines; `~/.claude/CLAUDE.md`, `CLAUDE.lo
+
+### conventional commit
+-- spec10 (all lines)
+55:- Small commits, conventional commit messages (feat:, fix:, test:, refactor:, docs:).
+373:description: Verify, check scope and commit the current change with a conventional commit message
+385:3. Stage the relevant files and commit with a conventional commit message whose subject summarises: $ARGUM
+-- workshop-plan
+280:   it shows `!`git status --short``, runs verify, proposes a conventional commit message for `$ARGUMENTS`,
+-- guide
+04-level-3-behavioral-control.mdx:200:Create a command `.claude/commands/ship.md` with `disable-model-invocation: true` 
+
+### 60 lines
+-- spec10 (all lines)
+25:### `CLAUDE.md` (at most 60 lines; this is the full reference text)
+-- workshop-plan
+140:2. Rewrite `CLAUDE.md` to at most 60 lines. It must contain:
+163:- `CLAUDE.md` has at most 60 lines.
+-- guide
+02-level-1-context-engineering.mdx:42:### 2. Rewrite CLAUDE.md to at most 60 lines
+02-level-1-context-engineering.mdx:44:Rewrite `CLAUDE.md` to at most 60 lines. It must contain:
+02-level-1-context-engineering.mdx:107:- [ ] `CLAUDE.md` has at most 60 lines.
+reference/cheat-sheet.md:16:- `CLAUDE.md`: the project instructions, at most 60 lines; `~/.claude/CLAUDE.md`, `CLAUDE.lo
+
+### PostgreSQL in Docker (added in rework round 1; spec09 is 09-workshop-baseline.md)
+-- spec10 (all lines)
+29:Spring Boot 4.1 / Java 25 online bookstore (module `bookstore`, PostgreSQL in Docker), a fake book d
+-- spec09
+39:  its own), run commands: `./mvnw verify` once, then `./mvnw -pl bookstore spring-boot:run` (starts PostgreSQL through Docker
+83:- **WHEN** the bookstore starts with the default profile (PostgreSQL through Docker Compose support) and `GET /books` is c
+-- workshop-plan
+56:./mvnw verify               # green, under a minute (dependencies and the PostgreSQL image were downloaded at home)
+82:Docker Desktop installers, the PostgreSQL image (`docker save`), the frontend's `node/` and `node_modules/` folders,
+-- guide
+00-setup-check.md:84:Expected: the build ends green. The Maven dependencies and the PostgreSQL image were downloaded at home, so run this
+(the exact phrase "PostgreSQL in Docker" occurs only in spec10 line 29 and the staged CLAUDE.md line 3)
+
+### React storefront (added in rework round 1)
+-- spec10 (all lines)
+30:(module `distributor`) and a React storefront (module `frontend`, built by Maven, served at `/shop/`).
+-- spec09
+(no occurrence)
+-- workshop-plan
+89:**Start:** `main` (tag `level-0-start`). No `CLAUDE.md`, no `.claude/`, no MCP. The app has a React storefront in
+-- guide
+01-level-0-break-the-agent.mdx:26:You start on `main` with a clean checkout. No `CLAUDE.md`, no `.claude/`, no MCP. The app has a React storefront in `frontend/`. The
+

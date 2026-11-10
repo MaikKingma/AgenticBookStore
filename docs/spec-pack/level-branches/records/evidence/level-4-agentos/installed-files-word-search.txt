@@ -1,0 +1,36 @@
+# Contradiction review of the installed upstream files (criterion 4, pack: review for anything that contradicts CLAUDE.md).
+# Words searched, case-insensitive, in the five command files, the two install scripts and the default profile file: lombok, mapstruct, double, float, --no-verify, git push, ddl-auto, h2, hsqldb, embedded, in-memory.
+# Files: 9
+hits for 'lombok': 0
+hits for 'mapstruct': 0
+hits for 'double': 0
+hits for 'float': 0
+hits for '--no-verify': 0
+hits for 'git push': 0
+hits for 'ddl-auto': 0
+hits for 'hsqldb': 0
+hits for 'embedded': 0
+hits for 'in-memory': 0
+hits for '\bh2\b': 0
+# lines of any hit (file:line: text):
+# control: the same files do answer a search (AskUserQuestion occurs, the standards path occurs):
+hits for 'AskUserQuestion': 27   hits for 'agent-os/standards': 25
+# the default profile file is the stack of an unrelated project (React 18, Tailwind, Express, PostgreSQL); the installer does not copy it (see PF-T13-3):
+# Tech Stack
+
+## Frontend
+
+- React 18 with TypeScript
+- Tailwind CSS v4 for styling
+- Vite for build tooling
+
+## Backend
+
+- Node.js with Express
+- TypeScript
+
+## Database
+
+- PostgreSQL
+
+## Other

@@ -17,7 +17,5 @@ metadata:
   so never assert a list count after other files ran, assert membership by id); a dip fires the automatic restock only
   when the signal is false, and `receive` resets it; a book the distributor does not list gives a logged WARN, not an
   error answer; an order that dips a stock item waits for the distributor call (about a second at most when it is up).
-- Isolated stack scripts belong in `.claude/comms/tmp/` (one simple command per Bash call): `docker run` on a free
-  port, bookstore jar with `--spring.docker.compose.enabled=false` and `SPRING_DATASOURCE_*`, cwd in the scratchpad.
 - Run the jar with `env -u BOOKSTORE_AI_API_KEY` for the offline assistant path (503 offline, 400 before offline, 429 only with
   a key).

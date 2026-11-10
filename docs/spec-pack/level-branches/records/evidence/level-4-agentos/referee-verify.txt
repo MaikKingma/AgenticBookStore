@@ -1,0 +1,13 @@
+# Referee: ./mvnw clean verify in the track worktree (S is inert for the build), criterion 10. Raw output kept in $SP (s10-t13-impl-raw/verify-referee.txt).
+# started 18:25:37Z UTC, exit code 0; command: bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify, TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR (HR1).
+total: [INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+total: [INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.045 s]
+[INFO] frontend ........................................... SUCCESS [  7.509 s]
+[INFO] bookstore .......................................... SUCCESS [ 15.898 s]
+[INFO] distributor ........................................ SUCCESS [  4.502 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  28.140 s
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.159 s -- in nl.openvalue.bookstore.ArchitectureTest
+# the totals equal the factory baseline of the earlier tasks (1314 bookstore tests and 190 distributor tests, T10 record).

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Run the Agent OS project install script in sandbox 1 under the isolated HOME and XDG dirs.
+# Records: before/after file lists of HOME, XDG and TMPDIR, sha256 lists of every tracked level-3 file, the output,
+# every mktemp call (a shim on PATH, because the upstream script calls bare mktemp, which macOS sends to /var/folders).
+set -eu
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+SHIM=$SP/s10-t13-impl-shim
+mkdir -p "$SHIM"
+cat > "$SHIM/mktemp" <<'EOF'
+#!/bin/bash
+# T13 shim: log every call; a call without arguments gets a template under $TMPDIR.
+echo "mktemp called with $# argument(s): $*" >> "$TMPDIR/mktemp-calls.log"
+if [ "$#" -eq 0 ]; then
+  f=$(/usr/bin/mktemp "$TMPDIR/tmp.XXXXXX")
+  echo "mktemp created $f" >> "$TMPDIR/mktemp-calls.log"
+  echo "$f"
+else
+  exec /usr/bin/mktemp "$@"
+fi
+EOF
+chmod 755 "$SHIM/mktemp"
+rm -f "$TMPD/mktemp-calls.log"
+
+snap() { # snap <label>
+  (cd "$HOMEISO" && find . | LC_ALL=C sort) > "$RAW/home-$1.txt"
+  (cd "$XDGROOT" && find . | LC_ALL=C sort) > "$RAW/xdg-$1.txt"
+  (cd "$TMPD" && find . | LC_ALL=C sort) > "$RAW/tmpdir-$1.txt"
+  git -C "$SBX1" ls-files -z | (cd "$SBX1" && xargs -0 shasum -a 256) | LC_ALL=C sort -k2 > "$RAW/tracked-sha-$1.txt"
+  (cd "$SBX1" && find . -path ./.git -prune -o -type f -print | LC_ALL=C sort | xargs shasum -a 256) > "$RAW/worktree-sha-$1.txt"
+  git -C "$SBX1" status --porcelain > "$RAW/status-$1.txt"
+}
+
+snap before
+echo "== running: cd \$SBX && \$HOME/agent-os/scripts/project-install.sh"
+cd "$SBX1"
+set +e
+PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" > "$RAW/install-out.txt" 2>&1
+rc=$?
+set -e
+echo "exit code: $rc" > "$RAW/install-rc.txt"
+snap after
+cat "$RAW/install-out.txt" | ascii | mask
+echo "exit code: $rc"
+echo "== mktemp calls"
+cat "$TMPD/mktemp-calls.log" | mask

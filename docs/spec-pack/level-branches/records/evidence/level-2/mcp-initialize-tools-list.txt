@@ -1,0 +1,74 @@
+# Level-2 sandbox HEAD 0c4b31c; no Claude process; ports 8080 and 8090 are never opened or probed
+
+## 1. The default URL of .mcp.json against the distributor config
+$ jq -c .mcpServers .mcp.json
+{"distributor":{"type":"http","url":"${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}"}}
+$ jq -r ".mcpServers | keys[]" .mcp.json
+distributor
+$ jq -r .mcpServers.distributor.type .mcp.json
+http
+url spec: ${DISTRIBUTOR_MCP_URL:-http://localhost:8090/mcp}
+env variable: DISTRIBUTOR_MCP_URL
+default URL:  http://localhost:8090/mcp
+default port: 8090
+default path: /mcp
+
+$ grep -n -E "^( |)+port:|address:" distributor/src/main/resources/application.yml
+16:  address: 127.0.0.1
+17:  port: 8090
+application.yml server.port: 8090
+port check: default URL port equals distributor server.port
+$ unzip -p distributor/target/distributor.jar BOOT-INF/classes/application.yml | grep -n -E "^ +port:"   (the jar carries the same port)
+17:  port: 8090
+$ grep -c -E "mcp-endpoint|streamable-http" distributor/src/main/resources/application.yml   (endpoint property is not set, the Spring AI default applies)
+0
+(exit code 1: count 0 means the property is absent; default /mcp is shown in mcp-endpoint-default.txt and by the curl below)
+
+## 2. Start the distributor jar on a free port
+free port: 59098 (not 8080, not 8090)
+pid: 96347
+ready: 1
+Tomcat started on port 59098 (http) with context path '/'
+Started DistributorApplication in 1.02 seconds (process running for 1.181)
+
+## 3. URL as .mcp.json resolves it when DISTRIBUTOR_MCP_URL is set, and when it is not
+with the variable set: http://localhost:59098/mcp
+with the variable unset: http://localhost:8090/mcp   (not contacted: that port is the workshop port)
+
+## 4. initialize
+$ curl -sS -D - -o init.json -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -X POST http://localhost:59098/mcp -d '{"jsonrpc":"2.0","id":1,"method":"initialize",...}'
+HTTP/1.1 200 
+Content-Type: application/json
+session id present: yes
+serverInfo: {"name":"distributor-catalog","version":"1.0.0"}
+protocolVersion: 2025-06-18
+capabilities.tools: {"listChanged":true}
+
+## 5. notifications/initialized
+HTTP 202
+
+## 6. tools/list
+HTTP/1.1 200 
+Content-Type: text/event-stream
+tool count: 4
+tool names, in order of the response:
+  "check_availability"  required: ean
+  "get_title"  required: ean
+  "list_subjects"  required: 
+  "search_titles"  required: query
+$ check "check_availability get_title list_subjects search_titles "
+check: exactly the expected set
+$ check "check_availability get_title list_subjects search_title "   (negative control: one name misspelled)
+check: DIFFERS from the expected set
+$ check "check_availability get_title list_subjects "   (negative control: one name missing)
+check: DIFFERS from the expected set
+
+## 7. other paths do not answer (the path is /mcp)
+POST /mcpx -> HTTP 404
+
+## 8. REST port answers on the same port (sanity: this is the distributor)
+GET /actuator/health -> HTTP 200
+
+stopped pid 96347 (own process only)
+## 9. after stopping: nothing listens on the free port
+port 59098 is free again

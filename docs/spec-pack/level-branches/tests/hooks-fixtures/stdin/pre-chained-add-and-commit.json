@@ -1,0 +1,1 @@
+{"session_id":"abc123","hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git add -A && git commit -am wip","description":"Stage and commit"},"tool_use_id":"toolu_01ABC123"}

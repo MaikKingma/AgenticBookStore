@@ -4,9 +4,7 @@ description: Re-verifying a recorded live UI walk-through (throwaway DB, jar, de
 metadata:
   type: feedback
 ---
-
 Rule: reproduce a recorded walk with your own data and scripts, seeded to the same figures, and compare value by value; never cite the implementer's JSON as evidence.
-
 **Why:** seeding the same books, prices and stock through the REST commands made every money string, 409 body and order total byte-comparable with the record, while ids and times differ by design.
 **How to apply:**
 - One control script with subcommands (`docker-state`, `ports`, `pg-start`, `jar-start`, `jar-stop`, `pg-stop`) writes a dated SP file per call; take `docker-state`/`ports` before and after the session. Use a different throwaway port than the implementer.

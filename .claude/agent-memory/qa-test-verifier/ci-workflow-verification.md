@@ -4,9 +4,7 @@ description: Verifying GitHub Actions workflow tasks (ci-performance style) with
 metadata:
   type: feedback
 ---
-
 Rule: for CI-config tasks the evidence is real runs plus the file; script every gh call and recompute baselines yourself.
-
 **Why:** a ledger/plan figure ("baseline median 52 s") turned out to be the minimum of the five baseline runs (median 58 s); copying it would have carried a wrong gate number forward.
 **How to apply:**
 - Put gh/jq/python in a script under `.claude/comms/tmp/qa-<id>-cip-<slug>.sh`; in `gh --jq` object construction write `.databaseId`, a bare `databaseId` fails with "function not defined".
@@ -23,7 +21,6 @@ Rule: for CI-config tasks the evidence is real runs plus the file; script every 
 - Referee on committed bytes without a clone or worktree: in a script, `git -C <wt> archive <sha> | tar -x -C <SP>/<prefix>-tree`, then `cd` there and run the budgeted `./mvnw`. `find -type f` counts one less than `git ls-tree -r` because `agent-os/product` is a symlink (mode 120000), not a missing file.
 - Timeout kinds via the annotations API: job timeout gives "The job has exceeded the maximum execution time of Nm0s" (job `cancelled`, `!cancelled()`/`failure()` steps skipped); step timeout gives "The action '<step>' has timed out after N minutes." (step and job `failure`). A hung test writes no `TEST-*.xml`, so the junit report still shows all-passed; the annotation is the only pointer.
 - Trap: `gh api repos/<r>/actions/jobs/<id>/logs > f` refuses Maven-coloured logs ("the response contains terminal escape sequences") and leaves a 0-byte file. Add `--allow-escape-sequences` and `wc -l` the file before grepping it.
-- Trap: `gh cache list --limit 100` returning exactly 100 entries means the list was cut off, so a "no probe cache" claim needs `--limit 1000 --json ref --jq` with a `length` total and a positive-control ref pattern.
 - Byte guards on a workflow (no `continue-on-error`/`|| true`/`-fn`, pins, ASCII): `python3 -I` on `git show <sha>:<file> > <SP>/x.yml`, plus one control copy per injected token written by a second script. Every guard must bite on its own control.
 - Gated-deploy workflows: count the gate bytes AND record each hit's job and step (track `^  <job>:` and `^      - name:` lines), so a moved `if` fails even when the count is right. Controls: unquoted `== true`, `||` for `&&`, one hit removed. Parse structure with js-yaml from an installed node tree (`createRequire(<dir>/package.json)`); YAML 1.2 keeps `on` as a string key.
 - Side-effect proof for an untriggerable push path: 404 on `pages`, `releases/tags/<t>`, `git/ref/heads/gh-pages`, `git/ref/tags/<t>`, plus empty `actions/variables`, `environments`, `deployments`. The owner can arm the gate between rounds (Pages `build_type: workflow`, a `github-pages` environment with a branch policy, the variable set): armed is not deployed, so read `deployments`, `gh-pages`, the release, push-event runs and the site URL separately and report the arming as a premise change, with the env `created_at`. Also prove actionlint lints at all: a copy with `timeout-minute:` must report `unexpected key`.

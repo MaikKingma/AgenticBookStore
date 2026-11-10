@@ -1,0 +1,34 @@
+# Hygiene of the track's files (criterion 9, FF-T5-c, FF-T10-b, C0-13a). Scope: the record, S/level-4-agentos/** and S/records/evidence/level-4-agentos/**.
+# --- 1. leak grep: the C0-10 pattern (a home folder prefix, the user name, the session scratch prefix, an API key prefix, two token words) over the three paths (must print nothing)
+hits: 0
+# positive control: the same grep over a copy of the record with one masked path made real
+hits in the control copy: 1
+# the unmasked evidence from the raw run does hold the paths (raw folder, not committed): hits in the raw install output: 48
+# --- 2. ASCII: bytes above 0x7F in the record, the evidence and the written files (the five upstream command files are exempt and listed in the record)
+files with non-ASCII bytes: 0   (files checked: 99)
+positive control (a file with an em dash): 1 line
+upstream files with non-ASCII lines (exempt): 23 8 29 4 23 
+# --- 3. dash characters (U+2013, U+2014) in the record and the written files: 0 in the record; control file: 1
+# --- 4. trailing whitespace and final newline in the record and the written files (the root .editorconfig trims it); generated evidence lines may carry trailing spaces and are not checked
+findings: 0
+# --- 5. FF-T10-b: no Level 4 done or solution branch name (the three alternatives of FF-T10-b, joined with |) in the track's files
+hits: 0
+positive control on a copy with one such name appended: hits 1
+branch names the record uses:  15 start/level-4-agentos;
+step_branch prints: start/level-4-agentos
+# --- 6. C0-13a: no Claude invocation in the record, the evidence or the scripts (classification of every hit)
+(hits listed above; none means none)
+jsonl files: 0   .log files: 0
+ANTHROPIC_API_KEY mentions outside quoted pack text: record 2, staged files 1 (the staged tech stack names it as the variable NOT to use, quoted from the pack)
+# --- 7. scope (criterion 10): git status of the track worktree, paths grouped
+   3 .claude/agent-memory/implementation-agent/...
+   1 .claude/agent-memory/qa-test-verifier/ci-workflow-verification.md
+   1 .claude/agent-memory/qa-test-verifier/consistency-check-verification.md
+  23 docs/spec-pack/level-branches/level-4-agentos/...
+  80 docs/spec-pack/level-branches/records/evidence/level-4-agentos/...
+   1 docs/spec-pack/level-branches/records/level-4-agentos.md
+tracked files changed against the spec tip 74a6113 (agent memory curation only): .claude/agent-memory/implementation-agent/MEMORY.md .claude/agent-memory/implementation-agent/frontend-build-traps.md .claude/agent-memory/qa-test-verifier/ci-workflow-verification.md .claude/agent-memory/qa-test-verifier/consistency-check-verification.md 
+rehearsal-checklist.md equals the spec tip: yes
+files of other tracks (level-4-openspec, level-4-speckit) present: 0
+ignored entries under S: 0
+paths outside the file scope that changed (agent memory aside): 2

@@ -1,0 +1,13 @@
+# Byte copies of raw output (paths masked), task T12, 2026-11-10.
+== $ cd $WT && JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify   (the track worktree; referee)
+start/stop UTC: 2026-11-10T16:26:28Z 2026-11-10T16:26:56Z   exit=0
+2050:[INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+2291:[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+2301:[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+2303:[INFO] agenticbookstore-parent ............................ SUCCESS [  0.040 s]
+2304:[INFO] frontend ........................................... SUCCESS [  7.375 s]
+2305:[INFO] bookstore .......................................... SUCCESS [ 15.151 s]
+2306:[INFO] distributor ........................................ SUCCESS [  4.341 s]
+2308:[INFO] BUILD SUCCESS
+2310:[INFO] Total time:  27.065 s
+2311:[INFO] Finished at: 2026-11-10T17:26:56+01:00

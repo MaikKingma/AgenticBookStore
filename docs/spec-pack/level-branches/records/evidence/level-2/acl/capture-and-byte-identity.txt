@@ -1,0 +1,66 @@
+# Capture of the multi-role title 9789900010395 (The Divine Comedy: Inferno) from a distributor jar built in a level-2 sandbox
+# No Claude Code is involved (decision D14). Every request is curl. Port 18095 was free (8080 and 8090 are used by other worktrees and were not touched).
+# Script: the commands below in order; the jar pid was recorded and only that pid was killed.
+
+$ java -jar $SBX-a/distributor/target/distributor.jar --server.port=18095
+INFO 26396 --- [distributor] [           main] n.o.distributor.DistributorApplication   : Started DistributorApplication in 1.055 seconds (process running for 1.22)
+pid: 26396
+
+$ curl -sS -D rest-headers.txt -o rest-body.json http://127.0.0.1:18095/api/titles/9789900010395
+HTTP/1.1 200 
+Content-Type: application/json
+Content-Length: 392
+Date: Mon, 09 Nov 2026 23:31:04 GMT
+--- rest-body.json (392 bytes, no trailing newline)
+{"ean":"9789900010395","titleName":"The Divine Comedy: Inferno","contributors":[{"name":"Dante Alighieri","role":"AUTHOR"},{"name":"Henry Wadsworth Longfellow","role":"TRANSLATOR"},{"name":"Gustave Dore","role":"ILLUSTRATOR"}],"subjectCodes":["POE000000"],"format":"HARDCOVER","listPriceCents":3499,"currency":"EUR","availability":"IN_STOCK","warehouseQuantity":12,"releaseDate":"1867-01-01"}
+
+$ curl -sS -D mcp-init-headers.txt -o mcp-init-response.txt -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -X POST http://127.0.0.1:18095/mcp -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t5-curl","version":"1"}}}'
+HTTP/1.1 200 
+Mcp-Session-Id: 7300167c-fa58-4772-8d9b-359618a5e644
+Content-Type: application/json
+--- mcp-init-response.txt
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-06-18","capabilities":{"completions":{},"logging":{},"prompts":{"listChanged":true},"resources":{"subscribe":false,"listChanged":true},"tools":{"listChanged":true}},"serverInfo":{"name":"distributor-catalog","version":"1.0.0"},"instructions":"Read-only catalogue of the book distributor. Use search_titles to find titles, get_title for details, check_availability before suggesting a title to stock. Prices are in cents.\n"}}
+
+$ curl ... -H 'Mcp-Session-Id: <id>' -X POST http://127.0.0.1:18095/mcp -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+HTTP/1.1 202 
+
+$ curl ... -H 'Mcp-Session-Id: <id>' -X POST http://127.0.0.1:18095/mcp -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_title","arguments":{"ean":"9789900010395"}}}'
+HTTP/1.1 200 
+Cache-Control: no-cache
+Content-Type: text/event-stream
+--- mcp-call-response.txt (server-sent event framing: id, event and data lines)
+id:7300167c-fa58-4772-8d9b-359618a5e644
+event:message
+data:{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"ean\":\"9789900010395\",\"titleName\":\"The Divine Comedy: Inferno\",\"contributors\":[{\"name\":\"Dante Alighieri\",\"role\":\"AUTHOR\"},{\"name\":\"Henry Wadsworth Longfellow\",\"role\":\"TRANSLATOR\"},{\"name\":\"Gustave Dore\",\"role\":\"ILLUSTRATOR\"}],\"subjectCodes\":[\"POE000000\"],\"format\":\"HARDCOVER\",\"listPriceCents\":3499,\"currency\":\"EUR\",\"availability\":\"IN_STOCK\",\"warehouseQuantity\":12,\"releaseDate\":\"1867-01-01\"}"}],"isError":false}}
+
+
+
+# Normalisation (only for the MCP result; the REST body is used as is):
+#  1. keep the SSE data line and drop its "data:" prefix: grep '^data:' mcp-call-response.txt | sed 's/^data://'
+#  2. take result.content[0].text as a raw string: jq -j '.result.content[0].text'  (jq -j writes no quotes and no trailing newline)
+# The text is the get_title payload; nothing in it is edited, re-ordered or re-encoded.
+
+$ bash impl-t5-normalise.sh 9789900010395
+isError: false
+content items: 1
+cmp contract vs REST body: identical
+cmp contract vs MCP text: identical
+cmp REST vs MCP: identical
+     392 $SP/t5/capture-9789900010395/title-9789900010395.json
+     392 $SP/t5/capture-9789900010395/rest-body.json
+     392 $SP/t5/capture-9789900010395/mcp-text.json
+    1176 total
+7ad1ede3a2bfb72e0598843d55638421fa5895b862beb4e1087e1ef592a37713  $SP/t5/capture-9789900010395/title-9789900010395.json
+7ad1ede3a2bfb72e0598843d55638421fa5895b862beb4e1087e1ef592a37713  $SP/t5/capture-9789900010395/rest-body.json
+7ad1ede3a2bfb72e0598843d55638421fa5895b862beb4e1087e1ef592a37713  $SP/t5/capture-9789900010395/mcp-text.json
+trailing byte of contract (hex):
+           7d                                                            
+
+bytes outside printable ASCII in contract: 0
+
+# Staged contract and the level-2 sandbox copy are the same bytes:
+$ cmp title-9789900010395.json <staged files/bookstore/src/test/resources/contracts/distributor/title-9789900010395.json>
+identical
+
+# The distributor process was stopped by the capture script (kill of its own pid only):
+stopped pid 26396

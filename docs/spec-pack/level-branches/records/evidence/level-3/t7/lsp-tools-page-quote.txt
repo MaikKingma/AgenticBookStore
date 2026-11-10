@@ -1,0 +1,14 @@
+# Tools reference page, read only (curl) on 2026-11-10 (UTC): https://code.claude.com/docs/en/tools-reference (HTTP 200)
+# Extraction: tags stripped, whitespace collapsed, entities decoded; the curly apostrophe of the page shows as '?' because
+# this evidence is ASCII only. No Claude process.
+
+Why it is quoted: the checklist row R2-3 (No server running yet) says the LSP tool may return an error when no
+language server runs. This sentence is the page's own statement for a call whose server cannot start; it does not say
+that a read-only request starts the server (the start trigger stays the first edit, level-2 evidence
+claude-docs-pages.txt, code intelligence page).
+
+Sentence (appears 2 times in the extracted page text):
+  "Claude Code returns an error result for each LSP call on a file whose language server it can?t start."
+
+Text just before it on the page (for context):
+  "...symbol by name across the workspace Find implementations of an interface Trace call hierarchies Claude Code keeps the tool inactive until you install a code intelligence plugin for your language. In cloud sessions , Claude Code doesn?t start plugin language servers, so the LSP tool stays inactive there. Claude Code takes the language server?s configuration from the plugin, and you install the server binary yourself. "

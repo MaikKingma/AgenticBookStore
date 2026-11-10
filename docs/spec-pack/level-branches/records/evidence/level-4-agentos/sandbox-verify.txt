@@ -1,0 +1,16 @@
+# ./mvnw clean verify on the fresh level-4 build (sandbox 2, HEAD tree b533a9a10f37e0308304401befb266e7b78d0234, equal to sandbox 1).
+# started 16:24:29Z UTC, exit code 0. Raw output kept in $SP (s10-t13-impl-raw/verify-sbx2.txt).
+# command: bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify, with TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR (HR1); shared ~/.m2 cache and Docker used (J10).
+total: [INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+total: [INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.040 s]
+[INFO] frontend ........................................... SUCCESS [  7.710 s]
+[INFO] bookstore .......................................... SUCCESS [ 17.885 s]
+[INFO] distributor ........................................ SUCCESS [  4.353 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  30.145 s
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.147 s -- in nl.openvalue.bookstore.ArchitectureTest
+# ArchitectureTest Surefire XML (bookstore/target/surefire-reports):
+  testsuite version="3.0.2" name="nl.openvalue.bookstore.ArchitectureTest" time="0.147" tests="22" errors="0" skipped="0" failures="0" flakes="0"
+# control: a build that fails would show BUILD FAILURE; this log holds 0 such lines and 20 ERROR lines.

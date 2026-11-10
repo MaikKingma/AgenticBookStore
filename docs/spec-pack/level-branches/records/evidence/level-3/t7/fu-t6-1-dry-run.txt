@@ -1,0 +1,86 @@
+# FU-T6-1 dry run of each changed branch through the next row (FF-T6-c). Paper walk-through of the checklist text, no Claude
+# process. Row names: R2-2, R2-3, R2-4 of records/rehearsal-checklist.md. <start> is the commit recorded in the clone recipe.
+
+Branch A: the first R2-3 answer comes from the LSP tool and is empty (failure (d)).
+  1. R2-5 starts the session. t0 = Enter on the R2-3 prompt `Find all references to `Money.of`.`
+  2. The answer is empty. t1 = it ends. Tree state: unchanged (R2-3 only reads).
+  3. R2-3 failure (d): wait, t2 = Enter on the second ask, t3 = the answer that lists the references ends. Failures (a) to (c) are
+     judged on this second answer. If it lists usages in domain and domaininteraction, (d) is only the cold-start observation.
+  4. R2-4 Measure 1: the stopwatch started with the R2-3 prompt, its answer was empty, so the time is reported as
+     "(d): between t1-t0 and t3-t0 seconds, includes my wait", never t1-t0 alone. The ls command of the setup lists the cache
+     folder after that answer (the server started). Premise of R2-4 Measure 2 (a): the R2-3 answer names two packages, restored.
+  5. R2-4 Measure 2 (b) runs on the unchanged tree (step 2 left it unchanged), then undo with `git reset --hard <start> && git
+     clean -fdx`. Premise of R2-2 (clean tree, plugin active): restored.
+  6. R2-2: prompt 1, prompt 2, judge, undo. Next premise (R2-4 optional warm comparison): clean tree, restored by the undo.
+  7. Warm comparison: `/exit`, `claude` again in the same folder, the R2-3 prompt again, record the time and "R2-3 prompt".
+
+Branch B: R2-3 finds no running server (the answer is not from the LSP tool, or the tool returns an error, and no `Found N` line
+yet).
+  1. R2-3 steps (1) and (2): quote the answer, note for the guide. Tree: unchanged.
+  2. Step (3): R2-2 prompt 1 (`Book.java` edited, `price()` returns String), wait for the `Found N new diagnostic issues` line.
+     This line is also the stop event of the R2-4 Measure 1 stopwatch (t0 = Enter on R2-2 prompt 1). Tree: Book.java edited.
+  3. Step (4): ask R2-3 again. The Money.of calls are untouched (only price() changed), so the premise of R2-3 holds. If this
+     second answer is empty again, failure (d) applies to it, with t0 = Enter on R2-2 prompt 1.
+  4. Step (5): R2-2 prompt 1 is NOT sent again (its Found N line from step 2 is R2-2's expected result after prompt 1).
+     R2-2 prompt 2 `Fix the new diagnostics.`, judge R2-2 (git diff of Book.java against <start> is empty or the new code compiles,
+     `./mvnw clean verify` ends BUILD SUCCESS), undo with `git reset --hard <start> && git clean -fdx`. Tree: unchanged again.
+  5. R2-4 Measure 2 (b) now runs on the unchanged tree (it needs one: a Found N line there would be a false diagnostic).
+  6. Warm comparison: reset first (tree unchanged, so R2-2 prompt 1 again has a `price()` that still returns Money), `/exit`,
+     `claude` again, R2-2 prompt 1 again, record the time and "R2-2 prompt 1"; undo again afterwards. Premise of anything after it
+     (R2-6 runs `./mvnw clean verify` in a clone): the undo restores the tree.
+
+Round r1 (META REJECT T7 r0, RA2): branch B is split into three sub-cases by what R2-2 prompt 1 prints and what the LSP tool
+says at R2-3 step (4). Paper walk-through again (FF-T6-c), no Claude process. Every line starting with ">> " is a verbatim
+quote of records/rehearsal-checklist.md (checked by a script, with a negative control, see fu-t6-1-checklist-checks.txt).
+t0 = Enter on R2-2 prompt 1 in all three sub-cases.
+
+Sub-case B1: R2-2 prompt 1 prints the `Found N` line (the existing branch, nothing changed).
+  1. R2-3 steps (1) and (2), then step (3), the first edit. Tree: Book.java edited.
+     >> (3) run R2-2 prompt 1, the first edit, and wait for its `Found N new diagnostic issues` line
+  2. R2-4 Measure 1: the line is the stop event, the time is t(line)-t0.
+     >> stop at its `Found N new diagnostic issues` line
+  3. Step (4) asks R2-3 again. Step (5) now applies, because the line appeared: prompt 2, judge, undo, tree unchanged.
+     >> (5) Added here, only when the `Found N` line of step (3) appeared (otherwise branch B above)
+  4. R2-4 Measure 2 (b) runs after that undo, on the unchanged tree.
+     >> Only after that undo run R2-4 Measure 2 (b)
+  Result: unchanged from the T7 r0 text, and still complete.
+
+Sub-case B2: no `Found N` line under the first edit, and the step (4) answer comes from the LSP tool (server running, diagnostics
+not ready at the edit).
+  1. Step (3): prompt 1 is sent, Book.java is edited, no `Found N` line. Write t1 = the end of prompt 1's answer, still do step (4).
+     >> (a) write down t1, the end of prompt 1's answer, and still do step (4)
+  2. Step (4): ask R2-3 again. The tool call is the LSP tool, so the server runs. Record R2-2 failure (a) with the note; send no
+     prompt 2 (step (5) is skipped: it applies only when the line appeared); undo. Tree: unchanged again.
+     >> record R2-2 failure (a) with the note "no diagnostic under the first edit; server running at step (4)"
+     >> send no prompt 2 (nothing was reported to fix), undo with `git reset --hard <start> && git clean -fdx` and only then run R2-4 Measure 2 (b)
+  3. R2-4 Measure 1: no stop event exists, the range is reported with t0 = Enter on R2-2 prompt 1.
+     >> report the range "(d): between t1-t0 and t3-t0 seconds, includes my wait" with t0 = Enter on R2-2 prompt 1, t1 = the end of prompt 1's answer and t3 = the end of the first `LSP` answer that lists usages
+     If the step (4) answer is empty: the (d) rule applies with the same t0 (t1 = the end of that empty answer), re-ask once.
+     >> if the step (4) answer from the `LSP` tool is empty, the (d) rule of the Failure row applies with the same t0
+  4. R2-4 Measure 2 (b) runs after the undo of step 2 on the unchanged tree, so a `Found N` line there would be a false diagnostic.
+     >> that undo is the one after step (4), with no prompt 2 sent
+  5. Recording rules: R2-3 records t1 and the step (4) result; R2-4 records the range and R2-2 failure (a) with its note.
+     >> in branch B also t1 and the step (4) result: running server or none
+     >> the cold time is the range with t0 = Enter on R2-2 prompt 1 and t1 = the end of prompt 1's answer, and R2-2 failure (a) is recorded with its note
+  Premise of the rows after it (R2-6 runs in a clone): the undo restored the tree.
+
+Sub-case B3: no `Found N` line under the first edit, and at step (4) there is no running server either (not the LSP tool, or an
+LSP error).
+  1. Step (3) as in B2, t1 written down, step (4) asked.
+     >> (c) If there is no running server at step (4) either
+  2. R2-4 failure (c), no prompt 2, undo, stop and report (pack: stop and ask Maik). Tree: unchanged after the undo.
+     >> record R2-4 failure (c) "the server does not start", send no prompt 2, undo, stop and report
+  3. R2-4 Measure 1: no time is reported.
+     >> when there is no server at step (4) either, report no time (failure (c))
+  4. R2-4 Measure 2 (b) is not judged.
+     >> R2-4 Measure 2 (b) is not judged, because a missing `Found N` line proves nothing without a running server.
+  Premise of the rows after it: the tree is unchanged after the undo, and Maik decides before anything continues.
+
+Reading check of the touched sentences (FF-T5-a): the suggested-order bullet, R2-2 Setup, R2-3 rows "No server running yet", Failure,
+Recording rule, R2-4 Measure 1, Measure 2 (b), Recording rule and the closing "Not in the pack scenarios and added here" paragraph
+were re-read after the edits. Each statement is either the task text (FU-T6-1) or follows from the docs sentence quoted in the row
+(the server starts at the first edit of a matching file; the tools page sentence on a server that cannot start). The closing
+paragraph now lists the additions of this task. Round r1 (branch B, three sub-cases) was re-read the same way, together with the
+two sentences of the suggested-order bullet and of R2-2 Setup that sent a reader on to prompt 2 (now conditional on the `Found N`
+line). Not claimed anywhere: that a references request starts the server, or what a cold
+index time will be.

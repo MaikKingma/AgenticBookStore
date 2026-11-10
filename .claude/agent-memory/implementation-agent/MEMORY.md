@@ -14,8 +14,11 @@
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
 - [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
 - [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, pin config-overriding flags, date-varied idempotency, absent-sha lease, hook and shim witnesses, perl mutants, guard refuses bash -c
+- [Bash script traps](bash-script-traps.md) — errexit lost in `f || die`, bash 3.2 proof run, IFS-tab traps, git apply --3way, eol anchoring, macOS mktemp ignores TMPDIR without template, EXIT traps need set +e, PATH shims, cmp -n false EOF
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files: driver with node handler shim, Expected status grammar, run-mode runs, seeded-state traps
 - [Docs task techniques](docs-task-techniques.md) — README census: two-way scripts with negative control, fake older DB for reset claim, jar has no compose, anonymous volume trap, rg only in Bash tool
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callback tests without a context, stackless tool exception, ListAppender, ChatClient mocks
+- [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, token inventory controls, hooks without Claude, installer isolation (npx/uvx), Spec Kit init traps, staging a generated tree, evidence greps
+- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace table with needles in both texts, counterexample searches on two trees, installer traps (no standards copied, bare mktemp), namespaced command names

@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""checklist-literals.py: every backticked literal of the Level 4 section of rehearsal-checklist.md is found, on one line, in the
+record it comes from (FF-T11-c), and every pointer heading is a heading line of its record.
+
+Usage: python3 -I checklist-literals.py <records-folder> [--section-file <file>] [--misspell]
+Mapping: pointer table and intro: any of the three records; R4-A: level-4-openspec.md; R4-B: level-4-speckit.md; R4-C: level-4-agentos.md.
+Also allowed: literals found in the pack spec text quoted in the row (spec 10 lines 478-481) or in the checklist's own earlier sections are NOT
+accepted: the literal must be in the record. --misspell breaks one literal in memory to show the check reports it.
+"""
+import re
+import sys
+
+rec = sys.argv[1]
+MIS = "--misspell" in sys.argv
+if "--section-file" in sys.argv:
+    text = open(sys.argv[sys.argv.index("--section-file") + 1]).read()
+else:
+    full = open(rec + "/rehearsal-checklist.md").read()
+    text = full[full.index("\n## Level 4\n"):]
+R = {k: open("%s/level-4-%s.md" % (rec, k)).read().split("\n") for k in ("openspec", "speckit", "agentos")}
+ALL = R["openspec"] + R["speckit"] + R["agentos"]
+# split into parts
+parts = re.split(r"\n(?=### )", text)
+bad = 0
+total = 0
+for part in parts:
+    head = part.split("\n", 1)[0]
+    if head.startswith("### R4-A"):
+        lines = R["openspec"]
+    elif head.startswith("### R4-B"):
+        lines = R["speckit"]
+    elif head.startswith("### R4-C"):
+        lines = R["agentos"]
+    elif head.startswith("### Word check"):
+        lines = None
+    else:
+        lines = ALL
+    if lines is None:
+        continue
+    body = part
+    # pointer headings: the third cell of each pointer row must be a heading line of its record
+    if head.startswith("### Draft rows"):
+        for row in body.split("\n"):
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cells) == 4 and re.match(r"^R(4[AC]|R)-", cells[0]) or (len(cells) == 4 and cells[0].startswith(("RR-S", "R4A-", "R4C-"))):
+                rf = cells[1].strip("`")
+                h = cells[2]
+                src = open("%s/%s" % (rec, rf)).read().split("\n")
+                ok = any(l == "### " + h for l in src)
+                total += 1
+                if not ok:
+                    bad += 1
+                    print("MISSING HEADING %s: %s" % (rf, h[:90]))
+    for lit in re.findall(r"`([^`\n]+)`", body):
+        probe = lit + "X" if (MIS and lit == "git status --short") else lit
+        total += 1
+        if re.fullmatch(r"level-4-(openspec|speckit|agentos)\.md|grep -F", lit):
+            continue
+        if not any(probe in l for l in lines):
+            bad += 1
+            print("NOT FOUND in %s: `%s`" % (head[:30], lit))
+print("literals and headings checked: %d, not found: %d" % (total, bad))
+sys.exit(1 if bad else 0)

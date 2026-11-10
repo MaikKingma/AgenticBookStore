@@ -1,0 +1,53 @@
+# Claude Code docs quotes for records/windows-hooks.md (T8)
+# Fetched read-only with curl on 2026-11-10 (UTC, about 08:50) in the markdown form of the public pages; no Claude
+# process, no login. Line numbers are lines of the fetched .md file. Non-ASCII characters are shown as '?'.
+# hooks https://code.claude.com/docs/en/hooks.md  sha256 4dba5422e112b5196b372e6206de4314f2ec83d4335dc88df1e72858978d8c21  bytes 292719
+# setup https://code.claude.com/docs/en/setup.md  sha256 8dc9f85869815f261b64fed8cf8598e5d77d247d26efa99d32a7f15c61e274ba  bytes 35209
+# tools https://code.claude.com/docs/en/tools-reference.md  sha256 0bd9feb89bc2f4cc25af4459f397f5202b04083aeaee89f4ac9e1ee7d857e4e2  bytes 90939
+
+[Q1] setup.md lines 126-126: with Git for Windows, Claude Code uses Git Bash for the Bash tool
+    126 | * **With Git for Windows**, Claude Code uses Git Bash for the [Bash tool](https://code.claude.com/docs/en/tools-reference.md#bash-tool-behavior). If Claude Code can't find Git Bash, set the path in your [settings.json file](https://code.claude.com/docs/en/settings.md):
+
+[Q2] hooks.md lines 1858-1859: without Git Bash, no Bash tool is registered and a hook that matches only Bash never fires
+   1858 | * On Windows without Git Bash, the tool is enabled automatically and Claude Code doesn't register the Bash tool at all.
+   1859 | * A hook that matches only `Bash` never fires there.
+
+[Q3] hooks.md lines 964-972: what counts as a failure for onFailure, and what block then does
+    964 | Each of these counts as a failure:
+    965 |
+    966 | * **Can't start**: a command hook fails to start, for example because the script or executable doesn't exist
+    967 | * **Exit code other than 0 or 2**: counts for a command hook even if it printed JSON that allows the action, such as `permissionDecision: "allow"`. To return a JSON decision, exit 0
+    968 | * **HTTP error**: an HTTP hook's connection fails, or the response status isn't 2xx
+    969 | * **Timeout**: the hook reaches its [`timeout`](#common-fields)
+    970 | * **Invalid output**: the JSON output [can't be parsed](#exit-code-0) or fails [schema validation](#json-output). For an HTTP hook, a 2xx body that is neither empty nor a JSON object also counts. Plain-text stdout from a command hook isn't a failure
+    971 |
+    972 | With `"block"` set, a failure does what [exit code 2 does on that event](#exit-code-2-behavior-per-event), except on `PermissionRequest`, where it denies the request. For example, a `PreToolUse` failure blocks the tool call and a `UserPromptSubmit` failure blocks the prompt.
+
+[Q4] hooks.md lines 974-976: onFailure has no effect on Stop hooks
+    974 | The field has no effect on these hooks:
+    975 |
+    976 | * **`Stop`, `SubagentStop`, `TaskCompleted`, and `TeammateIdle` hooks**: exit code 2 on these events sends Claude back to keep working, and Claude can't repair a hook that won't run
+
+[Q5] hooks.md lines 876-876: an exit code other than 0 or 2 is a non-blocking error unless the failure blocks the action
+    876 | A `<hook name> hook error` notice with `Failed with non-blocking status code:` means your hook's exit code wasn't 0 or 2 and its stdout was plain text or empty. Unless the hook is one [whose failure blocks the action](#block-the-action-when-a-hook-fails), this is a [non-blocking error](#exit-code-output), so your hook didn't stop the action. To capture your hook's full stderr rather than the first line the notice shows, enable [debug logging](#debug-hooks).
+
+[Q6] tools-reference.md lines 481-490: Bash deny rules turn the PowerShell tool off unless CLAUDE_CODE_USE_POWERSHELL_TOOL=1 or a PowerShell rule; a Bash rule does not restrict it
+    481 | ### Bash deny rules also turn off the PowerShell tool
+    482 |
+    483 | On Windows with Git Bash installed, denying Bash also turns the PowerShell tool off for the session. This applies to scoped rules such as `Bash(git push *)` as well as a bare `Bash`, and to rules from one of your settings files or `--disallowedTools`. Claude Code does this because a `Bash` rule doesn't restrict the PowerShell tool, which has [its own permission rules](https://code.claude.com/docs/en/permissions.md#powershell). With PowerShell left on, Claude could run there what your rule denies in Bash.
+    484 |
+    485 | To keep the PowerShell tool on alongside a Bash deny rule, do either of these:
+    486 |
+    487 | * Set `CLAUDE_CODE_USE_POWERSHELL_TOOL=1` in your environment or in the `env` block of a settings file, as shown in [Enable the PowerShell tool](#enable-the-powershell-tool).
+    488 | * Add a scoped [`PowerShell` permission rule](https://code.claude.com/docs/en/permissions#powershell) to a settings file, such as a `PowerShell(git push *)` deny rule.
+    489 |
+    490 | Without one of these, a scoped Bash deny rule leaves the Bash tool available, and Claude Code turns PowerShell off without a warning. A rule that removes the whole Bash tool leaves Claude with no shell tool for the session.
+
+[Q7] hooks.md lines 1855-1857: a Bash-only matcher does not cover the PowerShell tool, which takes the shell commands when enabled
+   1855 | Match `Bash|PowerShell` in hooks that inspect shell commands, so they cover both tools:
+   1856 |
+   1857 | * On Windows, wherever the PowerShell tool is enabled, Claude treats PowerShell as the primary shell and routes shell commands through it.
+
+[Q8] hooks.md lines 339-339: the if field matches the tool name and arguments together
+    339 | For tool events, you can filter more narrowly by setting the [`if` field](#common-fields) on individual hook handlers. `if` uses [permission rule syntax](https://code.claude.com/docs/en/permissions.md) to match against the tool name and arguments together, so `"Bash(git *)"` runs when any subcommand of the Bash input matches `git *` and `"Edit(*.ts)"` runs only for TypeScript files.
+

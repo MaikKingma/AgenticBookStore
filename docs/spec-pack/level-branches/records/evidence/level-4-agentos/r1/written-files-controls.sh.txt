@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Negative controls of check-written-files.py: each control breaks one thing in a copy of the written files and the
+# named check must report FAIL; the unbroken copy must report ALL PASS.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+CHK="$COMMS_TMP/impl-t13-check.py"
+TRACE="${1:-$COMMS_TMP/impl-t13-trace.txt}"
+NEG=$SP/s10-t13-impl-neg
+rm -rf "$NEG"
+mkdir -p "$NEG"
+# the copy: symlinks to every sandbox entry except agent-os, which is a real copy
+for e in $(ls -A "$SBX1" | grep -v '^agent-os$' | grep -v '^\.git$'); do ln -s "$SBX1/$e" "$NEG/$e"; done
+cp -R "$SBX1/agent-os" "$NEG/agent-os"
+
+run() { # run <label> <expected-failing-check>
+  out=$(python3 -I "$CHK" "$NEG" "$WT" "$TRACE" 2>&1)
+  if [ "$2" = "none" ]; then
+    echo "$out" | grep -q '^SUMMARY: ALL PASS' && echo "control $1: ALL PASS as expected" || { echo "control $1: UNEXPECTED FAIL"; echo "$out" | head -20; }
+  else
+    echo "$out" | grep -q "^FAIL $2" && echo "control $1: $2 reported FAIL as expected ($(echo "$out" | grep "^FAIL $2" | head -1))" || { echo "control $1: $2 NOT reported"; echo "$out" | head -20; }
+  fi
+}
+restore() { rm -rf "$NEG/agent-os"; cp -R "$SBX1/agent-os" "$NEG/agent-os"; }
+
+run N0-unbroken none
+printf '%s\n' '- Fill in [PROJECT_NAME] here.' >> "$NEG/agent-os/standards/testing/layer-tests.md"
+run N1-placeholder placeholders
+restore
+printf '%s\n' "- Use a dash $(printf '\342\200\224') here." >> "$NEG/agent-os/standards/testing/layer-tests.md"
+run N2-nonascii ascii
+restore
+printf '%s\n' '- Set `FOO_BARBAZ` before running.' >> "$NEG/agent-os/standards/testing/layer-tests.md"
+run N3-invented-constant allcaps
+restore
+printf '%s\n' '- Use Lombok for DTOs.' >> "$NEG/agent-os/standards/architecture/flows-and-ports.md"
+run N4-lombok forbidden
+restore
+printf '%s\n' '- Money may be a double when it is small.' >> "$NEG/agent-os/standards/architecture/money-is-exact.md"
+run N5-double-money forbidden
+restore
+printf '%s\n' '- Tests may use an H2 database.' >> "$NEG/agent-os/standards/testing/database-in-tests.md"
+run N6-embedded-db forbidden
+restore
+printf '%s\n' '- Fix a mistake by editing an existing migration.' >> "$NEG/agent-os/standards/database/flyway-migrations.md"
+run N7-edited-migration forbidden
+restore
+printf '%s\n' '- An unsourced rule that no trace row covers.' >> "$NEG/agent-os/standards/testing/test-conventions.md"
+run N8-uncovered-line trace
+restore
+sed -i.bak 's/Workshops about AI coding agents/Workshops about AI coding assistants/' "$NEG/agent-os/product/mission.md"; rm -f "$NEG/agent-os/product/mission.md.bak"
+run N9-mission-reworded mission
+restore
+sed -i.bak 's/React 19.3.1/React 19.3.2/' "$NEG/agent-os/product/tech-stack.md"; rm -f "$NEG/agent-os/product/tech-stack.md.bak"
+run N10-version-changed tech-stack
+restore
+sed -i.bak 's/^  layer-tests:$/  layer-testz:/' "$NEG/agent-os/standards/index.yml"; rm -f "$NEG/agent-os/standards/index.yml.bak"
+run N11-index-entry-misspelled index
+restore
+sed -i.bak 's/never an embedded database/never an in-process database/' "$NEG/agent-os/standards/testing/database-in-tests.md"; rm -f "$NEG/agent-os/standards/testing/database-in-tests.md.bak"
+run N12-claim-changed-away-from-source trace
+restore
+run N13-restored none
+rm -rf "$NEG"
