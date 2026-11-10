@@ -1,0 +1,65 @@
+# Byte copies of raw output (paths masked), task T12, 2026-11-10. Patterns are described, not quoted, so that this file does not match itself.
+== 1 scope: git status --porcelain --untracked-files=all in the track worktree (every path must lie in the three scopes or in the agent memory of this track)
+(end of paths outside the scope; empty = none)
+tracked files changed against the spec tip 74a6113, not counting the agent memory of this track: 0
+paths in scope (untracked): level-4-speckit 30, record 1, evidence 20
+rehearsal-checklist.md: byte-equal to the spec tip
+paths of other tracks changed (level-1): 0
+paths of other tracks changed (level-2): 0
+paths of other tracks changed (level-3): 0
+paths of other tracks changed (level-4-openspec): 0
+paths of other tracks changed (level-4-agentos): 0
+== 2 branch names: the three kinds of Level 4 done or solution branch name over the track's files
+search over level-4-speckit/**, the record and evidence/level-4-speckit/**: 0 matches
+positive control, the same search on a copy of the record with one planted line: 1 match
+== 3 leak search (home folder, scratchpad root, secrets; C0-10) over the record, the evidence folder and the staged files
+matches: 0
+positive control on the raw run files kept in the scratchpad (not in the repository): 12 raw files match
+== 4 ASCII (no byte above 126, no control character other than white space; an em dash is such a byte) over the record and the evidence folder
+lines: 0
+positive control (a file with one em dash): 1 line
+em dash search over the record: 0
+== 5 file kinds in the evidence folder (only .txt or .md): 0 others; files: 20
+== 6 C0-13a: invocations of claude in the record, evidence and the scripts kept as evidence (classified below)
+(end; a hit would be quoted guide or docs text, not a command that was run)
+streams of Claude sessions (*.jsonl) in the evidence folder: 0
+run, passed or N-of-M claims for a Claude session in the record: see section 9 below
+== 7 branch names printed by step_branch
+step_branch level-4-speckit -> start/level-4-speckit
+== 8 staged files against the manifest: every file under files/ is named by exactly one row and every row's staged file exists (comm both ways)
+only in files/: 0; only in the manifest: 0; duplicate staged names: 0
+staged path components that start with a dot: 0
+staged files named CLAUDE.md, CLAUDE.local.md or AGENTS.md: 0
+modes:   23 644    6 755 
+== 9 C0-13a, run or pass wording in the record (each hit is a zero-token run, a recording instruction for Maik or the staging self-test; none claims a Claude result)
+39:| Staging self-test | `PASSED all 58 cases` after the staging (`st:6-8`) |
+59:Environment: every command ran with `TMPDIR` and `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=...` in the session scratchpad (
+60:the init and the `uv` runs ran under `env -i` with `HOME`, `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`, `XDG
+160:Where the pack says `uv tool install specify-cli==1.3.1`, the staging ran `uvx --from specify-cli==1.3.1 specify ini
+279:| Recording rule (added here) | Date, `<start>`, `claude --version`, the lists you saw (quote), the answers to steps
+295:| Recording rule (added here) | Date, `<start>`, `claude --version`, the permission mode, the number of permission p
+324:- Gate: the staging self-test `PASSED all 58 cases` (`st:6-8`); the referee `./mvnw clean verify` in the track workt
+(end)
+# ---- appended in rework r1: the same checks re-run on the reworked record and evidence (the lines above are the r0 run, unchanged) ----
+== r1-1 scope: paths outside the three scopes and the agent memory of this track (empty = none)
+(end)
+tracked files changed against the spec tip 74a6113, not counting agent memory: 0
+rehearsal-checklist.md: byte-equal to the spec tip
+paths of other tracks changed (level-1): 0
+paths of other tracks changed (level-2): 0
+paths of other tracks changed (level-3): 0
+paths of other tracks changed (level-4-openspec): 0
+paths of other tracks changed (level-4-agentos): 0
+== r1-2 branch names (three kinds of Level 4 done or solution name) over the track's files: 0 matches
+positive control on a copy of the record with one planted line: 1 match
+== r1-3 leak search over the record, the evidence folder and the staged files: 0 matches; positive control on the raw run files in the scratchpad: 17 raw files match
+== r1-4 ASCII over the record and the evidence folder: 0 lines; em dash search over the record: 0
+positive control (a file with one em dash): 1 line
+== r1-5 evidence file kinds other than .txt or .md: 0; files: 21
+== r1-6 invocations of claude (the C0-13a pattern) in the record and evidence:
+(end)
+== r1-7 staging unchanged: manifest and the 29 staged files hash-equal to the r0 hash file
+staged hashes now: 30 ; in the r0 list: 30 ; equal: yes
+== r1-8 staging self-test after the rework
+1..58
+PASSED all 58 cases

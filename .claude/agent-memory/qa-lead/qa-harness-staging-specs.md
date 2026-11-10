@@ -1,6 +1,6 @@
 ---
 name: qa-harness-staging-specs
-description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, lifecycle premises (LSP starts on first edit), exercise reference tests, staged doc rows, locale-bound parity twins and gate-regex input forms (chained commands)
+description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions; ignore rules, eol attributes, re-run budget, isolation evidence, no-run consistency checks, rehearsal-row reset and judging, lifecycle premises (LSP starts on first edit), exercise reference tests, staged doc rows, locale-bound parity twins, gate-regex input forms (chained commands) and row literals measured with a variant command
 metadata:
   type: feedback
 ---
@@ -28,12 +28,10 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    plus sha256 of the user settings and plugin registry files before and after. A probe once wrote user settings
    through `claude plugin marketplace add`; ban `claude plugin`, `claude mcp add`, `--bare` in every script.
 
-5. **Honest N-of-M.** A model-behaviour scenario (skill selection, Level 0 task success) is reported with all runs
-   started; a run is replaceable only for a quoted infrastructure error. Judge "verify green" outside Claude.
+5. **Honest N-of-M.** Report all runs started; replace one only for a quoted infra error; judge verify outside Claude.
 
-6. **Judge a scenario claim by stream order.** "LSP reported the error" fails if a Bash `./mvnw` call precedes the
-   diagnostic; "permission denied" needs the `permission_denied` event, because `result.permission_denials` also
-   lists hook blocks; a `--settings` stand-in file must hold only what it stands in for.
+6. **Judge a scenario claim by stream order.** "LSP reported the error" fails if `./mvnw` precedes the diagnostic;
+   "permission denied" needs the `permission_denied` event (`result.permission_denials` also lists hook blocks).
 
 7. **Time-dependent paths in staged docs.** Exemplary paths and patch bases are checked against the simulated base
    at a recorded sha, and listed for re-check at the real cut (later specs may add or change them). Verbatim staged
@@ -83,10 +81,8 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    Scope labels are no claims: a heading over imperative bullets that each carry their own trigger, or a column whose
    own cells mix layer and library terms ("`domaininteraction` only; the only package that may use X"), is read by the
    file's convention. A rule reworded to match the code can contradict the file's declared source of truth: route a
-   product finding against the source, never reword back. Demand a hash file of every changed file per round, or the
-   prior round's bytes are gone (spec 10 T7 r2: only an r0 staging copy let me close the drift check).
-   Mirror sites of an exercise reach past its module scope: grep the sibling endpoint (`commands/ship`) repo-wide at
-   strategy time; README endpoint lists and `http/*.http` need a row, a residual or a skill note (spec 10 T9).
+   product finding against the source, never reword back. Demand a per-round hash file of changed files (spec 10 T7 r2).
+   Mirror sites reach past the module: grep the sibling endpoint repo-wide (README lists, `http/*.http`) (spec 10 T9).
 
 12. **Lifecycle premises in rehearsal rows.** Rows state "added here" facts about WHEN Claude Code starts something
    (the first references request is the LSP cold start) and nobody checks them: implementer and verifier check paths,
@@ -114,5 +110,11 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    through. At strategy time list the chained form as a must-block case and a word-internal `gitcommit` as must-pass,
    and probe each quantified part widened AND deleted. Found in a bounded round with the task open: REJECT, closed
    test-only RA (protected property; not the rule 23 narrowing loop of [[review-calibration]]) (spec 10 T8 r3).
-   Write an "insert exactly these lines after line N" bound as `diff --minimal` plus a split check (head N, the block,
-   the tail): when the block's last line equals line N, plain `diff` may report a shifted hunk (spec 10 T8 r4).
+   Bound "insert these lines after line N" as `diff --minimal` plus a head/block/tail split check (spec 10 T8 r4).
+
+15. **Row literals measured with another command.** Dry runs count with `git status --porcelain -uall`, rows print plain
+   `git status --short`, which folds a new untracked folder into one line (29 files -> 10 lines). In every row review, run the
+   printed command verbatim and compare its output with the literal; reject premises measured by a variant (spec 10 T12).
+   Rework bounds on evidence: line-cited files stay insertion only; an uncited log may be regenerated if declared and every
+   check re-run (grep `<file>:[0-9]` first). A cited file regenerated without a copy: revert the declared difference in
+   memory and hash; equal = byte proof (T11, T12 r1). A census check with a hard-coded expected list is circular (T13 r1).

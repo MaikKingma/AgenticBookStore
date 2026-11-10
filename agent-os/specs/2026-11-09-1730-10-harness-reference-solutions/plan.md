@@ -43,8 +43,8 @@ and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 | T8 | Level 3 hooks (sh, git hook), harness, Git Bash note (ps1 dropped, A6) | root | [T7] | 8 | critical | opus | opus | #155 | sdd/10-harness-reference-solutions/T8 | ENDORSE (r4) |
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | sonnet (A8) | opus | #157 | sdd/10-harness-reference-solutions/T9 | ENDORSE (r0) |
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | #161 | sdd/10-harness-reference-solutions/T10 | ENDORSE (r1) |
-| T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | | | |
-| T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | | | |
+| T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | #163 | sdd/10-harness-reference-solutions/T11 | ENDORSE (r1) |
+| T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | #164 | sdd/10-harness-reference-solutions/T12 | ENDORSE (r1) |
 | T13 | Level 4 Agent OS track | root | [T10] | 13 | elevated | sonnet | sonnet | | | |
 
 ### T1 Staging infrastructure and branch-cut tooling
@@ -321,6 +321,46 @@ for all three tracks is a manual check for Maik.
   checklist "added here" list names variants C, D and E of R3-1; "Z4 lists the four cases of the commit hook";
   R3-5 redo says "redo R3-1 setup steps 2 and 3"; one appended correction line in
   `S/records/evidence/level-3/t10/skill-selection-static.txt` (its line 1 says R3-5, the row is R3-4).
+- FF-T12-a (from the T12 r0 meta-review; T11 to T13 and the closing round): every literal a rehearsal row tells Maik
+  to compare (line counts, exact output) comes from running exactly the command the row prints, with no extra flag;
+  the verifier runs the row's command verbatim (`git status --short` folds a new untracked folder into one line).
+- FF-T12-b (refines FF-T10-c): each user-level path list states what it was measured under (Node and `~/.npm/_npx`
+  for `npx -y`, Python for `uv`, any executable the tool probes for); the verifier runs one isolated case without that
+  runtime or cites the pack line that makes it a prerequisite.
+- FF-T12-c (all verifiers): a rationale that cites a generated or docs file is read at the cited lines before it is
+  accepted.
+- FF-T11-a (from the T11 r1 meta-review; every later rework): evidence cited by line stays insertion-only (modulo
+  trailing whitespace) with a pre-edit copy kept; a generated check log may be regenerated only when nothing cites it
+  by line, the rework note declares it and the verifier re-runs every check it reports; the verifier maps every file
+  changed since the previous round's hash file to a Required Action or a declared item.
+- FF-T11-b (all agents): an artifact's `updated` field is the output of `date -u` at the moment of writing.
+- FF-T11-c (closing round, A5/A11): the Level 4 checklist section copies each track's rows from the merged records
+  without retyping any literal (a `grep -F` of every backticked literal finds it in the record), T12 rows from its r1
+  bytes; Levels 1 to 3 are a byte prefix (`cmp -n`) except the FU-T10-1 lines; the Level 4 section is one insertion;
+  pointers resolve to row headings; the three "Rehearsed in time" rows start from `git clone --branch
+  start/level-4-<track>` in a new folder with a recorded start and use the RR-S3 timer pattern (start at Enter on the
+  first framework command, stop when `/ship` prints its hash and `./mvnw clean verify` outside Claude ends BUILD
+  SUCCESS; a run still going at 35:00 is "started but not ready").
+- Reading notes for Maik before the Level 4 rehearsal (from the T11 and T12 meta-reviews): keep
+  `OPENSPEC_TELEMETRY=0` exported in the shell he starts `claude` from for R4A-2 and R4A-3, not only for the install;
+  in RR-S4 count with `git status --short --untracked-files=all` (29), ten lines from the plain command is not a
+  failure; in RR-S2 ask the step 2 question before `/skills` runs; RR-S4 needs `claude` on PATH and, without a Python
+  3.11+ on PATH, uv downloads a managed Python.
+- FF-T12-d (from the T12 r1 meta-review; T13 and the closing round): when a cited evidence file had to be regenerated
+  without a pre-edit copy, the verifier reverts the declared difference in memory and shows the result hashes to the
+  previous round's value.
+- FF-T12-e (closing round): the last track to merge (T13) applies FU-T10-1 (A11) and FU-T12-1 (record
+  `S/records/level-4-speckit.md` lines 336-337: the rerun was pinned to the factory sha of line 4, which is the whole
+  byte difference); the Level 4 checklist section copies RR-S1 to RR-S4 from T12's r1 bytes (RR-S2 listing question
+  first, RR-S4 with `--untracked-files=all`).
+- Product findings from T12 for Maik: PF-T12-1 to PF-T12-7 in `S/records/level-4-speckit.md` (generated
+  `tasks-template.md` calls tests OPTIONAL against principle II and CLAUDE.md; Spec Kit scripts prompt under the
+  Level 3 allow list; the guide gives an unpinned `uv tool install specify-cli` and `--script ps`; pack step 6 Level 4
+  solution branch, dropped on factory by 5b80da3).
+- Product findings from T11 for Maik: PF-T11-1 to PF-T11-7 in `S/records/level-4-openspec.md` (the branch installs
+  no `openspec` program and the guide setup page names none; pack spec 10 line 502 still offers a Level 4 solution
+  branch; guide Track A runs `/ship` before `/opsx:archive`; CLI `archive` writes a placeholder Purpose after which
+  `validate --all --strict` exits 1; bare `openspec validate --strict` exits 1 without a terminal).
 - Product findings from T10 for Maik: PF-T10-1 to PF-T10-9 in `S/records/level-3.md` (skill description shares no
   content word with the scenario sentence; PowerShell text left after D16 in spec 10, spec 11 and the workshop plan;
   "any other non-zero code does not block" stale under `onFailure: "block"`; current permission docs say Read deny

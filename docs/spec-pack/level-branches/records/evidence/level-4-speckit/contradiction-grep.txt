@@ -1,0 +1,101 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Generated skills, scripts, templates and workflow of sbx-2 at HEAD (the constitution is written by hand and is listed separately). Non-ASCII bytes of generated lines are printed as '?' (evidence files are ASCII).
+== $ git grep -n -i -E 'lombok|mapstruct|double|float|--no-verify|git push|ddl-auto|powershell|pwsh|\.ps1' HEAD -- <9 skills> .specify   (hits; the constitution file is shown last)
+HEAD:.claude/skills/speckit-analyze/SKILL.md:79:For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+HEAD:.claude/skills/speckit-checklist/SKILL.md:92:   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Gro
+HEAD:.claude/skills/speckit-clarify/SKILL.md:71:   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot
+HEAD:.claude/skills/speckit-converge/SKILL.md:108:For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+HEAD:.claude/skills/speckit-implement/SKILL.md:60:1. Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` from repo root and parse FEATURE
+HEAD:.claude/skills/speckit-plan/SKILL.md:60:1. **Setup**: Run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, FEATURE_
+HEAD:.claude/skills/speckit-tasks/SKILL.md:60:1. **Setup**: Run `.specify/scripts/bash/setup-tasks.sh --json` from repo root and parse FEATURE_DIR, TASKS_TEMPLATE_CONTENT, TAS
+HEAD:.specify/scripts/bash/common.sh:378:# Handles backslash, double-quote, and JSON-required control character escapes (RFC 8259).
+HEAD:.specify/scripts/bash/common.sh:927:                # semantics of .Replace()/.replace() in the PowerShell and Python
+HEAD:.specify/scripts/bash/create-new-feature.sh:149:# Three details keep this consistent with the Python and PowerShell twins:
+(hits in .specify/memory/constitution.md, the directly written file:)
+HEAD:.specify/memory/constitution.md:24:- Money is exact: it is always `Money` (`BigDecimal`, scale 2, HALF_EVEN), never floating point.
+HEAD:.specify/memory/constitution.md:25:- Never use `double` or `float` for money.
+HEAD:.specify/memory/constitution.md:38:- No Lombok and no MapStruct: records and small hand-written mappers.
+== positive control: the same grep for a word that must hit (CLAUDE.md of the built tree names Lombok)
+HEAD:CLAUDE.md:20:- `domain` is plain Java: no Spring, JPA, Jackson or Lombok imports.
+HEAD:CLAUDE.md:24:- No Lombok, no MapStruct: records and small hand-written mappers.
+== other greps over the generated files
+-- PowerShell files in the whole tree of the commit: 0
+-- git write commands (commit, checkout, switch, branch, push, add, reset, stash, clean, init, rm) in .specify/scripts: 0
+-- lines naming the word git in .specify/scripts (control, must be more than 0):
+HEAD:.specify/scripts/bash/common.sh:37:# (e.g. the git extension's create-new-feature-branch) rather than duplicating it.
+HEAD:.specify/scripts/bash/common.sh:78:# the git extension) or implicitly via .specify/feature.json.
+-- extension hook file .specify/extensions.yml in the tree: 0
+-- skills that read it (control): 9 of 9
+-- lines about committing in generated files:
+HEAD:.specify/templates/tasks-template.md:250:- Commit after each task or logical group
+-- tests wording in the generated templates (the first two lines are the tension with CLAUDE.md and principle II):
+HEAD:.specify/templates/tasks-template.md:12:**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature sp
+HEAD:.specify/templates/tasks-template.md:83:### Tests for User Story 1 (OPTIONAL - only if tests requested) ??????
+HEAD:.specify/templates/tasks-template.md:182:- Tests (if included) MUST be written and FAIL before implementation
+HEAD:.claude/skills/speckit-implement/SKILL.md:158:   - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
+-- the specify command line tool named as a command in a skill or script (count; the skills run only .specify/scripts/bash/*.sh): 0
+-- control for that search, the skills do run the bundled scripts: 9 lines
+-- default spec folder in the specify skill (lines 84 to 93):
+   Specs live under the default `specs/` directory unless the user explicitly provides `SPECIFY_FEATURE_DIRECTORY`.
+   2. Otherwise, auto-generate it under `specs/`:
+      - Set `SPECIFY_FEATURE_DIRECTORY` to `specs/<directory-name>`
+   - Persist the resolved path to `.specify/feature.json`:
+-- top-level folders of the built tree (does a root specs/ folder collide with anything?):
+.claude
+.editorconfig
+.gitattributes
+.githooks
+.github
+.gitignore
+.mcp.json
+.mvn
+.specify
+CLAUDE.local.md.example
+CLAUDE.md
+README.md
+bookstore
+distributor
+docs
+frontend
+http
+mvnw
+mvnw.cmd
+pom.xml
+scripts
+== docs/architecture.md on level-0-start against the constitution (no contradiction)
+level-0-start:docs/architecture.md:5:rules are enforced by `ArchitectureTest` (in `bookstore/src/test/java/nl/openvalue/bookstore/`), so a violation breaks
+level-0-start:docs/architecture.md:102:  (`BigDecimal`, scale 2, rounding `HALF_EVEN`, currency EUR), `Quantity`. Never use `double` or `float` for money.
+level-0-start:docs/architecture.md:145:  changes only through new Flyway migrations (`V{n}__{description}.sql` in `db/migration`); an existing migration is
+level-0-start:docs/architecture.md:146:  never edited. The demo data is a repeatable migration in `db/seed`, which only the default profile loads (see the
+level-0-start:docs/architecture.md:179:- There is no in-memory database. Every test that needs a database runs on PostgreSQL through Testcontainers, so
+level-0-start:docs/architecture.md:224:- Lombok: records and plain Java are enough.
+level-0-start:docs/architecture.md:225:- MapStruct: mappers are written by hand, small and explicit.
+== staged level-3 settings allow list (for the permission prompts of the Spec Kit scripts): the allow entries
+12:      "Bash(./mvnw *)",
+13:      "Bash(git status *)",
+14:      "Bash(git diff *)",
+15:      "Bash(git add *)",
+16:      "Bash(git commit *)"
+21:      "Bash(git push)",
+22:      "Bash(git push *)",
+23:      "Bash(* --no-verify*)",
+24:      "Bash(git commit -n *)"
+34:            "if": "Bash(git commit *)",
+== skills call the scripts as:
+.claude/skills/speckit-analyze/SKILL.md:72:.specify/scripts/bash/check-prerequisites.sh --json --require-spec --require-tasks -
+.claude/skills/speckit-checklist/SKILL.md:90:.specify/scripts/bash/check-prerequisites.sh --json --template checklist-template
+.claude/skills/speckit-clarify/SKILL.md:66:.specify/scripts/bash/check-prerequisites.sh --json --paths-only
+.claude/skills/speckit-constitution/SKILL.md:85:.specify/scripts/bash/resolve-template.sh constitution-template --json
+.claude/skills/speckit-converge/SKILL.md:99:.specify/scripts/bash/check-prerequisites.sh --json --require-spec --require-tasks -
+.claude/skills/speckit-implement/SKILL.md:60:.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+.claude/skills/speckit-plan/SKILL.md:60:.specify/scripts/bash/setup-plan.sh --json
+.claude/skills/speckit-specify/SKILL.md:97:.specify/scripts/bash/resolve-template.sh spec-template --json
+.claude/skills/speckit-tasks/SKILL.md:60:.specify/scripts/bash/setup-tasks.sh --json
+== where the generated skills read the constitution (plan, tasks, implement load it; analyze treats a violated MUST as CRITICAL)
+.claude/skills/speckit-implement/SKILL.md:102:   - **IF EXISTS**: Read .specify/memory/constitution.md for governance constraints
+.claude/skills/speckit-plan/SKILL.md:62:2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
+.claude/skills/speckit-plan/SKILL.md:66:   - Fill Constitution Check section from constitution
+.claude/skills/speckit-plan/SKILL.md:70:   - Re-evaluate Constitution Check post-design
+.claude/skills/speckit-tasks/SKILL.md:65:   - **IF EXISTS**: Load `.specify/memory/constitution.md` for project principles and governance constraints
+.claude/skills/speckit-analyze/SKILL.md:66:**Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is **non-negotiable** within this analysis 
+.claude/skills/speckit-analyze/SKILL.md:163:- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline func

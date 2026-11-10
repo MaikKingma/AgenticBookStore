@@ -1,0 +1,99 @@
+# Hygiene checks of spec 10 task T11 (criteria 8, 9 and 10). Paths are masked; this file is written after the record and the other evidence files.
+
+# 1. Leak grep over the record and the evidence folder (expect no output):
+(the leak grep of criterion 9: six alternatives, home path, owner login, scratch path prefix, API key prefix, access token word, refresh token word; the pattern is not written out here so that this file does not match it)
+(end, 0 lines)
+Positive control 1: the same grep over the unmasked raw build log of sandbox 1 matches 5 lines (the log holds the sandbox paths).
+Positive control 2: the same grep over the raw log of the init run matches 2333 lines (isolated file list).
+Positive control 3: a scratch copy of the record with one home path appended matches 1 line; the record itself matches 0.
+
+# 2. Evidence file types (.txt and .md only):
+  17 txt
+files: 17
+
+# 3. Text hygiene: non-ASCII characters and em dashes in the record and the evidence folder (expect none):
+none
+record alone: 0
+evidence alone:
+none
+Positive control: the generated files are listed by the same script:
+dot-claude/commands/opsx/apply.md: 8 lines non-ASCII, 0 lines with an em dash
+dot-claude/commands/opsx/archive.md: 12 lines non-ASCII, 11 lines with an em dash
+dot-claude/commands/opsx/explore.md: 3 lines non-ASCII, 3 lines with an em dash
+Authored staged files (config.yaml, ordering/spec.md) listed? 0
+
+# 4. FF-T10-b: no Level 4 solution or done branch name in the track's files (record, evidence, staged step folder). Expect no output:
+(the FF-T10-b pattern of the plan, three alternatives; not written out here so that this file does not match it)
+(end, 0 lines)
+Positive control: the same grep over pack spec 10 (working tree) matches line(s): 502 
+
+# 5. C0-13a: no Claude invocation in the record, the evidence, the step folder or the scripts of this task. Expect no output:
+(end)
+Positive control: the pattern on a copy with 'claude -p' prints 1 line
+No *.jsonl file in the evidence folder: 0 found
+Lines of the record that contain the words 'passed', 'ran' or 'N of M' (read each: none may claim a Claude session result):
+11:draft rows in section 8), HR1 (every tool ran with HOME, XDG and npm cache folders in the session scratch folder).
+20:| 4 | Generated files staged as they are; rebuild equals sandbox commit; verify; self-test | 16 `add` rows; trees equal `1c279415`; BUILD SUCCESS; 58 of 58 | `sandbox-
+62:  distributor `Tests run: 190, Failures: 0, Errors: 0, Skipped: 0`, frontend `Tests 689 passed | 2 expected fail (691)`,
+64:- `bash S/tests/test-staging.sh`: `PASSED all 58 cases` with the step folder present (`verify-and-selftest.txt:34-39`).
+143:`openspec validate --all --strict --no-interactive`: `spec/ordering` passed, exit 0 (`ordering-spec.txt:101-104`);
+295:| Expected | `openspec --version` prints `1.16.0`. In a fresh clone `openspec validate --all --strict --no-interactive` prints one line that starts with a check mark 
+305:| Setup | Clone recipe above (`<start>` written down; `git status --short` empty). `ls .claude/commands/opsx` lists `apply.md archive.md explore.md propose.md sync.md
+320:| Setup | R4A-1 and R4A-2 passed in this clone or an identical one. A new clone folder for this run (clean auto memory), `<start>` written down, `claude`, `/model son
+363:All commands ran from the track worktree root with `TMPDIR` and `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir` under the scratch folder:
+
+# 6. Scope: git status --porcelain in the track worktree (only the paths of this task and its memory):
+ M .claude/agent-memory/implementation-agent/MEMORY.md
+ M .claude/agent-memory/implementation-agent/consistency-check-techniques.md
+ M .claude/agent-memory/qa-test-verifier/consistency-check-verification.md
+?? docs/spec-pack/level-branches/level-4-openspec/
+?? docs/spec-pack/level-branches/records/evidence/level-4-openspec/
+?? docs/spec-pack/level-branches/records/level-4-openspec.md
+tracked changes against the spec tip:
+.claude/agent-memory/implementation-agent/MEMORY.md
+.claude/agent-memory/implementation-agent/consistency-check-techniques.md
+.claude/agent-memory/qa-test-verifier/consistency-check-verification.md
+paths outside the file scope (expect none; a memory file of the qa-test-verifier agent, written by QA and not by this task, is listed if present):
+.claude/agent-memory/qa-test-verifier/consistency-check-verification.md
+rehearsal-checklist.md equals the spec tip: yes
+
+# 7. Referee: ./mvnw clean verify in the track worktree, JAVA_TOOL_OPTIONS=-Djava.io.tmpdir under the scratch folder, budget 900 s:
+[INFO]  Test Files  23 passed (23)
+[INFO]       Tests  682 passed | 2 expected fail (684)
+[INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.055 s]
+[INFO] frontend ........................................... SUCCESS [  7.450 s]
+[INFO] bookstore .......................................... SUCCESS [ 16.054 s]
+[INFO] distributor ........................................ SUCCESS [  4.776 s]
+[INFO] BUILD SUCCESS
+mvnw exit: 0
+tail:
+
+agenticbookstore-parent ............................ SUCCESS [  0.055 s]
+frontend ........................................... SUCCESS [  7.450 s]
+bookstore .......................................... SUCCESS [ 16.054 s]
+distributor ........................................ SUCCESS [  4.776 s]
+------------------------------------------------------------------------
+BUILD SUCCESS
+------------------------------------------------------------------------
+Total time:  28.541 s
+Finished at: 2026-11-10T17:31:20+01:00
+------------------------------------------------------------------------
+mvnw exit: 0
+(the referee ran before rework round 1; round 1 changed only text files of this track, no Java, frontend or build file)
+
+# 8. Rework round 1: evidence edits are insertion only (trailing whitespace ignored). Old copy taken before the round, new file now:
+user-level-paths.txt:
+  old lines: 115, matched in order: 115, new lines: 148, added: 33
+  old is a subsequence of new: True; old is an exact prefix of new: True
+standalone-installer-read.txt:
+  old lines: 26, matched in order: 26, new lines: 33, added: 7
+  old is a subsequence of new: True; old is an exact prefix of new: True
+pack-and-guide-quotes.txt:
+  old lines: 196, matched in order: 196, new lines: 203, added: 7
+  old is a subsequence of new: True; old is an exact prefix of new: True
+Negative control: a copy of the old user-level-paths file with one word changed against the new file:
+  old lines: 116, matched in order: 115, new lines: 148, added: 33
+  old is a subsequence of new: False; old is an exact prefix of new: False
+(the control must say False)

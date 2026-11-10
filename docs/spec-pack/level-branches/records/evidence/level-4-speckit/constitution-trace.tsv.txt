@@ -1,0 +1,42 @@
+# constitution fragment	source	line	source fragment
+# P = pack:specs/10-harness-reference-solutions.md ; A = pack:product/architecture-standard.md ; T = pack:product/tech-stack.md ; K = sbx:.claude/skills/speckit-constitution/SKILL.md
+Code follows docs/architecture.md.	pack:specs/10-harness-reference-solutions.md	460	I. Onion layers: code follows docs/architecture.md;
+`ArchitectureTest` MUST stay green and its rules MUST NOT be	pack:specs/10-harness-reference-solutions.md	460	ArchitectureTest must stay green and its rules are never
+weakened.	pack:specs/10-harness-reference-solutions.md	461	weakened.
+The layer rules are enforced by ArchUnit, never by convention alone.	pack:product/architecture-standard.md	43	enforced by ArchUnit, never by convention alone
+Tests MUST come first, per layer.	pack:specs/10-harness-reference-solutions.md	461	II. Tests first, per layer
+Every new behaviour has a test in the layer where the behaviour lives.	pack:specs/10-harness-reference-solutions.md	41	Every new behaviour has a test in the layer where the behaviour lives.
+There MUST be one test per acceptance scenario	pack:specs/10-harness-reference-solutions.md	461	one test per acceptance scenario
+every requirement scenario in a spec maps to at least one test.	pack:product/architecture-standard.md	165	Every requirement scenario in a spec maps to at least one test.
+Money is exact	pack:specs/10-harness-reference-solutions.md	461	III. Money is exact (Money, BigDecimal),
+never floating point.	pack:specs/10-harness-reference-solutions.md	462	never floating point.
+`Money` (`BigDecimal`, scale 2, HALF_EVEN)	pack:specs/10-harness-reference-solutions.md	47	Money is always `Money` (BigDecimal, scale 2, HALF_EVEN).
+Never use `double` or `float` for money.	pack:product/architecture-standard.md	91	Never use `double` or `float` for money.
+Schema changes MUST go only through new Flyway migrations	pack:specs/10-harness-reference-solutions.md	462	IV. Schema changes only through new Flyway migrations.
+in `bookstore/src/main/resources/db/migration`.	pack:specs/10-harness-reference-solutions.md	48	in `bookstore/src/main/resources/db/migration`.
+An existing migration is never edited.	pack:specs/10-harness-reference-solutions.md	49	Never edit an existing migration.
+Changes MUST be small and scoped	pack:specs/10-harness-reference-solutions.md	462	V. Small, scoped changes that
+stay inside the scope of the request.	pack:specs/10-harness-reference-solutions.md	54	Stay inside the scope of the request.
+`./mvnw verify` MUST pass before every commit	pack:specs/10-harness-reference-solutions.md	463	pass ./mvnw verify before every commit.
+always use the Maven wrapper, never `mvn`.	pack:specs/10-harness-reference-solutions.md	34	Always use the wrapper, never `mvn`.
+Java 25	pack:product/tech-stack.md	10	| Java | **25**
+Spring Boot 4.1.2	pack:product/tech-stack.md	12	| Spring Boot | **4.1.2**
+the Maven wrapper (`./mvnw`)	pack:product/tech-stack.md	11	**Maven** via wrapper (`./mvnw`
+in the modules `frontend`, `bookstore` and `distributor`.	pack:product/tech-stack.md	11	multi-module: `frontend`, `bookstore`, `distributor`
+PostgreSQL is the only database	pack:product/tech-stack.md	14	| Database | **PostgreSQL 18**
+PostgreSQL is the only database	pack:product/tech-stack.md	14	The only database, for local runs and tests.
+no H2, no embedded or in-memory database	pack:product/tech-stack.md	14	No H2, no embedded database anywhere.
+no H2, no embedded or in-memory database	pack:product/architecture-standard.md	163	There is no in-memory database anywhere.
+tests included.	pack:product/tech-stack.md	14	for local runs and tests.
+No Lombok and no MapStruct: records and small hand-written mappers.	pack:specs/10-harness-reference-solutions.md	50	No Lombok, no MapStruct: records and small hand-written mappers.
+No Lombok and no MapStruct: records and small hand-written mappers.	pack:product/architecture-standard.md	170	Lombok (records and plain Java are enough on Java 25).
+The definition of done is `./mvnw verify` green, including `ArchitectureTest`; show the last lines of the output.	pack:specs/10-harness-reference-solutions.md	39	`./mvnw verify` is green, including `ArchitectureTest`. Show the last lines of the output.
+Never say tests pass without having run them in this session.	pack:specs/10-harness-reference-solutions.md	40	Never say tests pass without having run them in this session.
+Commits are small and use conventional commit messages (feat:, fix:, test:, refactor:, docs:).	pack:specs/10-harness-reference-solutions.md	55	Small commits, conventional commit messages (feat:, fix:, test:, refactor:, docs:).
+Compliance is checked by `ArchitectureTest` (principle I)	pack:specs/10-harness-reference-solutions.md	460	ArchitectureTest must stay green
+and `./mvnw verify` (principle V).	pack:specs/10-harness-reference-solutions.md	463	pass ./mvnw verify before every commit.
+The constitution is amended with `/speckit-constitution`;	pack:specs/10-harness-reference-solutions.md	459	Run `/speckit-constitution` with this input
+The constitution is amended with `/speckit-constitution`;	sbx:.claude/skills/speckit-constitution/SKILL.md	3	Create or update the project constitution
+MAJOR for backward incompatible removals or redefinitions of principles	sbx:.claude/skills/speckit-constitution/SKILL.md	103	MAJOR: Backward incompatible governance/principle removals or redefinitions.
+MINOR for a new or materially expanded principle or section	sbx:.claude/skills/speckit-constitution/SKILL.md	104	MINOR: New principle/section added or materially expanded guidance.
+PATCH for clarifications	sbx:.claude/skills/speckit-constitution/SKILL.md	105	PATCH: Clarifications, wording
