@@ -1,6 +1,6 @@
 ---
 name: qa-ci-config-specs
-description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit, actions/cache save lines and cache scope across PRs); read before the strategy or final brief of any workflow or CI spec
+description: QA strategy and evidence traps for CI-config specs whose evidence is real GitHub Actions runs (unreadable job summaries, signed-in channel at Gate 1, baselines recomputed by script, same-suite controls, timing noise, log-grep anchors, warning greps, hang and timeout paths, red/green probe pairs, Linux-only pipe truncation by process.exit, actions/cache save lines and cache scope across PRs, owner-armed deploy gates); read before the strategy or final brief of any workflow or CI spec
 metadata:
   type: feedback
 ---
@@ -38,3 +38,8 @@ Job summaries are not readable from the CLI. `gh run view --log` lacks them, and
    saved nothing (spec 12 T3 r1). Cache-hit evidence across tasks: a pull_request run's caches are scoped to its merge ref, so a
    later PR only restores what a push run on its base branch (or the default branch) saved: ask for that push run's save lines
    plus the later run's restore lines, and whether the hit is on the primary key or a restore-key.
+   Deploy gates the owner arms (a repo variable, Pages, an environment) can flip between the final brief and the sweep.
+   Write side-effect items as "quote the state at the head and compare it with the approval record", never as fixed
+   404 / no-variable expectations. Armed is no PR defect, but Gate 2 must say the merge itself publishes (a release
+   created with `--target $GITHUB_SHA` tags the merge commit once) and list post-merge checks: push run jobs at attempt
+   1, site 200, release asset, archive root (spec 11 r3, D17).

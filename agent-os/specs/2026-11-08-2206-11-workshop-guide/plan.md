@@ -1,11 +1,11 @@
 ---
 spec: 11-workshop-guide
 source: docs/spec-pack/specs/11-workshop-guide-site.md (factory 52c4f6b, includes D7)
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 created: 2026-11-08T21:07:46Z
 gate1: 2026-11-08T21:07:46Z
-gate2: 2026-11-09T22:49:14Z
+gate2: 2026-11-10T14:09:31Z (first acceptance 2026-11-09T22:49:14Z; re-run after T13)
 qa-lead: on
 base: factory
 branch: sdd/11-workshop-guide/spec
@@ -596,6 +596,37 @@ b8dd5e4f493fcf5c2988107b3ead3cbea4ecb8aa4448e2117d9c18cffca0337a):
   a FAIL, merge and re-run scoped by tree ids; SP-6 "no broken links" covers external links, checked at the deploy gate.
 - The spec PR #68 is NOT merged by the orchestrator: it waits for `spec-10-done` and Maik's public deploy approval
   (the coordinator's rule for this run). The roadmap and progress files are not edited by this cycle.
+
+### Gate 2 re-run (2026-11-10, self-accepted by the orchestrator after T13)
+
+- Reopened for T13 (A15: decision D16, follow-up F2; JDK 21 floor; Git Bash wording) after merging factory bd838b6
+  (D15, D16, spec 09, fix-08, fix-09) as 3fb3310; T13 merged as 7d0ca70 (#156, PASS r1, ENDORSE r1); factory 936028d
+  (D17) merged as dcfa28a.
+- qa-final r3 at dcfa28a (base factory 936028d, unmoved; scoped to the delta since fb958b3: T13 / A15 and the factory
+  merges with D15 to D17): PASS. Fresh-tree gates (coverage 304/304, 15 manual rows, 0 pending; 514 tests; both
+  check:built lines, 4 Windows lines all pack commands), referee 47.8 s (bookstore 1379, distributor 190, Vitest 689
+  passed and 2 expected fail), freeze 92 OK, 11 pages bound by hash (`t13-hashes.txt` 4 OK, patch-id 7c0bd830), T13
+  layer (fidelity 4/4, D16 grep 0 residual, must-fail copy), three A15 decision pins updated per FF-46, rendered matrix
+  66 cells with 0 failures, 49 internal links 0 broken, 17 external URLs 200 (the 4 level-branch links are allowed by
+  D17), CI attempt 1 green on T, PR readiness clean. Deploy gate armed by the owner (GUIDE_DEPLOY=true, Pages and
+  github-pages at 13:15Z); nothing published yet.
+- QA lead final-review r3: ENDORSE; Gate 2 QA confidence high for the PR scope (guide source, frozen checker,
+  `guide.yml`, one `.gitignore` line). Spec matrix S1 to S12 met (S7 push path first runs at the merge; F2 closed by
+  D16 / T13); S13 definition of done is an owner residual. The armed deploy gate is an owner approval (D17,
+  progress.md:227), not a PR defect: merging #68 into factory runs deploy and release at once, with the
+  `workshop-2026` tag on the merge commit.
+- Residuals with owners (full table in the QA ledger `## Gate 2 QA assessment`): R-G2 level-branch links 404 until
+  spec-10-done (D17), checked after it; F16 with the D16 extension (no repo pin for the absence of PowerShell hook
+  text); F18 and the stale D16 pack text (S11:56, S10:219, S10:322-326, S10:504, WP:344); F1/F12 now at the merge
+  (push deploy, live site, release zip); R-G3, FF-12, O1, O2, F14 with O-3, F15, F-T5b-1, R-1 to R-5, F17 unchanged.
+  G-ARM (new): the merge publishes at once (deploy, release, `workshop-2026` tag on the merge commit); to hold it the
+  owner unsets GUIDE_DEPLOY first. Right after the merge: the Guide push run has build, deploy and release green, the
+  site answers 200, the release zip has `index.html` at its root.
+- Standards proposals: SP-1 to SP-5 as before; SP-6 amended for D17 (one request per external URL; links to refs
+  created later are checked right after they exist); SP-7 a final sweep quotes the deploy-gate state; SP-8 (agent-comms)
+  `updated` is written from `date -u`.
+- Under D17 #68 no longer waits for `spec-10-done`: the orchestrator does not merge it; the main session merges it with
+  the owner's deploy approval in place and runs the post-merge checks; `spec-11-done` follows `spec-10-done` (R-G2).
 
 ## Amendments
 
