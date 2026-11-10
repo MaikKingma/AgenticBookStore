@@ -3,6 +3,8 @@ package nl.openvalue.bookstore;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -11,12 +13,16 @@ import nl.openvalue.bookstore.assistant.ScriptedChatModel;
 import nl.openvalue.bookstore.assistant.ScriptedChatModel.ReceivedPrompt;
 import nl.openvalue.bookstore.command.CommandResult;
 import nl.openvalue.bookstore.domaininteraction.CatalogueFlow;
+import nl.openvalue.bookstore.domaininteraction.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.anthropic.AnthropicChatModel;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -26,6 +32,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.web.servlet.client.EntityExchangeResult;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -57,6 +64,21 @@ class AssistantIntegrationTest extends IntegrationTestBase {
     private static final String FRANKENSTEIN_ISBN = "9780141439471";
     private static final String PERSUASION_ISBN = "9780141439686";
     private static final String EMMA_ISBN = "9780141439587";
+
+    /** The answer to a failed model call: the spec 12 text, no key, no internal message. */
+    private static final Map<String, Object> UNAVAILABLE = Map.of(
+            "title", "Assistant unavailable",
+            "status", 503,
+            "detail", "The assistant is unavailable right now, try again later",
+            "instance", "/assistant/chat",
+            "code", "assistant-unavailable",
+            "details", List.of());
+
+    /** What a failing live call says; none of it may reach the answer. */
+    private static final String FAILURE_MESSAGE = "upstream refused key sk-ant-dummy-not-a-key";
+
+    @Autowired
+    private ChatMemory chatMemory;
 
     @Autowired
     private ScriptedChatModel scripted;
@@ -181,6 +203,242 @@ class AssistantIntegrationTest extends IntegrationTestBase {
         Map<String, Object> withoutRestock = JSON.readValue(toolContentOf(received.get(3).messages()), JSON_MAP);
         assertThat(withoutRestock.keySet()).containsExactlyInAnyOrder("available", "pendingRestockExpected");
         assertThat(withoutRestock).containsEntry("available", 5).containsEntry("pendingRestockExpected", null);
+    }
+
+    @Test
+    void failedModelCallLeavesNoEntryForTheQuestion() {
+        UUID fresh = UUID.randomUUID();
+        UUID oneTurn = UUID.randomUUID();
+        UUID fullWindow = UUID.randomUUID();
+        UUID bystander = UUID.randomUUID();
+        scripted.thenReply("Emma is a novel by Jane Austen.")
+                .thenReply("Dracula is not in the shop.");
+        chat(oneTurn, "Tell me about Emma");
+        chat(bystander, "Do you have Dracula?");
+        chatMemory.add(fullWindow.toString(), windowOfTwentyMessages());
+        List<String> window = windowOfTwentyLines();
+        assertThat(memoryOf(fullWindow)).as("the window is full before the failure").containsExactlyElementsOf(window);
+        scripted.thenFail(new IllegalStateException(FAILURE_MESSAGE))
+                .thenFail(new UnsupportedOperationException(FAILURE_MESSAGE))
+                .thenFail(new IllegalArgumentException(FAILURE_MESSAGE));
+
+        Map<String, Object> freshAnswer = failedChat(fresh, "Is Persuasion in stock?");
+        Map<String, Object> oneTurnAnswer = failedChat(oneTurn, "Is it in stock?");
+        Map<String, Object> fullWindowAnswer = failedChat(fullWindow, "One more window question");
+
+        assertThat(freshAnswer).isEqualTo(UNAVAILABLE);
+        assertThat(oneTurnAnswer).isEqualTo(UNAVAILABLE);
+        assertThat(fullWindowAnswer).isEqualTo(UNAVAILABLE);
+        assertThat(scripted.received()).as("every failed question reached the model").hasSize(5);
+        assertThat(chatMemory.get(fresh.toString())).isEmpty();
+        assertThat(memoryOf(oneTurn)).containsExactly("USER: Tell me about Emma",
+                "ASSISTANT: Emma is a novel by Jane Austen.");
+        assertThat(memoryOf(fullWindow)).hasSize(20).containsExactlyElementsOf(window);
+        assertThat(memoryOf(fullWindow).get(0)).isEqualTo("USER: Window question 1");
+        assertThat(memoryOf(bystander)).containsExactly("USER: Do you have Dracula?",
+                "ASSISTANT: Dracula is not in the shop.");
+    }
+
+    @Test
+    void followUpAfterAFailedCallDoesNotSeeTheFailedQuestion() {
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenReply("Frankenstein is a novel by Mary Shelley.")
+                .thenFail(new IllegalStateException(FAILURE_MESSAGE))
+                .thenReply("It was first published in 1818.");
+        chat(conversationId, "Tell me about Frankenstein");
+        EntityExchangeResult<Map<String, Object>> failed = send(conversationId, "Who wrote Dracula instead?");
+        int receivedBeforeFollowUp = scripted.received().size();
+
+        Map<String, Object> reply = chat(conversationId, "When was it published?");
+
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(3);
+        assertThat(receivedBeforeFollowUp).isEqualTo(2);
+        List<String> followUp = withoutSystemMessage(received.get(2));
+        assertThat(followUp).containsExactly("USER: Tell me about Frankenstein",
+                "ASSISTANT: Frankenstein is a novel by Mary Shelley.", "USER: When was it published?");
+        assertThat(received.subList(receivedBeforeFollowUp, received.size()))
+                .allSatisfy(prompt -> assertThat(prompt.messages())
+                        .noneMatch(message -> message.getText() != null && message.getText().contains("Dracula")));
+        assertThat(reply).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "It was first published in 1818."));
+        assertThat(memoryOf(conversationId)).containsExactly("USER: Tell me about Frankenstein",
+                "ASSISTANT: Frankenstein is a novel by Mary Shelley.", "USER: When was it published?",
+                "ASSISTANT: It was first published in 1818.");
+        assertThat(unavailableProblem(failed)).isEqualTo(UNAVAILABLE);
+    }
+
+    @Test
+    void failureAfterAToolRoundLeavesTheConversationAsItWas() {
+        UUID pride = addBook(PRIDE_ISBN, "Pride and Prejudice", "Jane Austen", "fiction", "12.50", 1813);
+        receive(pride, 2);
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenReply("Welcome to the shop.")
+                .thenCallTool("searchCatalogue", "{\"query\":\"austen\"}")
+                .thenFail(new IllegalStateException(FAILURE_MESSAGE));
+        chat(conversationId, "Hello there");
+        List<String> before = memoryOf(conversationId);
+
+        Map<String, Object> answer = failedChat(conversationId, "Anything by Austen?");
+
+        assertThat(answer).isEqualTo(UNAVAILABLE);
+        verify(catalogueFlow).search("austen", null, null, null);
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).as("the tool round ran before the failure").hasSize(3);
+        assertThat(toolContentOf(received.get(2).messages())).contains("Pride and Prejudice");
+        assertThat(before).containsExactly("USER: Hello there", "ASSISTANT: Welcome to the shop.");
+        assertThat(memoryOf(conversationId)).isEqualTo(before);
+    }
+
+    @Test
+    void useCaseRejectionFromTheModelCallKeepsItsAnswerAndLeavesTheConversationAsItWas() {
+        UUID fresh = UUID.randomUUID();
+        UUID oneTurn = UUID.randomUUID();
+        scripted.thenReply("Emma is a novel by Jane Austen.")
+                .thenFail(new NotFoundException("shelf-not-found", "Shelf not found", "No shelf 7 in the shop"))
+                .thenFail(new NotFoundException("note-not-found", "Note not found", "No note for this book"));
+        chat(oneTurn, "Tell me about Emma");
+        List<String> before = memoryOf(oneTurn);
+
+        EntityExchangeResult<Map<String, Object>> freshAnswer = send(fresh, "Which shelf holds Persuasion?");
+        EntityExchangeResult<Map<String, Object>> oneTurnAnswer = send(oneTurn, "Is there a note for it?");
+
+        assertThat(freshAnswer.getStatus().value()).isEqualTo(404);
+        assertThat(freshAnswer.getResponseHeaders().getContentType()).hasToString("application/problem+json");
+        assertThat(freshAnswer.getResponseBody()).isEqualTo(Map.of(
+                "title", "Shelf not found",
+                "status", 404,
+                "detail", "No shelf 7 in the shop",
+                "instance", "/assistant/chat",
+                "code", "shelf-not-found",
+                "details", List.of()));
+        assertThat(oneTurnAnswer.getStatus().value()).isEqualTo(404);
+        assertThat(oneTurnAnswer.getResponseBody()).containsEntry("code", "note-not-found")
+                .containsEntry("title", "Note not found");
+        assertThat(scripted.received()).as("both rejected questions reached the model").hasSize(3);
+        assertThat(chatMemory.get(fresh.toString())).isEmpty();
+        assertThat(before).containsExactly("USER: Tell me about Emma", "ASSISTANT: Emma is a novel by Jane Austen.");
+        assertThat(memoryOf(oneTurn)).isEqualTo(before);
+    }
+
+    /**
+     * Guard for the follow-up rule of the system prompt (amendment A3): the memory keeps only questions and answers,
+     * so on turn 2 a model that follows the rule looks the book up again by its title alone and then asks for its
+     * availability with the id that search returned. Green before and after the prompt change: the scripted model
+     * plays the rule, the test shows the tools, flows and memory support it.
+     */
+    @Test
+    void followUpFindsTheBookAgainByTitleThenChecksAvailability() {
+        UUID sense = addBook("9780141439662","Sense and Sensibility", "Jane Austen", "fiction", "9.50", 1811);
+        receive(sense, 3);
+        UUID conversationId = UUID.randomUUID();
+        scripted.thenCallTool("searchCatalogue", "{\"query\":\"austen\"}")
+                .thenReply(prompt -> "I found " + firstTitleOf(toolContentOf(prompt.getInstructions())) + ".")
+                .thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility\"}")
+                .thenCallTool("checkAvailability", "{\"bookId\":\"" + sense + "\"}")
+                .thenReply(prompt -> {
+                    List<ToolResponseMessage> toolMessages = prompt.getInstructions().stream()
+                            .filter(ToolResponseMessage.class::isInstance)
+                            .map(ToolResponseMessage.class::cast)
+                            .toList();
+                    String availability = toolMessages.get(toolMessages.size() - 1).getResponses().get(0)
+                            .responseData();
+                    return "There are " + JSON.readValue(availability, JSON_MAP).get("available")
+                            + " copies in stock.";
+                });
+
+        Map<String, Object> first = chat(conversationId, "Anything by Austen?");
+        Map<String, Object> second = chat(conversationId, "Is it in stock, and is more on its way?");
+
+        assertThat(first).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "I found Sense and Sensibility."));
+        assertThat(second).isEqualTo(Map.of("conversationId", conversationId.toString(),
+                "reply", "There are 3 copies in stock."));
+        verify(catalogueFlow).search("austen", null, null, null);
+        verify(catalogueFlow).search("Sense and Sensibility", null, null, null);
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).as("turn 1: two model calls; turn 2: three").hasSize(5);
+        assertThat(withoutSystemMessage(received.get(2))).containsExactly("USER: Anything by Austen?",
+                "ASSISTANT: I found Sense and Sensibility.", "USER: Is it in stock, and is more on its way?");
+        assertThat(firstTitleOf(toolContentOf(received.get(3).messages())))
+                .as("the title-only search found the book").isEqualTo("Sense and Sensibility");
+    }
+
+    /**
+     * The spec 02 search contract the follow-up rule rests on, through the real tool and the real flow: the query
+     * matches a title or an author, so a title and an author together find nothing while the title alone finds the
+     * book. This is why the tool description and the system prompt ask for one fragment (amendment A3).
+     */
+    @Test
+    void combinedTitleAndAuthorQueryFindsNothingWhileTheTitleAloneFindsTheBook() {
+        UUID sense = addBook("9780141439662","Sense and Sensibility", "Jane Austen", "fiction", "9.50", 1811);
+        receive(sense, 1);
+        scripted.thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility Jane Austen\"}")
+                .thenReply(prompt -> "done")
+                .thenCallTool("searchCatalogue", "{\"query\":\"Sense and Sensibility\"}")
+                .thenReply(prompt -> "done");
+
+        chat(UUID.randomUUID(), "Is Sense and Sensibility by Jane Austen in stock?");
+        chat(UUID.randomUUID(), "Is Sense and Sensibility in stock?");
+
+        List<ReceivedPrompt> received = scripted.received();
+        assertThat(received).hasSize(4);
+        assertThat(JSON.readValue(toolContentOf(received.get(1).messages()), JSON_LIST)).isEmpty();
+        List<Map<String, Object>> hits = JSON.readValue(toolContentOf(received.get(3).messages()), JSON_LIST);
+        assertThat(hits).hasSize(1);
+        assertThat(hits.get(0)).containsEntry("id", sense.toString()).containsEntry("title", "Sense and Sensibility");
+        verify(catalogueFlow).search("Sense and Sensibility Jane Austen", null, null, null);
+        verify(catalogueFlow).search("Sense and Sensibility", null, null, null);
+    }
+
+    /** Posts a question whose model call fails and returns the problem, after its status, type and secrecy checks. */
+    private Map<String, Object> failedChat(UUID conversationId, String message) {
+        return unavailableProblem(send(conversationId, message));
+    }
+
+    /** Posts a question and returns the exchange, whatever its status. */
+    private EntityExchangeResult<Map<String, Object>> send(UUID conversationId, String message) {
+        return restTestClient.post().uri("/assistant/chat")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("conversationId", conversationId.toString(), "message", message))
+                .exchange()
+                .expectBody(JSON_OBJECT).returnResult();
+    }
+
+    /** The problem of a 503 answer, after its type and secrecy checks. */
+    private static Map<String, Object> unavailableProblem(EntityExchangeResult<Map<String, Object>> result) {
+        assertThat(result.getStatus().value()).isEqualTo(503);
+        assertThat(result.getResponseHeaders().getContentType()).hasToString("application/problem+json");
+        String body = new String(result.getResponseBodyContent(), StandardCharsets.UTF_8);
+        assertThat(body).doesNotContain(FAILURE_MESSAGE).doesNotContain("sk-ant-dummy-not-a-key")
+                .doesNotContain("upstream").doesNotContain("Exception");
+        return result.getResponseBody();
+    }
+
+    /** The messages the conversation memory holds, each as {@code TYPE: text}, oldest first. */
+    private List<String> memoryOf(UUID conversationId) {
+        return chatMemory.get(conversationId.toString()).stream()
+                .map(message -> message.getMessageType() + ": " + message.getText())
+                .toList();
+    }
+
+    /** Ten answered turns with texts of their own: exactly the 20 messages the memory window keeps. */
+    private static List<Message> windowOfTwentyMessages() {
+        List<Message> messages = new ArrayList<>();
+        for (int turn = 1; turn <= 10; turn++) {
+            messages.add(new UserMessage("Window question " + turn));
+            messages.add(AssistantMessage.builder().content("Window answer " + turn).build());
+        }
+        return messages;
+    }
+
+    private static List<String> windowOfTwentyLines() {
+        List<String> lines = new ArrayList<>();
+        for (int turn = 1; turn <= 10; turn++) {
+            lines.add("USER: Window question " + turn);
+            lines.add("ASSISTANT: Window answer " + turn);
+        }
+        return lines;
     }
 
     private Map<String, Object> chat(UUID conversationId, String message) {

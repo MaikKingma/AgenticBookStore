@@ -17,4 +17,4 @@
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files: driver with node handler shim, Expected status grammar, run-mode runs, seeded-state traps
 - [Docs task techniques](docs-task-techniques.md) — README census: two-way scripts with negative control, fake older DB for reset claim, jar has no compose, anonymous volume trap, rg only in Bash tool
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
-- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse, ChatClient without a context
+- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callback tests without a context, stackless tool exception, ListAppender, ChatClient mocks

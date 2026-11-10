@@ -653,3 +653,127 @@ describe('AssistantPage errors', () => {
     expectUsableWith(FIRST)
   })
 })
+
+describe('AssistantPage when the model behind the assistant fails', () => {
+  const UNAVAILABLE = 'The assistant is unavailable right now, try again later'
+  const TOO_MANY = 'Too many requests, try again in a minute'
+  const SERVER_TITLE = 'Assistant unavailable'
+  // Differs from the text of the page on purpose, so that showing the server detail cannot pass for showing the text.
+  const SERVER_DETAIL = 'The model provider did not answer'
+  // A server details list that must not reach the page for the assistant-unavailable rows, so that
+  // passing the list on cannot pass for showing the text on its own.
+  const SERVER_DETAILS_ENTRY = 'witness entry'
+
+  function alertText(): string | null {
+    return screen.getByRole('alert').textContent
+  }
+
+  function failure(status: number, code?: string): () => Response {
+    return () =>
+      problemResponse(status, {
+        title: SERVER_TITLE,
+        status,
+        ...(code === undefined ? {} : { code }),
+        detail: SERVER_DETAIL,
+        details: code === 'assistant-unavailable' ? [{ field: 'model', message: SERVER_DETAILS_ENTRY }] : [],
+      })
+  }
+
+  it('shows that the assistant is unavailable right now when it answers 503 assistant-unavailable', async () => {
+    seedConversation()
+    mockFetch([inOrder(failure(503, 'assistant-unavailable'))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, FIRST)
+
+    expect(await screen.findByText(UNAVAILABLE)).toBeInTheDocument()
+    expect(alertText()).toBe(UNAVAILABLE)
+    expect(screen.queryByText(SERVER_TITLE)).not.toBeInTheDocument()
+    expect(screen.queryByText(SERVER_DETAIL)).not.toBeInTheDocument()
+    expect(screen.getByRole('alert').textContent).not.toContain(SERVER_DETAILS_ENTRY)
+  })
+
+  it('keeps the typed message and the field usable after that answer, and a second send shows the reply', async () => {
+    seedConversation()
+    const mock = mockFetch([inOrder(failure(503, 'assistant-unavailable'), reply(FIRST_REPLY))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, FIRST)
+
+    expect(await screen.findByText(UNAVAILABLE)).toBeInTheDocument()
+    expectUsableWith(FIRST)
+    expect(conversationTexts()).toEqual([])
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    await user.click(sendButton())
+
+    expect(await screen.findByText(FIRST_REPLY, { exact: false })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(sentBodies(mock)).toEqual([
+      { conversationId: SEEDED_ID, message: FIRST },
+      { conversationId: SEEDED_ID, message: FIRST },
+    ])
+    expect(conversationTexts()).toEqual([`You: ${FIRST}`, `Assistant: ${FIRST_REPLY}`])
+    expect(input()).toHaveValue('')
+  })
+
+  it.each([500, 502])('shows the same text for the code assistant-unavailable on status %i', async (status) => {
+    seedConversation()
+    mockFetch([inOrder(failure(status, 'assistant-unavailable'))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, SECOND)
+
+    expect(await screen.findByText(UNAVAILABLE)).toBeInTheDocument()
+    expect(alertText()).toBe(UNAVAILABLE)
+    expect(screen.queryByText(SERVER_TITLE)).not.toBeInTheDocument()
+    expect(screen.queryByText(SERVER_DETAIL)).not.toBeInTheDocument()
+    expectUsableWith(SECOND)
+  })
+
+  it('shows the title and the detail of the server for a 503 with another code', async () => {
+    seedConversation()
+    mockFetch([inOrder(failure(503, 'distributor-unavailable'))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, THIRD)
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(alertText()).toBe(`${SERVER_TITLE}${SERVER_DETAIL}`)
+    expect(screen.queryByText(UNAVAILABLE)).not.toBeInTheDocument()
+    expectUsableWith(THIRD)
+  })
+
+  it('shows the title and the detail of the server for a 503 without a code', async () => {
+    seedConversation()
+    mockFetch([inOrder(failure(503))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, THIRD)
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(alertText()).toBe(`${SERVER_TITLE}${SERVER_DETAIL}`)
+    expect(screen.queryByText(UNAVAILABLE)).not.toBeInTheDocument()
+    expectUsableWith(THIRD)
+  })
+
+  it('still shows the too many requests text for a 429 whose body has the code assistant-unavailable', async () => {
+    seedConversation()
+    mockFetch([inOrder(failure(429, 'assistant-unavailable'))])
+    const user = userEvent.setup()
+    openAssistant()
+
+    await typeAndSend(user, SECOND)
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(alertText()).toBe(TOO_MANY)
+    expect(screen.queryByText(UNAVAILABLE)).not.toBeInTheDocument()
+    expect(screen.queryByText(SERVER_DETAIL)).not.toBeInTheDocument()
+    expectUsableWith(SECOND)
+  })
+})

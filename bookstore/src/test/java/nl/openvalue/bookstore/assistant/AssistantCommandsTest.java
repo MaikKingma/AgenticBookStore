@@ -1,6 +1,7 @@
 package nl.openvalue.bookstore.assistant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -10,10 +11,20 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.ThrowableProxy;
+import ch.qos.logback.core.read.ListAppender;
+import com.anthropic.errors.AnthropicIoException;
+import com.anthropic.errors.AnthropicRetryableException;
 import com.jayway.jsonpath.JsonPath;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +35,7 @@ import nl.openvalue.bookstore.domaininteraction.ConflictException;
 import nl.openvalue.bookstore.domaininteraction.InvalidInputException;
 import nl.openvalue.bookstore.domaininteraction.NotFoundException;
 import nl.openvalue.bookstore.domaininteraction.UnavailableException;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,6 +45,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ChatClient.AdvisorSpec;
 import org.springframework.ai.chat.client.ChatClient.CallResponseSpec;
@@ -64,7 +77,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
  */
 @WebMvcTest(AssistantCommands.class)
 @Import({AssistantRateLimiter.class, AssistantCommandsTest.LimiterSettings.class})
-@MockitoBean(types = {ChatClient.class, ChatModel.class})
+@MockitoBean(types = {ChatClient.class, ChatModel.class, ChatMemory.class})
 class AssistantCommandsTest {
 
     /** The Accept header the storefront sends with every request. */
@@ -88,6 +101,18 @@ class AssistantCommandsTest {
             "instance", "/assistant/chat",
             "code", "assistant-offline",
             "details", List.of());
+
+    /** The answer to a failed chat call: the spec 12 text, with the shape of the offline answer. */
+    private static final Map<String, Object> UNAVAILABLE = Map.of(
+            "title", "Assistant unavailable",
+            "status", 503,
+            "detail", "The assistant is unavailable right now, try again later",
+            "instance", "/assistant/chat",
+            "code", "assistant-unavailable",
+            "details", List.of());
+
+    /** What a failing live call says; none of it may reach the answer. */
+    private static final String FAILURE_MESSAGE = "upstream rejected key sk-ant-dummy-not-a-key";
 
     /** The limiter's clock and settings: 20 requests a minute, messages up to 1000 characters. */
     @TestConfiguration(proxyBeanMethods = false)
@@ -396,12 +421,99 @@ class AssistantCommandsTest {
         assertNoTrace(tooMany);
     }
 
+    // --- a failed chat call ---
+
+    /** Two failures of the Anthropic client and two from outside its hierarchy, each saying what must stay hidden. */
+    static Stream<RuntimeException> failedChatCalls() {
+        return Stream.of(
+                new AnthropicIoException(FAILURE_MESSAGE),
+                new AnthropicRetryableException(FAILURE_MESSAGE),
+                new IllegalStateException(FAILURE_MESSAGE),
+                new UncheckedIOException(FAILURE_MESSAGE, new IOException("upstream connection reset")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("failedChatCalls")
+    void failedChatCallAnswersAssistantUnavailable(RuntimeException failure) throws Exception {
+        when(response.content()).thenThrow(failure);
+
+        ResultActions result = chat(FIRST_ID, "Where is my book?");
+
+        Map<String, Object> problem = problem(result, 503);
+        assertThat(problem).isEqualTo(UNAVAILABLE);
+        assertThat(problem.keySet()).isEqualTo(OFFLINE.keySet());
+        String body = result.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(body).doesNotContain(FAILURE_MESSAGE).doesNotContain("sk-ant-dummy-not-a-key")
+                .doesNotContain("upstream").doesNotContain(failure.getClass().getName())
+                .doesNotContain(failure.getClass().getSimpleName());
+        verify(chatClient).prompt();
+    }
+
+    @Test
+    void failedChatCallIsLoggedOnceAtWarnWithItsCause() {
+        IllegalStateException failure = new IllegalStateException(FAILURE_MESSAGE);
+        when(response.content()).thenThrow(failure);
+        List<ILoggingEvent> logEvents = new ArrayList<>();
+
+        Throwable escaped = catchThrowable(() -> logOf(() -> chat(FIRST_ID, "Where is my book?"), logEvents));
+
+        List<ILoggingEvent> warnings = logEvents.stream()
+                .filter(event -> event.getLevel() == Level.WARN)
+                .toList();
+        assertThat(warnings).as("WARN lines of AssistantCommands").hasSize(1);
+        assertThat(warnings.get(0).getLoggerName()).isEqualTo(AssistantCommands.class.getName());
+        assertThat(warnings.get(0).getThrowableProxy().getClassName()).isEqualTo("java.lang.IllegalStateException");
+        assertThat(((ThrowableProxy) warnings.get(0).getThrowableProxy()).getThrowable()).isSameAs(failure);
+        assertThat(escaped).as("the failure is answered, not thrown").isNull();
+    }
+
+    /** A use-case exception from the chat call is a rejection the handler answers, not a failed model call. */
+    @ParameterizedTest
+    @MethodSource("useCaseRejections")
+    void useCaseExceptionFromTheChatCallIsNotLoggedAsAFailure(RuntimeException rejection, int status, String code,
+            String title, String detail, List<Map<String, String>> details) throws Throwable {
+        when(response.content()).thenThrow(rejection);
+        List<ILoggingEvent> logEvents = new ArrayList<>();
+
+        logOf(() -> assertThat(problem(chat(FIRST_ID, "Where is my book?"), status)).isEqualTo(Map.of(
+                "title", title,
+                "status", status,
+                "detail", detail,
+                "instance", "/assistant/chat",
+                "code", code,
+                "details", details)), logEvents);
+
+        assertThat(logEvents).as("log lines of AssistantCommands")
+                .noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.WARN));
+        verify(chatClient).prompt();
+    }
+
+    /** Runs the action with every event of the {@link AssistantCommands} logger collected into the given list. */
+    private static void logOf(ThrowingCallable action, List<ILoggingEvent> logEvents) throws Throwable {
+        Logger commandsLogger = (Logger) LoggerFactory.getLogger(AssistantCommands.class);
+        Level originalLevel = commandsLogger.getLevel();
+        boolean originalAdditive = commandsLogger.isAdditive();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        commandsLogger.setLevel(Level.TRACE);
+        commandsLogger.setAdditive(false);
+        commandsLogger.addAppender(appender);
+        try {
+            action.call();
+        } finally {
+            commandsLogger.detachAppender(appender);
+            commandsLogger.setLevel(originalLevel);
+            commandsLogger.setAdditive(originalAdditive);
+            logEvents.addAll(appender.list);
+        }
+    }
+
     /** The same endpoint while no key is configured: its context holds the offline chat model, not a mock. */
     @Nested
     @NestedTestConfiguration(EnclosingConfiguration.OVERRIDE)
     @WebMvcTest(AssistantCommands.class)
     @Import({AssistantRateLimiter.class, LimiterSettings.class, OfflineChatModel.class})
-    @MockitoBean(types = ChatClient.class)
+    @MockitoBean(types = {ChatClient.class, ChatMemory.class})
     class Offline {
 
         @Autowired

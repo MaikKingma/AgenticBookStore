@@ -24,8 +24,6 @@ Composite and parameter-predicate rules (money rule style):
 - Judge your own survivors against the criterion text, not the M list. A survivor on a money criterion that can be killed inside the file scope is a FAIL, not informational (qa-lead CP3/CP5 in its ledger's cross-task patterns). Prove the kill with a temporary probe before writing the Required Action.
 - Propose the kill as a FIXTURE, not a reflective test of a private helper: the orchestrator rejected the reflective form (couples the self-test to an implementation detail) and amended the plan with fixtures instead. If the fixture is outside the fileScope, say it needs a plan amendment.
 - `assertReportsExpectedViolators` stops at the first missing violator, so list order decides which fixture a probe names. When a probe must name a specific fixture, check the order, and grep the printed details to show the mutant is live.
-- Expected survivors, not defects: `isEquivalentTo` to `isAssignableTo` on primitives (equivalent), and `allowEmptyShould(true)` to `false` (only stricter, and both imports are non-empty).
-- A rule on `haveRawType(double.class)` does not cover boxed `Double`; the C0-5b grep is the only guard for wrappers.
 
 Enclosing-class walk predicates ("nested at any depth in a class named *X"):
 - Sweep EVERY walk position, not just both ends: suffix on direct-only, middle-only, top-only. Mutants: direct-only, top-only, direct-or-top (killed only by a middle-only fixture), skip-top, depth cap N (a cap at or above the deepest fixture is an inherent survivor, informational), start-at-self, `contains`. Fixtures that put the suffix only on the top-level class let top-only survive; the killer is a nested `...X` inside a top-level class without the suffix, with a member-anchored witness.
@@ -33,9 +31,6 @@ Enclosing-class walk predicates ("nested at any depth in a class named *X"):
 - Each control/witness fixture gets a vacuity probe: retype its field to `Object`; only its own test must fail.
 - Prove a proposed kill before you write the Required Action: generator probes that add the fixture (real predicate green) and fixture plus mutant (red), with a temporary `QaT6Probe*Test` in the test package, deleted afterwards and covered by the snap diff.
 - A rule-dump temp test that evaluates every `@ArchTest` field on the fixture import, filtered origin-anchored to the new fixtures, answers "which rules does each fixture trip" in one run. Calling the private predicate by reflection on the production import shows the should-set is non-empty.
-- `ignoreDependency` exception fixtures: widen the target (`simpleNameContaining`, `.or(simpleNameEndingWith("Exception"))`, `.or(assignableTo(Throwable.class))`), widen the origin (`resideInAnyPackage(PROCESS, QUERY)`, company root), narrow it (`simpleName("<one event>")`, `simpleNameStartingWith`), drop it. "Each fixture is the only violator of its aspect" is proven when each widening fails only its own fixture's pin plus its list entry. With `clean`, a `-Dtest=ArchitectureSelfTest,ArchitectureTest` run takes about 5 s.
 
 Grep traps:
-- The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
-- Suffix set equality: script-parse the section 3 table and the test, then prove the checker can fail on a mutated scratch copy.
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[shell-traps]]

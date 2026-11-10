@@ -8,6 +8,7 @@
 - [Integration test probes](integration-test-probes.md) — full-context IT witnesses, transaction boundaries, AFTER_COMMIT listeners
 - [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, float coercion, identity checks, log escaping
 - [Tool adapter probes](tool-adapter-probes.md) — @Tool and ChatClient mutants, scripted chat-model doubles, memory-window trap
+- [Prompt and tool text probes](prompt-text-probes.md) — text-only fixes: clause-level mutants, both-file base swap, guard-test bite proofs
 - [MCP and STDIO probes](mcp-tool-probes.md) — @McpTool mutants, output caps, swapped-stream tests in a shared fork
 - [Seed data probes](seed-data-probes.md) — JSON seed mutants via byte-identity generator, CRLF and at-minimum probes
 - [README and live-jar probes](readme-and-live-jar-probes.md) — README fact checks, jar start runs, STDIO driver, contract replay

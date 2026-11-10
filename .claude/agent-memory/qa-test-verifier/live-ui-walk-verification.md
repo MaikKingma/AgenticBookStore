@@ -12,13 +12,8 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
 - One control script with subcommands (`docker-state`, `ports`, `pg-start`, `jar-start`, `jar-stop`, `pg-stop`) writes a dated SP file per call; take `docker-state`/`ports` before and after the session. Use a different throwaway port than the implementer.
 - playwright-cli: one `async page => {...}` file per phase via `run-code --filename`, `--raw` redirected to SP; attach `console`/`pageerror`/`response`/`request` listeners inside and `off` them in `finally`. Fill number inputs with `locator.fill` (fires `onChange`). A `window.__marker` proves "no reload".
 - Favicon 404s fire no page `response` event; attribute a bare "Failed to load resource: 404" with `m.location().url`. A new context in the same browser does not re-request the favicon, so "first load of a fresh session" needs a brand-new `-s=<name>` session.
-- Blur-then-Tab starts from the last focused element (after a form submit the first stop is the next link, not the wordmark); say which start point a "first Tab stop" figure used.
-- Table-squeeze check at phone width: `.table-scroll` `clientWidth == scrollWidth` plus `th` heights several line-heights tall proves words break instead of scrolling, even when the document `scrollWidth` passes.
 - Negative control for a CSS fix: `git archive <pr-base>` into the scratchpad, `./mvnw -DskipTests package` there (8 s with Node cached), copy the jar out, run it on a second port against the SAME throwaway DB (`--server.port=8081`), and drive both builds with one script that takes the origin from `page.url().split('/shop/')[0]` (`URL` is not defined inside `run-code`). One brand-new `-s=<name>` session per build keeps the favicon check a true first load.
-- `playwright-cli` drops `.playwright-cli/` (page snapshots, console log) into the cwd, here the repo root, as untracked files that break a before/after porcelain snapshot; delete them and `rmdir` before the final snapshot.
 - Dev-mode console check (the jar serves a production React build, which strips React dev warnings): the Vite proxy target is fixed at 127.0.0.1:8080, so start a SECOND tip jar on 8080 against the same throwaway DB and Vite from the `git archive` extraction with `--port <free> --strictPort`; derive the dev journey from the jar journey with a string-replace script and switch to books that still have stock (the first walk used it up). Dev consoles show only `debug`/`info` lines (`[vite] connecting`, React DevTools hint); count `error`/`warning` types, not all messages.
-- Background children started inside `with-budget.sh` keep running after it exits (Vite stayed on its port): write pid files and stop them with an explicit `stop` subcommand plus an `lsof -tiTCP:<port>` sweep.
-- Spec scenario "a red frontend test fails the build": drop a failing `*.test.ts` into the tip extraction (never the repo), `./mvnw verify` there, expect `frontend FAILURE` with `bookstore`/`distributor SKIPPED`, then delete the file.
 - Any walk that provokes a 4xx on purpose (insufficient stock 409) logs Chromium's `error: Failed to load resource:
   the server responded with a status of 409 (Conflict)` with the API URL as location, in jar and dev mode alike. It is
   the browser's network log, not an app or React diagnostic: quote it, attribute it by its location URL (not a script)
@@ -34,6 +29,4 @@ Rule: reproduce a recorded walk with your own data and scripts, seeded to the sa
   size, listeners per page, `CHECK PASS|FAIL` lines, screenshots to SP, exit code = fails. Run it from a script that
   `cd`s to a scratch dir. End every walk with a control context that calls `console.warn('<tag>')` and assert exactly
   one recorded hit: a jar walk with zero console messages is otherwise indistinguishable from a detached listener.
-- A fresh throwaway DB has no books (no Flyway seed): seed through `POST /books/commands/add` (answers 202 with the
-  id, lower-case hyphen genres such as `science-fiction` accepted) with valid ISBN-13 check digits, then `GET /books`.
 Related: [[readme-and-live-jar-probes]], [[ci-workflow-verification]], [[shell-traps]]

@@ -86,9 +86,9 @@ http://127.0.0.1:8080. Windows commands are in `frontend/README.md`.
 
 ## Assistant
 
-The assistant answers questions about the catalogue with read-only tools. It is part of the shop at
-http://localhost:8080/shop/, and `POST /assistant/chat` takes a `conversationId` (a UUID you choose) and a `message`.
-The reply holds that `conversationId` and a `reply`; the last 20 messages of a conversation are kept.
+The assistant answers questions about the catalogue in the language of the customer, with read-only tools. It is part
+of the shop at http://localhost:8080/shop/, and `POST /assistant/chat` takes a `conversationId` (a UUID you choose) and
+a `message`. The reply holds that `conversationId` and a `reply`; the last 20 messages of a conversation are kept.
 
 The key comes only from `BOOKSTORE_AI_API_KEY`, set in the shell where you start the bookstore. In bash that is
 `export BOOKSTORE_AI_API_KEY="..."`, in PowerShell `$env:BOOKSTORE_AI_API_KEY = "..."`. Warning: never set

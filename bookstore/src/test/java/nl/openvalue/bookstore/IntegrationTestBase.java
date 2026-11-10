@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -41,8 +42,17 @@ import org.springframework.test.web.servlet.client.RestTestClient;
  *
  * <p>The one deliberate fork of this context is the assistant integration test, which adds a scripted chat model and
  * its own rate limit; this context stays offline for the assistant, so no test through it can reach a model.
+ *
+ * <p>The pin is a test property source with a blank Anthropic key and a loopback base URL, because operating system
+ * environment variables outrank {@code application-test.yml}: a shell that exports
+ * {@code SPRING_AI_ANTHROPIC_API_KEY} would otherwise put every subclass online. The blank key keeps the production
+ * offline switch ({@code AssistantModeConfig}) in charge of the chat model. The loopback base URL means no request can
+ * leave the machine even when a developer exports a model choice such as {@code SPRING_AI_MODEL_CHAT=anthropic}: that
+ * choice is honoured by design, and the tests that then call the chat model fail against the loopback address instead
+ * of reaching the API. A subclass's own test property source wins over this one.
  */
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = {"spring.ai.anthropic.api-key=", "spring.ai.anthropic.base-url=http://127.0.0.1:9"})
 @AutoConfigureRestTestClient
 @Import({PostgresTestConfig.class, StockEventRecorder.class, OrderEventRecorder.class})
 public abstract class IntegrationTestBase {

@@ -6,6 +6,8 @@ spring:
     locations: classpath:db/migration
   ai:
     anthropic:
-      # Tests stay offline even when the workshop key BOOKSTORE_AI_API_KEY is exported in the shell: a blank key
-      # switches the chat model off, so no test can send a request to the real API.
+      # Tests stay offline when the workshop key BOOKSTORE_AI_API_KEY is exported in the shell: a blank key switches
+      # the chat model off. This file ranks below operating system environment variables, so it does not hold against
+      # an exported SPRING_AI_ANTHROPIC_API_KEY. IntegrationTestBase pins a blank key and a loopback base URL in a test
+      # property source, which does. This file also covers contexts that do not extend that base.
       api-key: ""
