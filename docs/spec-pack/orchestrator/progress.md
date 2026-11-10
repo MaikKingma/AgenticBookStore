@@ -55,6 +55,17 @@ Steps for the new main session (read the Rules at the top of this file and CLAUD
 Maik's own items: the rehearsal of every level on 2026-11-10 (spec 10 checklist, spec 09 Level 0 template), the
 manual checks list below, spec 13 (assistant widget) and residual R-k after the first release.
 
+## Phase 4: first release (2026-11-11)
+
+Clean clone from GitHub over SSH, `./mvnw clean verify` with the key variables unset:
+- factory ddbf047: exit 0, 33.39 s, 1569 Java tests, 0 failures, clean tree.
+- level-0-start b668073 (= main): exit 0, 27.57 s, 1569 Java tests, 0 failures, clean tree.
+
+Summary: main and level-0-start publish the workshop baseline (b668073); the six D17 level branches are cut and verified;
+the guide is live at https://maikkingma.github.io/AgenticBookStore/ with release `workshop-2026`; specs 01 to 12 are
+tagged done. Open for Maik: the rehearsal of Levels 0 to 4 (checklists in the level-branch records), PF-T11-1 OpenSpec
+install route (spec 15). After the release: spec 14 (branding, running), 15 (content revision), 16 (bonus level), 13.
+
 ## Open questions
 
 - OQ4 closed 2026-11-09 by measurement: with the frontend, `./mvnw clean verify` took 27.3 s on the spec 12 head (main session, clean worktree, Node downloaded on the first run), 22.8 to 23.8 s in the orchestrator's runs. Inside the 60 s budget.
