@@ -2,6 +2,7 @@
 # The endpoint is POST /assistant/chat. The body holds a conversationId (a UUID) and a message. A good answer is 200 with the same conversationId and the reply.
 # The conversationId in these requests is {{$uuid}}, a new UUID for every send, so each request starts a new conversation. To continue a conversation, put the conversationId of an earlier answer into the next body.
 # Run mode: the answer depends on the API key. When the bookstore was started without the BOOKSTORE_AI_API_KEY environment variable it runs in offline mode and answers 503 with the error code assistant-offline. With the key set when the bookstore starts, the assistant answers 200.
+# Failed model call: with the key set, a failed model call (wrong key, spend or rate limit at Anthropic, timeout) answers 503 with the error code assistant-unavailable.
 # Rate limit: with the key set, the bookstore passes at most 20 chat requests per minute. The 21st request within a minute is refused with 429 Too Many Requests, a problem answer without an error code, and the model is not called. In offline mode the offline answer comes first, so 429 does not appear.
 # A message is limited to 1000 characters. A longer message is refused with 400 and the error code validation-failed.
 # Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.

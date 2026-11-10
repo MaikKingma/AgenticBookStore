@@ -39,7 +39,7 @@ unset GIT_CONFIG_COUNT GIT_CONFIG_PARAMETERS GIT_NAMESPACE GIT_PREFIX
 # The script creates its own temporary directory here, so the test can prove it is removed.
 export TMPDIR="$root/tmp"
 
-# The 11 paths the script must strip, in spec order. The test keeps its own copy as the oracle.
+# The 13 paths the script must strip, in spec order. The test keeps its own copy as the oracle.
 EXPECTED_PATHS='CLAUDE.md
 CLAUDE.local.md
 AGENTS.md
@@ -50,7 +50,9 @@ openspec
 specs
 agent-os
 .githooks
-docs/spec-pack'
+docs/spec-pack
+guide
+.github/workflows/guide.yml'
 
 MESSAGE='Agentic Bookstore: workshop baseline'
 TAG=level-0-start
@@ -80,6 +82,7 @@ is_listed() {
   case $1 in
     CLAUDE.md | CLAUDE.local.md | AGENTS.md | .mcp.json) return 0 ;;
     .claude/* | openspec/* | .specify/* | specs/* | agent-os/* | .githooks/* | docs/spec-pack/*) return 0 ;;
+    guide/* | .github/workflows/guide.yml) return 0 ;;
   esac
   return 1
 }
@@ -159,6 +162,17 @@ write_file "$work" 'docs/with space.md' 'spaced'
 write_file "$work" docs/architecture.md 'layers'
 write_file "$work" mvnw '#!/bin/sh'
 chmod +x "$work/mvnw"
+# The guide (decision D15): nested files under guide/ and its workflow beside a workflow that stays, plus
+# look-alikes that stay. guide.yml.disabled shares the workflow's whole name as a prefix.
+write_file "$work" guide/package.json '{}'
+write_file "$work" guide/docs/level-0.md '# Level 0'
+write_file "$work" .github/workflows/guide.yml 'name: guide'
+write_file "$work" .github/workflows/ci.yml 'name: ci'
+write_file "$work" guidelines.md 'look-alike'
+write_file "$work" docs/guide/x.md 'look-alike'
+write_file "$work" .github/workflows/guide.yaml 'look-alike'
+write_file "$work" .github/workflows/guide.yml.disabled 'look-alike'
+write_file "$work" guide.yml 'look-alike'
 printf '%s\n' '.claude/comms/' 'ignored.log' >"$work/.gitignore"
 git -C "$work" add -A
 git -C "$work" commit --quiet -m 'factory one'
@@ -173,7 +187,7 @@ check 'fixture work tree holds ignored files (they must not count as untracked)'
 
 run_in "$root" --list-paths
 check '--list-paths exits 0' same "$rc" 0
-check '--list-paths prints the 11 paths in spec order' same "$out" "$EXPECTED_PATHS"
+check '--list-paths prints the 13 paths in spec order' same "$out" "$EXPECTED_PATHS"
 
 # --- --check ------------------------------------------------------------------------------------------------
 
@@ -198,6 +212,14 @@ check '--check on factory names exactly the files under listed paths' \
   same "$reported" "$(printf '%s' "$listed_files" | sort)"
 check '--check names the agent-os/product symlink' has_line agent-os/product "$err"
 check '--check does not name the look-alike .claude-foo/x' lacks_line .claude-foo/x "$err"
+# The guide (D15): every guide file and the guide workflow are named, the other workflow and look-alikes are not.
+for f in guide/package.json guide/docs/level-0.md .github/workflows/guide.yml; do
+  check "--check on factory names $f" has_line "$f" "$err"
+done
+for f in .github/workflows/ci.yml guidelines.md docs/guide/x.md .github/workflows/guide.yaml \
+  .github/workflows/guide.yml.disabled guide.yml; do
+  check "--check on factory does not name $f" lacks_line "$f" "$err"
+done
 
 run_in "$work/docs" --check factory
 check '--check from a subdirectory exits non-zero' differ "$rc" 0
@@ -234,10 +256,19 @@ for p in .claude-foo/x CLAUDE.md.example docs/specs-notes.md bookstore/x/specs/y
   README.md pom.xml 'docs/with space.md' docs/architecture.md .gitignore; do
   check "main keeps $p" same "$(git -C "$work" ls-tree --name-only main -- "$p")" "$p"
 done
+# The guide (D15): nothing of it reaches main; the other workflow and the look-alikes stay.
+check 'main holds nothing under guide/docs' empty "$(git -C "$work" ls-tree -r --name-only main -- guide/docs)"
+for p in .github/workflows/ci.yml guidelines.md docs/guide/x.md .github/workflows/guide.yaml \
+  .github/workflows/guide.yml.disabled guide.yml; do
+  check "main keeps $p" same "$(git -C "$work" ls-tree --name-only main -- "$p")" "$p"
+done
+check 'main holds exactly ci.yml, guide.yaml and guide.yml.disabled under .github/workflows' \
+  same "$(git -C "$work" ls-tree -r --name-only main -- .github/workflows)" \
+  "$(printf '%s\n' .github/workflows/ci.yml .github/workflows/guide.yaml .github/workflows/guide.yml.disabled)"
 check 'mvnw keeps its executable bit' same "$(git -C "$work" ls-tree main -- mvnw | cut -c1-6)" 100755
 check 'local tag points to main' same "$(rev "$work" "refs/tags/$TAG^{commit}")" "$main1"
 check 'removed paths are printed after the line that reports the moved refs' \
-  same "$(count_removed "$(printf '%s\n' "$out" | sed -n '/now at/,$p')")" 11
+  same "$(count_removed "$(printf '%s\n' "$out" | sed -n '/now at/,$p')")" 13
 check 'HEAD stays on factory' same "$(git -C "$work" symbolic-ref HEAD)" refs/heads/factory
 check 'working tree stays clean' empty "$(git -C "$work" status --porcelain)"
 check 'temporary worktree removed' same "$(worktrees)" "worktree $work"
@@ -421,7 +452,7 @@ check '--push: exits 0' same "$rc" 0
 check '--push: remote main is local main' same "$(rev "$remote" refs/heads/main)" "$main4"
 check '--push: remote tag is local main' same "$(rev "$remote" "refs/tags/$TAG")" "$main4"
 check '--push: remote main has exactly one commit' same "$(git -C "$remote" rev-list --count main)" 1
-check '--push: prints removed paths' same "$(count_removed "$out")" 11
+check '--push: prints removed paths' same "$(count_removed "$out")" 13
 check '--push: one atomic push' has_line --atomic "$push_args"
 check '--push: lease on main expects the remote main' \
   has_line "--force-with-lease=refs/heads/main:$remote_seed" "$push_args"
@@ -593,6 +624,27 @@ run_in "$clone/docs" --check HEAD
 check '--check HEAD from a subdirectory: exits non-zero' differ "$rc" 0
 check '--check HEAD from a subdirectory: names exactly .claude/settings.json' \
   same "$(reported_paths "$err")" .claude/settings.json
+
+# The guide (D15): a page added under guide/, or the guide workflow added, to the published main is refused and
+# named exactly. The added content differs from the factory fixture, so each commit is a change in any case.
+git -C "$clone" reset --quiet --hard origin/main
+run_in "$clone" --check HEAD
+check '--check HEAD on the published main before the guide cases: exits 0' same "$rc" 0
+write_file "$clone" guide/docs/level-5.md '# Level 5 (added on main)'
+git -C "$clone" add guide/docs/level-5.md
+git -C "$clone" commit --quiet -m 'add a guide page'
+run_in "$clone" --check HEAD
+check '--check HEAD after adding guide/docs/level-5.md: exits non-zero' differ "$rc" 0
+check '--check HEAD after adding guide/docs/level-5.md: names exactly that path' \
+  same "$(reported_paths "$err")" guide/docs/level-5.md
+git -C "$clone" reset --quiet --hard origin/main
+write_file "$clone" .github/workflows/guide.yml 'name: guide (added on main)'
+git -C "$clone" add .github/workflows/guide.yml
+git -C "$clone" commit --quiet -m 'add the guide workflow'
+run_in "$clone" --check HEAD
+check '--check HEAD after adding .github/workflows/guide.yml: exits non-zero' differ "$rc" 0
+check '--check HEAD after adding .github/workflows/guide.yml: names exactly that path' \
+  same "$(reported_paths "$err")" .github/workflows/guide.yml
 
 finished=yes
 printf '%d assertions, %d failures (script run with %s, bash %s)\n' "$assertions" "$failures" "$BASH" \

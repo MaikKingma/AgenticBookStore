@@ -30,6 +30,11 @@ See also the senior researcher's note `.claude/agent-memory/senior-research-agen
   live ref the mutant may have moved.
 - **Mutants on copies:** `perl -0pe` (multi-line, same on BSD and GNU) into a scratch copy, run the test with its own
   TMPDIR. A mutant can abort the test in setup (`set -e`); an EXIT trap that prints "aborted" keeps that legible.
+- **Negative control must not abort in setup:** a "--check after adding X to the published main" case re-adds a
+  file the pre-fix script left on main; same content means `git commit` has nothing to commit and `set -e` aborts.
+  Give the added file content that differs from the factory fixture.
+- **Look-alikes for a prefix mutant (`"$p*"` pathspec):** pick names that extend the whole listed path
+  (`guide.yml.disabled`, `guidelines.md`); `guide.yaml` is not a prefix extension of `guide.yml` and survives it.
 - **shellcheck SC2016** fires on `printf '%s' '[ "$1" = x ]'`; write hook files with a quoted heredoc instead.
 - **actionlint on `ci.yml`** reports a pre-existing SC2016 info on the pre-pull step (line 28); compare against the
   base file before claiming a new finding.
