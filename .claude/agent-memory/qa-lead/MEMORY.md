@@ -4,4 +4,4 @@
 - [CI-config specs](qa-ci-config-specs.md) — evidence traps when the proof is real GitHub Actions runs: job summaries, baselines, hangs, caches; read before a CI spec strategy
 - [Harness staging specs](qa-harness-staging-specs.md) — staged agent config, claude -p scenarios: ignore/eol traps, isolation, consistency checks, rehearsal rows and lifecycle premises, locale-bound parity twins, gate-regex input forms
 - [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI/model specs: keyed referee, env-reading unit tests, network-safe probes, default-equivalent mutants, EPP order, memory window, tool double, catch-all tool helpers; read first
-- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits; read before every review
+- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, REJECT vs inspection threshold, oracle helpers, scope edits, nit classes in docs; read before every review

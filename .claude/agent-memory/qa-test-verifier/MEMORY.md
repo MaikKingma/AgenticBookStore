@@ -17,4 +17,4 @@
 - [Final sweep and coverage](final-sweep-checks.md) — qa-final traps, bugfix control ladder, JaCoCo from the CLI, heartbeat stamps
 - [Bash script QA probes](bash-script-qa-probes.md) — copy-based mutants for bash self-tests, xtrace coverage, rollback witnesses
 - [Hook regex probes](hook-regex-probes.md) — grep-on-stdin hooks: mutate prefix, separator, class per side; chained-command fixture; equivalents; docs quotes
-- [Consistency-check verification](consistency-check-verification.md) — own token inventory, glob tests with file-level control, row byte checks
+- [Consistency-check verification](consistency-check-verification.md) — own token inventory, glob tests, row byte checks, row dry runs with the real clone recipe, fallback 2x2 proofs
