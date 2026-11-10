@@ -1,0 +1,77 @@
+# Public sources fetched with curl (read only), 2026-11-10T00:43Z. Nothing installed, no Claude process.
+
+## 1. marketplace.json of anthropics/claude-plugins-official (the repo named by the plugin declaration)
+$ curl -sS -L -m 40 -o marketplace.json -w 'HTTP %{http_code}\n' https://raw.githubusercontent.com/anthropics/claude-plugins-official/main/.claude-plugin/marketplace.json
+HTTP 200
+bytes: 191974
+$ jq -r .name marketplace.json
+claude-plugins-official
+$ jq -c ".plugins[] | select(.name==\"jdtls-lsp\")" marketplace.json
+{"name":"jdtls-lsp","description":"Java language server (Eclipse JDT.LS) for code intelligence","version":"1.0.0","author":{"name":"Anthropic","email":"support@anthropic.com"},"source":"./plugins/jdtls-lsp","category":"development","strict":false,"lspServers":{"jdtls":{"command":"jdtls","extensionToLanguage":{".java":"java"},"startupTimeout":120000}}}
+$ jq ".plugins | length" marketplace.json
+317
+
+## 2. Homebrew formula jdtls (formulae.brew.sh API, read only; brew itself is not run)
+$ curl -sS -L -m 40 -o jdtls.json -w 'HTTP %{http_code}\n' https://formulae.brew.sh/api/formula/jdtls.json
+HTTP 200
+$ jq -c "{name, versions, dependencies, desc, homepage}" jdtls.json
+{"name":"jdtls","versions":{"stable":"1.63.0","head":null,"bottle":true},"dependencies":["openjdk"],"desc":"Java language specific implementation of the Language Server Protocol","homepage":"https://github.com/eclipse-jdtls/eclipse.jdt.ls"}
+
+## 3. AUR package jdtls (Arch User Repository RPC, read only; yay is not run)
+$ curl -sS -L -m 40 -g -o aur.json -w 'HTTP %{http_code}\n' 'https://aur.archlinux.org/rpc/v5/info?arg[]=jdtls'
+HTTP 200
+$ jq -c "{resultcount, results: [.results[] | {Name, Version, Depends}]}" aur.json
+{"resultcount":1,"results":[{"Name":"jdtls","Version":"1.63.0-1","Depends":["java-runtime>=21"]}]}
+
+## 4. Claude Code docs: ${VAR:-default} expansion in .mcp.json and the code intelligence page
+$ curl -sS -L -m 40 -o mcp.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/mcp
+HTTP 200
+$ grep -o -E ".{60}:-default.{60}" mcp.html | head -3   (tags stripped)
+n a server's configuration names a variable that isn't set and has no :-default, Claude Code warns in claude mcp list output and in /mcp, naming the 
+erver with the ${VAR} text unexpanded. Set the variable or add a ${VAR:-default} fallback. In a remote server's url and headers, some credential vari
+${VAR:-default}: expands to the value of VAR if VAR is set, or to default if it is u
+$ grep -c -F "DISTRIBUTOR_MCP_URL" mcp.html
+0
+$ curl -sS -L -m 40 -o ci.html -w 'HTTP %{http_code}\n' https://code.claude.com/docs/en/plugins/code-intelligence
+HTTP 200
+$ lines of the page that name the jdtls binary, the plugin and the error (tags stripped)
+gd     C#    csharp-lsp     csharp-ls     Go    gopls-lsp     gopls     Java    jdtls-lsp     jdtls     Kotlin    kotlin-lsp     kotlin-lsp     Liquid    liquid-lsp 
+  A diagnostics line appears :  Found N new diagnostic issues in M files (ctrl+o to expand)  under the edit that introduced the error 
+gnostics line appears : run  /plugin  and open the  Errors  tab. A row reading  Executable not found in $PATH: &quot;&lt;binary&gt;&quot;  names the binary to install. If the tab h
+laude edits a file the server handles, the conversation shows only the  Found N new diagnostic issues  summary. To read the issues themselves, press  Ctrl+O . 
+  The language server doesn't start : you see  Executable not found in $PATH  in the  Errors  tab of  /plugin , or Claude never reports diagnostics
+
+# ---- upstream jdtls wrapper ----
+# Upstream jdtls wrapper script, read only (curl), 2026-11-10T00:43Z. jdtls is not installed by this check.
+$ curl -sS -L -m 40 -o jdtls.py -w 'HTTP %{http_code}\n' https://raw.githubusercontent.com/eclipse-jdtls/eclipse.jdt.ls/v1.63.0/org.eclipse.jdt.ls.product/scripts/jdtls.py
+HTTP 200, 5004 bytes
+--- lines naming the Java version check
+34:	if not known_args.validate_java_version:
+37:	java_major_version = get_java_major_version(java_executable)
+39:	if java_major_version < 21:
+40:		raise Exception("jdtls requires at least Java 21")
+44:def get_java_major_version (java_executable):
+45:	out = subprocess.check_output([java_executable, '-version'], stderr = subprocess.STDOUT, universal_newlines=True)
+47:	matches = re.finditer(r"(?<=version\s\")(?P<major>\d+)(\.\d+\.\d+(_\d+)?)?", out)
+51:	raise Exception("Could not determine Java version")
+102:	parser.add_argument('--validate-java-version', action='store_true', default=True)
+103:	parser.add_argument('--no-validate-java-version', dest='validate_java_version', action='store_false')
+113:	java_major_version = get_java_major_version(java_executable)
+135:	if (java_major_version >= 24):
+--- lines naming the data (workspace) folder and cache
+14:from hashlib import sha1
+88:		cachedir = Path(os.environ['APPDATA'])
+90:		cachedir = Path(os.environ['HOME']) / 'Library' / 'Caches'
+92:		cachedir = Path(os.environ['HOME']) / '.cache'
+94:		cachedir = Path(os.environ['HOME']) / '.cache'
+96:		cachedir = Path(tempfile.gettempdir())
+98:	cachedir = cachedir / 'jdtls'
+99:	jdtls_data_path = os.path.join(cachedir, "jdtls-" + sha1(cwd_name.encode()).hexdigest())
+109:	parser.add_argument("-data", default=jdtls_data_path)
+132:			"-data", known_args.data] \
+
+# The cold-cache check of the rehearsal row: the folder name jdtls would use for a clone folder called l2-lsp-example
+$ printf %s l2-lsp-example | shasum -a 1
+56b7b190295d8dd20fbf72b592749b1f9d12aeae  -
+$ python3 -I -c "import hashlib; print(hashlib.sha1(b\"l2-lsp-example\").hexdigest())"   (what jdtls.py line 99 computes)
+56b7b190295d8dd20fbf72b592749b1f9d12aeae
