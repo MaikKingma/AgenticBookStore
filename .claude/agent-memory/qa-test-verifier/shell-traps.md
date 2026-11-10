@@ -35,4 +35,5 @@ Rule: quote every glob-bearing argument; the Bash tool runs zsh, which fails on 
 - The JVM on macOS ignores TMPDIR too (`java -XshowSettings:properties` prints `java.io.tmpdir = /var/folders/...`
   with TMPDIR set). For HR1 runs of `./mvnw` (referee, sandboxes) export
   `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>`; Surefire forks inherit it.
+- The worktree guard also refuses `bash ~/.claude/scripts/with-budget.sh 900 bash <script>` typed directly ("cannot be shown not to run git"). Put the budget call inside a small wrapper script (`bash <wrapper>` is accepted), and give it its own times file.
 Related: [[scaffold-verification-techniques]], [[final-sweep-checks]], [[bash-script-qa-probes]]

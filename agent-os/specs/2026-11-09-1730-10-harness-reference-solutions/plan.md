@@ -31,7 +31,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 | T2 | Level 1 files staged verbatim | root | [T1] | 2 | standard | sonnet | sonnet | #139 | sdd/10-harness-reference-solutions/T2 | ENDORSE (r0) |
 | T3 | Level 1 consistency check and rehearsal rows (A2) | root | [T2] | 3 | elevated | sonnet | sonnet | #144 | sdd/10-harness-reference-solutions/T3 | ENDORSE (r2) |
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | #142 | sdd/10-harness-reference-solutions/T4 | ENDORSE (r0) |
-| T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | | | |
+| T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | #148 | sdd/10-harness-reference-solutions/T5 | ENDORSE (r2) |
 | T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | | | |
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | | | |
 | T8 | Level 3 hooks (sh, ps1, git hook), harness, Windows note | root | [T7] | 8 | critical | opus | opus | | | |
@@ -223,6 +223,21 @@ for all three tracks is a manual check for Maik.
   10, the workshop plan and the guide use a plain path; PF-T3-2 `mvnw.cmd verify` is named only in spec 10 and
   `CLAUDE.md` (Windows rehearsal row R1-3). Guide notes: workshop-plan line 114's reset (`git restore . && git
   clean -fd`) keeps `target/`; running Level 0 and Level 1 in one clone carries Level 0's auto memory into Level 1.
+- FF-T5-a (from T5; QA directives of T6, T9 to T13 and any task that adds to an existing participant-facing doc):
+  after the edit, every sentence of the touched section is still true for the added content, including provenance and
+  summary claims ("every file below ..."), headings that name a run, column headers and complete lists; a claim the
+  addition makes false is a FAIL in the task's own file.
+- FF-T5-b (from T5; T9 and any allow-list rule): the realistic mutant of an allow-list filter is a deny-list of exactly
+  the values the test data contains; demand a witness with a value outside the test's own set, or record the pin that
+  prevents one.
+- FF-T5-c (from T5; implDirective and qaDirective of T6 to T13 for every file created or replaced under
+  `S/records/evidence/`): run scripts mask sandbox, scratchpad, worktree and home paths while writing (one placeholder
+  such as `$SBX`); the verifier runs the C0-10 leak grep on every evidence file created or replaced in each round,
+  with a positive control on the raw run.
+- FU-T5-1 (from T5, decision J14, residual for Maik and Gate 2): an AUTHOR-or-EDITOR filter or a deny-list filter
+  (`!TRANSLATOR && !ILLUSTRATOR`) survives the Level 2 reference test, because the only historical multi-role title has
+  no EDITOR; killing it needs a second contract (for example 9789900020264) and test, beyond the pack's one small
+  reference test; qa-final probes the deny-list mutant.
 - Product findings from T4 for Maik: PF-T4-1 the JDK floor reads "JDK 17 or later" in spec 10 line 168 and in
   workshop-plan line 59 (J8 and `docs/lsp-setup.md`: 21); PF-T4-2 workshop-plan line 207 `claude mcp add` writes a
   literal URL while the staged `.mcp.json` uses `DISTRIBUTOR_MCP_URL` (name, transport and port agree).
