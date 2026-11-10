@@ -16,11 +16,11 @@ contrast), the checker is production code AND the oracle for every later task. T
    harness task: check fails on zero executed tests (witnesses: test files deleted, emptied, glob to nothing).
    Lockfiles hold third-party names (`postcss-lab-function`), so a word ban must exempt the top-level lockfile by
    exact path.
-2. **Freeze the oracle.** Content tasks must not touch the checker: hash every checker file against the last gated
-   baseline in each content task (a hash chain), not only a fileScope rule. A decision that drops a feature may name
-   an artefact the site never had (spec 11 D16 "PowerShell hook tab"): before scoping a checker change, grep the
-   checker for a pin and tell computed counts from fixture expectations. A pack-derived allow-list (command lines,
-   inline spans) inherits pack text the decision left stale, so the dropped feature passes: pin it after the freeze.
+2. **Freeze the oracle.** Content tasks hash every checker file against the last gated baseline (a hash chain), not
+   only a fileScope rule. A later fix cycle makes old hash files stale: rebase on `git show <spec-base>:<f>` (spec 14).
+   A dropped feature may name an artefact the site never had (spec 11 D16): grep the checker for a pin and tell
+   computed counts from fixture expectations. A pack-derived allow-list inherits pack text the decision left stale,
+   so the dropped feature passes: pin it after the freeze.
 3. **Coverage-manifest gaming.** Name these witnesses: snippet only inside `{/* */}` or `<!-- -->` must not count; a
    command only in prose inline code must not count when `kind: command`; a snippet that exists in the source but in
    another section must fail; a pack line plus an appended command must fail (whole-line, not `includes`). Guard

@@ -5,4 +5,6 @@
 - [Frontend Maven probe](frontend-maven-probe-technique.md) — frontend-maven-plugin sources jars, scratch Maven+npm probe, resources/PATH/-fae traps
 - [Docs census probes](docs-census-probes.md) — jar run without Docker, endpoint grep, http ISBN collisions, unmerged-branch reads
 - [gh Actions measurement](gh-actions-measurement-technique.md) — step times, log greps, cache scoping check via gh, bash guard quirks
+- [PDF asset extraction](pdf-asset-extraction-technique.md) — stdlib python zlib on image XObject + SMask gives RGBA without installs; tool inventory
+- [Guide checker probe](guide-checker-probe-technique.md) — check.mjs runs bare, pins via git grep, hash baselines are QA-only, scratchpad browser rig, .tsx cannot load in Node
 - [Worktree shell guard](worktree-agent-shell-guard.md) — relative paths, git grep, referee wall time and Surefire totals, claude-api model table
