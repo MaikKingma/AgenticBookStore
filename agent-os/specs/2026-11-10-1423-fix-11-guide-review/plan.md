@@ -103,6 +103,44 @@ Open question the code does not settle in minutes: none.
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Levels 0 and 1 catch up at `level-0-start`, far-behind and index name every level's command, the setup page starts the app | guide | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #159 | sdd/fix-11-guide-review/T1 |
+| T2 | the pack's Level 1 start (line 132) and far-behind row (line 347) name the D1 commands; the setup link and same-terminal sentence are pinned (A1, FF-2) | guide | [T1] | 2 | elevated | sonnet | in-progress | | | | sdd/fix-11-guide-review/T2 |
+
+### T2: the pack agrees with the guide on the Level 0/1 catch-up; FF-2 pins
+
+- fileScope: `docs/spec-pack/workshop/workshop-plan.md` (line 132 and line 347 only, A1), `guide/scripts/level-start.test.mjs`,
+  and `guide/scripts/coverage.mjs` (TS-11 only, and only if the anchor needs it). Any other file that pins the
+  text of those two pack lines (for example a self-test that reads the real pack) is not in scope: block and ask.
+- Wording (D6, orchestrator): line 132 becomes
+  `**Start:** the tag `level-0-start` again (clean): `git stash -u && git switch -C level-1 level-0-start`. Catch-up / compare: `solution/level-1`.`
+  (the "Catch-up / compare" phrase and its branch stay); line 347 becomes a far-behind row that names, at the start
+  of each level, Level 0 `git stash -u && git switch -C level-0 level-0-start`, Level 1
+  `git stash -u && git switch -C level-1 level-0-start`, Levels 2 and 3 `git stash -u && git switch solution/level-N`
+  (N one lower than the level) and Level 4 `git stash -u && git switch start/level-4-<track>`. Keeping the generic
+  Levels 2 and 3 form keeps TS-11's pack snippet anchored unchanged; TS-11 keeps its `pageSnippet` because the page
+  shows explicit commands. Exact wording may differ only in connecting words; every command literal is as above.
+- Acceptance criteria:
+  1. Regression test `guide/scripts/level-start.test.mjs` gains case (d) "the workshop plan names the same Level 0
+     and 1 catch-up as the guide": the pack's Level 1 section `**Start:**` line holds the Level 1 at a glance
+     command read from the live Level 1 page and does not say `` `main` again ``; the pack's `Someone is far behind`
+     row holds the Level 0, Level 1 and Level 4 at a glance commands read from the live level pages. The pack is
+     located the way `guide/scripts/check.mjs` locates it. Case (c) gains the FF-2 pins: the `## Set the workshop key`
+     section links `(#start-the-app)`, and the `## Start the app` section holds the same-terminal sentence (its exact
+     words as on the page today).
+  2. Negative control: with line 132 and line 347 restored from `git show HEAD:docs/spec-pack/workshop/workshop-plan.md`
+     (copy-aside + SHA-256), `node --test guide/scripts/level-start.test.mjs` FAILS on exactly case (d) with an
+     assertion naming the missing `git stash -u && git switch -C level-1 level-0-start` (or Level 0) in the pack -
+     not with a read, import or syntax error; cases (a) to (c) stay green. With the fix in place all cases PASS.
+     The FF-2 pins are proven by must-fail probes on the page (the verifier runs them): M10 the setup link made plain
+     text, and the same-terminal sentence deleted, each makes case (c) FAIL. Outputs under `## Red evidence` and
+     `## Green evidence`.
+  3. Consistency: `git diff <pr-base> -- docs/spec-pack/` touches only lines 132 and 347 (`git diff -U0` hunks
+     quoted); `npm --prefix guide run check` keeps `anchored 304/304, 15 manual rows, 0 entries pending`, and
+     structure, content and plan checks `ok`; `content` rule (c) still passes (the new pack spans only add allowed
+     lines); T1's other 11 files are unchanged (`git diff <pr-base> --stat`); if TS-11 changes, the verdict says why
+     and that it is one entry.
+  4. ASCII only, plain English, no em dash in every touched line.
+  5. Gates green: `npm --prefix guide run check`, `typecheck`, `build`, `check:built`, `build:offline`, and the
+     referee (same command and env as T1) within 60 s.
 
 ### T1: Levels 0 and 1 catch up at the tag, far-behind names every level, the setup page starts the app
 
@@ -174,4 +212,10 @@ Open question the code does not settle in minutes: none.
 
 ## Amendments
 
-(none)
+- A1 (2026-11-10T14:50Z, main session decision, applied by the orchestrator): the pack and the guide must agree.
+  The main session authorised editing `docs/spec-pack/workshop/workshop-plan.md` lines 132 and 347 only, to match
+  the new catch-up commands and `level-0-start`, keeping every coverage anchor and hash binding consistent. This
+  lifts the Ground rule "Nothing under `docs/spec-pack/` is edited" for exactly those two lines; `progress.md` and
+  `decisions.md` stay untouched. Consequence: new task T2 (below), cut after T1 merged; the bug.md Blast radius
+  item "Docs or pack text" moves from deferred to task T2. The QA lead's FF-2 is folded into T2. Gate 1 re-run:
+  self-accepted by the orchestrator (owner-delegated).
