@@ -1,0 +1,131 @@
+name: Guide
+
+# Builds the workshop guide (Docusaurus, folder guide/).
+#
+# Pull requests only build. Pushes to factory build and, once the owner approves, deploy the site to GitHub Pages and
+# attach the offline zip to the release workshop-2026. Nothing is published until the owner has done these three steps:
+#   1. Enable GitHub Pages in the repository settings with the source "GitHub Actions".
+#   2. If the github-pages environment restricts deployment branches, allow the branch factory there.
+#   3. Create the repository variable GUIDE_DEPLOY with the value true (Settings, Secrets and variables, Actions).
+# Without the variable GUIDE_DEPLOY the deploy job, the release job and the Pages artifact upload are skipped.
+# Removing the three if lines that name GUIDE_DEPLOY makes publishing unconditional again.
+
+on:
+  push:
+    branches:
+      - factory
+    paths:
+      - 'guide/**'
+      - '.github/workflows/guide.yml'
+  pull_request:
+    paths:
+      - 'guide/**'
+      - '.github/workflows/guide.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: guide
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.13.0'
+          cache: npm
+          cache-dependency-path: guide/package-lock.json
+      # Each long step below stays under the job timeout-minutes (15), so a hang ends that step as failed.
+      - name: Install dependencies
+        timeout-minutes: 3
+        run: npm ci
+      - name: Check the guide sources
+        timeout-minutes: 3
+        run: npm run check
+      - name: Type check
+        timeout-minutes: 3
+        run: npm run typecheck
+      - name: Build site
+        # This is the gate for links: broken links and anchors fail this build, the hash router build below hides them.
+        timeout-minutes: 5
+        run: npm run build
+      - name: Check the built site
+        timeout-minutes: 3
+        run: npm run check:built
+      - name: Build offline site
+        timeout-minutes: 5
+        run: npm run build:offline
+      - name: Zip offline site
+        # Zip the contents of the folder so that index.html sits at the root of the zip, with no build-offline prefix.
+        timeout-minutes: 2
+        working-directory: guide/build-offline
+        run: zip -r -q ../../workshop-guide-offline.zip .
+      - name: Upload offline zip
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: workshop-guide-offline
+          path: workshop-guide-offline.zip
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload Pages artifact
+        if: ${{ github.event_name == 'push' && vars.GUIDE_DEPLOY == 'true' }}
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          # The working-directory default does not apply to uses steps, so the path starts at the repository root.
+          path: guide/build
+
+  deploy:
+    needs: build
+    if: ${{ github.event_name == 'push' && vars.GUIDE_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        # Stays below the job timeout-minutes (15). deploy-pages itself gives up after 10 minutes by default.
+        timeout-minutes: 12
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  release:
+    needs: build
+    if: ${{ github.event_name == 'push' && vars.GUIDE_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download offline zip
+        timeout-minutes: 2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: workshop-guide-offline
+      - name: Create the release if it is missing
+        # The target makes a new tag point at the pushed commit instead of the default branch.
+        timeout-minutes: 2
+        run: |
+          if ! gh release view workshop-2026 > /dev/null 2>&1; then
+            gh release create workshop-2026 --target "$GITHUB_SHA" --title "Workshop 2026" --notes "Offline copy of the workshop guide."
+          fi
+      - name: Attach the offline zip
+        timeout-minutes: 3
+        run: gh release upload workshop-2026 workshop-guide-offline.zip --clobber

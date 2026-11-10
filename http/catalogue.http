@@ -1,16 +1,21 @@
 # JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+# The bookstore starts with demo data: 103 books, their stock and 6 orders. Every ISBN these requests add or import is one that the demo data leaves out.
+# Run the files of this folder in this order on one database: catalogue.http, inventory.http, orders.http, distributor.http, demo-flow.http.
+# Every file also runs alone on a freshly seeded database. Run this file once per database: a second run is refused with 409, because its ISBNs are in the catalogue by then.
+# Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
 
-# Add Pride and Prejudice and remember the new book id for the requests below.
+# Add Northanger Abbey and remember the new book id for the requests below. The demo data does not hold this ISBN. The body of the answer holds the id of the new book.
+# Expected status: 202.
 POST http://localhost:8080/books/commands/add
 Content-Type: application/json
 
 {
-  "isbn": "978-0-14-143951-8",
-  "title": "Pride and Prejudice",
+  "isbn": "978-0-14-143979-2",
+  "title": "Northanger Abbey",
   "authors": ["Jane Austen"],
   "genre": "fiction",
   "price": "9.99",
-  "publicationYear": 1813
+  "publicationYear": 1817
 }
 
 > {% client.global.set("bookId", response.body.id); %}
@@ -18,16 +23,19 @@ Content-Type: application/json
 ###
 
 # Show the details of the book that was just added.
+# Expected status: 200.
 GET http://localhost:8080/books/{{bookId}}
 
 ###
 
-# Search the catalogue for Austen books in the fiction genre.
+# Search the catalogue for Austen books in the fiction genre. On a freshly seeded database the answer lists 2 books: Pride and Prejudice from the demo data and the book that was just added.
+# Expected status: 200.
 GET http://localhost:8080/books?q=austen&genre=FICTION
 
 ###
 
 # Change the price of the book to 12.50.
+# Expected status: 202.
 POST http://localhost:8080/books/{{bookId}}/commands/change-price
 Content-Type: application/json
 
@@ -38,29 +46,34 @@ Content-Type: application/json
 ###
 
 # Discontinue the book.
+# Expected status: 202.
 POST http://localhost:8080/books/{{bookId}}/commands/discontinue
 
 ###
 
 # The requests below import two books from the distributor and show them, so the distributor must be running (default port 8090).
-# Import A Study in Scarlet at the price the distributor recommends and remember the new book id.
+# With the distributor stopped, an import is refused with the error code distributor-unavailable.
+# Import A Connecticut Yankee in King Arthur's Court at the price the distributor recommends and remember the new book id. The body of the answer holds the id of the new book.
+# Expected status: 202 (distributor running); 503 (distributor stopped).
 POST http://localhost:8080/books/commands/import-from-distributor
 Content-Type: application/json
 
 {
-  "isbn": "9789900010159"
+  "isbn": "9789900010791"
 }
 
 > {% client.global.set("importedBookId", response.body.id); %}
 
 ###
 
-# Show the imported book: title, authors, genre and price all come from the distributor.
+# Show the imported book: title, authors, genre and price all come from the distributor. The price is 8.99.
+# Expected status: 200 (distributor running).
 GET http://localhost:8080/books/{{importedBookId}}
 
 ###
 
-# Import The Last Man and sell it at 7.50 instead of the recommended price.
+# Import The Last Man and sell it at 7.50 instead of the recommended price. The body of the answer holds the id of the new book.
+# Expected status: 202 (distributor running); 503 (distributor stopped).
 POST http://localhost:8080/books/commands/import-from-distributor
 Content-Type: application/json
 
@@ -73,5 +86,6 @@ Content-Type: application/json
 
 ###
 
-# Show the book that was imported with its own price.
+# Show the book that was imported with its own price. The price is 7.50.
+# Expected status: 200 (distributor running).
 GET http://localhost:8080/books/{{overriddenBookId}}

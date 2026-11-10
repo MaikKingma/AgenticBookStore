@@ -5,42 +5,51 @@ metadata:
   type: reference
 ---
 
-- `RestTestClient` `jsonPath(..).isEqualTo(expected)` converts the actual value to the expected value's class before
-  comparing. So `isEqualTo("9.99")` also passes when the price is a JSON number. When the type matters (string prices),
-  read the body with `expectBody(new ParameterizedTypeReference<Map<String, Object>>() {})` and compare with AssertJ.
-  Jackson gives a `String` for a JSON string and a `Double` or `Integer` for a number.
-- Map bodies give exact view shapes for free: `assertThat(view).isEqualTo(Map.of(...))` checks the key set and the
-  values together. `List.equals` works across list types, so a `List.of(Map.of(...))` literal can be compared
-  directly with a deserialised `details` array.
-- Avoid raw-type unchecked notes in the referee log: use `extractingByKey("details", InstanceOfAssertFactories.LIST)`
-  with `.singleElement(InstanceOfAssertFactories.MAP)`. Write `.extracting(d -> (Object) ((Map<?, ?>) d).get("field"))`;
-  the `(Object)` cast is what lets `containsExactly(String...)` compile.
-- Choose data that the expected production probes break: insert rows out of title order AND out of ISBN order, so
-  a sort-by-ISBN mutation fails. Every filter in a search URL needs its own decoy: for each criterion, one row
-  that matches all the other criteria but not this one (same-author other-genre row for genre, same-genre
-  other-author row for author). QA probes each criterion by passing null for it. Open-in-view is off, so any get or change after an add goes through lazy authors and kills a
-  removed flow `@Transactional`.
-- The full context is cached across `IntegrationTestBase` subclasses: a new subclass adds no Started line. A
-  `@MockitoSpyBean` on a port and a plain class in the base `@Import` keep it that way.
-- The base cleans BEFORE each test, not after: a `PER_CLASS` subclass's non-static `@BeforeAll` runs on the previous
-  class's leftover rows, so any row it inserts needs keys (ISBN, id) that no other test uses.
-- MockMvc `jsonPath("$.details").value(List.of(...))` converts the actual array to the expected value's class and then
-  reports `but was:<null>`. Wrap it: `.value(equalTo(List.of(Map.of(...))))` (Hamcrest, no conversion).
-- Payload records: `@Valid List<@NotNull X>` logs Hibernate Validator warning HV000271 (container-level `@Valid`
-  deprecated). Write `List<@Valid @NotNull X>`; field paths stay `lines[1]` and `lines[1].bookId`.
-- Null-valued JSON key pins: wrap the unchanged `Map.of(...)` literal in one `withNoPending...(Map)` helper that copies
-  into a `LinkedHashMap` and puts the null, so existing pin lines keep their figures. `Map.equals` treats a missing key
-  as different from a null value, so `isEqualTo` is itself a presence check. In slices,
-  `jsonPath("$.k").value(nullValue())` fails on a missing path, and `jsonPath("$", hasKey("k"))` pins presence.
-- `OutputCaptureExtension` on a full-context IT: `CapturedOutput.getOut()` joins the class-level capture with the test's
-  own, so a test also sees the context start-up and every EARLIER test of the class. Assert per unique token (a fresh
-  book id, a literal only that test throws), never a bare `containsOnlyOnce(" WARN ")`. "Exactly one WARN naming X"
-  without filtering: `containsPattern(" WARN .*" + x)` plus `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`.
-- Spring's after-commit listener failure logs `ERROR ... TransactionSynchronization.afterCompletion threw exception`,
-  then a BLANK line, then `java.lang.X: <message>`: join them with `\\R+`, not `\\R`. Logged per failing listener call.
-- A forked full context off `IntegrationTestBase` (own `@TestPropertySource` plus `@Import(PlainTestDouble.class)` plus a
-  `@MockitoSpyBean` on a transactional flow) just works: the subclass annotations add to the base's, the spy on the
-  proxied flow keeps its transactions, and it costs one extra Started line. Drive the Spring AI tool loop from
-  `ScriptedChatModel` and read the tool result from the received prompt's `ToolResponseMessage.responseData()` (raw
-  JSON of the tool's return value, parse it with Jackson 3 `JsonMapper.readValue(json, TypeReference)`).
+- `RestTestClient` `jsonPath(..).isEqualTo(expected)` converts the actual value to the expected value's class, so
+  `isEqualTo("9.99")` also passes for a JSON number. When the type matters, read the body with
+  `expectBody(new ParameterizedTypeReference<Map<String, Object>>() {})` and use AssertJ (String for JSON string, Double or
+  Integer for numbers). MockMvc `jsonPath("$.details").value(List.of(...))` converts too and reports `but was:<null>`: wrap in
+  `.value(equalTo(List.of(Map.of(...))))` (Hamcrest).
+- Map bodies give exact view shapes: `assertThat(view).isEqualTo(Map.of(...))` checks key set and values together.
+  `List.equals` works across list types. Null-valued key pins: wrap the `Map.of(...)` literal in a `withNoPending...(Map)` helper
+  that copies into a `LinkedHashMap` and puts the null; `Map.equals` treats a missing key as different from null, so `isEqualTo`
+  is a presence check. In slices `jsonPath("$.k").value(nullValue())` fails on a missing path; `jsonPath("$", hasKey("k"))`
+  pins presence.
+- No raw-type unchecked notes: `extractingByKey("details", InstanceOfAssertFactories.LIST)` with
+  `.singleElement(InstanceOfAssertFactories.MAP)`; `.extracting(d -> (Object) ((Map<?, ?>) d).get("field"))` (the `(Object)`
+  cast lets `containsExactly(String...)` compile). Verifier greps `^\s*@` allow only `@Test`/`@Autowired`: a generic varargs
+  helper needs `@SafeVarargs`, so pass `List<Map<String, Object>>` instead. Payload records: `@Valid List<@NotNull X>` logs
+  HV000271: write `List<@Valid @NotNull X>`; paths stay `lines[1]`.
+- Probe-breaking data: insert rows out of title order AND out of ISBN order (kills sort-by-ISBN). Every search filter needs its
+  own decoy matching all other criteria but not this one; QA probes each criterion by passing null. Open-in-view is off, so a
+  get/change after an add goes through lazy authors and kills a removed flow `@Transactional`.
+- Order claims over a list: at least four rows (three with fixed "first/last" rows is always monotone). Columns no use case
+  changes (reserved, reorder level) are set by `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check. For
+  app-generated ids seed `book`, `book_author`, `stock_item` by SQL with fixed ids (first hex digit 0 to 7) so ids can be
+  non-monotone; set instants with `OffsetDateTime.ofInstant(i, ZoneOffset.UTC)` to compare literal ISO strings.
+- Root-order claims over a fetch-joined query (orders with lines): QA sorts by each child column asc and desc over the flat
+  rows. Give each root its own books and put the smallest and largest child value of every column in the middle root; tabulate
+  with a script first.
+- The full context is cached across `IntegrationTestBase` subclasses (no new Started line); `@MockitoSpyBean` on a port and a
+  plain class in the base `@Import` keep it so. A forked context (own `@TestPropertySource`, `@Import(PlainTestDouble.class)`,
+  `@MockitoSpyBean` on a transactional flow) works and costs one extra Started line. Drive the Spring AI tool loop from
+  `ScriptedChatModel` and read the tool result from the prompt's `ToolResponseMessage.responseData()` (raw JSON; Jackson 3
+  `JsonMapper.readValue(json, TypeReference)`).
+- The base cleans BEFORE each test: a `PER_CLASS` subclass's non-static `@BeforeAll` runs on the previous class's leftover rows,
+  so its rows need keys (ISBN, id) no other test uses.
+- Verifier greps (`assert|fail\(`, forbidden annotations) also match Javadoc and comments: keep those tokens out of prose. QA greps
+  `LocalDate(Time)?\.now\(` over `bookstore/src/test`: autowire the `Clock` and use `LocalDate.ofInstant(clock.instant(),
+  clock.getZone())`. Stub the shared `@MockitoBean` default in the base `@BeforeEach` with `doAnswer(...).when(mock)`;
+  re-stubbing replaces it, so for "fail first, then default" rebuild locally (`doThrow(e).doAnswer(this::defaultConfirmation)`).
+- `OutputCaptureExtension` on a full-context IT: `getOut()` joins the class-level capture with start-up and EARLIER tests of
+  the class. Assert per unique token (fresh book id, a literal only that test throws), never a bare
+  `containsOnlyOnce(" WARN ")`. "Exactly one WARN naming X": `containsPattern(" WARN .*" + x)` plus
+  `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`. An after-commit listener failure logs `ERROR ...
+  afterCompletion threw exception`, a BLANK line, then `java.lang.X: <message>`: join with `\\R+`.
+- JDBC witnesses for nullable column groups: `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
+  rs.getObject(2, Integer.class), ...), id)` gives nulls for SQL NULL, so "all cleared" is `isEqualTo(Arrays.asList(null, ...))`.
+  "Row unchanged after a rejected command": `queryForMap("select * ...")` before and after. Run every "unchanged" claim from each
+  start of the flag it could flip (`@ValueSource(booleans = {true, false})`), else a reset-with-rollback-suppressed mutant
+  survives (QA rule C0-17).
+
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

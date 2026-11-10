@@ -153,6 +153,37 @@ class ScriptedChatModelTest {
                 .hasMessage("No scripted step left for call 1");
     }
 
+    @Test
+    void failingStepThrowsItsExceptionAfterRecordingThePrompt() {
+        IllegalStateException failure = new IllegalStateException("upstream refused the call");
+        ScriptedChatModel model = new ScriptedChatModel().thenFail(failure).thenReply("Back again.");
+
+        assertThatThrownBy(() -> model.call(new Prompt(new UserMessage("Is Emma in stock?")))).isSameAs(failure);
+
+        assertThat(model.received()).hasSize(1);
+        assertThat(model.received().get(0).messages()).extracting(Message::getText)
+                .containsExactly("Is Emma in stock?");
+        String next = model.call(new Prompt(new UserMessage("Any thrillers?"))).getResult().getOutput().getText();
+        assertThat(next).isEqualTo("Back again.");
+        assertThat(model.received()).hasSize(2);
+    }
+
+    @Test
+    void failureAfterAToolRoundReachesTheCallerUnchanged() {
+        when(catalogue.search("austen", null, null, null)).thenReturn(List.of(persuasion()));
+        when(inventory.findByBookId(PERSUASION_ID)).thenReturn(new StockItemDTO(PERSUASION_ID, 4, 1, 1, 5, false));
+        UnsupportedOperationException failure = new UnsupportedOperationException("upstream went away");
+        ScriptedChatModel model = new ScriptedChatModel()
+                .thenCallTool("searchCatalogue", "{\"query\":\"austen\"}")
+                .thenFail(failure);
+
+        assertThatThrownBy(() -> clientWithTools(model).prompt().user("Anything by Austen?").call().content())
+                .isSameAs(failure);
+
+        verify(catalogue).search("austen", null, null, null);
+        assertThat(model.received()).hasSize(2);
+    }
+
     private ChatClient clientWithTools(ScriptedChatModel model) {
         return ChatClient.builder(model).defaultTools(new BookstoreTools(catalogue, inventory)).build();
     }

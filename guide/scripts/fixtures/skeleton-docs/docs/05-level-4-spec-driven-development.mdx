@@ -1,0 +1,37 @@
+---
+title: "Level 4: Spec-driven development"
+sidebar_position: 7
+---
+
+import LevelProgress from '@site/src/components/LevelProgress';
+
+<LevelProgress current={4} />
+
+:::note[At a glance]
+
+**Goal:** Turn a vague request into a spec, a plan and tasks, then let the agent implement and verify it inside the harness you built.
+
+**Start branch:** `start/level-4-<track>`
+
+**Catch-up:**
+
+```bash
+git stash -u && git switch start/level-4-<track>
+```
+
+**Time:** 45 minutes
+
+:::
+
+{/* guide-skeleton */}
+
+## Tracks {/* #tracks */}
+
+## Feature briefs {/* #feature-briefs */}
+
+## Level cleared when
+
+- [ ] Spec artefacts committed next to the code.
+- [ ] `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+- [ ] Commit made through your `/ship` command and passed the test-gate hook.
+- [ ] Every acceptance scenario in your spec maps to a test (ask the agent to list the mapping).

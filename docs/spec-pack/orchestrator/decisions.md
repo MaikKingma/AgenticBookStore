@@ -191,6 +191,11 @@ not by a separate agent.
 Changed files: `specs/09-workshop-baseline.md` (Seed data, catalogue scenario), `specs/02-catalogue.md` (search
 cap).
 
+Clarified by the main session on 2026-11-09 after the spec 09 orchestrator found a contradiction (10 genres times at
+least 10 AVAILABLE books leaves no room for discontinued books in exactly 100): the seed has 103 books, 100 AVAILABLE
+(exactly 10 per genre) plus the 3 discontinued bookstore-only books spec 09 already asks for. This keeps both of
+Maik's requirements and fits under the cap of 200.
+
 ## D13. Assistant as a chat widget with streamed answers (deferred to after the first release)
 
 Maik, 2026-11-09, during the live walk of the storefront: the assistant should feel like a classic chat assistant
@@ -211,3 +216,84 @@ for Maik's review. Scenarios that need a Claude Code session, the macOS LSP rehe
 are Maik's manual checks.
 
 Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble, Definition of done).
+
+## D15. The publish script also strips the guide
+
+Main session, 2026-11-10, from the spec 09 review: spec 11's guide (`guide/` and `.github/workflows/guide.yml`)
+merges into `factory` after `main` is first published, so the first publish carries no guide. Any later republish
+would copy it to `main`, and the guide holds the Level 0 failure-mode checklist and the links to the solution
+branches, which a Level 0 agent could then read. Spec 11 already says nothing deploys from `main`. So the publish
+script's path list (and with it the `no-agent-config` guard) includes `guide/` and `.github/workflows/guide.yml`.
+
+Changed file: `specs/09-workshop-baseline.md` (publish script path list). Implemented through /sdd-bugfix
+(`fix-09-baseline-review`) before `main` is published.
+
+## D16. No PowerShell hook variants
+
+Maik, 2026-11-10, during spec 10 task T8: "Skip the powershell stuff. It's too much effort for now." Level 3 ships the
+bash hooks and the git pre-commit hook only. Windows participants run them through Git Bash, which D9 already
+requires. Every PowerShell hook, PowerShell hook tab in the guide and PowerShell parity test is dropped.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble). Spec 11's guide drops its PowerShell hook
+tabs when it merges (follow-up F2).
+
+## D17. Level branch names are a fixed contract, and the guide goes live before spec 10 ends
+
+Maik, 2026-11-10: "lets publish a first version of the docusaurus page. we can agree on branch names in a contract for
+the upcoming solution branches for reference". The guide deploys as soon as spec 11 is merged, without waiting for
+spec 10's branches. Its links point at branches that do not exist yet, so the names are frozen now:
+
+| Branch | Cut from | Level |
+|---|---|---|
+| `level-0-start` | a tag (not a branch) on b668073, the same commit as `main` | Level 0 |
+| `solution/level-1` | `level-0-start` | Level 1 |
+| `solution/level-2` | `solution/level-1` | Level 2 |
+| `solution/level-3` | `solution/level-2` | Level 3 |
+| `start/level-4-openspec` | `solution/level-3` | Level 4, OpenSpec track |
+| `start/level-4-speckit` | `solution/level-3` | Level 4, Spec Kit track |
+| `start/level-4-agentos` | `solution/level-3` | Level 4, Agent OS track |
+
+Rules: spec 10 task T14 creates exactly these names. Renaming one needs Maik's OK and a guide change in the same
+change. There are no Level 4 solution branches: Maik, 2026-11-10, "the t11 to t13 do not need a done branch. thats up to the participants." Spec 10's optional `solution/level-4-<track>-<brief>` step is dropped; the Level 4 tasks stage only the three `start/level-4-*` branches. Until
+spec-10-done the guide's branch links answer 404; check R-G2 (every guide link resolves) moves to after spec-10-done.
+Tags stay in build order: spec 11's merge and deploy happen now, the `spec-11-done` tag follows `spec-10-done`.
+
+Changed files: none in the specs (spec 10 already names these branches; this decision freezes them).
+
+## D18. The guide takes the keynote deck's look
+
+Maik, 2026-11-10: the guide header gets the OpenValue logo (left of the title, opens https://openvalue.eu in a new
+tab), a repository link and a LinkedIn link (https://www.linkedin.com/in/maik-kingma/). The level bar becomes a
+breadcrumb: done levels green with a check mark, the current level solid deck blue, upcoming levels slightly grayed
+out. Colours follow the deck "Shift Left, Look Right": slate grey `#1d242c` backgrounds in dark mode and blue
+`#3c7ec9` for buttons and links. The logo is extracted from the deck. This replaces D7's teal primary for the guide
+only; the storefront keeps D7. Montserrat stays.
+
+Changed files: new `specs/14-guide-branding.md`, `product/roadmap.md` (row 14).
+
+Addendum (main session, 2026-11-10, spec 14 OD-1): the deck blue `#3c7ec9` reaches only 4.18:1 against white and
+3.74:1 on slate, below the guide's pinned 4.5:1 text contrast. To keep that check unchanged, text-bearing uses (the
+primary colour, the current crumb) use the AA shade `#3371B8` in light mode and a lighter AA shade on slate in dark
+mode; the exact `#3c7ec9` is kept for non-text accents (borders, bars).
+
+## D19. Guide content revision: no sync moments, clearer Level 1 and 2, framework order in Level 4
+
+Maik, 2026-11-10, after reviewing the live guide: remove every sync moment (Maik and Tom walk around, no facilitator
+demos); their minutes go to solo time and the workshop plan changes with the guide. Level 1 step 3 gives the exact
+rule file path and content with its frontmatter; step 5 gets a text mock of the `/context` grid (no screenshot).
+Level 2 step 5 replaces "watch the demo" with debugging options in a collapsible section. Encourage creativity across
+levels. Level 4 start branches keep their prepared setup; the guide explains that on their own brownfield projects
+participants should first run the framework's own preparation (Agent OS: discover standards and plan product; the
+documented equivalents for Spec Kit and OpenSpec), in the order the frameworks' docs give. Runs as spec 15 after spec
+14 is merged.
+
+Changed files: new `specs/15-guide-content-revision.md`, `product/roadmap.md` (row 15).
+
+## D20. Bonus level on agent orchestration, deferred
+
+Maik, 2026-11-10: add a bonus level after Level 4 for fast participants: think through a feature's normal flow,
+define one research subagent and one QA subagent, run a simple team orchestration, then let Claude write it as code
+with Claude Code's workflow feature. An exercise without solutions. Deferred until specs 10, 14 and 15 are done, to
+keep enough tokens in the current usage window.
+
+Changed files: new `specs/16-bonus-level-orchestration.md`, `product/roadmap.md` (row 16).

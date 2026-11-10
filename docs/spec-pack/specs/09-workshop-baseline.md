@@ -24,10 +24,9 @@ that Level 0 actually produces the failure modes the keynote promises.
   with the numbering of new migrations in `db/migration`). Every statement is idempotent PostgreSQL SQL
   (`INSERT INTO ... ON CONFLICT DO NOTHING` or `INSERT INTO ... SELECT ... WHERE NOT EXISTS (...)`). There is no
   other database to stay portable with.
-- 100 books, at least 10 AVAILABLE books per genre (decision D12). 20 of them are exactly
-  the ISBNs in `distributor/src/main/resources/catalog/bookstore-shared-isbns.txt`
-  (spec 05), with the same titles and authors. The other 80 are bookstore-only. Mix genres; a few discontinued
-  (bookstore-only ones).
+- 103 books (decision D12): 100 AVAILABLE, exactly 10 AVAILABLE per genre, plus 3 discontinued bookstore-only
+  books. 20 of them are exactly the ISBNs in `distributor/src/main/resources/catalog/bookstore-shared-isbns.txt`
+  (spec 05), with the same titles and authors. The other 83 are bookstore-only.
 - Stock: varied; at least 5 books at or below their reorder level, all of them among the 20 shared ISBNs (so
   `demo-flow.http` can show a restock), 3 with zero stock, none with a pending restock.
 - 6 demo orders for 3 customers (`reader@example.com`, `bookworm@example.org`, `night.owl@example.net`), 2 shipped.
@@ -39,7 +38,8 @@ that Level 0 actually produces the failure modes the keynote promises.
   its own), run commands: `./mvnw verify` once, then `./mvnw -pl bookstore spring-boot:run` (starts PostgreSQL through Docker
   Compose, serves the storefront built by the full build at http://localhost:8080/shop/) and `./mvnw -pl distributor spring-boot:run`, plus how to run the jar
   against an existing PostgreSQL (`SPRING_DATASOURCE_URL`, user and password `bookstore`) and how to reset the
-  database (`docker compose -f bookstore/compose.yaml down`); the module map including `frontend/` and `guide/`;
+  database (`docker compose -f bookstore/compose.yaml down`); the module map including `frontend/` (the guide is not a folder on `main`, see spec 11: link the guide
+  site on GitHub Pages instead);
   a short architecture paragraph with the onion diagram and a link to `docs/architecture.md`; endpoint overview;
   a "Storefront" section (`/shop/`, Vite dev server for UI work with the Maven-installed npm: `frontend/node/npm run dev` in `frontend/`, proxy to 8080);
   "Assistant" section (`BOOKSTORE_AI_API_KEY`, offline mode, and the warning not to use `ANTHROPIC_API_KEY`);
@@ -59,7 +59,9 @@ that Level 0 actually produces the failure modes the keynote promises.
    `openspec/`, `.specify/`, `specs/`, `agent-os/` (including the `agent-os/product` symlink and
    `agent-os/specs/`, where the SDD cycle writes its plan artefacts), `.githooks/`,
    `docs/spec-pack/` (this pack contains the level solutions, the orchestrator progress file and facilitator notes,
-   so it must never reach `main`). The list lives once, in the script, and the CI guard below reads the same list.
+   so it must never reach `main`), `guide/` and `.github/workflows/guide.yml` (decision D15: the workshop guide
+   holds the Level 0 failure-mode checklist and the solution links, so a Level 0 agent must not find it in the
+   repository; it lives on `factory` and on GitHub Pages only). The list lives once, in the script, and the CI guard below reads the same list.
 3. Commits the result as a single commit "Agentic Bookstore: workshop baseline" on an orphan-based `main`
    (history starts fresh, so participants do not see agent-generated history), force-updates `main`, and moves tag
    `level-0-start` to it. Prints what it removed.
@@ -81,7 +83,7 @@ The application SHALL load the demo data when run locally and SHALL never load i
 
 #### Scenario: Local run
 - **WHEN** the bookstore starts with the default profile (PostgreSQL through Docker Compose support) and `GET /books` is called
-- **THEN** 100 books are returned, at least 10 AVAILABLE per genre, and the storefront at `/shop/` lists them
+- **THEN** 103 books are returned (100 AVAILABLE, 10 per genre, and 3 discontinued), and the storefront at `/shop/` lists them
 
 #### Scenario: Tests are unaffected
 - **WHEN** the test suite runs

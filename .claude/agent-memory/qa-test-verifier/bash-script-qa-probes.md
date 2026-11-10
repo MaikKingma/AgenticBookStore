@@ -4,45 +4,15 @@ description: Verifying bash tooling tasks (staging/apply/cut scripts with a bash
 metadata:
   type: feedback
 ---
-
-Rule: for a bash self-test, mutate COPIES of the script folder in the scratchpad, never the repo, and measure
-coverage with xtrace before calling the probe list complete.
-
-**Why:** the ledger's named mutants all died, but the coverage trace showed refusal lines that no case reached. One
-mutant on such a line silently let agent config through with exit 0. A suite that kills only the named mutants still
-does not cover "every refusal path".
+Rule: for a bash self-test, mutate COPIES of the script folder in the scratchpad, never the repo, and measure coverage with xtrace before calling the probe list complete.
+**Why:** the ledger's named mutants all died, but the coverage trace showed refusal lines that no case reached. One mutant on such a line silently let agent config through with exit 0. A suite that kills only the named mutants does not cover "every refusal path".
 **How to apply:**
-- Use a python `-I` generator with id -> (file, old, new) and an exact-once check. Per mutant: `cp -Rp` the snapshot
-  into `SP/mut/<id>/<same relative path>` (keep the sibling files the test reads, for example a spec file), run the
-  suite with TMPDIR in SP, and record the `not ok` lines. Run them with `xargs -P 6`; about 30 s per suite, 30
-  mutants in about 3.5 min. Add a CONTROL id that changes nothing: a green CONTROL from a copy proves that the test
-  finds its scripts relative to itself.
-- Coverage without kcov: a `BASH_ENV` file that opens `exec {fd}>>trace.$$.txt`, sets `BASH_XTRACEFD`,
-  `PS4='+${BASH_SOURCE[0]}:${LINENO}: '` and `set -x`. Every `bash script` the test starts inherits it (needs bash
-  4.1 or later on PATH). Parse `+...:/scripts/<name>.sh:<line>:`. Multi-line commands and heredoc terminators show
-  up as false "missed" lines, so read the missed list by hand.
-- From the never-reached die/line_die lines, build a second "gap" batch (remove each check). Each survivor needs a
-  witness, the same input on the original and on the mutant copy, to tell harmful (silent success, line number lost)
-  apart from equivalent (refused later by accident).
-- Run the README "as written" in a scratch clone of the worktree (`git clone <worktree>`, then point
-  `refs/remotes/origin/<base>` at the real sha), with the staging folder copied in and FIXTURE step folders. Use a
-  scratch bare remote for fetch and push steps. Keep HOME real for Maven (J10) and isolate git only with
-  `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_NOSYSTEM`.
-- Rollback under `set -e`: a failing command inside an EXIT-trap rollback aborts the rest of the handler silently
-  (index restore, folder cleanup, backup removal, the "rolled back" line). Witness on the UNMUTATED script: an
-  earlier row that stages (patch via `--3way`), then a write onto a `chmod 444` file. Check `git status`, empty
-  folders and leftover backup folders. A mutant leaving a temp folder behind is a hint to look for this.
-- "Deleting `set +e` in the trap is equivalent, every command is guarded" is usually false: the `echo ... >&2`
-  status lines are unguarded. Witness: run the failing case with stderr closed (`2>&-`); the mutant aborts the trap
-  and leaks its backup/temp folder (or turns exit 0 into 1). Judge claimed-equivalent mutants with a witness, never
-  by reading.
-- After a rollback rework, mutate each `|| record_failure` guard to `|| true` separately and run a witness per guard:
-  a failure the tests never force (rm of an added top-level file, a mode-only change skipped by a "same file"
-  shortcut) makes the tool claim "unchanged" while the tree differs. Shim the one command with a PATH-first script.
-- Verbatim-staging tasks (pack fenced blocks copied into a step folder): the extractor must be fence-aware, because
-  a CLAUDE.md block contains `## ` lines that end a naive section scan; end the section at a bare `---` outside a
-  fence and map heading to target by the first backticked token. Run one negative control PER file (flip one byte in a
-  copy of the staged tree) plus a dropped-final-newline control. A sandbox built from `origin/factory` can hold more
-  tests than the worktree referee (factory moved past the spec branch); compare totals per base, not across.
-
-Related: [[shell-traps]], [[env-switch-mutant-runner]], [[readme-and-live-jar-probes]]
+- Use a python `-I` generator with id -> (file, old, new) and an exact-once check. Per mutant: `cp -Rp` the snapshot into `SP/mut/<id>/<same relative path>` (keep sibling files the test reads, for example a spec file), run the suite with TMPDIR in SP, and record the `not ok` lines. Run with `xargs -P 6` (30 mutants in a few minutes). Add a CONTROL id that changes nothing: a green CONTROL from a copy proves that the test finds its scripts relative to itself.
+- Coverage without kcov: a `BASH_ENV` file that opens `exec {fd}>>trace.$$.txt`, sets `BASH_XTRACEFD`, `PS4='+${BASH_SOURCE[0]}:${LINENO}: '` and `set -x`. Every `bash script` the test starts inherits it (needs bash 4.1 or later on PATH). Parse `+...:/scripts/<name>.sh:<line>:`. Multi-line commands and heredoc terminators show up as false "missed" lines: read the missed list by hand.
+- From the never-reached die/line_die lines, build a second "gap" batch (remove each check). Each survivor needs a witness, the same input on the original and on the mutant copy, to tell harmful (silent success, line number lost) apart from equivalent (refused later by accident).
+- Run the README "as written" in a scratch clone of the worktree (`git clone <worktree>`, then point `refs/remotes/origin/<base>` at the real sha), with the staging folder copied in and FIXTURE step folders. Use a scratch bare remote for fetch and push steps. Keep HOME real for Maven and isolate git only with `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_NOSYSTEM`.
+- Rollback under `set -e`: a failing command inside an EXIT-trap rollback aborts the rest of the handler silently (index restore, folder cleanup, backup removal, the "rolled back" line). Witness on the UNMUTATED script: an earlier row that stages (patch via `--3way`), then a write onto a `chmod 444` file. Check `git status`, empty folders and leftover backup folders. A mutant leaving a temp folder behind is a hint to look for this.
+- "Deleting `set +e` in the trap is equivalent, every command is guarded" is usually false: the `echo ... >&2` status lines are unguarded. Witness: run the failing case with stderr closed (`2>&-`); the mutant aborts the trap and leaks its backup/temp folder (or turns exit 0 into 1). Judge claimed-equivalent mutants with a witness, never by reading.
+- After a rollback rework, mutate each `|| record_failure` guard to `|| true` separately and run a witness per guard: a failure the tests never force (rm of an added top-level file, a mode-only change skipped by a "same file" shortcut) makes the tool claim "unchanged" while the tree differs. Shim the one command with a PATH-first script.
+- Verbatim-staging tasks (pack fenced blocks copied into a step folder): the extractor must be fence-aware, because a CLAUDE.md block contains `## ` lines that end a naive section scan; end the section at a bare `---` outside a fence and map heading to target by the first backticked token. Run one negative control PER file (flip one byte in a copy of the staged tree) plus a dropped-final-newline control. A sandbox built from `origin/factory` can hold more tests than the worktree referee (factory moved past the spec branch): compare totals per base, not across.
+Related: [[shell-traps]], [[env-switch-mutant-runner]], [[readme-and-live-jar-probes]], [[bash-script-test-probes]]

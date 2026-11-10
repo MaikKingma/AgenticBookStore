@@ -481,6 +481,10 @@ contradicts `CLAUDE.md`.
 - **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
 
 ## Tasks
+Decision D16 (Maik, 2026-11-10): no PowerShell hook variants. Every PowerShell (`.ps1`) hook, PowerShell
+hook tab and PowerShell parity requirement in this spec is dropped. Level 3 ships the bash hooks and the git
+pre-commit hook only; on Windows they run through Git Bash (decision D9).
+
 Decision D14 (Maik, 2026-11-09): no agent runs Claude Code headlessly for this spec. Maik rehearses every level
 himself (2026-11-10). Agents build every file of every branch directly and replace each "run its scenarios" and
 "rehearse" step below with a careful consistency check: every file matches this spec, the guide (spec 11) and the
@@ -499,7 +503,7 @@ from this pack's product docs and listed for Maik's rehearsal review. The scenar
    diagnostics). If LSP fails, stop and ask Maik before writing a workaround.
 4. Create `solution/level-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
 5. Create the three `start/level-4-*` branches; rehearse each.
-6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
+6. (Dropped by D17: no Level 4 solution branches; building a Level 4 feature is up to the participants.)
 
 ## Definition of done
 - All branches exist, verify green on each, every acceptance scenario above checked and recorded: by the consistency

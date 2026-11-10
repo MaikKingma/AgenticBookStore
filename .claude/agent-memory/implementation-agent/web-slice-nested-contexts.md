@@ -19,6 +19,5 @@ metadata:
   `DefaultHandlerExceptionResolver` sends Boot's error JSON (empty body in MockMvc).
 - Mock a ChatClient chain explicitly (request spec and call spec mocks, `advisors(ArgumentMatchers.<Consumer<AdvisorSpec>>any())`),
   not deep stubs; check advisor params by applying the captured consumer to a small recording `AdvisorSpec`.
-- Surefire reports nested tests under `Outer$Nested` and the outer class with 0 tests: count per `$Nested` line.
 
 Related: [[integration-test-techniques]], [[spring-ai-tool-test-techniques]].

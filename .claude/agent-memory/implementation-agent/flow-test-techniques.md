@@ -5,51 +5,35 @@ metadata:
   type: reference
 ---
 
-- `@ExtendWith(MockitoExtension.class)` uses strict stubs: a stub that is never called fails the test with
-  `UnnecessaryStubbingException`. For a precedence test (stub the port to say "duplicate", expect an earlier 422
-  and `verify(port, never())`), mark that one stub `lenient()`; everywhere else keep strict stubs.
-- An `Optional`-returning port method on a Mockito mock returns `Optional.empty()` without a stub; verify the exact
-  argument (`verify(port).findByIsbn("<normalised>")`) instead of stubbing it, so a raw-argument mutation fails on
-  the verify rather than on a strict-stub argument mismatch.
+- `@ExtendWith(MockitoExtension.class)` uses strict stubs: a never-called stub fails with `UnnecessaryStubbingException`. For a
+  precedence test (stub the port to say "duplicate", expect an earlier 422 and `verify(port, never())`), mark that one stub
+  `lenient()`; everywhere else keep strict stubs.
+- An `Optional`-returning port method on a Mockito mock returns `Optional.empty()` without a stub; verify the exact argument
+  (`verify(port).findByIsbn("<normalised>")`) instead, so a raw-argument mutation fails on the verify rather than on a
+  strict-stub argument mismatch.
 - Assert translated messages exactly by computing the domain exception's message in the test
   (`catchThrowable(() -> new Title(bad)).getMessage()`) instead of `isNotBlank()` alone.
-- Clock witnesses: a second flow on `Clock.fixed(2000-...)` with publication year 2027 kills `Clock.systemUTC()` at
-  each call site, but only one site per test. Give every `toDomain(dto, clock)` call site its own witness
-  (add, change price and discontinue each have one in `CatalogueFlowTest`).
-- Watch a behavioural red, not only a compile red: add a stub method that returns a neutral value first, run, then
-  implement.
-- Published events: capture with `ArgumentCaptor<Object>`, so `verify(events).publishEvent(captor.capture())` binds
-  the `publishEvent(Object)` overload and a mutant that publishes the whole pulled list as one event fails on record
-  equality. Put the port and the publisher in one `inOrder(port, events)` to pin save before publish.
-- Not-found pass-through tests call the flow with input that would fail validation (`receive(id, -1)`), so a value
-  object built before the load turns the expected `isSameAs` 404 into a 422.
-- Order pass-through tests (`containsExactly` on a port list): make the stubbed order monotonic in NO column, asc or
-  desc (id, every int field, derived values like available, booleans), else a re-sorting mutant survives. Also add
-  the save-never/no-events check to read-side rejection tests (QA counts them as rejections).
-- A new `@Service` that needs a bean nobody provides yet breaks every full-context test; land the config class in the
-  same task (spec 02 T3: `CatalogueFlow` needs the `Clock` bean from `ClockConfig`).
-- When a criterion is checked by a token grep (`publishEvent\(`, `orders\.save\(`), write explicit calls, not method
-  references: `events::publishEvent` hides from the grep. `inOrder.verify(events).publishEvent(any(Object.class))`
-  binds the `Object` overload without a captor.
-- Multi-aggregate flows (spec 04 `OrderFlow`): give every "which element is reported" or "in X order" test three rows
-  where the reported row is in the middle and no stock column is monotonic in book-id order; QA probes sort by each.
-  This includes the asserted list itself: a two-entry shortage `details` list or two published stock events is always
-  sorted in every column, so it needs three entries too. Tabulate each asserted column before reporting.
-  QA counts every attribute of the entity the flow holds in scope (isbn, title, price of the book), not only the
-  asserted record's fields. A shared fixture list (e.g. `STORED_LINES`) is asserted in several orders (book-id order
-  for stock, stored order for the saved DTO): one changed literal can fix one order and make another monotone, so
-  tabulate every order the constant appears in. Constant columns (every reorder level 3) also let a sort survive,
-  because Java sorts are stable: vary them unless validation or an asserted literal pins them. Before-values derived
-  from asserted after-values and quantities can be pinned; show another test kills that sort instead.
-- Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with
-  `perl -0pe` from a `cp -p` original in the scratchpad, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and
-  compares `shasum`; flag "MUTANT NOT APPLIED" when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.
-- An external-port DTO that carries its own key (distributor isbn) gets a stub value different from the request, so
-  a flow that builds from the DTO key fails the saved-record assertion.
-- Flow log assertions: `@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})` works in a plain unit
-  test. Logback's unconfigured pattern (`HH:mm:ss.SSS [main] WARN logger -- msg`) and Boot's pattern both contain
-  `" WARN "`, so `containsOnlyOnce(" WARN ").containsPattern(" WARN .*" + id)` pins level and id on one line without
-  filtering the output (QA forbids filtering). Put the id only in the log arguments of a witness whose exception
-  message lacks it, so a "WARN without the id" mutant cannot pass via `e.getMessage()`.
-- Two use cases sharing one implementation: a test-local `enum UseCase` holding `BiConsumer<Flow, UUID>` plus
-  `@EnumSource`/`@MethodSource` runs every shared claim against both without duplicated test bodies.
+- Clock witnesses: a second flow on `Clock.fixed(2000-...)` with publication year 2027 kills `Clock.systemUTC()` at each call
+  site, but only one site per test: give every `toDomain(dto, clock)` call site its own witness.
+- Published events: capture with `ArgumentCaptor<Object>`, so `verify(events).publishEvent(captor.capture())` binds the
+  `publishEvent(Object)` overload and a mutant publishing the whole pulled list as one event fails on record equality. Put the
+  port and the publisher in one `inOrder(port, events)` to pin save before publish.
+- Not-found pass-through tests call the flow with input that would fail validation (`receive(id, -1)`), so a value object built
+  before the load turns the expected `isSameAs` 404 into a 422.
+- When a criterion is checked by a token grep (`publishEvent\(`, `orders\.save\(`), write explicit calls, not method references
+  (`events::publishEvent` hides from the grep). `inOrder.verify(events).publishEvent(any(Object.class))` binds the `Object`
+  overload without a captor.
+- Order and "which element" tests (`containsExactly` on a port list, multi-aggregate flows): make the stubbed order monotonic in
+  NO column, asc or desc (id, every int field, derived values like available, booleans), else a re-sorting mutant survives.
+  Use three rows with the reported row in the middle; the asserted list itself (shortage `details`, published stock events)
+  needs three entries too. QA counts every attribute of the entity the flow holds in scope (isbn, title, price). A shared
+  fixture list asserted in several orders: one changed literal can fix one order and make another monotone, so tabulate every
+  order. Constant columns (every reorder level 3) let a stable Java sort survive: vary them. Add the save-never/no-events check
+  to read-side rejection tests (QA counts them).
+- Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with `perl -0pe` from
+  a `cp -p` original in the scratchpad, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and compares `shasum`; flag
+  "MUTANT NOT APPLIED" when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.
+- Flow log assertions: `@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})` works in a plain unit test.
+  Logback's unconfigured pattern and Boot's pattern both contain `" WARN "`, so
+  `containsOnlyOnce(" WARN ").containsPattern(" WARN .*" + id)` pins level and id on one line without filtering the output (QA
+  forbids filtering). Put the id only in the log arguments of a witness whose exception message lacks it.

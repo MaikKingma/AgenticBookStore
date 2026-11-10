@@ -1,12 +1,10 @@
 ---
 name: scaffold-verification-techniques
-description: Techniques for verifying generated scaffolding (start.spring.io modules, wrapper, POMs) and for snapshot-safe probes in the bookstore repo
+description: Techniques for verifying generated scaffolding (start.spring.io modules, wrapper, POMs), snapshot-safe probes and rework carry-forward by hash in the bookstore repo
 metadata:
   type: feedback
 ---
-
 Rule: prove provenance of generated files by regenerating, not by reading the impl's claims.
-
 **Why:** a reindent (tabs to spaces) turns every POM/Java line into a diff hunk, which can hide a real change.
 **How to apply:**
 - Regenerate with the recorded curl into a fresh scratch dir, then `diff -r -x target gen/<mod> <mod>`, then again with `diff -r -w` excluding the deleted wrapper/metadata files (`-x .mvn -x mvnw -x mvnw.cmd -x HELP.md -x .gitignore -x .gitattributes`). The `-w` run leaves only structural hunks to map against the deviation list.
@@ -18,7 +16,5 @@ Rule: prove provenance of generated files by regenerating, not by reading the im
 - When a rework applies the data of your own witness variant (a full test-file copy in the scratchpad), `diff` the live test against that witness file too: only comment hunks may remain. That proves byte for byte that the data equals what the witness run proved, before you re-run the mutants on it.
 - Rework re-runs: a changed killing test file voids carry-forward, so re-run the whole mutant index (about 7 s per probe here). Use a copy of the runner with the new round's log prefix, or it overwrites the earlier round's logs. Reuse the old mutant files only when production is hash-equal, after a guard checks that live = `.orig` = both rounds' snaps. Watch two shifts. (1) A rework that calls a handler or helper method directly turns a "method removed" mutant into a compile error. A compile error is not a behavioural kill, so add an annotation-only variant (for example drop just `@ExceptionHandler`). (2) Racy probes (removing `synchronized`, removing a sort) can go from killed to surviving with byte-identical tests. Report each round's per-run tally and apply the pre-declared three-run rule again; never carry an earlier racy kill forward.
 - Literal-to-constant replacements (for example U+2003 literals replaced by an `EM_SPACE` concatenation, possibly rewrapped): write a `python3 -I` script that rewrites the base line into the expected ASCII form (`'"'+ch -> 'CONST+"'`, `ch+'"' -> '"+CONST'`), removes all whitespace from both sides and compares. Pair it with `od -An -tx1` of the base line (the `e2 80 83` triples). This proves "nothing else changed in the call" even across a line wrap.
-- Evidence names across specs: the scratchpad is shared, so spec N-1 left `t<n>-qa-*` files (hashes included, which qa-final of that spec relied on). Never overwrite them. Prefix this spec's evidence `t<n>-qa-s<NN>-` and say so in the verdict.
-- Workflow YAML (no actionlint installed): write your own `ruby -ryaml` checker (Psych loads `on` as `true`; assert `on` values are `nil` for unfiltered triggers), then prove it can fail by running it on a scratchpad copy mutated with sed (add `branches:`, drop a flag). Check pinned action majors exist with `gh api repos/<owner>/<action>/releases/latest --jq .tag_name`.
 - Static request collections (`http/*.http`): one `python3 -I` script in the scratchpad checks everything from the file's own bytes (bodies cut with `sed -n 'a,b p'`, key sets vs the payload records, JSON types, ISBN-13 checksum with an invalid-digit control, difference from the sibling collection). Compare the handler and header lines to the sibling file by `sed -n 'Np' | shasum`. Combination inventory: grep the integration tests for each literal (reason text, price, ISBN) to find which input combinations no HTTP test exercises. Read the record components from the Java source in the same script (regex on `public record X(...)`, strip annotations, split on top-level commas), so the key-set check never compares against a retyped list. Referee log: `Creating container for image` also matches Testcontainers' ryuk reaper; count `postgres:18.6` only. Look up test line numbers with `grep -n` before citing them; counting by eye drifts by one.
 Related: [[shell-traps]]
