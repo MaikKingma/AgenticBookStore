@@ -270,3 +270,30 @@ out. Colours follow the deck "Shift Left, Look Right": slate grey `#1d242c` back
 only; the storefront keeps D7. Montserrat stays.
 
 Changed files: new `specs/14-guide-branding.md`, `product/roadmap.md` (row 14).
+
+Addendum (main session, 2026-11-10, spec 14 OD-1): the deck blue `#3c7ec9` reaches only 4.18:1 against white and
+3.74:1 on slate, below the guide's pinned 4.5:1 text contrast. To keep that check unchanged, text-bearing uses (the
+primary colour, the current crumb) use the AA shade `#3371B8` in light mode and a lighter AA shade on slate in dark
+mode; the exact `#3c7ec9` is kept for non-text accents (borders, bars).
+
+## D19. Guide content revision: no sync moments, clearer Level 1 and 2, framework order in Level 4
+
+Maik, 2026-11-10, after reviewing the live guide: remove every sync moment (Maik and Tom walk around, no facilitator
+demos); their minutes go to solo time and the workshop plan changes with the guide. Level 1 step 3 gives the exact
+rule file path and content with its frontmatter; step 5 gets a text mock of the `/context` grid (no screenshot).
+Level 2 step 5 replaces "watch the demo" with debugging options in a collapsible section. Encourage creativity across
+levels. Level 4 start branches keep their prepared setup; the guide explains that on their own brownfield projects
+participants should first run the framework's own preparation (Agent OS: discover standards and plan product; the
+documented equivalents for Spec Kit and OpenSpec), in the order the frameworks' docs give. Runs as spec 15 after spec
+14 is merged.
+
+Changed files: new `specs/15-guide-content-revision.md`, `product/roadmap.md` (row 15).
+
+## D20. Bonus level on agent orchestration, deferred
+
+Maik, 2026-11-10: add a bonus level after Level 4 for fast participants: think through a feature's normal flow,
+define one research subagent and one QA subagent, run a simple team orchestration, then let Claude write it as code
+with Claude Code's workflow feature. An exercise without solutions. Deferred until specs 10, 14 and 15 are done, to
+keep enough tokens in the current usage window.
+
+Changed files: new `specs/16-bonus-level-orchestration.md`, `product/roadmap.md` (row 16).

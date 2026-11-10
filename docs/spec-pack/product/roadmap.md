@@ -32,6 +32,8 @@ Build strictly in this order. Each spec assumes the previous ones are merged and
 | 11 | Workshop guide site (Docusaurus) | guide | Participant-facing instructions |
 | 13 | Assistant chat widget with streamed answers (after the first release, decision D13) | bookstore, frontend | Optional; not part of the first release |
 | 14 | Guide header links, OpenValue logo, breadcrumb level bar and deck colours (decision D18) | guide | The guide matches the keynote deck |
+| 15 | Guide content revision after Maik's review (decision D19) | guide | Clearer steps, no sync moments, framework getting-started order |
+| 16 | Bonus level: subagents and a workflow for spec-driven development (decision D20, deferred) | guide | Something for fast participants after Level 4 |
 
 ## The factory branch (important)
 

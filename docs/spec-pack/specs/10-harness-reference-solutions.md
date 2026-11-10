@@ -503,7 +503,7 @@ from this pack's product docs and listed for Maik's rehearsal review. The scenar
    diagnostics). If LSP fails, stop and ask Maik before writing a workaround.
 4. Create `solution/level-3`; write the PowerShell variants; implement the cancel-order exercise with the skill; run its scenarios on macOS or Linux and on Windows.
 5. Create the three `start/level-4-*` branches; rehearse each.
-6. Optionally create `solution/level-4-<track>-<brief>` from the rehearsals.
+6. (Dropped by D17: no Level 4 solution branches; building a Level 4 feature is up to the participants.)
 
 ## Definition of done
 - All branches exist, verify green on each, every acceptance scenario above checked and recorded: by the consistency

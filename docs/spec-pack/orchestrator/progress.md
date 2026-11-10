@@ -21,6 +21,8 @@ Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the sp
 | 10 | in progress (prepare, parallel) | | | orchestrator agent in its own worktree since 2026-11-09, `merge: false`, prepare-only: shapes the spec, stages every level file on `sdd/10-harness-reference-solutions/spec` from factory, runs the scenarios that do not need `main` (macOS LSP per D8); cuts the branches from `level-0-start` only after spec 09 publishes `main` |
 | 11 | merged and deployed, tag waits for `spec-10-done` | | 32.0 s (referee on 0bcbcfe) | spec PR #68 merged into factory as 0bcbcfe (2026-11-10, D17: deploy before spec 10 ends); T13 #156 dropped the PowerShell hook paragraphs (D16), Git Bash wording, JDK 21 floor (F18); qa-final r3 PASS on dcfa28a, QA lead ENDORSE. Referee on 0bcbcfe: exit 0, 32.04 s, 1569 Java tests, 0 failures. Guide run 42831945214: build, deploy, release success; https://maikkingma.github.io/AgenticBookStore/ answers 200; release `workshop-2026` holds `workshop-guide-offline.zip`. Pages: source GitHub Actions, `GUIDE_DEPLOY=true`, `github-pages` environment allows `factory` and `main`. Review (fresh, sonnet): no blocker; should-fix S1 Level 0 and 1 start from `main` while D17 names `level-0-start` (a tag, not a branch), S2 no page says how to start the app with the key, S3 catch-up `git switch solution/level-N` wrong for Level 0 and Level 4; fixed via /sdd-bugfix `fix-11-guide-review`, spec PR #158 merged as 0fa7335 (T1 #159 guide pages, structure rule, `level-start.test.mjs`; T2 #160 workshop-plan lines 132 and 347; both PASS round 0, QA lead ENDORSE; qa-final PASS round 2; referee 33 s, guide check 519/519, coverage 304/304). Main session then aligned `roadmap.md` (catch-up per level, no Level 4 solution row, no PowerShell hook variants) and spec 11 line 51; guide check green. Residuals: Levels 2 and 3 Start lines tied to the guide only through `structure.mjs`; `-C` catch-up drops commits on the reset branch (reflog only); WSL2 wording pinned by TS-03. Before tagging `spec-11-done` (after `spec-10-done`): R-G2, every level-branch link resolves |
 | 14 | in progress | | | guide branding (D18): orchestrator agent in its own worktree, `merge: false`; the merge into factory redeploys the guide |
+| 15 | waiting for spec 14 | | | guide content revision (D19); starts after spec 14 is merged; may edit `workshop/workshop-plan.md` to remove the sync moments |
+| 16 | queued (D20) | | | bonus level, subagents and workflow; Maik 2026-11-10: start automatically once spec 15 is merged (no further ask) |
 
 ## Resume after an account switch (written 2026-11-10 by the main session, tokens nearly out)
 
@@ -60,6 +62,17 @@ manual checks list below, spec 13 (assistant widget) and residual R-k after the 
 - OQ1 closed 2026-11-07: Maik copied `.claude/settings.json` in; committed on factory as 07cfbba.
 
 ## Manual checks for Maik
+
+Spec 10 rehearsal reading notes (orchestrator, 2026-11-10): R3-5, note `git rev-list --count HEAD` before prompt A, or
+judge only by `git log --oneline <start>..HEAD` printing nothing. R3-1 variant E (an added row, like C and D): expect
+`sh: <path>: Permission denied` after the notice; judge by `failed; blocking because onFailure is "block"`, an
+unchanged commit count and no build wait; run `chmod +x` first when restoring. "R3-5" in the skill-selection evidence
+header means R3-4. Follow-ups after spec 10 (product findings PF-T10-1..9, PF-T11-1..7, PF-T12-1..7 in the level
+records): skill description shares no content word with the cancel-order scenario; PowerShell leftovers after D16;
+stale "any other non-zero code does not block" under `onFailure: "block"`; Spec Kit tasks template marks tests
+optional; guide names an unpinned `uv tool install` and `--script ps`; guide setup page lacks OpenSpec; storefront
+shows "Not shipped yet" for a cancelled order; README line 70 and `http/orders.http` lack the cancel command.
+
 
 - Done 2026-11-07: the gh token now has the `workflow` scope (`gh auth refresh -h github.com -s workflow`), so the SSH workaround for workflow-touching branches is no longer needed.
 - Spec-pack suggestion from the spec 01 review (no action needed now): no ArchUnit rule rejects a ninth top-level package in the bookstore (for example `util`). The standard says there are exactly eight. If you want it enforced, a later spec can add the rule and its fixture.
