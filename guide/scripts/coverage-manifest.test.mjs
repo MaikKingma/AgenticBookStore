@@ -234,6 +234,8 @@ const SWEEP_EXCLUDED = {
   'plan:89 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
   'plan:108 double': 'a hint inside the money question, which L0-11 (for money) carries',
   'plan:132 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
+  'plan:132 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
+  'plan:132 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:143 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
   'plan:180 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
   'plan:180 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
