@@ -25,13 +25,15 @@ Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the sp
 
 State: specs 01 to 09 and 12 done and tagged. `main` and `level-0-start` published at b668073 (do NOT republish
 without Maik's explicit OK). Spec 11 spec PR #68 is ready (head fb958b3). Spec 10 is in its prepare phase: T1 to T6
-merged into `sdd/10-harness-reference-solutions/spec` (PR #122), T7 was running; T11 to T13 may run in parallel
-after T10 (told to the orchestrator).
+T7 and T8 (#154, #155; D16: no PowerShell) merged into `sdd/10-harness-reference-solutions/spec` (PR #122, tip
+b9673a8). The orchestrator is PAUSED BEFORE T9 (clean worktree, nothing running); T11 to T13 run in parallel after
+T10 (A5).
 
 Steps for the new main session (read the Rules at the top of this file and CLAUDE.md first):
 1. Spec 10: relaunch the `orchestrator` agent (Agent tool, `model: "opus"`, never fable; tell it to pass `model` on
    every spawn) with cwd/worktree `.claude/worktrees/agent-a85791c595c1a985d` and the prompt: "resume, spec:
-   docs/spec-pack/specs/10-harness-reference-solutions.md, merge: false. Q1 answered by D14 (no headless claude).
+   docs/spec-pack/specs/10-harness-reference-solutions.md, merge: false, PHASE prepare then cut (A4), parallel
+   Level 4 (A5), next T9. Q1 answered by D14 (no headless claude); D16 no PowerShell.
    main is published: level-0-start at b668073; after the prepare tasks, merge origin/factory, cut solution/level-1..3
    and start/level-4-* from level-0-start, verify each, qa-final, Gate 2 self-accept, stop with the spec PR ready."
    Its state is in that worktree's `.claude/comms/mailboxes/orchestrator/outbox/run-10-harness-reference-solutions.md`.
