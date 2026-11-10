@@ -87,4 +87,12 @@ Rule: for a navbar/theme-wrapper task, run three witness layers and fix the rig'
 - Dev-mode walk: Docusaurus colour toggle cycles system -> light -> dark, so a "click once, theme differs" assertion fails in a light-scheme context; click until it differs. The React DevTools info line proves the dev build and the console hook are live (positive control).
 - Dev-mode check is one `docusaurus start --port 344x` per task, engines can share it; `lsof` both ports free afterwards.
 
+Rule: for a component task (component + stylesheet + built rule), split the mutants by who can see them and run both test commands.
+
+**Why:** `npm run check` is `node --test` THEN `node scripts/check.mjs`, and check.mjs does not run the tests: a runner that only calls check.mjs reported 6 of 6 known-killed mutants as survivors (0 failing titles). Hand-written fixtures cannot see a TSX mutant: `<=` for `<` in the component, a check mark without aria-hidden or after the label, aria-current on the li passed every node:test; only a real build plus `check:built` killed them.
+**How to apply:**
+- Rule/pair/css mutants: in place, byte copies, `node --test` plus check.mjs. TSX mutants and the bad-prop guard: a scratch copy (`cpSync` with a filter minus node_modules/build/.docusaurus, symlink `node_modules`, symlink the repo `docs/` beside `guide/` because check:built reads the pack), `npm run build` then `check-built.mjs` per mutant, about 5 s each. Quote the `RangeError` line of the guard from the build log, not the exit code.
+- A mutant inserted at a comment that sits INSIDE the dark block makes a nested `@media` the pin cannot see (false survivor): anchor on a top-level comment. Classify survivors: equivalent (fallback `?.` never reached, a count printed only on success), contract-neutral, or rendered-only (hover colour, sr-only text, first-chevron clip: no CI pin, rig only).
+- Rig traps: `locator.ariaSnapshot()` prints no `aria-current=step`; assert accessible names with exact `getByRole('link', {name})`. A "just outside the focus ring" pixel probe must stay inside the wrapped row gap (8px; ring offset+width = 5px): a probe at 7.5px read the crumb above in Firefox only. Firefox dev console logs thousands of `timeStamp` events (React tracks), WebKit dev logs nothing, so the React DevTools info line is a positive control in Chromium and Firefox only.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

@@ -74,9 +74,22 @@ No stack skill exists for Node/Docusaurus; follow the spec folder's strategy.md 
   `.navbar-sidebar__back`. Wait ~500 ms after `hover()` before reading link colour. WebKit needs `Alt+Tab` for links.
 - Entry-point switch tests without `guide/build`: copy `scripts/` beside a fixture `build/` in a `realpathSync(mkdtemp)` dir.
 
+## Chevron breadcrumb, axe and focus rings (LevelProgress)
+- axe `color-contrast` lists a label as `incomplete` (bgOverlap) when its fill is a pseudo-element, or a real span with a
+  negative z-index under `isolation: isolate`; it passes with real background spans BEFORE a `position: relative` link
+  (z-index auto) or with bg + `clip-path` on a wrapper. A symbol-only node (the check mark) is `incomplete` (nonBmp) even
+  with aria-hidden: draw it as CSS `content: '\2713'` in an empty aria-hidden span. Compare variants in a scratch page first.
+- A focus ring on a `clip-path` element is clipped: clip only sibling layer spans, never the link. Prove it with
+  `page.screenshot({clip})` decoded in-page on a canvas (`willReadFrequently`), sampling ring edges and corners.
+- A new default-dir `check-built` rule breaks the older entry-point fixtures (builds with only `index.html`): the fixtures
+  gain the pages, listed old -> new; keep the rule opt-in through an option only the default dir sets.
+- Mutation sweeps over a copy: record the baseline's failing titles and count only NEW failing titles as kills (a mutant
+  `from` string that no longer matched source left a pin test red at baseline and hid a survivor behind `status != 0`).
+
 ## Edit/Write traps
 - Edit/Write turn a backslash-u escape (NBSP) into the literal character, failing the ascii rule: use
-  `String.fromCharCode(0xa0)` / `new RegExp` from char codes, and grep edited files for non-ASCII.
+  `String.fromCharCode(0xa0)` / `new RegExp` from char codes, and grep edited files for non-ASCII. To keep a real `✓`
+  in TSX, `sed -i '' "s/^const X = .*\$/const X = '\\\\u2713';/"` then `od -c` the line (CSS `\2713` is unaffected).
 - An Edit deleting text at a list line end can swallow the newline and fuse bullets: read `git diff -U0` of edited lists.
 
 ## Printable A4 pages
