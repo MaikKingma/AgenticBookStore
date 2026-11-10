@@ -1,0 +1,27 @@
+# T9 factory checks in the project root (criterion 10). Raw: $SP/s10-t9-impl-raw-factory.txt and $SP/s10-t9-impl-raw-referee-verify.txt
+== git status --porcelain (project root)
+ M .claude/agent-memory/implementation-agent/maven-build-traps.md
+ M docs/spec-pack/level-branches/level-3/manifest.tsv
+?? docs/spec-pack/level-branches/level-3/files/bookstore/
+?? docs/spec-pack/level-branches/level-3/patches/
+?? docs/spec-pack/level-branches/records/evidence/level-3/cancel-order/
+== git status --porcelain --ignored -- docs/spec-pack/level-branches (no !! line expected)
+ M docs/spec-pack/level-branches/level-3/manifest.tsv
+?? docs/spec-pack/level-branches/level-3/files/bookstore/
+?? docs/spec-pack/level-branches/level-3/patches/
+?? docs/spec-pack/level-branches/records/evidence/level-3/cancel-order/
+== git grep -n -i cancel -- bookstore/src/main/java
+(git grep exit 1)
+== grep -rn -i cancel bookstore/src/main/java (working tree)
+(grep exit 1)
+== ./mvnw -B -ntp clean verify (project root, budget 900 s)
+start 13:32:21Z exit 0 at 13:32:46Z
+[INFO]       Tests  682 passed | 2 expected fail (684)
+[INFO] Tests run: 1314, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.054 s]
+[INFO] frontend ........................................... SUCCESS [  5.110 s]
+[INFO] bookstore .......................................... SUCCESS [ 15.281 s]
+[INFO] distributor ........................................ SUCCESS [  4.305 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  24.970 s

@@ -1,0 +1,61 @@
+# T9 sandbox build (criterion 1). Raw: $SP/s10-t9-impl-raw-build-sbx-1.txt (simulate-level-0.sh level-0-start, then build-level.sh level-3).
+== simulate-level-0 level-0-start
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $SBX at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+level-0-start sha: b668073eb44bfea453c291509a615f6de081e54a
+simulated level-0 HEAD: 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c
+== build-level level-3
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-1 as dadef2b: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-2 as aa8dba2: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3: 8 rows applied (group: all); changes left uncommitted in $SBX
+build-level: committed level-3 as 163e5d1: Level 3 solution: behavioral control
+build-level: level-3 built in $SBX
+== sandbox log
+163e5d1 Level 3 solution: behavioral control
+aa8dba2 Level 2 solution: give your agent eyes (LSP + MCP)
+dadef2b Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+sandbox HEAD: 163e5d1a6aea758293e4c19370bcac97ceb24606
+
+# Baseline verify of an identical level-3 sandbox before the exercise ($SP/s10-t9-impl-sbx-base). Raw: $SP/s10-t9-impl-raw-baseline-verify.txt
+[INFO] Tests run: 1380, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.046 s]
+[INFO] frontend ........................................... SUCCESS [  7.716 s]
+[INFO] bookstore .......................................... SUCCESS [ 18.073 s]
+[INFO] distributor ........................................ SUCCESS [  4.533 s]
+[INFO] BUILD SUCCESS

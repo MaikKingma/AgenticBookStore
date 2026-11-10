@@ -1,0 +1,15 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+index cff2ea76d1a7f9afd81cb72c41a574ed7075456a..8ddb90c9827af570c3102b3bf03d07493b72e4be 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+@@ -7,8 +7,8 @@ import java.util.UUID;
+ public interface OrderDataService {
+ 
+     /**
+-     * Stores the order: inserts it when the id is unknown, otherwise updates only the status and the shipped time.
+-     * The lines and the other values never change after the insert.
++     * Stores the order: inserts it when the id is unknown, otherwise updates only the status, the shipped time and the
++     * cancelled time. The lines and the other values never change after the insert.
+      */
+     void save(OrderDTO order);
+ 
