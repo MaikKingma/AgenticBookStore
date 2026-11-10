@@ -23,7 +23,9 @@ openspec/
 specs/
 agent-os/
 .githooks/
-docs/spec-pack/'
+docs/spec-pack/
+guide/
+.github/workflows/guide.yml'
 
 # Fixed identity and date, so the same <ref> always gives the same commit.
 SIM_NAME='Level 0 Simulator'

@@ -268,7 +268,7 @@ case_sim_builtin_list_equals_spec09() {
   sed -n 's/^strip-path: //p' "$CASE_TMP/run.txt" > "$CASE_TMP/used.txt"
   [ -s "$CASE_TMP/used.txt" ] || die "no strip-path lines printed"
   spec09_list > "$CASE_TMP/spec.txt"
-  [ "$(wc -l < "$CASE_TMP/spec.txt")" -ge 11 ] || die "spec 09 list extraction found fewer than 11 paths"
+  [ "$(wc -l < "$CASE_TMP/spec.txt")" -ge 13 ] || die "spec 09 list extraction found fewer than 13 paths"
   diff "$CASE_TMP/spec.txt" "$CASE_TMP/used.txt" || die "built-in list differs from spec 09"
 }
 
@@ -287,7 +287,7 @@ case_sim_strips_every_path_and_keeps_the_rest() {
   # The commit holds exactly the source tree minus the stripped paths.
   git -C "$SOURCE" ls-tree -r --name-only src-tag | while IFS= read -r p; do
     case $p in
-      CLAUDE.md|CLAUDE.local.md|AGENTS.md|.claude/*|.mcp.json|openspec/*|.specify/*|specs/*|agent-os/*|.githooks/*|docs/spec-pack/*) ;;
+      CLAUDE.md|CLAUDE.local.md|AGENTS.md|.claude/*|.mcp.json|openspec/*|.specify/*|specs/*|agent-os/*|.githooks/*|docs/spec-pack/*|guide/*|.github/workflows/guide.yml) ;;
       *) echo "$p" ;;
     esac
   done > "$CASE_TMP/expected.txt"
@@ -310,7 +310,7 @@ case_sim_uses_list_paths_of_the_ref() {
   make_source "$src"
   # The fake lists the spec 09 paths plus one extra path; the extra path must be stripped too.
   fake_publish "$src" 'if [ "${1:-}" = --list-paths ]; then' \
-    "  printf '%s\n' CLAUDE.md CLAUDE.local.md AGENTS.md .claude/ .mcp.json openspec/ .specify/ specs/ agent-os/ .githooks/ docs/spec-pack/ extra-strip/" \
+    "  printf '%s\n' CLAUDE.md CLAUDE.local.md AGENTS.md .claude/ .mcp.json openspec/ .specify/ specs/ agent-os/ .githooks/ docs/spec-pack/ guide/ .github/workflows/guide.yml extra-strip/" \
     '  exit 0' 'fi' 'exit 1'
   expect_ok "$CASE_TMP/run.txt" bash "$SIM" --repo "$src" HEAD "$out"
   assert_grep "$CASE_TMP/run.txt" "list: scripts/publish-workshop-main.sh --list-paths"
