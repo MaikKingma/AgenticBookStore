@@ -1,0 +1,145 @@
+# T9 staging rows and the fresh rebuild from staging (criterion 9).
+# Manifest check. Raw: $SP/s10-t9-impl-raw-manifest-check.txt
+committed manifest lines:        9
+manifest lines now:       32
+lines 1-9 byte-identical to HEAD
+lines 10-32 byte-identical to the generated rows
+lines without exactly 5 tabs: 0
+lines with CR: 0
+exercise rows: 23
+git diff of the manifest (insertion only):
+23	0	docs/spec-pack/level-branches/level-3/manifest.tsv
+
+# Fresh rebuild: simulate-level-0.sh level-0-start, build-level.sh level-3, tree compared with the exercise commit. Raw: $SP/s10-t9-impl-raw-rebuild.txt
+== bash $S/scripts/simulate-level-0.sh level-0-start $RB
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $RB at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+level-0-start: b668073eb44bfea453c291509a615f6de081e54a
+== bash $S/scripts/build-level.sh level-3 $RB
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $RB
+build-level: committed level-1 as c6fcc13: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $RB
+build-level: committed level-2 as 0599953: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3 line 10: patch bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java (644, exercise)
+apply-level: level-3 line 11: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java (644, exercise)
+apply-level: level-3 line 12: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java (644, exercise)
+apply-level: level-3 line 13: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java (644, exercise)
+apply-level: level-3 line 14: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java (644, exercise)
+apply-level: level-3 line 15: add bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java (644, exercise)
+apply-level: level-3 line 16: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java (644, exercise)
+apply-level: level-3 line 17: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java (644, exercise)
+apply-level: level-3 line 18: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java (644, exercise)
+apply-level: level-3 line 19: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java (644, exercise)
+apply-level: level-3 line 20: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java (644, exercise)
+apply-level: level-3 line 21: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java (644, exercise)
+apply-level: level-3 line 22: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java (644, exercise)
+apply-level: level-3 line 23: patch bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java (644, exercise)
+apply-level: level-3 line 24: add bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql (644, exercise)
+apply-level: level-3 line 25: patch bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java (644, exercise)
+apply-level: level-3 line 26: patch bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java (644, exercise)
+apply-level: level-3 line 27: patch bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java (644, exercise)
+apply-level: level-3 line 28: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java (644, exercise)
+apply-level: level-3 line 29: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java (644, exercise)
+apply-level: level-3 line 30: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java (644, exercise)
+apply-level: level-3 line 31: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java (644, exercise)
+apply-level: level-3 line 32: patch bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java (644, exercise)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $RB
+build-level: committed level-3 as c24db0a: Level 3 solution: behavioral control
+build-level: level-3 built in $RB
+== git -C $RB log --oneline
+c24db0a Level 3 solution: behavioral control
+0599953 Level 2 solution: give your agent eyes (LSP + MCP)
+c6fcc13 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+== git -C $RB diff --name-status HEAD~1 HEAD
+A	.claude/agents/architecture-reviewer.md
+A	.claude/commands/ship.md
+A	.claude/hooks/architecture-check-on-stop.sh
+A	.claude/hooks/tests-before-commit.sh
+M	.claude/settings.json
+A	.claude/skills/new-use-case/SKILL.md
+A	.claude/skills/new-use-case/reference.md
+A	.githooks/pre-commit
+M	bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java
+A	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+M	bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java
+A	bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql
+M	bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java
+M	bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java
+== git -C $RB fetch $SBX (the exercise sandbox) HEAD
+exercise sandbox commit: 608f819e253892b7d302465d74b730141996ee9e
+fetched: 608f819e253892b7d302465d74b730141996ee9e
+rebuilt tree:  309786e063b813e0f9248714f404b927d277d879
+exercise tree: 309786e063b813e0f9248714f404b927d277d879
+== git -C $RB diff --stat FETCH_HEAD HEAD (empty means equal)
+(diff exit 0)
+
+# ./mvnw -B -ntp clean verify in $RB (budget 900 s). Raw: $SP/s10-t9-impl-raw-rebuilt-verify.txt
+[INFO]       Tests  689 passed | 2 expected fail (691)
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.243 s -- in nl.openvalue.bookstore.ArchitectureTest
+[INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.043 s]
+[INFO] frontend ........................................... SUCCESS [  7.701 s]
+[INFO] bookstore .......................................... SUCCESS [ 21.334 s]
+[INFO] distributor ........................................ SUCCESS [  5.278 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  34.542 s
+# ArchitectureTest Surefire XML in $RB (bookstore/target/surefire-reports/TEST-nl.openvalue.bookstore.ArchitectureTest.xml):
+name="nl.openvalue.bookstore.ArchitectureTest" tests="22" errors="0" skipped="0" failures="0" 
+
+# bash S/tests/test-staging.sh after the manifest change (TMPDIR=$SP/s10-t9-impl-tmp, budget 600 s). Raw: $SP/s10-t9-impl-raw-test-staging.txt
+# test-staging: bash 5.3.20(1)-release, git version 2.50.1 (Apple Git-155)
+1..58
+PASSED all 58 cases
+# failing cases (expected 0):
+0

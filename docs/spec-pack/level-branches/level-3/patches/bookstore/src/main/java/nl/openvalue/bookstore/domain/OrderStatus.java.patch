@@ -1,0 +1,15 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java b/bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
+index 83ef457b6da3b9028f47806c97eaf97496d07e56..a7b156e3f209fdfae7c6e45e94c8e87e600e71bd 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java
+@@ -1,7 +1,8 @@
+ package nl.openvalue.bookstore.domain;
+ 
+-/** Where an order stands: placed with its stock reserved, or shipped. */
++/** Where an order stands: placed with its stock reserved, shipped, or cancelled with its stock released. */
+ public enum OrderStatus {
+     PLACED,
+-    SHIPPED
++    SHIPPED,
++    CANCELLED
+ }

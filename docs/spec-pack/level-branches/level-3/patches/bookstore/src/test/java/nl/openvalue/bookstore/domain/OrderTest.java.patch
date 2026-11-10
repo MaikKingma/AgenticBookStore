@@ -1,0 +1,305 @@
+diff --git a/bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java b/bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
+index d680f622995bbf120ec24a0f729f365ac29e3ead..f517db77ee03e0500a65681aaaf93c7c11fc46f4 100644
+--- a/bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
++++ b/bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java
+@@ -89,9 +89,14 @@ class OrderTest {
+         assertThatThrownBy(() -> new OrderId(null)).isInstanceOf(NullPointerException.class);
+     }
+ 
++    /**
++     * The cancel rules are tested per status by name: a placed order can be cancelled, a shipped or cancelled one
++     * cannot. This pin fails when a status is added, so that its cancel rule is decided and tested by name too.
++     */
+     @Test
+-    void orderStatusHasExactlyPlacedAndShipped() {
+-        assertThat(OrderStatus.values()).containsExactly(OrderStatus.PLACED, OrderStatus.SHIPPED);
++    void orderStatusHasExactlyPlacedShippedAndCancelled() {
++        assertThat(OrderStatus.values())
++                .containsExactly(OrderStatus.PLACED, OrderStatus.SHIPPED, OrderStatus.CANCELLED);
+     }
+ 
+     @Test
+@@ -230,7 +235,7 @@ class OrderTest {
+         Instant shippedAt = Instant.parse("2026-06-14T09:45:00.123456789Z");
+ 
+         Order placed = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A, REQUEST_B, REQUEST_C),
+-                OrderStatus.PLACED, placedAt, null);
++                OrderStatus.PLACED, placedAt, null, null);
+ 
+         assertThat(placed.id()).isEqualTo(ORDER_ID);
+         assertThat(placed.customerEmail()).isEqualTo(EMAIL);
+@@ -248,22 +253,24 @@ class OrderTest {
+         OrderId shippedId = new OrderId(UUID.fromString("6e7f8091-a2b3-4c4d-8e5f-60718293a4b5"));
+         EmailAddress shippedEmail = new EmailAddress("other@example.org");
+         Order shipped = Order.restore(shippedId, shippedEmail, List.of(REQUEST_C, REQUEST_A),
+-                OrderStatus.SHIPPED, placedAt, shippedAt);
++                OrderStatus.SHIPPED, placedAt, shippedAt, null);
+ 
+         assertThat(shipped.id()).isEqualTo(shippedId);
+         assertThat(shipped.customerEmail()).isEqualTo(shippedEmail);
+         assertThat(shipped.status()).isEqualTo(OrderStatus.SHIPPED);
+         assertThat(shipped.placedAt()).isEqualTo(placedAt);
+         assertThat(shipped.shippedAt()).isEqualTo(shippedAt);
++        assertThat(shipped.cancelledAt()).isNull();
++        assertThat(placed.cancelledAt()).isNull();
+         assertThat(shipped.lines()).extracting(OrderLine::bookId).containsExactly(BOOK_C, BOOK_A);
+     }
+ 
+     @Test
+     void restoreRegistersNoEvent() {
+         Order placed = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.PLACED,
+-                Instant.parse("2026-06-14T08:30:00Z"), null);
++                Instant.parse("2026-06-14T08:30:00Z"), null, null);
+         Order shipped = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.SHIPPED,
+-                Instant.parse("2026-06-14T08:30:00Z"), Instant.parse("2026-06-14T09:30:00Z"));
++                Instant.parse("2026-06-14T08:30:00Z"), Instant.parse("2026-06-14T09:30:00Z"), null);
+ 
+         assertThat(placed.pullDomainEvents()).isEmpty();
+         assertThat(shipped.pullDomainEvents()).isEmpty();
+@@ -273,25 +280,25 @@ class OrderTest {
+     void restoreChecksTheLineRules() {
+         Instant placedAt = Instant.parse("2026-06-14T08:30:00Z");
+ 
+-        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, List.of(), OrderStatus.PLACED, placedAt, null))
++        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, List.of(), OrderStatus.PLACED, placedAt, null, null))
+                 .satisfies(e -> assertLineCountOutOfRange(e, 0));
+         assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, distinctRequests(21, "12.50", 1),
+-                OrderStatus.PLACED, placedAt, null))
++                OrderStatus.PLACED, placedAt, null, null))
+                 .satisfies(e -> assertLineCountOutOfRange(e, 21));
+         assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL,
+                 List.of(REQUEST_B, request(BOOK_A, "9780200000003", "Middlemarch", "12.50", 11)),
+-                OrderStatus.PLACED, placedAt, null))
++                OrderStatus.PLACED, placedAt, null, null))
+                 .satisfies(e -> assertQuantityOutOfRange(e, 11));
+         assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL,
+                 List.of(REQUEST_A, REQUEST_B, request(BOOK_A, "9780200000003", "Middlemarch", "12.50", 4)),
+-                OrderStatus.SHIPPED, placedAt, Instant.parse("2026-06-14T09:30:00Z")))
++                OrderStatus.SHIPPED, placedAt, Instant.parse("2026-06-14T09:30:00Z"), null))
+                 .satisfies(e -> assertDuplicateLine(e, BOOK_A));
+         // Here the second copy of the duplicated book is not the last request, so the last request's
+         // book cannot stand in for it either.
+         assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL,
+                 List.of(REQUEST_A, REQUEST_C, request(BOOK_A, "9780200000003", "Middlemarch", "12.50", 4),
+                         REQUEST_B),
+-                OrderStatus.PLACED, placedAt, null))
++                OrderStatus.PLACED, placedAt, null, null))
+                 .satisfies(e -> assertDuplicateLine(e, BOOK_A));
+     }
+ 
+@@ -300,18 +307,20 @@ class OrderTest {
+         Instant placedAt = Instant.parse("2026-06-14T08:30:00Z");
+         List<OrderLineRequest> lines = List.of(REQUEST_A);
+ 
+-        assertThatThrownBy(() -> Order.restore(null, EMAIL, lines, OrderStatus.PLACED, placedAt, null))
++        assertThatThrownBy(() -> Order.restore(null, EMAIL, lines, OrderStatus.PLACED, placedAt, null, null))
+                 .isInstanceOf(NullPointerException.class);
+-        assertThatThrownBy(() -> Order.restore(ORDER_ID, null, lines, OrderStatus.PLACED, placedAt, null))
++        assertThatThrownBy(() -> Order.restore(ORDER_ID, null, lines, OrderStatus.PLACED, placedAt, null, null))
+                 .isInstanceOf(NullPointerException.class);
+-        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, null, OrderStatus.PLACED, placedAt, null))
++        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, null, OrderStatus.PLACED, placedAt, null, null))
+                 .isInstanceOf(NullPointerException.class);
+-        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, lines, null, placedAt, null))
++        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, lines, null, placedAt, null, null))
+                 .isInstanceOf(NullPointerException.class);
+-        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, lines, OrderStatus.PLACED, null, null))
++        assertThatThrownBy(() -> Order.restore(ORDER_ID, EMAIL, lines, OrderStatus.PLACED, null, null, null))
+                 .isInstanceOf(NullPointerException.class);
+ 
+-        assertThat(Order.restore(ORDER_ID, EMAIL, lines, OrderStatus.PLACED, placedAt, null).shippedAt()).isNull();
++        Order placed = Order.restore(ORDER_ID, EMAIL, lines, OrderStatus.PLACED, placedAt, null, null);
++        assertThat(placed.shippedAt()).isNull();
++        assertThat(placed.cancelledAt()).isNull();
+     }
+ 
+     @Test
+@@ -325,7 +334,7 @@ class OrderTest {
+         assertThat(order.placedAt()).isEqualTo(Instant.parse("2026-06-15T10:00:00Z"));
+ 
+         Order restored = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_C), OrderStatus.PLACED,
+-                Instant.parse("2026-06-14T08:30:00Z"), null);
++                Instant.parse("2026-06-14T08:30:00Z"), null, null);
+ 
+         restored.ship(LATER_CLOCK);
+ 
+@@ -343,7 +352,7 @@ class OrderTest {
+         assertThat(placed.pullDomainEvents()).isEmpty();
+ 
+         Order restored = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.PLACED,
+-                Instant.parse("2026-06-14T08:30:00Z"), null);
++                Instant.parse("2026-06-14T08:30:00Z"), null, null);
+ 
+         restored.ship(NANO_CLOCK);
+ 
+@@ -367,7 +376,7 @@ class OrderTest {
+     void shippingARestoredShippedOrderThrows() {
+         Instant shippedAt = Instant.parse("2026-06-14T09:45:00.123456789Z");
+         Order order = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.SHIPPED,
+-                Instant.parse("2026-06-14T08:30:00Z"), shippedAt);
++                Instant.parse("2026-06-14T08:30:00Z"), shippedAt, null);
+ 
+         assertThatThrownBy(() -> order.ship(CLOCK)).satisfies(e -> assertAlreadyShipped(e, ORDER_ID));
+ 
+@@ -376,6 +385,150 @@ class OrderTest {
+         assertThat(order.pullDomainEvents()).isEmpty();
+     }
+ 
++    @Test
++    void cancelSetsCancelledAndTheTruncatedCancelledTime() {
++        Order order = Order.place(EMAIL, List.of(REQUEST_A, REQUEST_B), CLOCK);
++
++        order.cancel(NANO_CLOCK);
++
++        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(order.cancelledAt()).isEqualTo(NANO_INSTANT_TRUNCATED);
++        assertThat(order.shippedAt()).isNull();
++        assertThat(order.placedAt()).isEqualTo(Instant.parse("2026-06-15T10:00:00Z"));
++
++        Order restored = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_C), OrderStatus.PLACED,
++                Instant.parse("2026-06-14T08:30:00Z"), null, null);
++
++        restored.cancel(LATER_CLOCK);
++
++        assertThat(restored.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(restored.cancelledAt()).isEqualTo(Instant.parse("2026-06-16T11:30:00.654321Z"));
++        assertThat(restored.shippedAt()).isNull();
++    }
++
++    @Test
++    void placeLeavesTheCancelledTimeEmpty() {
++        Order order = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
++
++        assertThat(order.cancelledAt()).isNull();
++    }
++
++    @Test
++    void cancelRegistersNoEvent() {
++        Order placed = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
++        placed.pullDomainEvents();
++
++        placed.cancel(NANO_CLOCK);
++
++        assertThat(placed.pullDomainEvents()).isEmpty();
++
++        Order restored = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.PLACED,
++                Instant.parse("2026-06-14T08:30:00Z"), null, null);
++
++        restored.cancel(NANO_CLOCK);
++
++        assertThat(restored.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void cancellingAShippedOrderThrowsOrderAlreadyShippedAndChangesNothing() {
++        Order order = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
++        order.pullDomainEvents();
++        order.ship(NANO_CLOCK);
++
++        assertThatThrownBy(() -> order.cancel(LATER_CLOCK)).satisfies(e -> assertAlreadyShipped(e, order.id()));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.SHIPPED);
++        assertThat(order.shippedAt()).isEqualTo(NANO_INSTANT_TRUNCATED);
++        assertThat(order.cancelledAt()).isNull();
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void cancellingARestoredShippedOrderThrowsOrderAlreadyShipped() {
++        Instant shippedAt = Instant.parse("2026-06-14T09:45:00.123456789Z");
++        Order order = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.SHIPPED,
++                Instant.parse("2026-06-14T08:30:00Z"), shippedAt, null);
++
++        assertThatThrownBy(() -> order.cancel(CLOCK)).satisfies(e -> assertAlreadyShipped(e, ORDER_ID));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.SHIPPED);
++        assertThat(order.shippedAt()).isEqualTo(shippedAt);
++        assertThat(order.cancelledAt()).isNull();
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void cancellingTwiceThrowsOrderAlreadyCancelledAndKeepsTheFirstCancelledTime() {
++        Order order = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
++        order.pullDomainEvents();
++        order.cancel(NANO_CLOCK);
++
++        assertThatThrownBy(() -> order.cancel(LATER_CLOCK)).satisfies(e -> assertAlreadyCancelled(e, order.id()));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(order.cancelledAt()).isEqualTo(NANO_INSTANT_TRUNCATED);
++        assertThat(order.shippedAt()).isNull();
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void cancellingARestoredCancelledOrderThrowsOrderAlreadyCancelled() {
++        Instant cancelledAt = Instant.parse("2026-06-14T09:45:00.123456Z");
++        Order order = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.CANCELLED,
++                Instant.parse("2026-06-14T08:30:00Z"), null, cancelledAt);
++
++        assertThatThrownBy(() -> order.cancel(CLOCK)).satisfies(e -> assertAlreadyCancelled(e, ORDER_ID));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(order.cancelledAt()).isEqualTo(cancelledAt);
++        assertThat(order.shippedAt()).isNull();
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void shippingACancelledOrderThrowsOrderAlreadyCancelledAndChangesNothing() {
++        Order order = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
++        order.pullDomainEvents();
++        order.cancel(NANO_CLOCK);
++
++        assertThatThrownBy(() -> order.ship(LATER_CLOCK)).satisfies(e -> assertAlreadyCancelled(e, order.id()));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(order.shippedAt()).isNull();
++        assertThat(order.cancelledAt()).isEqualTo(NANO_INSTANT_TRUNCATED);
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void shippingARestoredCancelledOrderThrowsOrderAlreadyCancelled() {
++        Instant cancelledAt = Instant.parse("2026-06-14T09:45:00.123456Z");
++        Order order = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_A), OrderStatus.CANCELLED,
++                Instant.parse("2026-06-14T08:30:00Z"), null, cancelledAt);
++
++        assertThatThrownBy(() -> order.ship(CLOCK)).satisfies(e -> assertAlreadyCancelled(e, ORDER_ID));
++
++        assertThat(order.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(order.shippedAt()).isNull();
++        assertThat(order.cancelledAt()).isEqualTo(cancelledAt);
++        assertThat(order.pullDomainEvents()).isEmpty();
++    }
++
++    @Test
++    void restoreKeepsTheCancelledTimeOfACancelledOrder() {
++        Instant placedAt = Instant.parse("2026-06-14T08:30:00.987654Z");
++        Instant cancelledAt = Instant.parse("2026-06-14T10:15:00.000321Z");
++
++        Order cancelled = Order.restore(ORDER_ID, EMAIL, List.of(REQUEST_B, REQUEST_C), OrderStatus.CANCELLED,
++                placedAt, null, cancelledAt);
++
++        assertThat(cancelled.status()).isEqualTo(OrderStatus.CANCELLED);
++        assertThat(cancelled.placedAt()).isEqualTo(placedAt);
++        assertThat(cancelled.shippedAt()).isNull();
++        assertThat(cancelled.cancelledAt()).isEqualTo(cancelledAt);
++        assertThat(cancelled.pullDomainEvents()).isEmpty();
++    }
++
+     @Test
+     void pullDomainEventsReturnsTheEventsAndClearsThem() {
+         Order order = Order.place(EMAIL, List.of(REQUEST_A), CLOCK);
+@@ -434,4 +587,10 @@ class OrderTest {
+         assertThat(thrown.getMessage()).isNotBlank();
+         assertThat(((OrderAlreadyShippedException) thrown).orderId()).isEqualTo(orderId);
+     }
++
++    private static void assertAlreadyCancelled(Throwable thrown, OrderId orderId) {
++        assertThat(thrown).isInstanceOf(OrderAlreadyCancelledException.class);
++        assertThat(thrown.getMessage()).isEqualTo("Order " + orderId.value() + " has already been cancelled");
++        assertThat(((OrderAlreadyCancelledException) thrown).orderId()).isEqualTo(orderId);
++    }
+ }

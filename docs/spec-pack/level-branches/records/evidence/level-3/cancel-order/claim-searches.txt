@@ -1,0 +1,51 @@
+# FF-T7-b counterexample searches on level-0-start for the descriptive sentences T9 writes. Raw: $SP/s10-t9-impl-raw-claims.txt
+== C1 'Thrown when more copies of a book are shipped or released than are reserved': throwers on level-0-start
+$ git grep -n -e new InsufficientReservedStockException level-0-start -- bookstore/src/main
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java:104:            throw new InsufficientReservedStockException(bookId, quantity.value(), reserved);
+(exit 0)
+== C2 'Never registers an event: nothing reacts to a cancellation': every after-commit listener on level-0-start
+$ git grep -n -e EventListener level-0-start -- bookstore/src/main
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/process/EventProcessor.java:6:import org.springframework.transaction.event.TransactionalEventListener;
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/process/EventProcessor.java:23:    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+(exit 0)
+== C3 OrderStatus values on level-0-start (the cancel rule is tested per status by name)
+$ git grep -n -A4 -e public enum OrderStatus level-0-start -- bookstore/src/main
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java:4:public enum OrderStatus {
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java-5-    PLACED,
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java-6-    SHIPPED
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java-7-}
+(exit 0)
+== C4 'like the shipped time' (V5 comment): shipped_at is nullable without default on level-0-start
+$ git grep -n -e shipped_at level-0-start -- bookstore/src/main/resources/db/migration
+level-0-start:bookstore/src/main/resources/db/migration/V3__create_orders.sql:8:    shipped_at     timestamptz,
+(exit 0)
+== C5 receive resets the signal only above the reorder level ('as on a delivery')
+$ git grep -n -B1 -A2 -e if (available() > reorderLevel) level-0-start -- bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java-80-        pendingRestock = null;
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java:81:        if (available() > reorderLevel) {
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java-82-            lowStockSignalled = false;
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java-83-        }
+(exit 0)
+== C6 status column fits CANCELLED (varchar(16)) and has no check constraint
+$ git grep -n -e status  -e check level-0-start -- bookstore/src/main/resources/db/migration/V3__create_orders.sql
+level-0-start:bookstore/src/main/resources/db/migration/V3__create_orders.sql:6:    status         varchar(16)  not null,
+(exit 0)
+== C7 frontend residual: OrderPage shows 'Not shipped yet' when shippedAt is null
+$ git grep -n -e Not shipped yet level-0-start -- frontend/src
+level-0-start:frontend/src/pages/OrderPage.test.tsx:83:      ['Shipped', 'Not shipped yet'],
+level-0-start:frontend/src/pages/OrderPage.test.tsx:98:    expect(screen.queryByText('Not shipped yet')).not.toBeInTheDocument()
+level-0-start:frontend/src/pages/OrderPage.tsx:29:        <dd>{order.shippedAt === null ? 'Not shipped yet' : formatInstant(order.shippedAt)}</dd>
+(exit 0)
+== C8 OrderSummaryView has no shippedAt (stays unchanged)
+$ git grep -n -e record OrderSummaryView level-0-start -- bookstore/src/main
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/query/OrderSummaryView.java:11:public record OrderSummaryView(UUID id, String status, String placedAt, int itemCount, String total) {
+(exit 0)
+== C9 control: a word that is certainly present (positive control for the grep form)
+$ git grep -c -e OrderAlreadyShippedException level-0-start -- bookstore/src/main
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java:2
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java:2
+level-0-start:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java:2
+(exit 0)
+== C10 no 'cancel' in bookstore main code on level-0-start (the exercise starts from nothing)
+$ git grep -n -i -e cancel level-0-start -- bookstore/src/main/java
+(exit 1)

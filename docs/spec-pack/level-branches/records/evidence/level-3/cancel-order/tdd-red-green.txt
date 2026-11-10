@@ -1,0 +1,357 @@
+# T9 test-first record (criterion 7, G9). Every run: ./mvnw -B -ntp -pl bookstore test -Dtest=<classes> in $SBX with
+# TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir set to $SP/s10-t9-impl-tmp, under with-budget.sh 900.
+# Lines below each heading are copied from the raw run; the test names and the stub used are in cancel-order-record.md.
+
+# DOMAIN 1 RED: StockItemTest release tests written; StockItem.release(Quantity) was an empty stub
+# command: test -Dtest=StockItemTest
+# raw: $SP/s10-t9-impl-raw-domain-stock-red.txt
+[ERROR] Tests run: 107, Failures: 8, Errors: 0, Skipped: 0, Time elapsed: 0.123 s <<< FAILURE! -- in nl.openvalue.bookstore.domain.StockItemTest
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingLowersReservedAndKeepsOnHand -- Time elapsed: 0.006 s <<< FAILURE!
+expected: 2
+ but was: 6
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingAboveTheDefaultButNotAboveAHigherOwnReorderLevelKeepsTheSignal -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 4
+ but was: 2
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingToOneAboveTheReorderLevelResetsTheSignal -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 1
+ but was: 4
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingWhileLowAndUnsignalledRegistersNoEventAndKeepsTheSignalUnset -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 2
+ but was: 1
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingMoreThanReservedThrowsAndLeavesStockUnchanged -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingExactlyTheReservedQuantitySucceeds -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 0
+ but was: 4
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingToExactlyTheReorderLevelKeepsTheSignal -- Time elapsed: 0 s <<< FAILURE!
+expected: 2
+ but was: 4
+[ERROR] nl.openvalue.bookstore.domain.StockItemTest.releasingAboveALowerOwnReorderLevelButNotAboveTheDefaultResetsTheSignal -- Time elapsed: 0 s <<< FAILURE!
+expected: 2
+ but was: 0
+[ERROR]   StockItemTest.releasingAboveALowerOwnReorderLevelButNotAboveTheDefaultResetsTheSignal:1032 
+expected: 2
+ but was: 0
+[ERROR]   StockItemTest.releasingAboveTheDefaultButNotAboveAHigherOwnReorderLevelKeepsTheSignal:1021 
+expected: 4
+ but was: 2
+[ERROR]   StockItemTest.releasingExactlyTheReservedQuantitySucceeds:987 
+expected: 0
+ but was: 4
+[ERROR]   StockItemTest.releasingLowersReservedAndKeepsOnHand:959 
+expected: 2
+ but was: 6
+[ERROR]   StockItemTest.releasingMoreThanReservedThrowsAndLeavesStockUnchanged:968 
+Expecting code to raise a throwable.
+[ERROR]   StockItemTest.releasingToExactlyTheReorderLevelKeepsTheSignal:997 
+expected: 2
+ but was: 4
+[ERROR]   StockItemTest.releasingToOneAboveTheReorderLevelResetsTheSignal:1009 
+expected: 1
+ but was: 4
+[ERROR]   StockItemTest.releasingWhileLowAndUnsignalledRegistersNoEventAndKeepsTheSignalUnset:1043 
+expected: 2
+ but was: 1
+[ERROR] Tests run: 107, Failures: 8, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# DOMAIN 1 GREEN: release implemented (+ InsufficientReservedStockException action constructor)
+# command: test -Dtest=StockItemTest
+# raw: $SP/s10-t9-impl-raw-domain-stock-green.txt
+[INFO] Tests run: 107, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s -- in nl.openvalue.bookstore.domain.StockItemTest
+[INFO] Tests run: 107, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# DOMAIN 2 RED: OrderTest cancel tests written; stub: CANCELLED, OrderAlreadyCancelledException, restore parameter, empty cancel, cancelledAt() returning null
+# command: test -Dtest=OrderTest
+# raw: $SP/s10-t9-impl-raw-domain-order-red.txt
+[ERROR] Tests run: 37, Failures: 9, Errors: 0, Skipped: 0, Time elapsed: 0.089 s <<< FAILURE! -- in nl.openvalue.bookstore.domain.OrderTest
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.shippingACancelledOrderThrowsOrderAlreadyCancelledAndChangesNothing -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.cancellingARestoredShippedOrderThrowsOrderAlreadyShipped -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.orderStatusHasExactlyPlacedAndShipped -- Time elapsed: 0.004 s <<< FAILURE!
+Expecting actual:
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.shippingARestoredCancelledOrderThrowsOrderAlreadyCancelled -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.restoreKeepsTheCancelledTimeOfACancelledOrder -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 2026-06-14T10:15:00.000321Z
+ but was: null
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.cancellingTwiceThrowsOrderAlreadyCancelledAndKeepsTheFirstCancelledTime -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.cancelSetsCancelledAndTheTruncatedCancelledTime -- Time elapsed: 0.001 s <<< FAILURE!
+expected: CANCELLED
+ but was: PLACED
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.cancellingARestoredCancelledOrderThrowsOrderAlreadyCancelled -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR] nl.openvalue.bookstore.domain.OrderTest.cancellingAShippedOrderThrowsOrderAlreadyShippedAndChangesNothing -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.cancelSetsCancelledAndTheTruncatedCancelledTime:397 
+expected: CANCELLED
+ but was: PLACED
+[ERROR]   OrderTest.cancellingARestoredCancelledOrderThrowsOrderAlreadyCancelled:484 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.cancellingARestoredShippedOrderThrowsOrderAlreadyShipped:456 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.cancellingAShippedOrderThrowsOrderAlreadyShippedAndChangesNothing:442 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.cancellingTwiceThrowsOrderAlreadyCancelledAndKeepsTheFirstCancelledTime:470 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.orderStatusHasExactlyPlacedAndShipped:94 
+Expecting actual:
+[ERROR]   OrderTest.restoreKeepsTheCancelledTimeOfACancelledOrder:531 
+expected: 2026-06-14T10:15:00.000321Z
+ but was: null
+[ERROR]   OrderTest.shippingACancelledOrderThrowsOrderAlreadyCancelledAndChangesNothing:498 
+Expecting code to raise a throwable.
+[ERROR]   OrderTest.shippingARestoredCancelledOrderThrowsOrderAlreadyCancelled:512 
+Expecting code to raise a throwable.
+[ERROR] Tests run: 37, Failures: 9, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# DOMAIN 2 GREEN: cancel, ship guard and accessor implemented; the status pin extended (see cancel-order-record.md)
+# command: test -Dtest=OrderTest,StockItemTest
+# raw: $SP/s10-t9-impl-raw-domain-order-green.txt
+[INFO] Tests run: 107, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.113 s -- in nl.openvalue.bookstore.domain.StockItemTest
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s -- in nl.openvalue.bookstore.domain.OrderTest
+[INFO] Tests run: 143, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# FLOW 1 RED (mapping): OrderDomainMapperTest cancelled tests written; stub: OrderDTO.cancelledAt component, null in OrderDTO(Order), OrderJPAMapper.toDTO and OrderDomainMapper
+# command: test -Dtest=OrderDomainMapperTest
+# raw: $SP/s10-t9-impl-raw-mapper-red.txt
+[ERROR] Tests run: 26, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 0.078 s <<< FAILURE! -- in nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest.roundTripsACancelledOrder -- Time elapsed: 0.011 s <<< FAILURE!
+expected: OrderDTO[id=2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77, customerEmail=reader@example.com, status=CANCELLED, placedAt=2026-06-15T10:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-15T18:05:40.000987Z, lines=[OrderLineDTO[bookId=3a1d5e90-7c24-4b6f-8e13-5d9a2c4f0b61, isbn=9780141439518, title=Middlemarch, unitPriceAmount=12.50, unitPriceCurrency=EUR, quantity=2], OrderLineDTO[bookId=7e4b2c18-9a05-4d3e-b7f6-1c8d0a5e3f92, isbn=9780140449136, title=Emma, unitPriceAmount=8.00, unitPriceCurrency=EUR, quantity=7], OrderLineDTO[bookId=1f6c8a24-5b97-4e01-a3d8-9e2b7c4d6a05, isbn=9780192833598, title=Persuasion, unitPriceAmount=21.99, unitPriceCurrency=EUR, quantity=3]]]
+ but was: OrderDTO[id=2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77, customerEmail=reader@example.com, status=CANCELLED, placedAt=2026-06-15T10:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=3a1d5e90-7c24-4b6f-8e13-5d9a2c4f0b61, isbn=9780141439518, title=Middlemarch, unitPriceAmount=12.50, unitPriceCurrency=EUR, quantity=2], OrderLineDTO[bookId=7e4b2c18-9a05-4d3e-b7f6-1c8d0a5e3f92, isbn=9780140449136, title=Emma, unitPriceAmount=8.00, unitPriceCurrency=EUR, quantity=7], OrderLineDTO[bookId=1f6c8a24-5b97-4e01-a3d8-9e2b7c4d6a05, isbn=9780192833598, title=Persuasion, unitPriceAmount=21.99, unitPriceCurrency=EUR, quantity=3]]]
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest.newOrderDTOCopiesTheStatusAndCancelledTimeOfAnOrderCancelledByTheClock -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 2026-06-17T07:20:05.246813Z
+ but was: null
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest.toDomainKeepsTheStatusAndCancelledTimeOfACancelledOrder -- Time elapsed: 0.001 s <<< FAILURE!
+expected: 2026-06-15T18:05:40.000987Z
+ but was: null
+[ERROR]   OrderDomainMapperTest.newOrderDTOCopiesTheStatusAndCancelledTimeOfAnOrderCancelledByTheClock:110 
+expected: 2026-06-17T07:20:05.246813Z
+ but was: null
+[ERROR]   OrderDomainMapperTest.roundTripsACancelledOrder:90 
+expected: OrderDTO[id=2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77, customerEmail=reader@example.com, status=CANCELLED, placedAt=2026-06-15T10:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-15T18:05:40.000987Z, lines=[OrderLineDTO[bookId=3a1d5e90-7c24-4b6f-8e13-5d9a2c4f0b61, isbn=9780141439518, title=Middlemarch, unitPriceAmount=12.50, unitPriceCurrency=EUR, quantity=2], OrderLineDTO[bookId=7e4b2c18-9a05-4d3e-b7f6-1c8d0a5e3f92, isbn=9780140449136, title=Emma, unitPriceAmount=8.00, unitPriceCurrency=EUR, quantity=7], OrderLineDTO[bookId=1f6c8a24-5b97-4e01-a3d8-9e2b7c4d6a05, isbn=9780192833598, title=Persuasion, unitPriceAmount=21.99, unitPriceCurrency=EUR, quantity=3]]]
+ but was: OrderDTO[id=2c9a7f10-4b3d-4e8a-9d52-6a1f0c3b8e77, customerEmail=reader@example.com, status=CANCELLED, placedAt=2026-06-15T10:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=3a1d5e90-7c24-4b6f-8e13-5d9a2c4f0b61, isbn=9780141439518, title=Middlemarch, unitPriceAmount=12.50, unitPriceCurrency=EUR, quantity=2], OrderLineDTO[bookId=7e4b2c18-9a05-4d3e-b7f6-1c8d0a5e3f92, isbn=9780140449136, title=Emma, unitPriceAmount=8.00, unitPriceCurrency=EUR, quantity=7], OrderLineDTO[bookId=1f6c8a24-5b97-4e01-a3d8-9e2b7c4d6a05, isbn=9780192833598, title=Persuasion, unitPriceAmount=21.99, unitPriceCurrency=EUR, quantity=3]]]
+[ERROR]   OrderDomainMapperTest.toDomainKeepsTheStatusAndCancelledTimeOfACancelledOrder:98 
+expected: 2026-06-15T18:05:40.000987Z
+ but was: null
+[ERROR] Tests run: 26, Failures: 3, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# FLOW 1 GREEN: OrderDTO(Order) and OrderDomainMapper map cancelledAt
+# command: test -Dtest=OrderDomainMapperTest,OrderTest,StockItemTest,OrderFlowTest
+# raw: $SP/s10-t9-impl-raw-mapper-green.txt
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s -- in nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest
+[INFO] Tests run: 37, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.401 s -- in nl.openvalue.bookstore.domaininteraction.OrderFlowTest
+[INFO] Tests run: 107, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s -- in nl.openvalue.bookstore.domain.StockItemTest
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in nl.openvalue.bookstore.domain.OrderTest
+[INFO] Tests run: 206, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# FLOW 2 RED: OrderFlowTest cancelOrder tests written; OrderFlow.cancelOrder(UUID) was an empty stub
+# command: test -Dtest=OrderFlowTest
+# raw: $SP/s10-t9-impl-raw-flow-red.txt
+[ERROR] Tests run: 48, Failures: 11, Errors: 0, Skipped: 0, Time elapsed: 0.483 s <<< FAILURE! -- in nl.openvalue.bookstore.domaininteraction.OrderFlowTest
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderCancelsTheOrderAndReleasesTheStockOfEveryLine -- Time elapsed: 0.005 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderStampsTheCancelledTimeFromTheFlowClock -- Time elapsed: 0.002 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderTranslatesInsufficientReservedStockTo409 -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderPublishesNoEventEvenWhenTheStockStaysLowAndUnsignalled -- Time elapsed: 0.001 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderSavesTheOrderFirstThenTheStockItemsInBookIdOrder -- Time elapsed: 0.001 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.shipRejectsACancelledOrderWith409BeforeTouchingStock -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual throwable to be exactly an instance of:
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderPassesOrderNotFoundThrough -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual:
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderResetsTheLowStockSignalWhenTheAvailableStockRisesAboveTheReorderLevel -- Time elapsed: 0.004 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderKeepsTheLowStockSignalWhenTheAvailableStockEndsAtTheReorderLevel -- Time elapsed: 0.001 s <<< FAILURE!
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderRejectsAShippedOrderWith409BeforeTouchingStock -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR] nl.openvalue.bookstore.domaininteraction.OrderFlowTest.cancelOrderRejectsACancelledOrderWith409BeforeTouchingStock -- Time elapsed: 0 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR]   OrderFlowTest.cancelOrderCancelsTheOrderAndReleasesTheStockOfEveryLine:679 
+[ERROR]   OrderFlowTest.cancelOrderKeepsTheLowStockSignalWhenTheAvailableStockEndsAtTheReorderLevel:810 
+[ERROR]   OrderFlowTest.cancelOrderPassesOrderNotFoundThrough:768 
+Expecting actual:
+[ERROR]   OrderFlowTest.cancelOrderPublishesNoEventEvenWhenTheStockStaysLowAndUnsignalled:823 
+[ERROR]   OrderFlowTest.cancelOrderRejectsACancelledOrderWith409BeforeTouchingStock:743->assertConflict:949 
+Expecting actual not to be null
+[ERROR]   OrderFlowTest.cancelOrderRejectsAShippedOrderWith409BeforeTouchingStock:731->assertConflict:949 
+Expecting actual not to be null
+[ERROR]   OrderFlowTest.cancelOrderResetsTheLowStockSignalWhenTheAvailableStockRisesAboveTheReorderLevel:797 
+[ERROR]   OrderFlowTest.cancelOrderSavesTheOrderFirstThenTheStockItemsInBookIdOrder:712 
+[ERROR]   OrderFlowTest.cancelOrderStampsTheCancelledTimeFromTheFlowClock:699 
+[ERROR]   OrderFlowTest.cancelOrderTranslatesInsufficientReservedStockTo409:782->assertConflict:949 
+Expecting actual not to be null
+[ERROR]   OrderFlowTest.shipRejectsACancelledOrderWith409BeforeTouchingStock:755->assertConflict:949 
+Expecting actual throwable to be exactly an instance of:
+[ERROR] Tests run: 48, Failures: 11, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# FLOW 2 GREEN: cancelOrder and the order-already-cancelled translation implemented
+# command: test -Dtest=OrderFlowTest,OrderDomainMapperTest,OrderTest,StockItemTest
+# raw: $SP/s10-t9-impl-raw-flow-green.txt
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest
+[INFO] Tests run: 48, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.424 s -- in nl.openvalue.bookstore.domaininteraction.OrderFlowTest
+[INFO] Tests run: 107, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.055 s -- in nl.openvalue.bookstore.domain.StockItemTest
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in nl.openvalue.bookstore.domain.OrderTest
+[INFO] Tests run: 217, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# WEB RED: OrderCommandsTest cancel tests written; no cancel mapping existed (404 from the slice)
+# command: test -Dtest=OrderCommandsTest
+# raw: $SP/s10-t9-impl-raw-web-red.txt
+[ERROR] Tests run: 61, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 1.399 s <<< FAILURE! -- in nl.openvalue.bookstore.command.OrderCommandsTest
+[ERROR] nl.openvalue.bookstore.command.OrderCommandsTest.cancelMapsOrderAlreadyShippedTo409 -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: Response status expected:<409> but was:<404>
+[ERROR] nl.openvalue.bookstore.command.OrderCommandsTest.cancelMapsOrderNotFoundTo404 -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Content type not set
+[ERROR] nl.openvalue.bookstore.command.OrderCommandsTest.cancelReturns202WithoutBodyAndPassesTheId -- Time elapsed: 0.001 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<202> but was:<404>
+[ERROR] nl.openvalue.bookstore.command.OrderCommandsTest.cancelMapsOrderAlreadyCancelledTo409 -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: Response status expected:<409> but was:<404>
+[ERROR]   OrderCommandsTest.cancelMapsOrderAlreadyCancelledTo409:604->expectProblem:648 Response status expected:<409> but was:<404>
+[ERROR]   OrderCommandsTest.cancelMapsOrderAlreadyShippedTo409:590->expectProblem:648 Response status expected:<409> but was:<404>
+[ERROR]   OrderCommandsTest.cancelMapsOrderNotFoundTo404:576->expectProblem:649 Content type not set
+[ERROR]   OrderCommandsTest.cancelReturns202WithoutBodyAndPassesTheId:563 Status expected:<202> but was:<404>
+[ERROR] Tests run: 61, Failures: 4, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# WEB GREEN: POST /orders/{id}/commands/cancel mapped (202)
+# command: test -Dtest=OrderCommandsTest
+# raw: $SP/s10-t9-impl-raw-web-green.txt
+[INFO] Tests run: 61, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.398 s -- in nl.openvalue.bookstore.command.OrderCommandsTest
+[INFO] Tests run: 61, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# PERSISTENCE RED, first run: tests written, stub = V5 migration only; three of the four failed as NullPointerException in the instant() helper, not on an assertion
+# command: test -Dtest=OrderDataServiceImplTest
+# raw: $SP/s10-t9-impl-raw-persistence-red.txt
+[ERROR] Tests run: 19, Failures: 1, Errors: 3, Skipped: 0, Time elapsed: 4.351 s <<< FAILURE! -- in nl.openvalue.bookstore.data.OrderDataServiceImplTest
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.updateCopiesOnlyStatusShippedAtAndCancelledAt -- Time elapsed: 0.012 s <<< ERROR!
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.storesAndFindsTheCancelledTimeOfACancelledOrder -- Time elapsed: 0.009 s <<< ERROR!
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.anOrderCancelledByAClockWithNanosecondsReloadsUnchanged -- Time elapsed: 0.017 s <<< FAILURE!
+expected: OrderDTO[id=1436e870-738b-4009-afd1-ebd0518bb7d9, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-24T09:30:00.987654Z, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+ but was: OrderDTO[id=1436e870-738b-4009-afd1-ebd0518bb7d9, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.cancellingUpdatesStatusAndCancelledAtAndBumpsTheVersion -- Time elapsed: 0.013 s <<< ERROR!
+[ERROR]   OrderDataServiceImplTest.anOrderCancelledByAClockWithNanosecondsReloadsUnchanged:202 
+expected: OrderDTO[id=1436e870-738b-4009-afd1-ebd0518bb7d9, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-24T09:30:00.987654Z, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+ but was: OrderDTO[id=1436e870-738b-4009-afd1-ebd0518bb7d9, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+[ERROR]   OrderDataServiceImplTest.cancellingUpdatesStatusAndCancelledAtAndBumpsTheVersion:162->instant:470 NullPointer Cannot invoke "java.sql.Timestamp.toInstant()" because "timestamp" is null
+[ERROR]   OrderDataServiceImplTest.storesAndFindsTheCancelledTimeOfACancelledOrder:178->instant:470 NullPointer Cannot invoke "java.sql.Timestamp.toInstant()" because "timestamp" is null
+[ERROR]   OrderDataServiceImplTest.updateCopiesOnlyStatusShippedAtAndCancelledAt:257->instant:470 NullPointer Cannot invoke "java.sql.Timestamp.toInstant()" because "timestamp" is null
+[ERROR] Tests run: 19, Failures: 1, Errors: 3, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# PERSISTENCE RED, second run: helper instant() now asserts a Timestamp first; all four fail on an assertion
+# command: test -Dtest=OrderDataServiceImplTest
+# raw: $SP/s10-t9-impl-raw-persistence-red2.txt
+[ERROR] Tests run: 19, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 3.815 s <<< FAILURE! -- in nl.openvalue.bookstore.data.OrderDataServiceImplTest
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.updateCopiesOnlyStatusShippedAtAndCancelledAt -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.storesAndFindsTheCancelledTimeOfACancelledOrder -- Time elapsed: 0.007 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.anOrderCancelledByAClockWithNanosecondsReloadsUnchanged -- Time elapsed: 0.013 s <<< FAILURE!
+expected: OrderDTO[id=90a4e892-e0ff-4cec-a145-3ca9c6b99c5b, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-24T09:30:00.987654Z, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+ but was: OrderDTO[id=90a4e892-e0ff-4cec-a145-3ca9c6b99c5b, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+[ERROR] nl.openvalue.bookstore.data.OrderDataServiceImplTest.cancellingUpdatesStatusAndCancelledAtAndBumpsTheVersion -- Time elapsed: 0.015 s <<< FAILURE!
+java.lang.AssertionError: 
+Expecting actual not to be null
+[ERROR]   OrderDataServiceImplTest.anOrderCancelledByAClockWithNanosecondsReloadsUnchanged:202 
+expected: OrderDTO[id=90a4e892-e0ff-4cec-a145-3ca9c6b99c5b, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=2026-06-24T09:30:00.987654Z, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+ but was: OrderDTO[id=90a4e892-e0ff-4cec-a145-3ca9c6b99c5b, customerEmail=reload.reader@example.com, status=CANCELLED, placedAt=2026-06-24T08:00:00.123456Z, shippedAt=null, cancelledAt=null, lines=[OrderLineDTO[bookId=40000000-0000-0000-0000-0000000000b1, isbn=9780000000379, title=Persuasion, unitPriceAmount=9.25, unitPriceCurrency=EUR, quantity=2]]]
+[ERROR]   OrderDataServiceImplTest.cancellingUpdatesStatusAndCancelledAtAndBumpsTheVersion:162->instant:471 
+Expecting actual not to be null
+[ERROR]   OrderDataServiceImplTest.storesAndFindsTheCancelledTimeOfACancelledOrder:178->instant:471 
+Expecting actual not to be null
+[ERROR]   OrderDataServiceImplTest.updateCopiesOnlyStatusShippedAtAndCancelledAt:257->instant:471 
+Expecting actual not to be null
+[ERROR] Tests run: 19, Failures: 4, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# PERSISTENCE GREEN: OrderJPA.cancelledAt, OrderJPAMapper.copyInto and toDTO
+# command: test -Dtest=OrderDataServiceImplTest
+# raw: $SP/s10-t9-impl-raw-persistence-green.txt
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.490 s -- in nl.openvalue.bookstore.data.OrderDataServiceImplTest
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# VIEW RED: OrderQueriesTest exact-field pin extended to 9 fields and cancelled view test written
+# command: test -Dtest=OrderQueriesTest
+# raw: $SP/s10-t9-impl-raw-view-red.txt
+[ERROR] Tests run: 16, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 1.256 s <<< FAILURE! -- in nl.openvalue.bookstore.query.OrderQueriesTest
+[ERROR] nl.openvalue.bookstore.query.OrderQueriesTest.getReturnsTheOrderViewWithExactlyItsFields -- Time elapsed: 0.011 s <<< FAILURE!
+java.lang.AssertionError: 
+[ERROR] nl.openvalue.bookstore.query.OrderQueriesTest.getRendersTheCancelledTimeOfACancelledOrder -- Time elapsed: 0.007 s <<< FAILURE!
+expected: "2026-04-03T11:22:33.445566Z"
+ but was: null
+[ERROR]   OrderQueriesTest.getRendersTheCancelledTimeOfACancelledOrder:157 
+expected: "2026-04-03T11:22:33.445566Z"
+ but was: null
+[ERROR]   OrderQueriesTest.getReturnsTheOrderViewWithExactlyItsFields:83 JSON path "$.*"
+[ERROR] Tests run: 16, Failures: 2, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# VIEW GREEN: OrderView.cancelledAt
+# command: test -Dtest=OrderQueriesTest
+# raw: $SP/s10-t9-impl-raw-view-green.txt
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.226 s -- in nl.openvalue.bookstore.query.OrderQueriesTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# INTEGRATION RED: five cancel scenarios written; the endpoint change was withdrawn (OrderCommands.java copied from the level-3 baseline, run with clean)
+# command: clean test -Dtest=OrderIntegrationTest
+# raw: $SP/s10-t9-impl-raw-integration-red.txt
+[ERROR] Tests run: 30, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: 5.266 s <<< FAILURE! -- in nl.openvalue.bookstore.OrderIntegrationTest
+[ERROR] nl.openvalue.bookstore.OrderIntegrationTest.cancellingAPlacedOrderReleasesTheReservedStockOfEveryLine -- Time elapsed: 0.037 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR] nl.openvalue.bookstore.OrderIntegrationTest.shippingACancelledOrderIsRejectedWith409AndChangesNothing -- Time elapsed: 0.019 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR] nl.openvalue.bookstore.OrderIntegrationTest.cancellingAnUnknownOrderIsNotFound -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Response header 'Content-Type' expected:<application/problem+json> but was:<application/json>
+[ERROR] nl.openvalue.bookstore.OrderIntegrationTest.cancellingAShippedOrderIsRejectedWith409AndChangesNothing -- Time elapsed: 0.024 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<409 CONFLICT> but was:<404 NOT_FOUND>
+[ERROR] nl.openvalue.bookstore.OrderIntegrationTest.cancellingTwiceIsRejectedWith409AndChangesNothing -- Time elapsed: 0.020 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR]   OrderIntegrationTest.cancellingAPlacedOrderReleasesTheReservedStockOfEveryLine:393 Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR]   OrderIntegrationTest.cancellingAShippedOrderIsRejectedWith409AndChangesNothing:431->problem:896 Status expected:<409 CONFLICT> but was:<404 NOT_FOUND>
+[ERROR]   OrderIntegrationTest.cancellingAnUnknownOrderIsNotFound:416->problem:897 Response header 'Content-Type' expected:<application/problem+json> but was:<application/json>
+[ERROR]   OrderIntegrationTest.cancellingTwiceIsRejectedWith409AndChangesNothing:451 Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR]   OrderIntegrationTest.shippingACancelledOrderIsRejectedWith409AndChangesNothing:475 Status expected:<202 ACCEPTED> but was:<404 NOT_FOUND>
+[ERROR] Tests run: 30, Failures: 5, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+
+# INTEGRATION GREEN: the endpoint change re-applied byte-identically (shasum 644c7b054527dfd7...)
+# command: clean test -Dtest=OrderIntegrationTest,OrderCommandsTest
+# raw: $SP/s10-t9-impl-raw-integration-green.txt
+[INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.341 s -- in nl.openvalue.bookstore.OrderIntegrationTest
+[INFO] Tests run: 61, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.350 s -- in nl.openvalue.bookstore.command.OrderCommandsTest
+[INFO] Tests run: 91, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+# FULL VERIFY in $SBX after the flow refactor (changeStockOfEveryLine). Raw: $SP/s10-t9-impl-raw-sbx1-verify.txt
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.145 s -- in nl.openvalue.bookstore.ArchitectureTest
+[INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.040 s]
+[INFO] frontend ........................................... SUCCESS [  7.921 s]
+[INFO] bookstore .......................................... SUCCESS [ 17.353 s]
+[INFO] distributor ........................................ SUCCESS [  4.218 s]
+[INFO] BUILD SUCCESS
