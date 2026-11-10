@@ -1,10 +1,18 @@
-/* Colours come from the variables of src/css/custom.css only. The current level is a
-   filled step with a bold label, the other levels are outlined steps. */
+/* Colours come from the --guide-level-* variables of src/css/custom.css only.
+   Five chevron-shaped crumbs in a row that wraps. The chevron is drawn by two empty spans behind
+   the link (.edge, the outline layer, and .fill, the fill layer, both clipped to the chevron). They
+   are real elements with real backgrounds, not pseudo elements, and sit before the link in the
+   document with no z-index (the link is positioned and paints after them), so a checker such as
+   axe can read the colour under each label; the link itself is never clipped, so its focus ring
+   shows in full.
+   The state of a crumb is the data-state attribute of the list item: done, current or upcoming. */
 .progress {
   margin-bottom: var(--ifm-spacing-vertical);
 }
 
 .steps {
+  --point: 0.75rem;
+  --outline: 2px;
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -15,20 +23,112 @@
 
 /* The doubled class beats the page's `li + li` list spacing (Infima). */
 .steps > .step {
-  flex: 1 1 5.5rem;
+  --crumb-bg: var(--guide-level-inactive-bg);
+  --crumb-fg: var(--guide-level-inactive-fg);
+  --crumb-border: var(--guide-level-inactive-border);
+  --crumb-weight: 400;
+  --crumb-clip: polygon(
+    0 0,
+    calc(100% - var(--point)) 0,
+    100% 50%,
+    calc(100% - var(--point)) 100%,
+    0 100%,
+    var(--point) 50%
+  );
+  position: relative;
+  flex: 1 1 6rem;
   margin: 0;
-  padding: 0.4rem 0.75rem;
-  border: 2px solid var(--guide-level-inactive-border);
-  border-radius: var(--ifm-global-radius);
-  background: var(--guide-level-inactive-bg);
-  color: var(--guide-level-inactive-fg);
-  font-weight: 400;
-  text-align: center;
+  padding: 0;
 }
 
-.steps > .current {
-  border-color: var(--guide-level-current-border);
-  background: var(--guide-level-current-bg);
-  color: var(--guide-level-current-fg);
+/* The first crumb has a flat left edge. */
+.steps > .step:first-child {
+  --crumb-clip: polygon(0 0, calc(100% - var(--point)) 0, 100% 50%, calc(100% - var(--point)) 100%, 0 100%);
+}
+
+.steps > .step[data-state='done'] {
+  --crumb-bg: var(--guide-level-done-bg);
+  --crumb-fg: var(--guide-level-done-fg);
+  --crumb-border: var(--guide-level-done-border);
+  --crumb-weight: 600;
+}
+
+.steps > .step[data-state='current'] {
+  --crumb-bg: var(--guide-level-current-bg);
+  --crumb-fg: var(--guide-level-current-fg);
+  --crumb-border: var(--guide-level-current-border);
+  --crumb-weight: 700;
+}
+
+.edge,
+.fill {
+  position: absolute;
+  clip-path: var(--crumb-clip);
+}
+
+.edge {
+  inset: 0;
+  background: var(--crumb-border);
+}
+
+.fill {
+  inset: var(--outline);
+  background: var(--crumb-bg);
+}
+
+/* A focused crumb sits above its neighbours so the whole ring shows. */
+.step:focus-within {
+  z-index: 1;
+}
+
+.steps > .step > .link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.4rem calc(var(--point) + 0.25rem);
+  color: var(--crumb-fg);
+  font-weight: var(--crumb-weight);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.steps > .step > .link:hover {
+  color: var(--crumb-fg);
+  text-decoration: underline;
+}
+
+/* The ring is the link's own outline, outside the chevron, on the page colour: 3:1 in both modes. */
+.steps > .step > .link:focus-visible {
+  outline: 3px solid var(--guide-level-focus);
+  outline-offset: 2px;
+}
+
+/* The check mark of a done crumb: an empty aria-hidden span, the character is its content (an
+   escape, so this file stays ASCII). It is not text in the page, so no colour pair is left for a
+   checker to decide; its colour is the non-text pair "level progress done check mark". */
+.check {
+  color: var(--guide-level-done-check);
   font-weight: 700;
+  line-height: 1;
+}
+
+.check::before {
+  content: '\2713';
+}
+
+/* Text for screen readers only ("completed"): out of sight, still in the link's name. */
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

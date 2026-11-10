@@ -19,7 +19,7 @@ merge.
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | #165 | sdd/14-guide-branding/T1 | PASS r1 | ENDORSE |
-| T2 | guide | [T1] | 2 | LevelProgress chevron breadcrumb with links, done/current/upcoming states, level-progress built rule | critical | sonnet (owner policy, see Decisions) | | sdd/14-guide-branding/T2 | | |
+| T2 | guide | [T1] | 2 | LevelProgress chevron breadcrumb with links, done/current/upcoming states, level-progress built rule | critical | sonnet (owner policy, see Decisions) | #167 | sdd/14-guide-branding/T2 | PASS r1 | ENDORSE |
 | T3 | guide | [T1, T2] | 3 | deck colours across the site, brand rule to D18, visual sweep, screenshots | elevated | sonnet | | sdd/14-guide-branding/T3 | | |
 
 qaDirective per task = `qa-strategy.md` C0 plus that task's block under "Task directives", plus every
@@ -202,6 +202,29 @@ From the T1 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
   `#3C7EC9` must make `npm run check` fail at 4.18. T3 item 1 must-fails: light primary `#014046`, light primary
   `#3C7EC9`, dark primary `#3C7EC9`, dark primary swapped with the light value; drop every mention of `large`.
 
+From the T2 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
+
+- FF-T2-1 (T3, under A3): insert into `guide/scripts/level-progress.test.mjs` (a) R15: `Level 10 (completed)` at
+  crumb 1 of a current-2 fixture fails `/crumb 2 \(Level 1\) must read Level 1/`; (b) R20: a second `ol` in the nav
+  fails `/must hold one ol \(found 2\)/`; (c) R33: a `div` around the `ol` fails `/must hold one ol \(found 0\)/`;
+  (d) R34: the first done text `(uncompleted)` fails `/crumb 1 \(Level 0\) is done and its link name must say
+  completed/`; (e) two `moduleErrors()` checks with one mutant row each: no rule whose selector contains `:hover`
+  declares a `color` other than `var(--crumb-fg)` (row: `var(--ifm-link-hover-color)`), and `.fill` declares
+  `inset: var(--outline)` with `.steps` declaring `--outline` of at least 1px (row: `inset: 0`); (f) rename the title
+  at `:686` from "... the chevron on pseudo elements ..." to "... the chevron on the two layer spans ...". Verifier
+  re-applies R15, R20, R33, R34, MC9, MC10 (texts in `.claude/comms/tmp/s14-t2-qa-mutants.mjs`): each fails exactly one
+  new test and survives against the T2-gate test file; deleting the inserted lines and reverting the title in a copy
+  gives back the T2-gate hash.
+- FF-T2-2 (T3): if any `--guide-level-*` declaration is re-pointed, retarget the literal in the `contrast-pairs.test.mjs`
+  test "a current fill of #3C7EC9 fails ..." (old -> new listed) so it still fails at 4.18; the current fill stays
+  `#3371B8` in both modes; the done fill stays green (quote its hue); recompute and quote the dark `current fill`
+  (3.10) and `done fill` (3.18) against the final dark page.
+- FF-T2-3 (T3): `LevelProgress.module.css` stays hash-equal to the T2 gate unless the var() sweep edits it (list each
+  edit); either way T3's sweep re-measures on Chromium, both builds and both modes the hover label colour of all five
+  crumbs, the unclipped focus-ring band, the light-mode upcoming outline band (equals `--guide-level-inactive-border`)
+  and the 1 px sr-only box.
+- FF-T2-4 (T3): a `#3C7EC9` grep over `guide/src` accounts for the T2 comment at `custom.css:164` (a comment, not a use).
+
 ## Amendments
 
 - A1 (2026-11-10, orchestrator, applying OD-1 resolved; gate re-run self-accepted). Supersedes the conflicting text
@@ -223,6 +246,10 @@ From the T1 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
 - A2 (2026-11-10, orchestrator, from the T1 meta-review; gate re-run self-accepted, test-only scope). T2's fileScope
   gains `guide/scripts/navbar.test.mjs`, limited to the FF-T1-1 inserted test and the FF-T1-2 fixture edits (listed
   old -> new). `guide/scripts/rules/navbar-built.mjs` stays byte-identical.
+- A3 (2026-11-10, orchestrator, from the T2 meta-review; gate re-run self-accepted, test-only scope). T3's fileScope
+  gains `guide/scripts/level-progress.test.mjs`, insertion-only except the one FF-T2-1 (f) title rename.
+  `guide/scripts/rules/level-progress-built.mjs` and `guide/src/components/LevelProgress.tsx` stay hash-equal to the
+  T2 gate.
 
 ## Residuals for the owner
 

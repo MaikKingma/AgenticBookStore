@@ -119,6 +119,12 @@ test('navbar rule: the logo link must be on the left side of the navbar', () => 
   assert.ok(errors.some((error) => /logo link must be in the left part of the navbar/.test(error)), errors.join('\n'));
 });
 
+// Spec 14, T2 (FF-T1-1): two logo links are one too many; the rule names the count and nothing else.
+test('navbar rule: two logo links in the left part of the navbar fail with the count, and only that', () => {
+  const two = errorsOf(page({logo: logoWith(LOGO_OPEN) + logoWith(LOGO_OPEN)}));
+  assert.deepEqual(two, ['navbar: index.html: more than one logo link in the navbar (found 2)']);
+});
+
 // --- the logo images: the right file per mode ------------------------------------------------------
 
 test('navbar rule: swapped light and dark logo files fail (the slate logo belongs to light mode)', () => {
@@ -266,17 +272,37 @@ function withCopiedScripts(build, fn) {
 
 const run = (script, args = []) => spawnSync(process.execPath, [script, ...args], {encoding: 'utf8'});
 
+// Spec 14, T2 (FF-T1-2): the default build dir also runs the level progress rule (rules/level-progress-built.mjs),
+// which needs the five level pages with their breadcrumb. These fixture builds gain them (page() plus the nav).
+function levelProgressNav(current) {
+  const routes = ['level-0-a', 'level-1-b', 'level-2-c', 'level-3-d', 'level-4-e'];
+  const crumbs = routes.map((route, level) => {
+    const state = level < current ? 'done' : level === current ? 'current' : 'upcoming';
+    const check = state === 'done' ? '<span aria-hidden=true data-part=check></span>' : '';
+    const done = state === 'done' ? '<span> (completed)</span>' : '';
+    const marker = state === 'current' ? ' aria-current=step' : '';
+    return `<li data-state=${state}><a${marker} href=/AgenticBookStore/${route}>${check}<span>Level ${level}</span>${done}</a>`;
+  });
+  return `<nav aria-label="Level progress"><ol>${crumbs.join('')}</ol></nav>`;
+}
+const LEVEL_PAGES = Object.fromEntries(
+  [0, 1, 2, 3, 4].map((level) => [
+    `level-${level}-${'abcde'[level]}.html`,
+    page().replace('<main><h1>Welcome</h1>', `<main><h1>Welcome</h1>${levelProgressNav(level)}`),
+  ]),
+);
+
 test('check-built with no argument checks the default build dir and runs the navbar rule', () => {
-  withCopiedScripts({'index.html': page(), 'setup-check.html': page()}, (root, script) => {
+  withCopiedScripts({...LEVEL_PAGES, 'index.html': page(), 'setup-check.html': page()}, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}navbar: 2 pages, /m);
-    assert.match(result.stdout, /^ok {3}built: 2 html files/m);
+    assert.match(result.stdout, /^ok {3}navbar: 7 pages, /m);
+    assert.match(result.stdout, /^ok {3}built: 7 html files/m);
   });
 });
 
 test('check-built with no argument fails on a default build whose navbar is wrong', () => {
-  withCopiedScripts({'index.html': page(), 'setup-check.html': page({github: ''})}, (root, script) => {
+  withCopiedScripts({...LEVEL_PAGES, 'index.html': page(), 'setup-check.html': page({github: ''})}, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 1, result.stdout + result.stderr);
     assert.match(result.stderr, /navbar: setup-check\.html: no GitHub link/);
