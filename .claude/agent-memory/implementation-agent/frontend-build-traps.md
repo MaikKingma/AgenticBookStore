@@ -47,10 +47,6 @@ metadata:
 - jsdom "Not implemented: HTMLFormElement's requestSubmit()" goes to raw stderr, NOT through the console trap, so a form
   handler missing `preventDefault` stays green. Witness it in the test: `document.addEventListener('submit', (e) =>
   seen.push(e.defaultPrevented))` (runs after React's root listener), `onTestFinished` removes it, expect `[true]`.
-- Router rows an unknown-route list needs: unknown first segment WITH a second segment (`#/basket/x`, `#/foo/bar`), a
-  prefix like `#xbasket`, `#/basket?x=1`, and a double-encoded id decode row (`a%2541` gives `a%41`); the final
-  `return notFound` after a valid id is otherwise never executed. A genre or enum shown on a card needs one fixture with an
-  underscore (`SCIENCE_FICTION`) to pin "shown as sent".
 - Worktree Bash guard refuses `cd <dir> && ...` and `for` loops inline: use relative paths from the worktree root or a
   script in `.claude/comms/tmp`. The `Grep` tool does not exist here; grep through Bash.
 - A synchronous App test row that now renders a real fetching page: install `mockFetch` routes whose `respond` is
@@ -62,29 +58,8 @@ metadata:
   so edge-whitespace witnesses never reach the payload. Use `type="text"` with `inputMode="email"`; keep `noValidate` on
   the form anyway when the card names it. Controlled `type="number"` inputs reset to the state value after a refused
   `fireEvent.change` (React restores it), which is what a "value stays 3" test needs.
-- C0-6c limit grep (`-w 10|20|1000`) also hits production COMMENTS and date examples ("10:00:00"): write comment
-  examples without those numbers and name limits in words. Order-fixture search: when no permutation of three lines
-  makes every attribute a peak or valley, change one price (a python brute force over candidate prices found
-  `7.99, 12.50, 3.50` with quantities 2, 3, 1); a data-only test double may differ from the basket it answers.
 - Form pages that call an id helper inside the send path: make the send an `async` function with try/catch around
   `await chat({ id: helper(), ... })`, so a throwing helper (`crypto.randomUUID` is absent on plain-http non-localhost
   origins) becomes the generic alert instead of a stuck pending state. A reply with edge whitespace cannot be awaited with
   `findByText` (it normalises); await the author label instead and compare `li.textContent` byte-exact. A counter is
   checked with `toHaveAccessibleDescription` when the textarea points at it with `aria-describedby`.
-- Live checks after a rebuild: the jar serves `index.html` with `Last-Modified` 1980, so a REUSED Playwright session can keep
-  the old `index.html` (old CSS hash) and measure the old build. Open a new session per build. `overflow-wrap: anywhere`
-  inherited from `.card` makes `th`/`td` min-content 1 char: `overflow-wrap: normal` alone still wraps headings at spaces
-  (taller on a phone); add `white-space: nowrap` for the short columns. A style test needs a non-colour property in CSS
-  fixtures (`color: red` trips the colour-literal scan).
-- "Existing test file unmodified, 0 deletions" tasks: add imports as NEW lines after the old import block (never widen an
-  existing `import { a }` line) and append to the last `describe` by replacing its closing lines with themselves plus the
-  new block; fixtures for a page that only reads some fields can omit the C0-6c words (isbn, onHand, reserved). Shared
-  in-flight state (a request that outlives its page) belongs in the root provider with a `useRef` guard next to the
-  state: only a same-tick hook test (`act(() => { place(); place() })`) kills a state-only guard.
-- CSS source-level contract tests (styleContract.test.ts): read the effective cascade (top-level rules only, source order, last
-  declaration wins; comments and media queries excluded) and put the real assertions in helpers that throw; run the helper on
-  the real file and, via `expect(() => helper(css)).toThrow()`, on one-mutation variants of a passing fixture. `Number(` and
-  `parseFloat` hit the C0-6c greps: use unary `+x`. DOM element arrays: `toEqual` is `isEqualNode`, compare identity with `toBe`.
-- Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
-  a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
-  test file, not by the guard.

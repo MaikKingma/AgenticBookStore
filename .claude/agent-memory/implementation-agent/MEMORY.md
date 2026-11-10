@@ -17,3 +17,4 @@
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse, ChatClient without a context
 - [Consistency-check techniques](consistency-check-techniques.md) — glob test for rule paths, git grep -e on a sha, token inventory with overlay controls, wrapped-prose search, hooks run without Claude, docs drift
+- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace table with needles in both texts, counterexample searches on two trees, installer traps (no standards copied, bare mktemp), namespaced command names
