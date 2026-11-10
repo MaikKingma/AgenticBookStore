@@ -1,11 +1,12 @@
 ---
 spec: fix-11-guide-review
 source: docs/spec-pack/specs/11-workshop-guide-site.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-10T14:22:57Z
 origin: fresh read-only review of the guide merged as 0bcbcfe (main session); decisions D9, D16, D17
 gate1: 2026-11-10T14:25:05Z
+gate2: 2026-11-10T15:33:43Z
 qa-lead: on
 base: factory
 branch: sdd/fix-11-guide-review/spec
@@ -236,7 +237,7 @@ Open question the code does not settle in minutes: none.
   `level-start.test.mjs`), plus removal of a key only if its literal left line 132. No sweep logic or count changes;
   the coverage line stays `anchored 304/304`. Not a weakening: the sweep still covers every other pack literal, and
   the two literals are pinned by the structure rule and the regression test.
-- A3 (2026-11-10T15:35Z, orchestrator, qa-final round 1 FAIL RA-1): bug.md Blast radius records
+- A3 (2026-11-10T15:27Z, commit time; a hand-written 15:35Z was corrected at finalize; orchestrator, qa-final round 1 FAIL RA-1): bug.md Blast radius records
   `docs/spec-pack/specs/11-workshop-guide-site.md:51` (generic at a glance catch-up rule) as deferred, owner residual;
   no product or pack file changes. Fix round 1 of at most 2: qa-final re-checks the delta, then the QA lead's
   final review.

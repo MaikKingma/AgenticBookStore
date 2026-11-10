@@ -2,7 +2,7 @@
 bug: fix-11-guide-review
 severity: S3
 path: lite
-status: open
+status: fixed
 closes: [review S1 Level 0 and 1 catch-up on main, review S2 no run command for the app, review S3 generic catch-up form]
 ---
 # Bug - the guide's Level 0 and 1 catch-up does not reset to the start, and no page says how to start the app
