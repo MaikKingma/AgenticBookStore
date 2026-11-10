@@ -103,7 +103,7 @@ Open question the code does not settle in minutes: none.
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | T1 | Levels 0 and 1 catch up at `level-0-start`, far-behind and index name every level's command, the setup page starts the app | guide | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #159 | sdd/fix-11-guide-review/T1 |
-| T2 | the pack's Level 1 start (line 132) and far-behind row (line 347) name the D1 commands; the setup link and same-terminal sentence are pinned (A1, FF-2) | guide | [T1] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | (see PR) | sdd/fix-11-guide-review/T2 |
+| T2 | the pack's Level 1 start (line 132) and far-behind row (line 347) name the D1 commands; the setup link and same-terminal sentence are pinned (A1, FF-2) | guide | [T1] | 2 | elevated | sonnet | done | PASS r0 | ENDORSE | #160 | sdd/fix-11-guide-review/T2 |
 
 ### T2: the pack agrees with the guide on the Level 0/1 catch-up; FF-2 pins
 
