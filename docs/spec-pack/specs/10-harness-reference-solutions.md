@@ -481,6 +481,10 @@ contradicts `CLAUDE.md`.
 - **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
 
 ## Tasks
+Decision D16 (Maik, 2026-11-10): no PowerShell hook variants. Every PowerShell (`.ps1`) hook, PowerShell
+hook tab and PowerShell parity requirement in this spec is dropped. Level 3 ships the bash hooks and the git
+pre-commit hook only; on Windows they run through Git Bash (decision D9).
+
 Decision D14 (Maik, 2026-11-09): no agent runs Claude Code headlessly for this spec. Maik rehearses every level
 himself (2026-11-10). Agents build every file of every branch directly and replace each "run its scenarios" and
 "rehearse" step below with a careful consistency check: every file matches this spec, the guide (spec 11) and the
