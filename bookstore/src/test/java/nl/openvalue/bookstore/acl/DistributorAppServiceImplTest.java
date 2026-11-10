@@ -272,6 +272,17 @@ class DistributorAppServiceImplTest {
     }
 
     @Test
+    void keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator() {
+        stubTitle("9789900010395", "title-9789900010395.json");
+
+        DistributorTitleDTO title = distributor.findTitle("9789900010395").orElseThrow();
+
+        assertThat(title.title()).isEqualTo("The Divine Comedy: Inferno");
+        assertThat(title.authors()).containsExactly("Dante Alighieri");
+        assertThat(title.authors()).doesNotContain("Henry Wadsworth Longfellow", "Gustave Dore");
+    }
+
+    @Test
     void outOfPrintTitleIsNotOrderable() {
         stubTitle("9789900010678", "title-9789900010678.json");
 

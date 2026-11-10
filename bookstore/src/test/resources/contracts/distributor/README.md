@@ -4,16 +4,16 @@ These files are the bodies the real distributor returned (and the request bodies
 
 How the capture was done:
 
-- Capture date: 2026-11-08 (Sunday, Europe/Amsterdam). Every file below was captured on that day unless the table says otherwise.
-- Distributor: started from the repository root with `./mvnw -pl distributor spring-boot:run`, listening on port 8090 on 127.0.0.1. Run 1 used no flags (defaults). Run 2 used `--distributor.chaos.failure-rate=1.0` and produced only `unavailable-503.json`.
-- Requests were sent with curl, as written in `http/distributor.http` (the compact request bodies below carry the same keys and values as the pretty-printed bodies in that file). Every response body was written to its file untouched.
-- Both distributor processes were stopped afterwards and port 8090 was free again.
+- Capture date: 2026-11-08 (Sunday, Europe/Amsterdam). Every file below was captured on that day except `title-9789900010395.json`, which the title files section describes.
+- Distributor for every file except `title-9789900010395.json`: started from the repository root with `./mvnw -pl distributor spring-boot:run`, listening on port 8090 on 127.0.0.1. Run 1 used no flags (defaults). Run 2 used `--distributor.chaos.failure-rate=1.0` and produced only `unavailable-503.json`.
+- For every file except `title-9789900010395.json`: Requests were sent with curl, as written in `http/distributor.http` (the compact request bodies below carry the same keys and values as the pretty-printed bodies in that file). Every response body was written to its file untouched.
+- Both of these distributor processes were stopped afterwards and port 8090 was free again.
 
 Dates and ids come from the capture day. The restock order ids are random, and the expected delivery dates are the capture day plus 2 working days (CONFIRMED) or plus 14 calendar days (BACKORDERED), counted in Europe/Amsterdam. The spec example date 2026-11-17 is only an example. The bookstore tests assert the values captured here, so a recapture on another day means updating the literals below and the tests together. The same holds for the release date of 9789900020080, which the distributor derives from the capture day (16 days before it).
 
-## Title files (GET /api/titles/{ean}, status 200, run 1, no flags)
+## Title files (GET /api/titles/{ean}, status 200, run 1 unless noted, no flags)
 
-Every title has only contributors with the role AUTHOR and the currency EUR. The first subject code is the one that decides the bookstore genre. Prices are `listPriceCents`.
+Every title has the currency EUR. Every title has only contributors with the role AUTHOR, except `title-9789900010395.json`, which also has a TRANSLATOR (Henry Wadsworth Longfellow) and an ILLUSTRATOR (Gustave Dore). That file was captured on 2026-11-10 with curl from a distributor on a free port: the REST body and the MCP `get_title` text were identical bytes. The first subject code is the one that decides the bookstore genre. Prices are `listPriceCents`.
 
 | File | Source request | Title | Authors in order | Subject codes | Price (cents) | Availability | Release date |
 |---|---|---|---|---|---|---|---|
@@ -31,10 +31,11 @@ Every title has only contributors with the role AUTHOR and the currency EUR. The
 | `title-9789900010678.json` | GET /api/titles/9789900010678 | Pamela | Samuel Richardson | FIC027000 | 1099 | OUT_OF_PRINT | 1740-01-01 |
 | `title-9789900010272.json` | GET /api/titles/9789900010272 | Bleak House | Charles Dickens | FIC004000 | 1299 | BACKORDER | 1853-01-01 |
 | `title-9789900020080.json` | GET /api/titles/9789900020080 | Patterns for Patient Systems | Dagny Vellacourt, Emeric Stroud-Halvorsen | COM000000 | 2499 | IN_STOCK | 2026-10-23 |
+| `title-9789900010395.json` | GET /api/titles/9789900010395 | The Divine Comedy: Inferno | Dante Alighieri | POE000000 | 3499 | IN_STOCK | 1867-01-01 |
 
 Release years the tests assert: 1813, 1826, 1889, 1887, 1811, 1818, 1516, 1859, 1864, 1868, 1845, 1740, 1853, and 2026 for 9789900020080.
 
-First subject code prefixes covered: FIC004 (Pride and Prejudice, Bleak House), FIC028 (The Last Man), FIC009 (A Connecticut Yankee, with FIC028000 second), FIC022 (A Study in Scarlet), FIC027 (Sense and Sensibility, Pamela), FIC015 (Frankenstein, with FIC028000 second), HIS (Utopia), SCI (On the Origin of Species), COM (Passages from the Life of a Philosopher, Patterns for Patient Systems), JUV (Little Women) and POE (The Raven and Other Poems).
+First subject code prefixes covered: FIC004 (Pride and Prejudice, Bleak House), FIC028 (The Last Man), FIC009 (A Connecticut Yankee, with FIC028000 second), FIC022 (A Study in Scarlet), FIC027 (Sense and Sensibility, Pamela), FIC015 (Frankenstein, with FIC028000 second), HIS (Utopia), SCI (On the Origin of Species), COM (Passages from the Life of a Philosopher, Patterns for Patient Systems), JUV (Little Women) and POE (The Raven and Other Poems, The Divine Comedy: Inferno).
 
 Availability per title: all IN_STOCK except Pamela (OUT_OF_PRINT, so not orderable) and Bleak House (BACKORDER, still orderable). Warehouse quantities and formats are in the files and are not asserted by the bookstore.
 
