@@ -23,11 +23,11 @@ runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run 
 `COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
-## Status (2026-11-10, T10 in review)
+## Status (2026-11-10, before the cut)
 
-T1 to T9 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155, #157); T10 is PR #161.
-Next: T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4, D17), qa-final
-and Gate 2. The run ledger (comms, not committed) holds the full resume point.
+T1 to T13 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155, #157, #161, #163,
+#164, #166); `origin/factory` ab61c1d is merged in (0b14104); the fix task T15 is PR #168. Next: T14 cut and verify
+(A4, D17), qa-final and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 
 ## Tasks
 
@@ -46,6 +46,8 @@ and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | #163 | sdd/10-harness-reference-solutions/T11 | ENDORSE (r1) |
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | #164 | sdd/10-harness-reference-solutions/T12 | ENDORSE (r1) |
 | T13 | Level 4 Agent OS track and the Level 4 closing round (A5, A11, A12) | root | [T10] | 13 | elevated | sonnet | sonnet | #166 | sdd/10-harness-reference-solutions/T13 | ENDORSE (r2) |
+| T15 | Fix: simulate strip list and self-test follow spec 09 after D15 (A13) | root | [T13] | 14 | elevated | sonnet | sonnet | #168 | sdd/10-harness-reference-solutions/T15 | ENDORSE (r0) |
+| T14 | Cut the six D17 branches from `level-0-start`, push, verify each (A4, D17) | root | [T15] | 15 | critical | sonnet (A8) | orchestrator | | | |
 
 ### T1 Staging infrastructure and branch-cut tooling
 fileScope: `S/README.md`, `S/.gitattributes`, `S/scripts/**`, `S/tests/test-staging.sh`, `S/tests/fixtures/**`.
@@ -531,6 +533,13 @@ for all three tracks is a manual check for Maik.
   are the round's criteria. Gate 1 re-run and self-accepted: docs only, no new task.
 - J22 (orchestrator): FU-T13-1 is not run as a fix round before the cut (rework budget spent, not class (i), Maik
   rehearses from the record rows that the checklist points to); it is a Gate 2 residual with the reading note above.
+- A13 (2026-11-10, orchestrator, decision J23): `origin/factory` ab61c1d was merged into the spec branch (0b14104;
+  agent-memory conflicts only, resolved by union and curated to budget by the owning agent types). It brought spec 09's
+  D15 strip-list entries (`guide/`, `.github/workflows/guide.yml`), and `test-staging.sh` failed 4 of 58 (found after
+  the push: process slip, every gate now runs before a push). Fix task T15 (root, elevated, sonnet) updates the
+  built-in strip list of `simulate-level-0.sh` and the self-test's fixtures to spec 09 step 2; no case loosened.
+  Follow-up FU-T15-1: keeper fixtures (`guide-sibling.md`, `guide.yaml`, `.github/workflows/ci.yml`) in `make_source`
+  so a widened expected-tree filter dies. Gate 1 re-run and self-accepted: one fix task, no scope change.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
