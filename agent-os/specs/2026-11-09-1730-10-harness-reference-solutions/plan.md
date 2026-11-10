@@ -45,7 +45,7 @@ and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | #161 | sdd/10-harness-reference-solutions/T10 | ENDORSE (r1) |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | #163 | sdd/10-harness-reference-solutions/T11 | ENDORSE (r1) |
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | #164 | sdd/10-harness-reference-solutions/T12 | ENDORSE (r1) |
-| T13 | Level 4 Agent OS track | root | [T10] | 13 | elevated | sonnet | sonnet | | | |
+| T13 | Level 4 Agent OS track and the Level 4 closing round (A5, A11, A12) | root | [T10] | 13 | elevated | sonnet | sonnet | #166 | sdd/10-harness-reference-solutions/T13 | ENDORSE (r2) |
 
 ### T1 Staging infrastructure and branch-cut tooling
 fileScope: `S/README.md`, `S/.gitattributes`, `S/scripts/**`, `S/tests/test-staging.sh`, `S/tests/fixtures/**`.
@@ -346,6 +346,21 @@ for all three tracks is a manual check for Maik.
   in RR-S4 count with `git status --short --untracked-files=all` (29), ten lines from the plain command is not a
   failure; in RR-S2 ask the step 2 question before `/skills` runs; RR-S4 needs `claude` on PATH and, without a Python
   3.11+ on PATH, uv downloads a managed Python.
+- FU-T13-1 (from the T13 r2 meta-review; listed for Gate 2 with a reading note, checked by qa-final): R4-B's Failure
+  field restores RR-S3's (d) word for word ("/ship asking to include specs/ or .specify/ files is a finding, not a
+  failure", PF-T12-5); the Recording rule of R4-A and R4-B ends with the record rows' observation items (R4A-3:
+  permission prompts, whether `/ship` asked about `openspec/`, `git status --short` after step 7, the validate run after
+  archive; RR-S3: `claude --version`, permission mode, number of permission prompts, whether `tasks.md` had test
+  tasks); R4-C compared with R4C-4 field by field the same way.
+- Reading note for Maik before the Level 4 rehearsal (from the T13 r2 meta-review): in R4-A, R4-B and R4-C also record
+  the observation items of R4A-3, RR-S3 and R4C-4; in R4-B, `/ship` asking about `specs/` or `.specify/` files is a
+  finding to write down, not a failure.
+- FF-T13-a (from the T13 meta-reviews; qa-final): a census check whose expected list is copied from the claim it tests
+  proves nothing (derive it from the code); rows copied into the checklist carry every field of the record row.
+- Product findings from T13 for Maik: PF-T13-1 to PF-T13-9 in `S/records/level-4-agentos.md` (typed command names are
+  `/agent-os:<name>` while the pack and guide use the short form; the installer copies no standards, so `/plan-product`
+  step 4 never finds `global/tech-stack.md`; three DTOs without a domain-object constructor falsify the general DTO
+  wording of `docs/architecture.md`), and decisions D-1 to D-6 for Maik's review.
 - FF-T12-d (from the T12 r1 meta-review; T13 and the closing round): when a cited evidence file had to be regenerated
   without a pre-edit copy, the verifier reverts the declared difference in memory and shows the result hashes to the
   previous round's value.
@@ -509,6 +524,13 @@ for all three tracks is a manual check for Maik.
   rows and one appended evidence correction line) is applied by the last Level 4 track to merge, which already edits
   `S/records/rehearsal-checklist.md`; that track's file scope gains exactly those lines and
   `S/records/evidence/level-3/t10/skill-selection-static.txt` (append only). Gate 1 re-run and self-accepted.
+- A12 (2026-11-10, orchestrator, decision J21, from the T13 r1 meta-review closing-round directive): T13 merges last
+  and runs the closing round; its file scope gains `S/records/rehearsal-checklist.md` (FU-T10-1 lines and the Level 4
+  section only), `S/records/evidence/level-3/t10/skill-selection-static.txt` (append only), lines 336-337 of
+  `S/records/level-4-speckit.md` (FU-T12-1) and `S/records/evidence/level-4-agentos/r2/`. The QA lead's CR-1 to CR-8
+  are the round's criteria. Gate 1 re-run and self-accepted: docs only, no new task.
+- J22 (orchestrator): FU-T13-1 is not run as a fix round before the cut (rework budget spent, not class (i), Maik
+  rehearses from the record rows that the checklist points to); it is a Gate 2 residual with the reading note above.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
