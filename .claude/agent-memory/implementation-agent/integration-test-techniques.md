@@ -29,12 +29,10 @@ metadata:
 - Order claims over a whole list with fixed "added first / added last" rows: with three rows the insertion order is
   then always monotone, so use at least four. Columns no use case changes (reserved, reorder level) are set by
   `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check.
-
 - MockMvc `jsonPath("$.details").value(List.of(...))` converts the actual array to the expected value's class and then
   reports `but was:<null>`. Wrap it: `.value(equalTo(List.of(Map.of(...))))` (Hamcrest, no conversion).
 - Payload records: `@Valid List<@NotNull X>` logs Hibernate Validator warning HV000271 (container-level `@Valid`
   deprecated). Write `List<@Valid @NotNull X>`; field paths stay `lines[1]` and `lines[1].bookId`.
-
 - Order claims over books whose ids the app generates: seed `book`, `book_author` and `stock_item` by SQL with fixed
   ids (first hex digit 0 to 7), so the id column can be made non-monotone too; keep the pack scenarios on HTTP adds.
   Set instants (`placed_at`) by `jdbcTemplate.update(..., OffsetDateTime.ofInstant(i, ZoneOffset.UTC), id)` so views
@@ -45,7 +43,6 @@ metadata:
   smallest and largest child value of every column in the middle root. Tabulate with a script before running.
 - Verifier greps `^\s*@` on integration classes allow only `@Test`/`@Autowired`: a generic varargs helper needs
   `@SafeVarargs` (or logs an unchecked note), so pass `List<Map<String, Object>>` instead.
-
 - QA greps `LocalDate(Time)?\.now\(` over `bookstore/src/test` and allows only the base's default-answer line. A
   test that needs "today by the application Clock" autowires its own `Clock` and writes
   `LocalDate.ofInstant(clock.instant(), clock.getZone())`. Stub the shared `@MockitoBean` default in the base
@@ -62,7 +59,6 @@ metadata:
   then a BLANK line, then `java.lang.X: <message>`: join them with `\\R+`, not `\\R`. Logged per failing listener call.
 - Re-stubbing the shared mock replaces the base default; for "fail first, then the default", rebuild the default answer
   locally (`doThrow(e).doAnswer(this::defaultConfirmation)`), since the base's lambda cannot be chained.
-
 - JDBC witnesses for nullable column groups: a `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
   rs.getObject(2, Integer.class), rs.getObject(3, LocalDate.class), rs.getObject(4, Boolean.class)), id)` row gives
   nulls for SQL NULL (pgjdbc), so "all cleared" is `isEqualTo(Arrays.asList(null, null, null, null))`. "Row unchanged
@@ -77,5 +73,4 @@ metadata:
 - Deterministic "never two threads inside" witness for a synchronized method: a test `Clock` whose `instant()` bumps an
   `AtomicInteger`, records the max, then waits `CountDownLatch.await(50, ms)` on a latch nobody opens; two threads
   released from one start latch call the method.
-
 Related: [[flow-test-techniques]], [[jpa-slice-traps]].

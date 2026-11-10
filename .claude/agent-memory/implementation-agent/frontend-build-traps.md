@@ -15,7 +15,8 @@ metadata:
   back with `vi.mocked(console.error)` and guard with `vi.isMockFunction`.
 - Vite's dev server binds `localhost`, which can be IPv6 only: `curl http://127.0.0.1:5173/` fails with code 000 until
   `server.host: '127.0.0.1'` is set.
-- `rg` is not on the Bash tool PATH here and BSD grep has no `-P`. Byte-level ASCII check, in a script: `env LC_ALL=C grep
+- `rg` and a `Grep` tool are absent (grep through Bash), BSD grep has no `-P`, and the worktree Bash guard refuses
+  `cd <dir> && ...` and inline `for` loops (use a script in `.claude/comms/tmp`). Byte-level ASCII check, in a script: `env LC_ALL=C grep
   -rnI $'[\x80-\xff]' <paths>`. The Write tool stores U+2003 as a plain space, so a Written control file proves nothing; use
   a committed file known to hold non-ASCII as the positive control.
 - Must-fail probes for a shared setup file: one script with a loop that deletes one line per run via `grep -vF`, restores from
@@ -40,8 +41,6 @@ metadata:
   prefix like `#xbasket`, `#/basket?x=1`, and a double-encoded id decode row (`a%2541` gives `a%41`); the final
   `return notFound` after a valid id is otherwise never executed. A genre or enum shown on a card needs one fixture with an
   underscore (`SCIENCE_FICTION`) to pin "shown as sent".
-- Worktree Bash guard refuses `cd <dir> && ...` and `for` loops inline: use relative paths from the worktree root or a
-  script in `.claude/comms/tmp`. The `Grep` tool does not exist here; grep through Bash.
 - A synchronous App test row that now renders a real fetching page: install `mockFetch` routes whose `respond` is
   `new Promise<Response>(() => {})`, or the answer lands after the test and logs an act warning (console trap fails it).
   A hook that throws outside its provider logs through `console.error`: `vi.mocked(console.error).mockClear()` after the
