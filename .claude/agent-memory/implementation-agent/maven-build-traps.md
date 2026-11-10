@@ -22,15 +22,15 @@ metadata:
   `maven.compiler.createMissingPackageInfoClass=false` stops it; javac's own behaviour is not the cause.
 - Edit (probes and normal edits): a trailing space at the end of old/new string can be lost (a probe once left
   `"...",importOptions`; an anchor `X = ` once produced `X =new`). Make edits whole-line, never end an anchor with a
-  space, and prove every probe restore with `shasum -a 256` against a baseline. In-place Edit probes restored by
-  `cp -p` from a scratchpad `.orig` work, and Edit does not ask for a re-read after an identical restore.
+  space, and prove every probe restore with `shasum -a 256` against a baseline.
+- `cp -p` (probe install, restore, a withdrawn change for a red) keeps the OLD mtime, so incremental compile reuses the
+  stale class and the run proves nothing (a "red" IT once came out green): run such runs with `clean`.
 - Surefire `-Dtest=A+B` matches nothing ("No tests matching pattern"); several classes are `-Dtest=A,B`.
 - `-q` with `-l <log>` leaves the log empty for `help:describe`; read the plugin descriptor instead with
   `unzip -p <plugin jar> META-INF/maven/plugin.xml` and grep it.
 - Edit cannot match a literal non-ASCII char (e.g. U+2003) in `old_string`: the char cannot be emitted reliably and the
   edit fails "not found". Replace that one line by number with an ASCII-only `perl -i -pe 'if ($. == N) {...}'`,
   verify with `git diff -U0`, and report the Write/Edit-only deviation in the outbox.
-
 - Worktree Bash guard rejects backslash-escaped spaces in a path ("too complex"): double-quote every path containing
   "OpenValue AI". Run mvnw as `with-budget.sh N "<root>/mvnw" -f "<root>/pom.xml" -pl <mod> ...` with `> log 2>&1`.
 - Outbox `updated` stamps: always take them from `date -u`, never estimate. Estimated stamps once ran ahead of the real

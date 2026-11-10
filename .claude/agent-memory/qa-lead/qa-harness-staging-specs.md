@@ -85,6 +85,8 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    file's convention. A rule reworded to match the code can contradict the file's declared source of truth: route a
    product finding against the source, never reword back. Demand a hash file of every changed file per round, or the
    prior round's bytes are gone (spec 10 T7 r2: only an r0 staging copy let me close the drift check).
+   Mirror sites of an exercise reach past its module scope: grep the sibling endpoint (`commands/ship`) repo-wide at
+   strategy time; README endpoint lists and `http/*.http` need a row, a residual or a skill note (spec 10 T9).
 
 12. **Lifecycle premises in rehearsal rows.** Rows state "added here" facts about WHEN Claude Code starts something
    (the first references request is the LSP cold start) and nobody checks them: implementer and verifier check paths,

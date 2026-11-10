@@ -61,4 +61,11 @@ Rule: a wrapped-cause detail message is pinned by `isEqualTo(prefix + domainMess
 **Why:** `startsWith(prefix)` left the part after `": "` free, so `e.toString()`, an appended suffix and the class name all survived; a cause pinned only by `isExactlyInstanceOf` also let a different exception of the same type survive.
 **How to apply:** probe the suffix expression (`getMessage`, `toString`, `getClass().getSimpleName()`, appended text, upper-cased, substring, dropped) and the cause (dropped, `getCause()`, wrapped, same type with another message). For a parameterized test derive the expected domain message per case inside the test.
 
+## Batch runner for a use-case slice (state change plus mirror sites)
+
+Rule: keep a pristine sandbox and a probe sandbox; a `python3 -I` mutator replaces OLD exactly once (exit 1 on 0 or 2 hits) in the pristine text and writes the probe copy; run the same fixed class list (all slice classes, pinned total) with `clean test -pl <module>` for every probe; after each probe restore by byte copy and `diff -rq` the two `src` trees (must be empty).
+
+**Why:** one fixed list makes every probe's total comparable (a changed total means a compile or selection problem), and exactly-once replacement stops a mutant from silently not applying. `if (false)` replacements keep the edit compilable without touching the surrounding lines.
+**How to apply:** add per mirror site (DTO ctor, domain mapper, JPA mapper in both directions, view) one "drops the new field" probe, per shared helper one "other caller's lambda swapped" probe, and the enum pin (add a fourth value). An allow-list rewrite of a two-value rule is an equivalent mutant on the current enum; prove it by the per-status tests passing on both, and rely on the enum pin.
+
 Related: [[env-switch-mutant-runner]], [[shell-traps]], [[spring-runtime-probes]], [[scaffold-verification-techniques]]

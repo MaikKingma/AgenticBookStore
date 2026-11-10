@@ -22,6 +22,9 @@ metadata:
   counterexample per claim" and "every rehearsal row: start commit, `reset --hard <start> && clean -fdx`, judge
   against start, fresh clone folder for auto memory, sourced start triggers with a branch" into the implDirective of
   round 0.
+- **Relaunched into an existing worktree as a subagent, cwd stays the main checkout** (`cd` does not persist), so
+  every brief names the absolute project root and tells the agent to write memory only under
+  `<root>/.claude/agent-memory/<agent>/`; check the main checkout's `git status` after each task (held for T9).
 - **Owner decisions arrive mid-task** (D9, D14, D16): redirect a running agent with an urgent inbox directive plus
   SendMessage (an orchestrator cannot TaskStop its children's tasks), record a plan amendment, and bound the next QA
   round to the change.
