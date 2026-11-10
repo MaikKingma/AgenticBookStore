@@ -10,7 +10,7 @@ plan amendment A2): no `claude` command, no login, no plugin or marketplace comm
 code, and are listed below for Maik's review. Every command name below that begins with `/` is quoted text of a command
 file, the pack, the guide or the docs, never a command that was run. Nothing here claims a Claude result. The scenarios
 that need a session are rows R4C-1 to R4C-4 below, for Maik's rehearsal; the closing round adds them to
-`rehearsal-checklist.md` (plan amendment A5; this task does not touch that file).
+`rehearsal-checklist.md` (plan amendment A5); the closing round r2 (below) did that, as the last Level 4 track to merge.
 
 Evidence files are in `evidence/level-4-agentos/`, and `name:N` means line N of that file. Short names: `clone`
 agent-os-clone.txt, `inst` install-run.txt, `ulp` user-level-paths.txt, `f5` f5-before-after.txt, `san` sandbox-build.txt,
@@ -34,7 +34,7 @@ evidence are in `$SP` (`s10-t13-impl-record-r0.orig.txt`, `s10-t13-impl-evidence
 | RA1 dropped ArchUnit rule `APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL` and the `acl` adapter | new standard `architecture/outbound-acl.md` (8 lines: `*AppServiceImpl` implements the port with `RestClient`, payloads are private nested records that never leave `acl`, every external failure becomes a port exception, base URL `distributor.base-url`); rule added to `dependency-rules.md` line 21; `class-naming.md` line 17 states the `*AppServiceImpl` exception to the top-level-record preference; entry `outbound-acl` in `index.yml`; manifest row 22 | `r1/arch:1-25` (all 22 constants covered; control dropping the rule reports it `r1/arch:26-28`; the round 0 tree misses it `r1/arch:32-34`), `r1/claims:127-134` (C29 to C32: 5 catch blocks, 4 throw and 1 error-body reader returns null; 5 private nested records; `DistributorProperties` the only top-level record; base URL property), trace rows for the new lines (`r1/trace`), `r1/red-green-round-1.txt` (the round 0 trace fails on the round 1 files, the round 1 trace passes) |
 | RA2 R4C-5 premise | row rewritten below: run folder named (a clone of `solution/level-3`), the prompt on a clone of the start branch stated with both answers, the temp file listed, Expected and Failure from the real output | `r1/rr:3-101` |
 | RA3 false "unchanged" literal | the staged `index.yml` now ends with the blank line that the installed builder writes, so `--commands-only` leaves a clone of the start branch byte-equal and `git status` empty; the round 0 file differed by exactly that line (control in the same file); the three places and the citation are corrected | `r1/rr:103-116` |
-| Nits N1 to N6 | `domain-model.md` line 9 and `flows-and-ports.md` line 19 reworded to what the code shows (`Order` and `StockItem` only; 4 DTOs without an aggregate constructor, a product finding, PF-T13-9); hygiene row wording; R4C-4 factory-checkout note; `idx` citation; evidence count | `r1/claims:127-134`, this record |
+| Nits N1 to N6 | `domain-model.md` line 9 and `flows-and-ports.md` line 19 reworded to what the code shows (`Order` and `StockItem` only; 3 DTOs without a constructor from a domain object, a product finding, PF-T13-9); hygiene row wording; R4C-4 factory-checkout note; `idx` citation; evidence count | `r1/claims:127-134`, this record |
 
 Files changed since the round 0 hash file, with the action each serves: `level-4-agentos/manifest.tsv` (22 rows, RA1),
 `level-4-agentos/files/agent-os/standards/architecture/outbound-acl.md` (new, RA1), `.../class-naming.md` (RA1), `.../dependency-rules.md`
@@ -43,6 +43,30 @@ this record (RA1 to RA3, nits), and the new files under `evidence/level-4-agento
 scripts). No round 0 evidence file was edited. `r1/changed-files-since-r0.txt` lists the staged diff. Generated check logs were
 not edited in place: they were regenerated as new `r1/` files because the tree changed (declared here, nothing cites the r1 copies
 before this record).
+
+## Closing round r2 (last Level 4 track to merge: A5, A11, CR-1 to CR-8)
+
+The branch of this task now contains the spec tip `9089969` (T11 #163 and T12 #164) as the merge commit `ca66a3b`; every edit
+below was made on the merged tree. Evidence of this round is in `evidence/level-4-agentos/r2/` (cited `r2/<name>:N`); no earlier
+evidence file was edited, except two appended lines (insertion only, pre-edit copies in `$SP`, `s10-t13-impl-r2-*.orig.txt`).
+
+| Item | What changed | Evidence |
+|---|---|---|
+| CR-1 merge | done by the orchestrator before this round; memory directory of this task curated from 806 to 776 lines (one narrow QA-rule section of `integration-test-techniques.md` pruned), `check-agent-memory.mjs` 0 violations | `r2/hygiene.txt` scope lines |
+| CR-2 checklist FU-T10-1 | `S/records/rehearsal-checklist.md` against the merged tip is exactly four hunks: lines 402, 463 and 543 (the three FU-T10-1 sentences: "Z4 lists the four cases of the commit hook (the fifth row is the Stop handler)", "redo R3-1 setup steps 2 and 3", "variants C, D and E of R3-1") and one insertion after the Level 3 section (`@@ -547,0 +548,112 @@`) | `r2/checklist-hunks.txt` |
+| CR-3 Level 4 section | the insertion holds 12 pointer rows (R4A-1 to R4A-3, RR-S1 to RR-S4, R4C-1 to R4C-5), each naming its record and the exact heading line (every heading resolves by `grep -F`, count 1), and three "Rehearsed in time" rows R4-A, R4-B and R4-C with GIVEN, WHEN and THEN from spec 10 lines 478 to 481, `git clone --branch` into a new folder, `<start>` recorded, the timer (start: Enter on the first framework command; stop: `/ship` prints the hash and `./mvnw clean verify` outside Claude ends `BUILD SUCCESS`), the 35:00 "started but not ready" rule, the infrastructure-error repeat rule, the time per track, and undo `git reset --hard <start> && git clean -fdx`; RR-S2 keeps the listing question first and RR-S4 `git status --short --untracked-files=all`; text that is not pack text is marked "added here". To keep the Agent OS row equal to its record, R4C-4 of this record now uses `<start>` (it said `START`), the same timer, the 35:00 rule and the infrastructure-error rule, and its clone literal is on one line | `r2/checklist-level4-checks.txt:3-15` (headings), `:17` (181 literals and headings, 0 not found), `:19-21` (control reports the broken literal), `:22` (branch names equal `step_branch`), `:29-31` (pack words) |
+| CR-8 | the OpenSpec row R4-A and the pointer for R4A-2 say to keep `OPENSPEC_TELEMETRY=0` exported in the shell that starts `claude`, marked "added here" | `r2/checklist-level4-checks.txt:17` |
+| CR-4 | one line appended to `evidence/level-3/t10/skill-selection-static.txt`: "# correction (closing round): the behaviour row is R3-4, not R3-5"; the 2402 bytes of round 1 are a byte prefix | `r2/hygiene.txt` (scope), prefix proof in this record's hand-off |
+| CR-5 | `level-4-speckit.md` line 337 only: the only byte difference is the `origin/factory` sha on line 4 (`c3d44d7` in the r0 file, `711dd9dc` as in the Inputs table); nothing else in that file changed | `r2/hygiene.txt` scope (one changed line of that record) |
+| CR-6 | this record: the DTO count is three (`DistributorTitleDTO`, `PlaceOrderLineDTO`, `RestockConfirmationDTO`) in the claims row and in PF-T13-9; check C32 now DERIVES the list (DTO files minus those with a public constructor from a class of the domain package), with a synthetic control and the check that `PendingRestockDTO` has such a constructor; a correction line is appended to `r1/claim-searches.txt` | `r2/claim-searches.txt:68-70`, `:136-138`, `:140` (112 searches, 0 failures) |
+| CR-7 no staged file of any track changed | fresh trees on the merged tree: OpenSpec `1c279415`, Spec Kit `c9d758b9`, Agent OS `0a55b23f`, manifest rows 16, 29 and 22 equal to the files changed by each step commit; `test-staging.sh` `PASSED all 58 cases`; referee `BUILD SUCCESS`, 1314 and 190 tests | `r2/fresh-trees.txt`, `r2/staging-selftest.txt`, `r2/referee-verify.txt` |
+
+Files changed in this round, each against its item: `S/records/rehearsal-checklist.md` (CR-2, CR-3, CR-8),
+`S/records/evidence/level-3/t10/skill-selection-static.txt` (CR-4, appended line), `S/records/level-4-speckit.md` line 337 (CR-5),
+this record (CR-3 text of R4C-4, CR-6, this section), `S/records/evidence/level-4-agentos/r1/claim-searches.txt` (CR-6, appended
+line), new files under `S/records/evidence/level-4-agentos/r2/` (CR-3, CR-6, CR-7, hygiene, copies of the scripts), the memory
+directory of this task (CR-1). No file under `S/level-4-*/` changed. Hygiene of this round: `r2/hygiene.txt` (leak grep 0 hits with
+control, no non-ASCII, no dash, no Level 4 done or solution branch name, scope).
 
 ## Verdict
 
@@ -194,7 +218,7 @@ the level-4 tree (round 1: 110 searches; round 0: 94, `claims`), with a control 
 | every domain exception is referenced from `domaininteraction`; the four use-case exceptions are unchecked | `r1/claims:58-60` | 0 unreferenced; 4 of 4 |
 | `acl`: every catch of a `RestClient` exception throws a port exception (4 of 5; the fifth is the error-body reader that returns null); payloads are private nested records (5), the only top-level record is `DistributorProperties`; the base URL property is `distributor.base-url` | `r1/claims:61-65` | as stated |
 | aggregates that raise events: only `Order` and `StockItem` define `pullDomainEvents`; `Book` does not | `r1/claims:66-67` | the standard says "an aggregate that raises domain events (`Order`, `StockItem`)" |
-| DTOs with a convenience constructor from a domain object | `r1/claims:68` | `DistributorTitleDTO`, `PendingRestockDTO`, `PlaceOrderLineDTO`, `RestockConfirmationDTO` have none (no aggregate behind them), so the standard says "a DTO that mirrors an aggregate" (PF-T13-9) |
+| DTOs with a convenience constructor from a domain object | `r1/claims:68` | `DistributorTitleDTO`, `PlaceOrderLineDTO`, `RestockConfirmationDTO` have none (no aggregate behind them; `PendingRestockDTO` has `public PendingRestockDTO(PendingRestock pendingRestock)`, so it is not listed), so the standard says "a DTO that mirrors an aggregate" (PF-T13-9) |
 
 One counterexample was found and shaped the text. The rule file and the Level 1 rule say end-to-end tests end with
 `IntegrationTest`; five full-application tests do not (`BookstoreApplicationTests`, `ClockConfigTest`,
@@ -263,12 +287,10 @@ works.
 
 ## Rehearsal rows (draft for the Level 4 section of the checklist)
 
-Common rules, all rows: the branch is `start/level-4-agentos`; every run starts with `git clone --branch start/level-4-agentos
-<path or URL of the repository> <new run folder>` and a recorded start commit `START` (`git rev-parse HEAD`), and a NEW run
+Common rules, all rows: the branch is `start/level-4-agentos`; every run starts with `git clone --branch start/level-4-agentos <path or URL of the repository> <new run folder>` and a recorded start commit `<start>` (`git rev-parse HEAD`), and a NEW run
 folder per run (the default; Claude Code's auto memory is keyed by the clone path and lives outside the repository, FF-T3-b), or
-a `/memory` check before each run in the same folder. Between repeated runs in one folder: `git reset --hard START && git clean
--fdx` (a stale ignored `bookstore/target/classes/db/migration` file survives a plain reset, `reh:25-26`). Judge against `START`,
-commits included: `git diff --stat START` and `git log --oneline START..HEAD` (`reh:9-15`). Verify is judged with
+a `/memory` check before each run in the same folder. Between repeated runs in one folder: `git reset --hard <start> && git clean -fdx` (a stale ignored `bookstore/target/classes/db/migration` file survives a plain reset, `reh:25-26`). Judge against `<start>`,
+commits included: `git diff --stat <start>` and `git log --oneline <start>..HEAD` (`reh:9-15`). Verify is judged with
 `./mvnw clean verify` in the run folder. Commands load when the session starts: the docs say live change detection covers
 `.claude/skills/` and that commands of an added directory are not watched (`docs:6-8`), and no line says the project
 `.claude/commands/` is watched, so every row starts a new `claude` session after the clone, and if the `/` menu lacks the
@@ -284,10 +306,10 @@ interactive session. The staged files are the pack fallback for rows R4C-1 to R4
 | Setup | Common rules, then `claude` in the run folder. Type `/agent-os` in the prompt and read the menu. |
 | Prompt, part 1 | Open the `/` menu (type `/agent-os`) and write down the five names it lists. Expected from the docs: `agent-os:plan-product`, `agent-os:discover-standards`, `agent-os:index-standards`, `agent-os:inject-standards`, `agent-os:shape-spec` (`docs:9`). Then try the short form `/plan-product` and write down whether it resolves. |
 | Prompt, part 2 | Run the form that works. If it asks "I found existing product documentation" (`plan-product.md:23-33`), answer `1` (start fresh). Answer the questions from the pack text: problem, users and unique solution from `docs/spec-pack/product/mission.md` (Problem, Target users, Solution), MVP and post-launch features from `docs/spec-pack/product/roadmap.md` lines 22-33 (the build order), the tech stack from `docs/spec-pack/product/tech-stack.md`. The pack folder exists only on the factory branch: paste from a factory checkout. |
-| Expected | It asks one question at a time through `AskUserQuestion` (`plan-product.md:7-9`), writes `agent-os/product/mission.md`, `roadmap.md` and `tech-stack.md` with the headings of `plan-product.md:131-183`, and prints "Product documentation created:" with the three paths (`plan-product.md:189-198`). It will first look for `agent-os/standards/global/tech-stack.md` (`plan-product.md:91`); that file is absent, so it asks the free tech stack question (PF-T13-3). `git diff START` shows the differences from the staged files; read them against `trace` (staged mission = pack lines verbatim). |
+| Expected | It asks one question at a time through `AskUserQuestion` (`plan-product.md:7-9`), writes `agent-os/product/mission.md`, `roadmap.md` and `tech-stack.md` with the headings of `plan-product.md:131-183`, and prints "Product documentation created:" with the three paths (`plan-product.md:189-198`). It will first look for `agent-os/standards/global/tech-stack.md` (`plan-product.md:91`); that file is absent, so it asks the free tech stack question (PF-T13-3). `git diff <start>` shows the differences from the staged files; read them against `trace` (staged mission = pack lines verbatim). |
 | Failure | (a) No `agent-os` entry in the menu after a restart. (b) It asks for or writes files with other names or headings. (c) The generated mission or tech stack contains a version, feature or rule that is not in the pack text you pasted. (d) It never calls `AskUserQuestion` and asks in plain text (record it: the command says always use the tool). |
 | Pack fallback | The staged product files are the pack's own text (spec 10 lines 488-491): keep them; do not commit the generated ones unless you prefer them. |
-| Recording rule | Per run: date, `START`, `claude --version`, the five menu names as listed, the form that worked, whether `AskUserQuestion` was called, and the diff summary. Undo: delete the run folder. |
+| Recording rule | Per run: date, `<start>`, `claude --version`, the five menu names as listed, the form that worked, whether `AskUserQuestion` was called, and the diff summary. Undo: delete the run folder. |
 
 ### R4C-2 `/discover-standards` for architecture, testing and persistence
 
@@ -299,7 +321,7 @@ interactive session. The staged files are the pack fallback for rows R4C-1 to R4
 | Expected | For each area the command proposes standards (`discover-standards.md:50-66`), asks 1-2 questions per selected standard, shows a draft and writes it to `agent-os/standards/<folder>/<name>.md` (`discover-standards.md:92-121`), then offers index entries and updates `agent-os/standards/index.yml` (`discover-standards.md:123-147`). The folder for persistence may be `database` (the command's own example list) or another name; record it (D-2). |
 | Failure | (a) A written standard contradicts `docs/architecture.md`, or recommends Lombok, MapStruct, a `double` or `float` price, an embedded test database or an edited migration. That is a defect of the proposal: do not accept it. (b) A rule with no source in the docs or the code. (c) `index.yml` out of date after the run (run R4C-3). |
 | Pack fallback | Keep the staged standards (spec 10 lines 488-491); the pack says to review the generated files against `docs/architecture.md` (spec 10 line 473). |
-| Recording rule | Per run: date, `START`, the three areas, the folders and file names it created, the list of rules you rejected and why, and `git diff --stat START`. |
+| Recording rule | Per run: date, `<start>`, the three areas, the folders and file names it created, the list of rules you rejected and why, and `git diff --stat <start>`. |
 
 ### R4C-3 `/index-standards`
 
@@ -308,10 +330,10 @@ interactive session. The staged files are the pack fallback for rows R4C-1 to R4
 | Branch | `start/level-4-agentos` on the staged tree (a new run folder) or after R4C-2 (if R4C-2 changed standards, expect a different count and an `index.yml` diff) |
 | Setup | Common rules; `claude`; the form that worked in R4C-1 for `index-standards`. |
 | Prompt | Run `index-standards` with no argument. |
-| Expected | On the staged tree it finds 13 standards, none new, none stale, and prints a report of the form of `index-standards.md:105-111` ("Index updated:", "entries unchanged", "Total: 13 standards indexed"); `git diff START -- agent-os/standards/index.yml` is empty, or at most differs by trailing blank lines (Claude may write the file without the blank line that the installed builder adds). Zero-token equivalent that needs no session, run verbatim on a clone of the start branch: `~/agent-os/scripts/project-install.sh --commands-only` prints "Updated index.yml (13 entries)" and `git status --porcelain` stays empty, because the staged file already ends with the blank line the builder writes (`r1/rr:103-111`). In round 0 the staged file lacked that line and the same command showed ` M agent-os/standards/index.yml` with one inserted line (`r1/rr:112-116`). |
+| Expected | On the staged tree it finds 13 standards, none new, none stale, and prints a report of the form of `index-standards.md:105-111` ("Index updated:", "entries unchanged", "Total: 13 standards indexed"); `git diff <start> -- agent-os/standards/index.yml` is empty, or at most differs by trailing blank lines (Claude may write the file without the blank line that the installed builder adds). Zero-token equivalent that needs no session, run verbatim on a clone of the start branch: `~/agent-os/scripts/project-install.sh --commands-only` prints "Updated index.yml (13 entries)" and `git status --porcelain` stays empty, because the staged file already ends with the blank line the builder writes (`r1/rr:103-111`). In round 0 the staged file lacked that line and the same command showed ` M agent-os/standards/index.yml` with one inserted line (`r1/rr:112-116`). |
 | Failure | It asks to describe entries that already have a description, or changes the file layout, or removes entries (`index-standards.md:55-62`). |
 | Pack fallback | The staged `index.yml`. |
-| Recording rule | Date, `START`, the report text, the diff of `index.yml`. |
+| Recording rule | Date, `<start>`, the report text, the diff of `index.yml`. |
 
 ### R4C-4 Rehearsed in time (Agent OS), the pack scenario
 
@@ -323,15 +345,15 @@ the time per track)".
 | Field | Content |
 |---|---|
 | Branch | `start/level-4-agentos` (GIVEN: "a fresh clone on the track's start branch") |
-| Setup | Common rules, then the guide's common start: `claude`, then `/model sonnet` (`sdd-framework-guide.md:93-98`). Open the pack brief A in `docs/spec-pack/workshop/level-4-feature-briefs.md` lines 6-12 (reviews and ratings); like all of `docs/spec-pack/`, that file exists only in a checkout of the factory branch, never in a clone of `start/level-4-agentos` (paste the brief from the facilitator's copy). |
+| Setup | Common rules (`git status --short` prints nothing in the fresh clone), then the guide's common start: `claude`, then `/model sonnet` (`sdd-framework-guide.md:93-98`). Open the pack brief A in `docs/spec-pack/workshop/level-4-feature-briefs.md` lines 6-12 (reviews and ratings); like all of `docs/spec-pack/`, that file exists only in a checkout of the factory branch, never in a clone of `start/level-4-agentos` (paste the brief from the facilitator's copy). |
 | Prompt and steps | Track C of `sdd-framework-guide.md:129-136`: (1) read `agent-os/standards/` and fix anything wrong; (2) enter plan mode (`/plan` or `Shift+Tab`), then run `shape-spec` (form from R4C-1) with the brief and your decisions; it refuses outside plan mode (`shape-spec.md:13-23`); (3) answer its questions and let it save `agent-os/specs/<date>-<slug>/`; (4) approve the plan, let Claude implement it, use `inject-standards testing` if tests drift; (5) `/ship add book reviews`. |
-| Time | Start event: you press Enter on the first step (reading `agent-os/standards/`). Stop event: the commit made through `/ship` exists (`git log --oneline START..HEAD` shows it). Record `t0` (start), `t1` (commit), `t2` (the end of your own `./mvnw clean verify` on the run folder); the measured time is `t1 - t0`, reported next to `t2`. If a step is "started but not ready" (the `agent-os` commands are missing from the menu, `/ship` does not start), write the time lost and the restart, and keep the clock running. The pack limit is 35 minutes. |
-| Expected | A commit through `/ship` (the level-3 commit hook runs the build first), `agent-os/specs/<date>-<slug>/` holds the shaped spec, `git diff --stat START` shows the feature, its tests and that folder, and `./mvnw clean verify` ends in `BUILD SUCCESS` with `ArchitectureTest` green (`r1/ver:11-15` shows the form). Every acceptance scenario of the spec maps to a test (guide "Level cleared when"). |
+| Time | Start event: you press Enter on the first framework command (`shape-spec` in plan mode); write down the clock time `t0`, and also the time at which you began reading `agent-os/standards/` (step 1), so that reading time is visible. Stop event: `/ship` prints the commit hash and, outside Claude, `./mvnw clean verify` in the run folder ends `BUILD SUCCESS`; clock time `t1`. The pack's 35 minutes is judged against `t1 - t0`. If a command or `/ship` has not finished at 35:00, write down which one is running or last finished and when it finishes ("started but not ready"); that counts as a miss. If the `agent-os` commands are missing from the menu or `/ship` does not start, write the time lost and the restart and keep the clock running. If a run stops on an infrastructure error (429, login, Docker), quote the message and repeat it in a new clone folder; a run that finished with a wrong result is not replaced. |
+| Expected | A commit through `/ship` (the level-3 commit hook runs the build first), `agent-os/specs/<date>-<slug>/` holds the shaped spec, `git diff --stat <start>` shows the feature, its tests and that folder, and `./mvnw clean verify` ends in `BUILD SUCCESS` with `ArchitectureTest` green (`r1/ver:11-15` shows the form). Every acceptance scenario of the spec maps to a test (guide "Level cleared when"). |
 | Failure | More than 35 minutes to the commit; the commit is not made through `/ship`; verify not green; `/shape-spec` (any form) unusable; the facilitator had used the framework before (then say so: the GIVEN clause is not met and the time is a lower bound). |
-| Pack fallback | None stated for this scenario. On failure keep `t0`, `t1`, `t2`, the run folder and report the step that took longest. |
-| Recording rule | Per track one line: date, `START`, `claude --version`, the model, `t0`, `t1`, `t2`, pass or fail, brief, whether the facilitator was new to Agent OS. Undo: delete the run folder. |
+| Pack fallback | None stated for this scenario. On failure keep `t0`, `t1`, the run folder and report the step that took longest. |
+| Recording rule | Per track one line: date, `<start>`, `claude --version`, the model, `t0`, `t1`, `t1 - t0`, pass or fail, brief, whether the facilitator was new to Agent OS. Undo: `git reset --hard <start> && git clean -fdx`, or delete the run folder. |
 
-Word check against the pack scenario: GIVEN "a fresh clone on the track's start branch" is the setup row (new clone, `START`
+Word check against the pack scenario: GIVEN "a fresh clone on the track's start branch" is the setup row (new clone, `<start>`
 recorded, FF-T3-a and FF-T3-b); WHEN "a facilitator who has not used the framework before" is the failure column's last item;
 "ships Level 4 brief A" is the setup row (brief A) and the steps; "following `workshop/sdd-framework-guide.md`" is the steps
 (`sdd-framework-guide.md:129-136`, the same five steps as guide page 05 lines 161-191); THEN "committed through `/ship`" is the
@@ -346,7 +368,7 @@ scratch folder (`r1/rr`), so the expected lines are the real ones.
 
 | Field | Content |
 |---|---|
-| Run folder | A clone of `solution/level-3`, which has no `agent-os/` folder: `git clone --branch solution/level-3 <path or URL of the repository> <run folder>`. Record `START` (`git rev-parse HEAD`). Not a clone of `start/level-4-agentos`: that branch already holds the install result and the installer asks first (variant B below). |
+| Run folder | A clone of `solution/level-3`, which has no `agent-os/` folder: `git clone --branch solution/level-3 <path or URL of the repository> <run folder>`. Record `<start>` (`git rev-parse HEAD`). Not a clone of `start/level-4-agentos`: that branch already holds the install result and the installer asks first (variant B below). |
 | Setup | `git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/agent-os/.git` (use `HOME=<scratch>/home` in front of both commands and of the next one for a scratch copy), then `cd <run folder> && ~/agent-os/scripts/project-install.sh`. |
 | Paths written | (1) `~/agent-os`: one new folder, 22 files, about 168 KB. (2) In the run folder: `.claude/commands/agent-os/` (5 files) and `agent-os/standards/index.yml` (28 bytes). (3) One temp file: the script calls bare `mktemp` when it installs standards, macOS puts the file in the per-user temp folder (`/var/folders/.../T/tmp.XXXXXX`, not `TMPDIR`) and the script's `trap` removes it on exit; none is left behind (`rr:36-39`, `ulp:22-26`). Nothing else: no npm, uv or pip cache, no `~/.config` entry, no Claude Code plugin or marketplace, so no extra OK is needed. |
 | See it | `find ~/agent-os -type f \| sort`, `git status --porcelain` in the run folder. Undo: `rm -rf ~/agent-os`, and `git clean -fd .claude/commands/agent-os agent-os` in the run folder (or delete the run folder). |
@@ -389,7 +411,7 @@ the five files `.claude/commands/agent-os/{discover-standards,index-standards,in
 | PF-T13-6 | Five full-application tests are not named `*IntegrationTest`, against the Level 1 rule and `docs/architecture.md` section 6 wording. | `r1/claims:48`, `r1/claims:114` |
 | PF-T13-7 | The SDD guide line 83 and the pack `architecture-standard.md` line 5 say the architecture standard can be copied to `agent-os/standards/architecture/clean-hexagonal-onion.md`; spec 10 line 473 says to discover it. Two instructions for one file (D-3). | `spell:39-40` |
 | PF-T13-8 | `project-install.sh` calls bare `mktemp`, which on macOS writes to the per-user temp folder and ignores `TMPDIR`; harmless (the script removes it), but it is a write outside the project. | `ulp:22-26`, script line 217 |
-| PF-T13-9 | Four DTOs have no convenience constructor from a domain object (`DistributorTitleDTO`, `PendingRestockDTO`, `PlaceOrderLineDTO`, `RestockConfirmationDTO`), and `Book` collects no events; `docs/architecture.md` lines 98 and 118 word both as general rules. The written standards follow the code ("an aggregate that raises domain events", "a DTO that mirrors an aggregate"). | `r1/claims:66-68` |
+| PF-T13-9 | Three DTOs have no convenience constructor from a domain object (`DistributorTitleDTO`, `PlaceOrderLineDTO`, `RestockConfirmationDTO`), and `Book` collects no events; `docs/architecture.md` lines 98 and 118 word both as general rules. The written standards follow the code ("an aggregate that raises domain events", "a DTO that mirrors an aggregate"). | `r1/claims:66-68` (round 1 listed four; corrected in the closing round: the list is derived in `r2/claims`) |
 
 Not findings: the pack says "Agent OS 3.0 (clone `main`, it includes post-3.0 install-script fixes)"; the clone is 8 commits
 after `v3.0.0` (`clone:7`), so that sentence is true at the recorded sha.

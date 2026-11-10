@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+# Counterexample searches (FF-T7-b) for every universal or descriptive claim of the written standards, each on two trees:
+# the tag level-0-start (git archive of the real tag into scratch) and sandbox 1 at its level-4 commit, each with a control that
+# shows the search can find a counterexample (a pattern run where hits are known to exist).
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+L0=$SP/s10-t13-impl-l0
+rm -rf "$L0"
+mkdir -p "$L0"
+git -C "$WT" archive level-0-start | tar -x -C "$L0"
+echo "level-0-start commit: $(git -C "$WT" rev-parse 'level-0-start^{commit}')"
+echo "trees searched: L0 = git archive of level-0-start, L4 = sandbox 1 at HEAD, the level-4 tree $(git -C "$SBX1" rev-parse 'HEAD^{tree}') (its bookstore code is the level-3 solution code, level-3 tree 309786e0)"
+fail=0
+n=0
+# result <label> <what> <count> <expected-count>
+result() {
+  n=$((n+1))
+  if [ "$3" = "$4" ]; then echo "PASS  $1 [$2]: $3 (expected $4)"; else echo "FAIL  $1 [$2]: $3 (expected $4)"; fail=$((fail+1)); fi
+}
+for T in L0 L4; do
+  if [ "$T" = L0 ]; then R=$L0; else R=$SBX1; fi
+  echo "==== tree $T"
+  MAIN=$R/bookstore/src/main/java/nl/openvalue/bookstore
+  TEST=$R/bookstore/src/test/java/nl/openvalue/bookstore
+  # C1 exactly eight packages
+  c=$(find "$MAIN" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+  result "C1 packages under the root" "$T" "$c" 8
+  c=$(find "$MAIN" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | LC_ALL=C sort | tr '\n' ' ')
+  result "C1 names" "$T" "$c" "acl assistant command data domain domaininteraction process query "
+  # C1b root package classes
+  c=$(find "$MAIN" -maxdepth 1 -type f -name '*.java' -exec basename {} \; | LC_ALL=C sort | tr '\n' ' ')
+  result "C1b root package classes" "$T" "$c" "BookstoreApplication.java ClockConfig.java StorefrontConfig.java "
+  # C2 aggregates have only private constructors
+  c=$(grep -cE '^\s+private (Book|Order|StockItem)\(' "$MAIN"/domain/Book.java "$MAIN"/domain/Order.java "$MAIN"/domain/StockItem.java | awk -F: '{s+=$2} END{print s}')
+  result "C2 private constructors of Book, Order, StockItem" "$T" "$c" 3
+  c=$(grep -cE '^\s+(public|protected)? ?(Book|Order|StockItem)\(' "$MAIN"/domain/Book.java "$MAIN"/domain/Order.java "$MAIN"/domain/StockItem.java | awk -F: '{s+=$2} END{print s}')
+  result "C2 non-private constructors" "$T" "$c" 0
+  # C3 no setters in domain
+  c=$(grep -rEn 'void set[A-Z]' "$MAIN/domain" | wc -l | tr -d ' ')
+  result "C3 setters in domain" "$T" "$c" 0
+  c=$(printf 'public void setName(String n) {}\n' | grep -cE 'void set[A-Z]')
+  result "C3 control (the pattern matches a setter)" "$T" "$c" 1
+  # C4 every *Event class in domain is a record
+  nonrec=$(for f in "$MAIN"/domain/*Event.java; do case $f in */DomainEvent.java) continue;; esac; grep -L '^public record ' "$f"; done | wc -l | tr -d ' ')
+  result "C4 domain *Event classes that are not records" "$T" "$nonrec" 0
+  c=$(grep -L '^public record ' "$MAIN"/domain/Book.java | wc -l | tr -d ' ')
+  result "C4 control (Book is not a record, so it is listed)" "$T" "$c" 1
+  # C5 domain imports only java.* (and its own package)
+  c=$(grep -rhE '^import ' "$MAIN/domain" | grep -vE '^import (static )?java\.' | grep -vE '^import (static )?nl\.openvalue\.bookstore\.domain\.' | wc -l | tr -d ' ')
+  result "C5 domain imports outside java.* and domain" "$T" "$c" 0
+  c=$(grep -rhE '^import ' "$MAIN/domaininteraction" | grep -vE '^import (static )?java\.' | grep -vE '^import (static )?nl\.openvalue\.bookstore\.domain' | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C5 control (the same search over domaininteraction finds $c imports outside java and domain)" || { echo "FAIL  C5 control"; fail=$((fail+1)); }
+  # C6 flows are @Service and @Transactional
+  c=$(for f in "$MAIN"/domaininteraction/*Flow.java; do grep -cE '^(@Service|@Transactional)$' "$f"; done | tr '\n' ' ')
+  result "C6 @Service and @Transactional lines per flow" "$T" "$c" "2 2 2 "
+  c=$(ls "$MAIN"/domaininteraction/*Flow.java | wc -l | tr -d ' ')
+  result "C6 number of flows" "$T" "$c" 3
+  # C7 framework imports in domaininteraction
+  c=$(grep -rhE '^import (static )?(org|com|io|jakarta|tools)\.' "$MAIN/domaininteraction" | sed 's/^import //;s/;$//' | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C7 framework imports in domaininteraction" "$T" "$c" "org.slf4j.Logger org.slf4j.LoggerFactory org.springframework.context.ApplicationEventPublisher org.springframework.stereotype.Service org.springframework.transaction.annotation.Transactional "
+  # C8 ports are interfaces, DTOs are records
+  c=$(for f in "$MAIN"/domaininteraction/*DataService.java "$MAIN"/domaininteraction/*AppService.java; do grep -L '^public interface ' "$f"; done | wc -l | tr -d ' ')
+  result "C8 ports that are not interfaces" "$T" "$c" 0
+  c=$(for f in "$MAIN"/domaininteraction/*DTO.java; do grep -L '^public record ' "$f"; done | wc -l | tr -d ' ')
+  result "C9 *DTO classes that are not records" "$T" "$c" 0
+  # C10 query adapters expose Views, never DTOs, in public signatures
+  c=$(grep -hE '^\s+public .*DTO' "$MAIN"/query/*Queries.java | wc -l | tr -d ' ')
+  result "C10 public query signatures with a DTO" "$T" "$c" 0
+  c=$(grep -hE '^\s+(private|public) .*DTO' "$MAIN"/query/*Queries.java | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C10 control (the search finds $c private signature(s) that take a DTO)" || { echo "FAIL  C10 control"; fail=$((fail+1)); }
+  # C10b flow public methods do not mention domain types in their signatures
+  c=$(grep -hE '^\s+public [A-Za-z<>?, ]+ [a-z][A-Za-z]*\(' "$MAIN"/domaininteraction/*Flow.java | grep -cE '\b(Money|Isbn|Quantity|Book|Order|OrderLine|StockItem|BookId|OrderId|EmailAddress|Title|AuthorName|Genre)\b[ >,)]')
+  result "C10b flow public signatures that mention a domain type" "$T" "$c" 0
+  c=$(printf '    public Order place(Money m) {\n' | grep -cE '^\s+public [A-Za-z<>?, ]+ [a-z][A-Za-z]*\(' )
+  result "C10b control (signature pattern matches a method header)" "$T" "$c" 1
+  # C11 every command POST answers 202
+  p=$(grep -hE '@PostMapping' "$MAIN"/command/*Commands.java | wc -l | tr -d ' ')
+  a=$(grep -hE '@ResponseStatus\(HttpStatus.ACCEPTED\)' "$MAIN"/command/*Commands.java | wc -l | tr -d ' ')
+  result "C11 @PostMapping count equals @ResponseStatus(ACCEPTED) count in command" "$T" "$p/$a" "$p/$p"
+  p=$(grep -hE '@GetMapping' "$MAIN"/query/*Queries.java | wc -l | tr -d ' ')
+  a=$(grep -hE '@ResponseStatus\(HttpStatus.ACCEPTED\)' "$MAIN"/query/*Queries.java | wc -l | tr -d ' ')
+  [ "$p" != "$a" ] && echo "PASS  C11 control (query: $p @GetMapping against $a ACCEPTED differ)" || { echo "FAIL  C11 control"; fail=$((fail+1)); }
+  # C12 one @RestControllerAdvice per adapter package that has controllers
+  c=$(grep -rl '@RestControllerAdvice' "$MAIN" | sed "s|$MAIN/||" | LC_ALL=C sort | tr '\n' ' ')
+  result "C12 files with @RestControllerAdvice" "$T" "$c" "assistant/AssistantExceptionHandler.java command/CommandExceptionHandler.java query/QueryExceptionHandler.java "
+  c=$(grep -rl 'validation-failed' "$MAIN" | wc -l | tr -d ' ')
+  result "C13 handlers that use validation-failed" "$T" "$c" 3
+  c=$(for f in "$MAIN"/command/CommandExceptionHandler.java "$MAIN"/query/QueryExceptionHandler.java "$MAIN"/assistant/AssistantExceptionHandler.java; do grep -cE 'HttpStatus.(NOT_FOUND|CONFLICT|UNPROCESSABLE_CONTENT|SERVICE_UNAVAILABLE),' "$f"; done | tr '\n' ' ')
+  result "C13b status mappings (404, 409, 422, 503) per handler" "$T" "$c" "4 4 4 "
+  # C14 listeners are AFTER_COMMIT
+  l=$(grep -c '@TransactionalEventListener' "$MAIN"/process/EventProcessor.java)
+  a=$(grep -c 'phase = TransactionPhase.AFTER_COMMIT' "$MAIN"/process/EventProcessor.java)
+  result "C14 @TransactionalEventListener count equals AFTER_COMMIT count" "$T" "$l/$a" "$l/$l"
+  c=$(grep -c 'Propagation.REQUIRES_NEW' "$MAIN"/process/RequestRestockDelegate.java)
+  result "C14b REQUIRES_NEW in the delegate" "$T" "$c" 1
+  # C15 layer-restricted types
+  c=$(grep -rlE '^@RestController|@RestController$' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C15 packages with @RestController" "$T" "$c" "assistant command query "
+  c=$(grep -rl 'jakarta.persistence' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C15 packages that import jakarta.persistence" "$T" "$c" "data "
+  c=$(grep -rlE 'import org.springframework.data' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C15 packages that import org.springframework.data" "$T" "$c" "data "
+  c=$(grep -rl 'org.springframework.web.client' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C15 packages that import org.springframework.web.client" "$T" "$c" "acl "
+  c=$(grep -rl 'org.springframework.ai' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  result "C15 packages that import org.springframework.ai" "$T" "$c" "assistant "
+  c=$(grep -rl '@Service' "$MAIN" | sed "s|$MAIN/||;s|/.*||" | LC_ALL=C sort -u | tr '\n' ' ')
+  [ -n "$c" ] && echo "PASS  C15 control (@Service is found in: $c)" || { echo "FAIL  C15 control"; fail=$((fail+1)); }
+  # C16 no double or float anywhere in bookstore main code, none in the distributor either
+  c=$(grep -rnE '\b(double|float|Double|Float)\b' "$R/bookstore/src/main/java" | wc -l | tr -d ' ')
+  result "C16 double or float in bookstore main code" "$T" "$c" 0
+  c=$(grep -nE '\b(double|float|Double|Float)\b' "$TEST/ArchitectureTest.java" | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C16 control (ArchitectureTest names double or float $c times)" || { echo "FAIL  C16 control"; fail=$((fail+1)); }
+  # C17 no Lombok, MapStruct, H2 in any build file or source
+  c=$(grep -rilE 'lombok|mapstruct' "$R"/pom.xml "$R"/bookstore/pom.xml "$R"/distributor/pom.xml "$R/bookstore/src" "$R/distributor/src" 2>/dev/null | wc -l | tr -d ' ')
+  result "C17 files mentioning Lombok or MapStruct (poms and sources)" "$T" "$c" 0
+  c=$(grep -rilE 'lombok|mapstruct' "$R/docs/architecture.md" | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C17 control (docs/architecture.md mentions them)" || { echo "FAIL  C17 control"; fail=$((fail+1)); }
+  c=$(grep -rilE '\bh2\b|hsqldb|derby' "$R"/pom.xml "$R"/bookstore/pom.xml "$R"/distributor/pom.xml 2>/dev/null | wc -l | tr -d ' ')
+  result "C17b poms that mention an embedded database" "$T" "$c" 0
+  # C18 @DirtiesContext used as an annotation nowhere
+  c=$(grep -rn '@DirtiesContext' "$R/bookstore/src/test" | grep -v '{@code' | wc -l | tr -d ' ')
+  result "C18 @DirtiesContext used as an annotation" "$T" "$c" 0
+  c=$(grep -rn '@DirtiesContext' "$R/bookstore/src/test" | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C18 control (the javadoc mention is found: $c line)" || { echo "FAIL  C18 control"; fail=$((fail+1)); }
+  # C19 every @DataJpaTest imports PostgresTestConfig and keeps the datasource
+  c=$(for f in $(grep -rl '@DataJpaTest' "$R/bookstore/src/test"); do grep -L 'PostgresTestConfig' "$f"; done | wc -l | tr -d ' ')
+  result "C19 @DataJpaTest classes without PostgresTestConfig" "$T" "$c" 0
+  c=$(for f in $(grep -rl '@DataJpaTest' "$R/bookstore/src/test"); do grep -L 'Replace.NONE\|replace = NONE' "$f"; done | wc -l | tr -d ' ')
+  result "C19b @DataJpaTest classes without replace NONE" "$T" "$c" 0
+  c=$(grep -rl '@DataJpaTest' "$R/bookstore/src/test" | wc -l | tr -d ' ')
+  [ "$c" -gt 0 ] && echo "PASS  C19 control ($c @DataJpaTest classes exist)" || { echo "FAIL  C19 control"; fail=$((fail+1)); }
+  # C20 every @SpringBootTest class except the base extends IntegrationTestBase
+  c=$(for f in $(grep -rl '@SpringBootTest' "$R/bookstore/src/test"); do case $f in */IntegrationTestBase.java) continue;; esac; grep -L 'extends IntegrationTestBase' "$f"; done | sed "s|$R/||" | tr '\n' ' ')
+  result "C20 @SpringBootTest classes other than the base that do not extend IntegrationTestBase" "$T" "$c" ""
+  # C21 classes extending IntegrationTestBase are named *IntegrationTest
+  c=$(grep -rl 'extends IntegrationTestBase' "$R/bookstore/src/test" | xargs -n1 basename | grep -v 'IntegrationTest.java$' | LC_ALL=C sort | tr '\n' ' ')
+  result "C21 INFO full-application tests not named *IntegrationTest (so the standard words the suffix as an instruction, not as a description)" "$T" "$c" "BookstoreApplicationTests.java ClockConfigTest.java IntegrationTestBaseHooksTest.java IntegrationTestOfflineTest.java StorefrontConfigTest.java "
+  # C22 migrations follow V{n}__{snake_case}.sql, money columns are numeric(10,2) and varchar(3)
+  c=$(ls "$R/bookstore/src/main/resources/db/migration" | grep -vcE '^V[0-9]+__[a-z0-9_]+\.sql$')
+  result "C22 migration files that break V{n}__{snake_case}.sql" "$T" "$c" 0
+  c=$(ls "$R/bookstore/src/main/resources/db/seed" | grep -vcE '^V[0-9]+__')
+  [ "$c" -gt 0 ] && echo "PASS  C22 control (the seed file R__seed_demo_data.sql would break the pattern if it were a migration)" || { echo "FAIL  C22 control"; fail=$((fail+1)); }
+  c=$(grep -hiE 'numeric\(' "$R"/bookstore/src/main/resources/db/migration/*.sql | grep -vc 'numeric(10,2)')
+  result "C23 numeric columns that are not numeric(10,2)" "$T" "$c" 0
+  c=$(grep -hiE 'currency[a-z_]* +' "$R"/bookstore/src/main/resources/db/migration/*.sql | grep -viE 'varchar\(3\)|--' | wc -l | tr -d ' ')
+  result "C23b currency columns that are not varchar(3)" "$T" "$c" 0
+  # C24 test profile loads schema only; main config loads schema plus seed
+  c=$(grep -c 'locations: classpath:db/migration$' "$R/bookstore/src/test/resources/application-test.yml")
+  result "C24 test profile flyway locations (schema only)" "$T" "$c" 1
+  c=$(grep -c 'locations: classpath:db/migration,classpath:db/seed' "$R/bookstore/src/main/resources/application.yml")
+  result "C24b main flyway locations (schema plus seed)" "$T" "$c" 1
+  c=$(grep -c 'ddl-auto: validate' "$R/bookstore/src/main/resources/application.yml")
+  result "C24c ddl-auto validate" "$T" "$c" 1
+  # C25 the distributor port is mocked in the shared base; ScriptedChatModel exists
+  c=$(grep -c '@MockitoBean' "$TEST/IntegrationTestBase.java")
+  [ "$c" -ge 1 ] && echo "PASS  C25 IntegrationTestBase has @MockitoBean ($c)" || { echo "FAIL  C25"; fail=$((fail+1)); }
+  c=$(find "$TEST" -name 'ScriptedChatModel.java' | wc -l | tr -d ' ')
+  result "C25b ScriptedChatModel.java exists" "$T" "$c" 1
+  # C27 every domain exception is referenced from domaininteraction (translated at the use-case boundary)
+  c=$(for f in "$MAIN"/domain/*Exception.java; do n=$(basename "$f" .java); grep -lw "$n" "$MAIN"/domaininteraction/*.java >/dev/null || echo "$n"; done | wc -l | tr -d ' ')
+  result "C27 domain exceptions not referenced from domaininteraction" "$T" "$c" 0
+  c=$(for n in NoSuchDomainException; do grep -lw "$n" "$MAIN"/domaininteraction/*.java >/dev/null || echo "$n"; done | wc -l | tr -d ' ')
+  result "C27 control (an invented exception name is reported as unreferenced)" "$T" "$c" 1
+  # C28 the four use-case exceptions are unchecked and live in domaininteraction
+  c=$(grep -hE '^public (abstract )?class (NotFound|Conflict|InvalidInput|Unavailable)Exception extends RuntimeException' "$MAIN"/domaininteraction/*.java | wc -l | tr -d ' ')
+  result "C28 use-case exceptions that extend RuntimeException" "$T" "$c" 4
+  # C29 acl: every catch of a RestClient exception throws, except the error-body reader, which returns null (brace matching in python)
+  c=$(python3 -I - "$MAIN"/acl/DistributorAppServiceImpl.java <<'PY'
+import re, sys
+text = open(sys.argv[1]).read()
+tot = thr = nul = 0
+for m in re.finditer(r"catch \(RestClient\w*Exception \w+\) \{", text):
+    i = m.end(); depth = 1
+    while depth:
+        depth += {"{": 1, "}": -1}.get(text[i], 0); i += 1
+    block = text[m.end():i]
+    tot += 1; thr += "throw " in block; nul += "return null" in block
+print("%d/%d/%d" % (tot, thr, nul))
+PY
+)
+  result "C29 catch (RestClient...) blocks, blocks that throw, blocks that return null (the error-body reader)" "$T" "$c" "5/4/1"
+  c=$(grep -c 'catch (RestClient' "$MAIN"/query/QueryExceptionHandler.java)
+  result "C29 control (a file without such a catch reports 0)" "$T" "$c" 0
+  # C30 payload records of acl are private nested records; the only top-level record is the properties class
+  c=$(grep -cE '^    private record ' "$MAIN"/acl/DistributorAppServiceImpl.java)
+  result "C30 private nested records in DistributorAppServiceImpl" "$T" "$c" 5
+  c=$(grep -lE '^public record |^record ' "$MAIN"/acl/*.java | xargs -n1 basename | tr '\n' ' ')
+  result "C30 top-level records in acl" "$T" "$c" "DistributorProperties.java "
+  c=$(grep -rn 'distributor.base-url' "$MAIN"/acl/DistributorProperties.java | wc -l | tr -d ' ')
+  result "C30 base-url property named in DistributorProperties" "$T" "$c" 1
+  # C31 only some aggregates collect events
+  c=$(grep -l 'pullDomainEvents' "$MAIN"/domain/*.java | xargs -n1 basename | tr '\n' ' ')
+  result "C31 aggregates that define pullDomainEvents" "$T" "$c" "Order.java StockItem.java "
+  c=$(grep -c 'pullDomainEvents' "$MAIN"/domain/Book.java)
+  result "C31 pullDomainEvents in Book (so the standard does not say every aggregate)" "$T" "$c" 0
+  # C32 DTOs with a convenience constructor from a domain object: the list is DERIVED (DTO files minus those with a public
+  # constructor whose single parameter type is a class of the domain package); controls on two synthetic DTO files
+  derive_dto() { python3 -I - "$1" "$2" <<'PY'
+import os, re, sys
+dtodir, domdir = sys.argv[1], sys.argv[2]
+dom = {f[:-5] for f in os.listdir(domdir) if f.endswith(".java")}
+none = []
+for f in sorted(os.listdir(dtodir)):
+    if not f.endswith("DTO.java"):
+        continue
+    name = f[:-5]
+    text = open(os.path.join(dtodir, f)).read()
+    ctors = re.findall(r"\bpublic " + re.escape(name) + r"\((\w+) \w+\)", text)
+    if not any(t in dom for t in ctors):
+        none.append(f)
+print(" ".join(none) + " ")
+PY
+  }
+  c=$(derive_dto "$MAIN/domaininteraction" "$MAIN/domain")
+  echo "INFO  C32 DTOs without a public constructor from a domain object, derived [$T]: $c"
+  fx=$(mktemp -d "$TMPDIR/c32.XXXXXX"); mkdir "$fx/dto" "$fx/dom"; : > "$fx/dom/Thing.java"
+  printf 'public record WithDTO(String a) {\n    public WithDTO(Thing t) { this(t.toString()); }\n}\n' > "$fx/dto/WithDTO.java"
+  printf 'public record WithoutDTO(String a) {\n    public WithoutDTO(String s, int n) { this(s); }\n}\n' > "$fx/dto/WithoutDTO.java"
+  result "C32 control (synthetic DTOs: only the one without a constructor from Thing is listed)" "$T" "$(derive_dto "$fx/dto" "$fx/dom")" "WithoutDTO.java "
+  rm -rf "$fx"
+  c=$(derive_dto "$MAIN/domaininteraction" "$MAIN/domain" | tr ' ' '\n' | grep -c 'PendingRestockDTO')
+  result "C32 PendingRestockDTO has a constructor from a domain object (public PendingRestockDTO(PendingRestock ...))" "$T" "$c" 0
+  # C26 every adapter class suffix rule: the build proves it (ArchitectureTest), here only the class-naming table equality below
+done
+echo "==== summary"
+echo "searches run: $n, failures: $fail"
+exit $fail

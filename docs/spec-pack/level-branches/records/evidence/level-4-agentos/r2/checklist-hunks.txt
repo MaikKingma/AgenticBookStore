@@ -1,0 +1,12 @@
+# rehearsal-checklist.md against the spec tip pre-edit copy (the merged tree before this round): diff -U0 hunk map. Expected: three FU-T10-1 hunks and one insertion after the Level 3 section.
+@@ -402 +402 @@
+@@ -463 +463 @@
+@@ -543 +543 @@
+@@ -547,0 +548,112 @@
+# the three one-line hunks, new text (first 330 characters):
+line 402: level-3.md` Z4 lists the four cases of the commit hook (the fifth row is the Stop handler).
+line 463: redo R3-1 setup steps 2 and 3
+line 543: variants C, D and E of R3-1
+# bytes before the insertion hunk equal the pre-edit bytes except the three hunks: lines changed in the first 547 lines: 3
+# the old texts are gone: 'Z4 lists all four cases' 0, 'setup step 2 (the failing' 0, 'variants C and D of R3-1' 0
+# Level 3 and earlier text: first 547 lines vs the pre-edit copy, differing lines: 3

@@ -26,3 +26,4 @@ docs quotes (skills.md, fetched 2026-11-10; non-ASCII shown as '?'):
   138 | **Let Claude invoke it automatically** by asking something that matches the description:
   557 | By default, both you and Claude can invoke any skill. You can type `/skill-name` to invoke it directly, and Claude can load it automatically when relevant to your conversation. Two frontmatter fields let you restrict this:
 exit code: 0
+# correction (closing round): the behaviour row is R3-4, not R3-5

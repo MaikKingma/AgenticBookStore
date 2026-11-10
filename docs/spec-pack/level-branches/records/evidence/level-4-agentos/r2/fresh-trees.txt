@@ -1,0 +1,8 @@
+# Fresh simulate-level-0.sh level-0-start plus build-level.sh <step> for each track, on the merged T13 tree (spec tip 9089969 merged as ca66a3b).
+# worktree HEAD: ca66a3b Merge remote-tracking branch 'origin/sdd/10-harness-reference-solutions/spec' into
+level-4-openspec: tree 1c279415e014454ab193a37849c64028ae5d247e (equal to the expected 1c279415); manifest rows 16, files changed by the step commit 16; commits: 5
+  build-level: committed level-4-openspec as 21f47a6: Level 4 start: OpenSpec installed and initialised
+level-4-speckit: tree c9d758b95c060a9cb24a8c1c7260920fbcea5cef (equal to the expected c9d758b9); manifest rows 29, files changed by the step commit 29; commits: 5
+  build-level: committed level-4-speckit as 64be81e: Level 4 start: Spec Kit installed and initialised
+level-4-agentos: tree 0a55b23f20d4288ba9301d44fc70de7e9a3d868e (equal to the expected 0a55b23f); manifest rows 22, files changed by the step commit 22; commits: 5
+  build-level: committed level-4-agentos as 3ea7abc: Level 4 start: Agent OS installed and initialised

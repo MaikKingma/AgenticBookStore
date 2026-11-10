@@ -134,3 +134,4 @@ PASS  C31 pullDomainEvents in Book (so the standard does not say every aggregate
 PASS  C32 INFO DTOs without a constructor from a domain object (so the standard says a DTO that mirrors an aggregate has one) [L4]: DistributorTitleDTO.java PendingRestockDTO.java PlaceOrderLineDTO.java RestockConfirmationDTO.java  (expected DistributorTitleDTO.java PendingRestockDTO.java PlaceOrderLineDTO.java RestockConfirmationDTO.java )
 ==== summary
 searches run: 110, failures: 0
+# correction (closing round): C32 above lists four DTOs because its expected list was typed in, not derived. PendingRestockDTO has public PendingRestockDTO(PendingRestock pendingRestock) (line 14 on level-0-start), so three DTOs have no constructor from a domain object: DistributorTitleDTO, PlaceOrderLineDTO, RestockConfirmationDTO. The derived list and its controls are in r2/claim-searches.txt.
