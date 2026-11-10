@@ -245,7 +245,7 @@ spec 10's branches. Its links point at branches that do not exist yet, so the na
 
 | Branch | Cut from | Level |
 |---|---|---|
-| `level-0-start` | (exists, b668073) | Level 0 |
+| `level-0-start` | a tag (not a branch) on b668073, the same commit as `main` | Level 0 |
 | `solution/level-1` | `level-0-start` | Level 1 |
 | `solution/level-2` | `solution/level-1` | Level 2 |
 | `solution/level-3` | `solution/level-2` | Level 3 |
