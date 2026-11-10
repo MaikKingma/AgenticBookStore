@@ -1,0 +1,50 @@
+# The files that openspec init 1.16.0 generated and the two authored files, as staged (S/level-4-openspec/files, decoded names). Generated files are exempt from the text hygiene rules.
+# sha256 of the staged copy, bytes, first line of each.
+9a980fe310f04f66   11173  .claude/commands/opsx/apply.md  | ---
+0c48963c41c06b12   17330  .claude/commands/opsx/archive.md  | ---
+e00d9352b42e9ff0   20459  .claude/commands/opsx/explore.md  | ---
+2680d809cd4dcfce   16395  .claude/commands/opsx/propose.md  | ---
+a946e1a29b7421e1   15579  .claude/commands/opsx/sync.md  | ---
+9a7db84558012013   11186  .claude/commands/opsx/update.md  | ---
+f16785aa35a86296   11397  .claude/skills/openspec-apply-change/SKILL.md  | ---
+6cacaaa57799336c   16583  .claude/skills/openspec-archive-change/SKILL.md  | ---
+a9d3068326c8b0b8   23471  .claude/skills/openspec-explore/SKILL.md  | ---
+d1ef3fa5df779220   16689  .claude/skills/openspec-propose/SKILL.md  | ---
+f83f4d04930d68ea   15769  .claude/skills/openspec-sync-specs/SKILL.md  | ---
+3de674a9b7ba2735   11534  .claude/skills/openspec-update-change/SKILL.md  | ---
+e3b0c44298fc1c14       0  openspec/changes/archive/.gitkeep  | 
+eafcef3d94e050a7     898  openspec/config.yaml  | schema: spec-driven
+e3b0c44298fc1c14       0  openspec/specs/.gitkeep  | 
+c97f82dbb8d82fda    2245  openspec/specs/ordering/spec.md  | # Ordering Specification
+
+# Non-ASCII characters and em dashes in the staged files (generated text is exempt; authored files must have none):
+python3 -I nonascii.py over S/level-4-openspec/files (per file, lines with a non-ASCII character and lines with an em dash):
+dot-claude/commands/opsx/apply.md: 8 lines non-ASCII, 0 lines with an em dash
+dot-claude/commands/opsx/archive.md: 12 lines non-ASCII, 11 lines with an em dash
+dot-claude/commands/opsx/explore.md: 3 lines non-ASCII, 3 lines with an em dash
+dot-claude/commands/opsx/propose.md: 3 lines non-ASCII, 0 lines with an em dash
+dot-claude/commands/opsx/sync.md: 6 lines non-ASCII, 4 lines with an em dash
+dot-claude/skills/openspec-apply-change/SKILL.md: 8 lines non-ASCII, 0 lines with an em dash
+dot-claude/skills/openspec-archive-change/SKILL.md: 13 lines non-ASCII, 12 lines with an em dash
+dot-claude/skills/openspec-explore/SKILL.md: 3 lines non-ASCII, 3 lines with an em dash
+dot-claude/skills/openspec-propose/SKILL.md: 3 lines non-ASCII, 0 lines with an em dash
+dot-claude/skills/openspec-sync-specs/SKILL.md: 6 lines non-ASCII, 4 lines with an em dash
+(a file listed above that is not openspec/config.yaml or openspec/specs/ordering/spec.md is generated text, exempt; the two authored files must not be listed)
+
+# Line endings (git ls-files --eol on the built sandbox 2 tree, level-4 files):
+  i/lf w/lf .claude/commands/opsx/apply.md
+  i/lf w/lf .claude/commands/opsx/archive.md
+  i/lf w/lf .claude/commands/opsx/explore.md
+  i/lf w/lf .claude/commands/opsx/propose.md
+  i/lf w/lf .claude/commands/opsx/sync.md
+  i/lf w/lf .claude/commands/opsx/update.md
+  i/lf w/lf .claude/skills/openspec-apply-change/SKILL.md
+  i/lf w/lf .claude/skills/openspec-archive-change/SKILL.md
+  i/lf w/lf .claude/skills/openspec-explore/SKILL.md
+  i/lf w/lf .claude/skills/openspec-propose/SKILL.md
+  i/lf w/lf .claude/skills/openspec-sync-specs/SKILL.md
+  i/lf w/lf .claude/skills/openspec-update-change/SKILL.md
+  i/none w/none openspec/changes/archive/.gitkeep
+  i/lf w/lf openspec/config.yaml
+  i/none w/none openspec/specs/.gitkeep
+  i/lf w/lf openspec/specs/ordering/spec.md

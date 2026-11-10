@@ -1,0 +1,147 @@
+# User-level paths written by the OpenSpec runs (FF-T10-c). Every run used folders under $SP, never the real home.
+# Masks: $ISO = isolated folders of the T11 run (npm cache pinned with npm_config_cache), $ISO2 = plain run, $ISO3 = global install run.
+
+# A. The run that made the staged files: HOME and XDG_* and npm_config_cache under $ISO, OPENSPEC_TELEMETRY=0 (init-run.txt).
+isolated HOME, XDG_CONFIG_HOME, XDG_CACHE_HOME, XDG_DATA_HOME, XDG_STATE_HOME were empty before the run (0 files).
+files before: 0
+files after: 2333
+added: 2333
+removed or changed names: 0
+
+added files by area (count):
+     116  npm-cache/_cacache/content-v2
+     115  npm-cache/_cacache/index-v5
+       1  npm-cache/_logs
+    2100  npm-cache/_npx/<hash>/node_modules (the extracted package)
+       1  npm-cache/_update-notifier-last-checked
+
+added files outside npm-cache (HOME, XDG config, cache, data, state):
+  none
+
+npm-cache/_logs and top level of npm-cache:
+  npm-cache/_logs/2026-11-10T16_04_41_013Z-debug-0.log
+  npm-cache/_update-notifier-last-checked
+
+# B. A plain run like Maik's: HOME and XDG_* isolated, but no OPENSPEC_TELEMETRY and no npm_config_cache (npm then uses its default, $HOME/.npm).
+# Note: this probe ran WITHOUT the telemetry opt-out on purpose; the tool printed its notice (line 2 of the run below), so it may have sent one anonymous usage event.
+(the staged files come from run A only; run B ran in an empty scratch repository)
+command: npx -y @fission-ai/openspec@1.16.0 init --tools claude   (plain run: no OPENSPEC_TELEMETRY, no npm_config_cache)
+Note: OpenSpec collects anonymous usage stats. Opt out: OPENSPEC_TELEMETRY=0 or openspec config set telemetry.enabled false
+- Creating OpenSpec structure...
+files before: 0
+files after: 2334
+added: 2334
+removed or changed names: 0
+
+added files by area (count):
+       1  config/openspec/config.json
+     231  home/.npm/_cacache
+       1  home/.npm/_logs
+    2100  home/.npm/_npx
+       1  home/.npm/_update-notifier-last-checked
+
+added files outside npm-cache (HOME, XDG config, cache, data, state):
+  $ISO2/config/openspec/config.json
+
+npm-cache/_logs and top level of npm-cache:
+  home/.npm/_logs/2026-11-10T16_05_30_594Z-debug-0.log
+  home/.npm/_update-notifier-last-checked
+
+# The one non-cache file of run B, key names and value types only (the id value is not copied):
+  telemetry.noticeSeen : bool
+  telemetry.anonymousId : str
+
+# C. The alternative to npx: a global install of the pinned CLI, npm_config_prefix, HOME and XDG_* under $ISO3, OPENSPEC_TELEMETRY=0.
+# In this run the 'outside npm-cache' list is the installed package itself under prefix/lib/node_modules plus the bin link; HOME and the XDG folders got nothing.
+command: npm install -g @fission-ai/openspec@1.16.0   (npm_config_prefix, HOME and XDG variables under $ISO3, OPENSPEC_TELEMETRY=0)
+
+added 57 packages in 2s
+
+22 packages are looking for funding
+  run `npm fund` for details
+exit code: 0
+files before: 0
+files after: 2329
+added: 2329
+removed or changed names: 0
+
+added files by area (count):
+     230  home/.npm/_cacache
+       1  home/.npm/_logs
+       1  home/.npm/_update-notifier-last-checked
+    2097  prefix/lib/node_modules
+
+added files outside npm-cache (HOME, XDG config, cache, data, state):
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/LICENSE
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/README.md
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/bin/openspec.js
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/config.d.ts
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/config.js
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/context.d.ts
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/context.js
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/doctor.d.ts
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/doctor.js
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/schema.d.ts
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/schema.js
+  $ISO3/prefix/lib/node_modules/@fission-ai/openspec/dist/cli/commands/spec.d.ts
+  ... and 2085 more (full list in the scratch file list, summarized by area above)
+
+npm-cache/_logs and top level of npm-cache:
+  home/.npm/_logs/2026-11-10T16_16_20_015Z-debug-0.log
+  home/.npm/_update-notifier-last-checked
+bin entries in the prefix:
+openspec -> ../lib/node_modules/@fission-ai/openspec/bin/openspec.js
+version from the installed binary:
+1.16.0
+default global prefix on this machine (read only, npm config get prefix, depends on how Node was installed):
+$HOME/.nvm/versions/node/v24.20.0
+
+# D. How to see and undo (commands run in the isolated home to show they exist; $HOME below is the real home when Maik runs them):
+npm cache npx ls  (isolated home of run B):
+2e6f94dbd680ce26: @fission-ai/openspec@1.16.0
+npm cache npx rm <key> removes that npx entry; npm cache clean --force empties the content cache (npm cache --help of npm 11.19.0):
+Usage:
+npm cache add <package-spec>
+npm cache clean [<key>]
+npm cache ls [<name>@<version>]
+npm cache verify
+npm cache npx ls
+npm cache npx rm [<key>...]
+
+# E. The real home, read only: ls -la of the real ~/.config/openspec before and after run A (a plain run writes it, see B; run A must not):
+before run A:
+ls: $HOME/.config/openspec: No such file or directory
+after run A:
+ls: $HOME/.config/openspec: No such file or directory
+
+# F. Added in rework round 1 (QA r0, finding F1): the OS temp folder, which runs A to C above did not list.
+# Every npm or npx route also writes Node's compile cache, a folder named node-compile-cache, into the OS temp folder (Node's os.tmpdir():
+# $TMPDIR when it is set, else /tmp). Runs A, B and C above had TMPDIR set to a folder under $SP, so their lists never scanned it.
+# Own before/after scan: a fresh isolated TMPDIR per route ($SP/s10-t11-impl-tmpscan/<route>/tmp), HOME, XDG_*, npm_config_cache and
+# npm_config_prefix isolated, OPENSPEC_TELEMETRY=0, stdin /dev/null, Node v24.20.0. Scan script: impl-t11-tmpscan.sh.
+
+route                                                   files in TMPDIR before   after
+npm --version (control, no OpenSpec)                    0                        70
+npx -y @fission-ai/openspec@1.16.0 init --tools claude  0                        535
+npm install -g @fission-ai/openspec@1.16.0              0                        541
+openspec --version (installed binary, run afterwards)   0                        0
+
+Every added file of the three routes is under one folder; area summary (count, folder relative to the temp folder, first two levels):
+  control-npm-version:
+    70 node-compile-cache/v24.20.0-arm64-964aae3f-501
+  npx-init:
+    535 node-compile-cache/v24.20.0-arm64-964aae3f-501
+  npm-global:
+    541 node-compile-cache/v24.20.0-arm64-964aae3f-501
+Exit lines of the runs: exit 0 (npx init), exit 0 (npm install -g).
+
+Where the temp folder is (node -p 'os.tmpdir()'): with TMPDIR set to a scratch folder it is that folder; with TMPDIR unset on this machine it is /tmp.
+macOS login shells normally set TMPDIR to a per-user folder under /var/folders (the folder that the command below prints), so there the cache sits in that folder.
+The scratch temp folder of the whole T11 task (set as TMPDIR for every run of this task) holds node-compile-cache with 2454 files.
+
+How to see it:   ls "$(node -p 'os.tmpdir()')/node-compile-cache"    and    find "$(node -p 'os.tmpdir()')/node-compile-cache" -type f | wc -l
+How to undo it:  rm -r "$(node -p 'os.tmpdir()')/node-compile-cache"   (it is a cache; Node rebuilds it, and the OS purges its temp folder by itself)
+Not covered by npm cache clean: it lives outside ~/.npm.
+
+Added check: in the shell used for this task (macOS) TMPDIR is set: yes, and node -p 'os.tmpdir()' prints a folder under /var/folders: yes (masked here).
+Correction to the last undo line: when the OS clears its temp folders differs by system (and on Linux /tmp may be kept until reboot); delete the folder to be sure.

@@ -60,3 +60,14 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
   url). Observable "hook cannot start": `chmod -x` the hook, `sh -c` of the settings command exits 126 `Permission
   denied`, status shows a mode change that `git add -A` would stage, `git reset --hard` restores the bit. Cite a
   hook-failure row from the docs block that prints the notice (`failed; blocking because onFailure is "block"`).
+- When a level file merges a pack block into an earlier staged file, build the expected text from the earlier file
+  plus the pack lines and compare bytes, with one mutant per key and list; match pack headings by exact line.
+- **Generator or installer under isolation** (`npx`, `uvx`): HOME, every `XDG_*` and `npm_config_cache` in the scratch
+  folder; list files before and after and summarize by area (a cache holds thousands). A second plain run (HOME and XDG
+  only) shows what the user's own run writes: npm uses `$HOME/.npm`, OpenSpec adds `$XDG_CONFIG_HOME/openspec/config.json`
+  unless `OPENSPEC_TELEMETRY=0`. The npm package ships no `docs/`: read the docs file from the repository tag with curl.
+  OpenSpec 1.16.0 traps: bare `validate --strict` exits 1 without a terminal; `archive` writes a placeholder Purpose and
+  `validate --all --strict` then fails; staged `.gitkeep` encodes as `dot-gitkeep`.
+- **Staging a generated tree**: commit it in sandbox 1, stage from `git diff-tree` of that commit, prove with a fresh
+  sandbox 2 whose tree id equals sandbox 1's. Evidence scripts: `mask` BEFORE any `cut` (a cut path no longer matches);
+  never echo the leak or branch-name pattern into evidence (the file matches itself), print counts for controls.
