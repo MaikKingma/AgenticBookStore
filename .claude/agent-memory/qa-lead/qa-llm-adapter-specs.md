@@ -87,7 +87,8 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     on the catch types. A dropped `List.copyOf` on the snapshot is equivalent (the in-memory repository returns a
     fresh `ArrayList` and stores `List.copyOf`). Snapshot plus `clear`/`add` restore can erase a concurrent turn on the
     same id: price it as a residual. Once failures answer 503 `assistant-unavailable`, an escaped live call in an
-    offline test also answers 503: offline assertions must check the code, never the status alone.
+    offline test also answers 503: offline assertions must check the code, never the status alone. Docs naming causes
+    (`javap`, fix-09 T2): `SpringAiAnthropicHttpClient.execute` wraps every `IOException` (timeouts) in `AnthropicIoException`; 401/429 are `AnthropicServiceException`, all `RuntimeException`.
 
 14. **Provider-shape defects need a stub contract test of the real model client (fix-08 T4).** Model doubles never
     emit provider blocks (signed thinking), so a library replay bug shows only live. Review rules: the stub answers on
