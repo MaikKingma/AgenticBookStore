@@ -16,41 +16,43 @@ const CATEGORY_FILE = 'docs/reference/_category_.json';
 const WRAP_UP_POSITION = 8;
 
 // The five level pages: exact titles of spec 11, contractual H2 anchors, and the header
-// values of the page grammar (Start branch as written on the page, the catch-up branch).
+// values of the page grammar (Start branch as written on the page, the full catch-up command).
+// level-0-start is a tag, not a branch (D17), so Levels 0 and 1 catch up with `git switch -C`,
+// which creates the participant's own branch at the tag and resets it on a re-run.
 const LEVELS = [
   {
     file: 'docs/01-level-0-break-the-agent.mdx',
     title: 'Level 0: Break the agent',
     start: '`main` (tag `level-0-start`)',
-    catchUp: 'main',
+    catchUp: 'git stash -u && git switch -C level-0 level-0-start',
     anchors: [],
   },
   {
     file: 'docs/02-level-1-context-engineering.mdx',
     title: 'Level 1: Context engineering',
-    start: '`main`',
-    catchUp: 'main',
+    start: '`level-0-start`',
+    catchUp: 'git stash -u && git switch -C level-1 level-0-start',
     anchors: [],
   },
   {
     file: 'docs/03-level-2-give-your-agent-eyes.mdx',
     title: 'Level 2: Give your agent eyes (LSP + MCP)',
     start: 'your Level 1 result, or `solution/level-1`',
-    catchUp: 'solution/level-1',
+    catchUp: 'git stash -u && git switch solution/level-1',
     anchors: ['part-a-lsp', 'part-b-mcp', 'stretch'],
   },
   {
     file: 'docs/04-level-3-behavioral-control.mdx',
     title: 'Level 3: Behavioral control',
     start: 'your Level 2 result, or `solution/level-2`',
-    catchUp: 'solution/level-2',
+    catchUp: 'git stash -u && git switch solution/level-2',
     anchors: ['part-a-permissions', 'part-b-hooks', 'optional-stop-hook', 'part-c-skill-and-command', 'stretch'],
   },
   {
     file: 'docs/05-level-4-spec-driven-development.mdx',
     title: 'Level 4: Spec-driven development',
     start: '`start/level-4-<track>`',
-    catchUp: 'start/level-4-<track>',
+    catchUp: 'git stash -u && git switch start/level-4-<track>',
     anchors: ['tracks', 'feature-briefs'],
   },
 ];
@@ -205,7 +207,7 @@ function boxErrors({box, level, spec, planLevel}) {
     }
   }
   const catchUp = first('Catch-up');
-  const command = `git stash -u && git switch ${spec.catchUp}`;
+  const command = spec.catchUp;
   if (catchUp) {
     const [block] = catchUp.fences;
     const ok =

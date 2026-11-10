@@ -102,7 +102,7 @@ Open question the code does not settle in minutes: none.
 
 | id | summary | module | dependsOn | batch | qaTier | qaModel | status | verdict | qa-lead | pr | branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| T1 | Levels 0 and 1 catch up at `level-0-start`, far-behind and index name every level's command, the setup page starts the app | guide | [] | 1 | elevated | sonnet | pending | | | | |
+| T1 | Levels 0 and 1 catch up at `level-0-start`, far-behind and index name every level's command, the setup page starts the app | guide | [] | 1 | elevated | sonnet | done | PASS r0 | ENDORSE | #159 | sdd/fix-11-guide-review/T1 |
 
 ### T1: Levels 0 and 1 catch up at the tag, far-behind names every level, the setup page starts the app
 
@@ -162,7 +162,15 @@ Open question the code does not settle in minutes: none.
 
 ## QA feed-forward
 
-(none yet)
+- FF-1 (T1 r0, for later tasks): `node --test guide/scripts/level-start.test.mjs` passes 3/3 or more;
+  `npm --prefix guide run check` keeps `anchored 304/304, 15 manual rows, 0 entries pending` (or states a new count
+  with its reason); T1's other files are unchanged unless the task names them; a TS-11 change is one entry, and the
+  verdict says whether `pageSnippet` is still needed when the pack snippet equals a page command.
+- FF-2 (T1 r0, adopted for T2): pin in `level-start.test.mjs` case (c) that the `## Set the workshop key` section
+  links `(#start-the-app)` and that the Start the app section says to use the same terminal that holds the key;
+  must-fail probes: the link turned into plain text (M10), the sentence deleted.
+- qa-final items: the far-behind labels (Level 0 to Level 4) match their commands; the same-terminal sentence is
+  present; reflog-only recovery of committed work after `-C` is a Gate 2 residual accepted by D1.
 
 ## Amendments
 
