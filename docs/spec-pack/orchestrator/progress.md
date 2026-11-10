@@ -21,6 +21,34 @@ Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the sp
 | 10 | in progress (prepare, parallel) | | | orchestrator agent in its own worktree since 2026-11-09, `merge: false`, prepare-only: shapes the spec, stages every level file on `sdd/10-harness-reference-solutions/spec` from factory, runs the scenarios that do not need `main` (macOS LSP per D8); cuts the branches from `level-0-start` only after spec 09 publishes `main` |
 | 11 | spec PR ready, waits for `spec-10-done` | | 28.6 s (qa-final) | spec PR #68 ready on fb958b3 (task PRs #71, #73, #76, #79, #83, #87, #100, #110, #112, #114, #115, #118, #119, #124, #129); qa-final PASS on e7e7dea, QA lead ENDORSE, Gate 2 self-accepted; guide checks green (coverage 304/304, 514 checker tests, built-HTML checks, three byte-identical builds, browser checks 0 failures); CI green on fb958b3. Merge after `spec-10-done` (re-merge factory and re-run the guide checks first), then the approved deploy (enable Pages, `GUIDE_DEPLOY=true`, release zip) and the follow-ups F1 to F8, R-G2 link check. For Maik's rehearsal: `.env` checkpoint without an instruction to create `.env`, Git Bash wording differs between pages, cheat-sheet print headroom 8 px; R-G3 25 npm audit findings in the pinned Docusaurus tree (bump after the release is Maik's call) |
 
+## Resume after an account switch (written 2026-11-10 by the main session, tokens nearly out)
+
+State: specs 01 to 09 and 12 done and tagged. `main` and `level-0-start` published at b668073 (do NOT republish
+without Maik's explicit OK). Spec 11 spec PR #68 is ready (head fb958b3). Spec 10 is in its prepare phase: T1 to T6
+merged into `sdd/10-harness-reference-solutions/spec` (PR #122), T7 was running; T11 to T13 may run in parallel
+after T10 (told to the orchestrator).
+
+Steps for the new main session (read the Rules at the top of this file and CLAUDE.md first):
+1. Spec 10: relaunch the `orchestrator` agent (Agent tool, `model: "opus"`, never fable; tell it to pass `model` on
+   every spawn) with cwd/worktree `.claude/worktrees/agent-a85791c595c1a985d` and the prompt: "resume, spec:
+   docs/spec-pack/specs/10-harness-reference-solutions.md, merge: false. Q1 answered by D14 (no headless claude).
+   main is published: level-0-start at b668073; after the prepare tasks, merge origin/factory, cut solution/level-1..3
+   and start/level-4-* from level-0-start, verify each, qa-final, Gate 2 self-accept, stop with the spec PR ready."
+   Its state is in that worktree's `.claude/comms/mailboxes/orchestrator/outbox/run-10-harness-reference-solutions.md`.
+2. When spec 10's PR is ready: merge #122 into factory (merge commit), run `./mvnw clean verify` yourself with timing,
+   a fresh read-only review, fixes through /sdd-bugfix, then tag `spec-10-done` and push factory --tags.
+3. Spec 11: resume its orchestrator in `.claude/worktrees/agent-ae5be2d5b360fd390` to merge origin/factory into
+   `sdd/11-workshop-guide/spec` and re-run the guide checks and the referee; then merge #68 (merge commit), review,
+   tag `spec-11-done`. Deploy (approved by Maik): enable GitHub Pages (source GitHub Actions), set repository variable
+   `GUIDE_DEPLOY=true`, check https://maikkingma.github.io/AgenticBookStore/ answers 200 (the README on main links it)
+   and the six solution-branch links (R-G2).
+4. Phase 4: clean-clone check of factory and of `level-0-start`, then a final summary for Maik of at most 5 lines.
+5. Cleanup: `git worktree remove /tmp/s08-live` (local merge commit there is throwaway; ask Maik to stop the bookstore
+   on 8080 first), release finished worktrees with `~/.claude/scripts/sdd-worktree.sh release <path>`
+   (agent-a79845dd7577a6cd4 is merged; agent-acc9bb50053a613ae is KEEP-UNPUSHED, ask Maik).
+Maik's own items: the rehearsal of every level on 2026-11-10 (spec 10 checklist, spec 09 Level 0 template), the
+manual checks list below, spec 13 (assistant widget) and residual R-k after the first release.
+
 ## Open questions
 
 - OQ4 closed 2026-11-09 by measurement: with the frontend, `./mvnw clean verify` took 27.3 s on the spec 12 head (main session, clean worktree, Node downloaded on the first run), 22.8 to 23.8 s in the orchestrator's runs. Inside the 60 s budget.
