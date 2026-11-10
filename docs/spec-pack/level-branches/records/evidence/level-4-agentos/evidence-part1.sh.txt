@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# Evidence part 1: clone, install run, user-level paths, F5. Every file is masked and ASCII; raw output stays in $RAW.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+AOS=$HOMEISO/agent-os
+fin() { ascii | mask; }
+
+# ---------------------------------------------------------------- 01 agent-os-clone.txt
+{
+  echo "# Agent OS clone into the isolated HOME (criterion 1). HOME=\$HOME below is \$SP/s10-t13-impl-home; the real ~/agent-os was never touched."
+  echo "# command run (the pack's step 1, with HOME isolated): git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/agent-os/.git"
+  echo "# clone sha, branch, last commit and describe, recorded before .git was removed (script: agent-os-clone.sh.txt in this folder):"
+  cat "$SP/s10-t13-impl-evidence/agent-os-clone-sha.txt"
+  echo "# after the removal: .git present? $( [ -e "$AOS/.git" ] && echo yes || echo no )"
+  echo "# files in \$HOME/agent-os: $(find "$AOS" -type f | wc -l | tr -d ' ') files, $(du -sk "$AOS" | cut -f1) KB on disk"
+  echo "# file list with sha256 (relative paths):"
+  (cd "$AOS" && find . -type f | LC_ALL=C sort | xargs shasum -a 256)
+  echo "# modes of the scripts (the pack runs project-install.sh directly, so it must be executable):"
+  ls -l "$AOS/scripts" | awk 'NR>1 {print $1, $NF}'
+  echo "# config.yml of the clone (version and default profile):"
+  cat "$AOS/config.yml" | head -3
+} | fin > "$EV/agent-os-clone.txt"
+
+# ---------------------------------------------------------------- 02 install-run.txt
+{
+  echo "# project-install.sh run in sandbox 1 (level-3 tree 309786e0) with HOME, XDG_* and TMPDIR under \$SP (criterion 2)."
+  echo "# command: cd \$SBX && PATH=\$SHIM:\$PATH \$HOME/agent-os/scripts/project-install.sh   (no flags; it asked no question: the standards folder did not exist)"
+  echo "# \$SHIM holds one script named mktemp: it logs each call and gives a call without arguments a template under \$TMPDIR,"
+  echo "# because the upstream script calls bare mktemp, which macOS sends to the per-user temp folder outside \$SP (HR1)."
+  echo "# --- output (colour codes removed, non-ASCII characters shown as ?):"
+  cat "$RAW/install-out.txt" | fin
+  echo "# --- $(cat "$RAW/install-rc.txt")"
+  echo "# --- mktemp calls seen by the shim:"
+  cat "$TMPD/mktemp-calls.log" | fin
+  echo "# --- git status --porcelain of the sandbox after the run:"
+  cat "$RAW/status-after.txt"
+  echo "# --- files the run added to the sandbox work tree (sha256 after minus before):"
+  diff "$RAW/worktree-sha-before.txt" "$RAW/worktree-sha-after.txt" | grep '^>' | sed 's/^> //'
+  echo "# --- file lists before and after, \$HOME, \$XDG and \$TMPDIR (diff of the sorted find output; empty means no change):"
+  echo "# home:"; diff "$RAW/home-before.txt" "$RAW/home-after.txt" && echo "(no difference)"
+  echo "# xdg:"; diff "$RAW/xdg-before.txt" "$RAW/xdg-after.txt" && echo "(no difference)"
+  echo "# tmpdir (only the shim's own log file is new; the temp file of the script was created and removed again):"; diff "$RAW/tmpdir-before.txt" "$RAW/tmpdir-after.txt" || true
+  echo "# --- xdg folders after the run:"; cat "$RAW/xdg-after.txt"
+} | fin > "$EV/install-run.txt"
+
+# ---------------------------------------------------------------- 03 user-level-paths.txt (FF-T10-c)
+{
+  echo "# User-level paths written by the Agent OS steps (FF-T10-c), proved from my own zero-token run with HOME and XDG_* under \$SP."
+  echo "# What the pack's step 1 writes for Maik (macOS, bash 3.2 /bin/bash used by the script's #! line):"
+  echo "#  (1) git clone ... ~/agent-os: one new folder ~/agent-os, $(find "$AOS" -type f | wc -l | tr -d ' ') files, $(du -sk "$AOS" | cut -f1) KB (listed in agent-os-clone.txt); then rm -rf ~/agent-os/.git removes the git folder."
+  echo "#  (2) ~/agent-os/scripts/project-install.sh in a repository: writes only inside that repository (.claude/commands/agent-os/, agent-os/standards/) plus one short-lived temp file."
+  echo "# See it:  ls -la ~/agent-os ; find ~/agent-os -type f | sort"
+  echo "# Undo it: rm -rf ~/agent-os   (nothing else outside the repository is written); in the repository: git clean -fd .claude/commands/agent-os agent-os"
+  echo
+  echo "# --- proof 1: no other user-level path changed in the zero-token run (empty diffs, install-run.txt):"
+  echo "home diff lines: $(diff "$RAW/home-before.txt" "$RAW/home-after.txt" | wc -l | tr -d ' ')   xdg diff lines: $(diff "$RAW/xdg-before.txt" "$RAW/xdg-after.txt" | wc -l | tr -d ' ')"
+  echo "# --- proof 2: the install script names no user-level path other than its own folder (grep over both scripts):"
+  echo "# every line that mentions HOME, ~, XDG, .config, .cache, .claude, settings, plugin or marketplace:"
+  grep -n -E 'HOME|~|XDG|\.config|\.cache|\.claude|settings|plugin|marketplace' "$AOS/scripts/project-install.sh" "$AOS/scripts/common-functions.sh" | sed "s|$AOS/||" || true
+  echo "# (lines 179, 311, 313 and 104 hold the bash or awk operator ~ or =~, a regex match, not a home folder)"
+  echo "# control: the same grep finds the project-relative commands folder (so it can find .claude):"
+  grep -c '\.claude/commands/agent-os' "$AOS/scripts/project-install.sh" | sed 's/^/lines naming .claude\/commands\/agent-os: /'
+  echo "# no 'claude plugin' and no marketplace command: $(grep -c -E 'claude plugin|marketplace' "$AOS/scripts/project-install.sh" "$AOS/scripts/common-functions.sh" | tr '\n' ' ')(0 in each file)"
+  echo "# --- proof 3: bare mktemp on macOS ignores TMPDIR (the unshimmed run writes one temp file to the per-user temp folder, removed by the script's EXIT trap):"
+  f=$(env TMPDIR="$TMPD" /usr/bin/mktemp)
+  echo "bare mktemp with TMPDIR=\$TMPDIR created: $(echo "$f" | sed 's|^/var/folders/[^/]*/[^/]*/T/|/var/folders/XX/XXXXXXXX/T/|')"
+  rm -f "$f"
+  echo "(that probe file was removed again; the install script itself was never run unshimmed)"
+  grep -n 'mktemp\|trap ' "$AOS/scripts/project-install.sh" | sed "s|$AOS/||"
+  echo "# --- proof 4: the pack's clone command fails without deleting anything when ~/agent-os already exists (isolated HOME; no network needed):"
+  (cd "$AOS" && find . -type f | LC_ALL=C sort | xargs shasum -a 256) > "$RAW/aos-before-reclone.txt"
+  (cd "$HOMEISO" && git clone https://github.com/buildermethods/agent-os.git "$AOS" && rm -rf "$AOS/.git") 2>&1 | head -3
+  echo "exit status of the clone-and-remove pair: ${PIPESTATUS[0]} (nonzero, so rm -rf did not run)"
+  (cd "$AOS" && find . -type f | LC_ALL=C sort | xargs shasum -a 256) > "$RAW/aos-after-reclone.txt"
+  cmp -s "$RAW/aos-before-reclone.txt" "$RAW/aos-after-reclone.txt" && echo "~/agent-os file list and hashes unchanged after the failed re-clone"
+  echo "# --- Claude Code plugins or marketplaces: none of these steps installs a plugin or adds a marketplace; no step here needs a plugin OK from Maik."
+  echo "# Claude Code itself (when Maik runs the slash commands in a session) writes its own session and memory state under ~/.claude; that is Claude Code behaviour, not an Agent OS step."
+} 2>&1 | fin > "$EV/user-level-paths.txt"
+
+# ---------------------------------------------------------------- 04 f5-before-after.txt
+{
+  echo "# F5 (criterion 5): the level-3 CLAUDE.md, settings, hooks, skills, commands and agents are byte-identical before and after the install and after the written files."
+  echo "# sha256 of every tracked file of sandbox 1 before the install (level-3 tree 309786e0) and after it:"
+  echo "tracked files before: $(wc -l < "$RAW/tracked-sha-before.txt" | tr -d ' '), after the install run: $(wc -l < "$RAW/tracked-sha-after.txt" | tr -d ' ')"
+  echo "diff of the two lists: $(diff "$RAW/tracked-sha-before.txt" "$RAW/tracked-sha-after.txt" | wc -l | tr -d ' ') lines (0 means identical)"
+  echo "# the F5 files, hashed before (b) and after (a) the install and in the committed level-4 tree (c):"
+  (cd "$SBX1" && git ls-files -z -- CLAUDE.md .mcp.json .claude/settings.json .claude/hooks .claude/skills .claude/commands/ship.md .claude/agents .claude/rules .githooks | xargs -0 shasum -a 256 | LC_ALL=C sort -k2) > "$RAW/f5-after-commit.txt" 2>/dev/null
+  # before and after lines of the same paths from the full lists
+  awk '{print $2}' "$RAW/f5-after-commit.txt" | while read -r p; do
+    b=$(grep -F "  $p" "$RAW/tracked-sha-before.txt" | awk '{print $1}')
+    a=$(grep -F "  $p" "$RAW/tracked-sha-after.txt" | awk '{print $1}')
+    c=$(grep -F "  $p" "$RAW/f5-after-commit.txt" | awk '{print $1}')
+    [ "$b" = "$a" ] && [ "$a" = "$c" ] && s=same || s=DIFFERENT
+    echo "$s $b $p"
+  done
+  echo "# count of F5 files above: $(wc -l < "$RAW/f5-after-commit.txt" | tr -d ' ')"
+  echo "# the level-4 commit changes only added paths (no M, D or R row):"
+  cut -c1 "$RAW/sbx1-diff.txt" | sort | uniq -c
+  echo "# control: a copy of the before list with one hash changed (settings.json) is reported by the same diff:"
+  sed 's/^[0-9a-f]\{8\}\(.*\)  \.claude\/settings.json$/00000000\1  .claude\/settings.json/' "$RAW/tracked-sha-before.txt" > "$RAW/tracked-sha-before-mutated.txt"
+  diff "$RAW/tracked-sha-before-mutated.txt" "$RAW/tracked-sha-after.txt" | sed 's/^\(.\) \([0-9a-f]\{12\}\)[0-9a-f]*/\1 \2.../' | head -6
+  echo "# .claude/settings.json is not written by the install script or by this task (HR2): its sha256 line before/after:"
+  grep -F '  .claude/settings.json' "$RAW/tracked-sha-before.txt" "$RAW/tracked-sha-after.txt" | sed "s|$RAW/||"
+} 2>&1 | fin > "$EV/f5-before-after.txt"
+echo "evidence part 1 written:"
+ls -l "$EV" | awk 'NR>1 {print $5, $NF}'

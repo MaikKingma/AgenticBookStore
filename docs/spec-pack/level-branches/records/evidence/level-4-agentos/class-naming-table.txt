@@ -1,0 +1,14 @@
+# class-naming-table.py: the suffix table of standards/architecture/class-naming.md equals the suffix lists in ArchitectureTest and the table of docs/architecture.md section 3.
+packages: written 7, docs/architecture.md 7, ArchitectureTest 7
+PASS acl                written=AppServiceImpl,Properties
+PASS assistant          written=Commands,Tools,Config,Properties,Payload,View,ExceptionHandler,RateLimiter,ChatModel
+PASS command            written=Commands,Payload,CommandResult,ExceptionHandler
+PASS data               written=DataServiceImpl,JPA,JPAMapper,Repository
+PASS domaininteraction  written=Flow,DataService,AppService,DTO,DomainMapper,Exception
+PASS process            written=EventProcessor,Delegate
+PASS query              written=Queries,View,ExceptionHandler
+SUMMARY: ALL PASS
+# ---- control: one suffix dropped from the written table in memory
+FAIL command            written=Commands,Payload,CommandResult
+     docs=['Commands', 'Payload', 'CommandResult', 'ExceptionHandler'] code=['Commands', 'Payload', 'CommandResult', 'ExceptionHandler']
+SUMMARY: 1 package(s) differ

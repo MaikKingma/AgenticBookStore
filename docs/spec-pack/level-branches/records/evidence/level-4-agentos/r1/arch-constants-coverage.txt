@@ -1,0 +1,34 @@
+# All 22 @ArchTest constants of ArchitectureTest are covered by a written standard (RA1). Script: arch-constants-coverage.py.txt.
+@ArchTest constants in ArchitectureTest: 22
+COVERED  DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION         architecture/dependency-rules.md:5
+COVERED  DOMAININTERACTION_IS_ONLY_ACCESSED_BY_ADAPTERS       architecture/dependency-rules.md:6
+COVERED  COMMAND_IS_NOT_ACCESSED_BY_OTHER_LAYERS              architecture/dependency-rules.md:7
+COVERED  QUERY_IS_NOT_ACCESSED_BY_OTHER_LAYERS                architecture/dependency-rules.md:7
+COVERED  PROCESS_IS_NOT_ACCESSED_BY_OTHER_LAYERS              architecture/dependency-rules.md:7
+COVERED  ASSISTANT_IS_NOT_ACCESSED_BY_OTHER_LAYERS            architecture/dependency-rules.md:7
+COVERED  DATA_IS_NOT_ACCESSED_BY_OTHER_LAYERS                 architecture/dependency-rules.md:7
+COVERED  ACL_IS_NOT_ACCESSED_BY_OTHER_LAYERS                  architecture/dependency-rules.md:7
+COVERED  DOMAIN_DEPENDS_ON_JAVA_ONLY                          architecture/dependency-rules.md:8
+COVERED  PERSISTENCE_TYPES_ONLY_IN_DATA                       architecture/dependency-rules.md:9
+COVERED  REST_CLIENT_ONLY_IN_ACL                              architecture/dependency-rules.md:10
+COVERED  APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL          architecture/dependency-rules.md:21
+COVERED  SPRING_AI_ONLY_IN_ASSISTANT                          architecture/dependency-rules.md:11
+COVERED  REST_CONTROLLERS_ONLY_IN_COMMAND_QUERY_ASSISTANT     architecture/dependency-rules.md:12
+COVERED  NO_DOUBLE_OR_FLOAT_FOR_MONEY                         architecture/money-is-exact.md:9
+COVERED  COMMAND_CLASS_NAMES                                  architecture/class-naming.md:7
+COVERED  QUERY_CLASS_NAMES                                    architecture/class-naming.md:8
+COVERED  PROCESS_CLASS_NAMES                                  architecture/class-naming.md:9
+COVERED  ASSISTANT_CLASS_NAMES                                architecture/class-naming.md:10
+COVERED  DATA_CLASS_NAMES                                     architecture/class-naming.md:11
+COVERED  ACL_CLASS_NAMES                                      architecture/class-naming.md:12
+COVERED  DOMAININTERACTION_CLASS_NAMES                        architecture/class-naming.md:13
+SUMMARY: all 22 constants covered
+# ---- control: the mapping of APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL dropped in memory
+UNCOVERED APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL
+SUMMARY: 1 problem(s)
+# ---- control: a constant that the test file does not have
+UNCOVERED INVENTED_RULE_ONLY_IN_ACL
+SUMMARY: 1 problem(s)
+# ---- the r0 level-4 tree (sandbox of round 0) against the same mapping: the dropped rule shows up as MISSING
+MISSING  APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL          architecture/dependency-rules.md:0
+SUMMARY: 1 problem(s)

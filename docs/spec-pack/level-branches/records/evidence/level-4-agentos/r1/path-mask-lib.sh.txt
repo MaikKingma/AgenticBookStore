@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Shared variables and the path mask of the T13 scripts. Sourced, never run on its own.
+SP=$SP
+WT=$SP/s10-wt-t13
+S=$WT/docs/spec-pack/level-branches
+EV=${EV_OVERRIDE:-$S/records/evidence/level-4-agentos}
+RAW=$SP/s10-t13-impl-raw
+HOMEISO=$SP/s10-t13-impl-home
+XDGROOT=$SP/s10-t13-impl-xdg
+TMPD=$SP/s10-t13-impl-tmp
+SBX1=${SBX_OVERRIDE:-$SP/s10-t13-impl-sbx-1}
+COMMS_TMP="$COMMS_TMP"
+
+# mask: replace every scratch, worktree, sandbox and home path by a placeholder (longest first).
+mask() {
+  sed -e "s|$SBX1|\$SBX|g" \
+      -e "s|$SP/s10-t13-impl-sbx-2|\$SBX2|g" \
+      -e "s|$SP/s10-t13-impl-sbx-3|\$SBX3|g" \
+      -e "s|$SP/s10-t13-impl-clone|\$CLONE|g" \
+      -e "s|$HOMEISO|\$HOME|g" \
+      -e "s|$XDGROOT|\$XDG|g" \
+      -e "s|$TMPD|\$TMPDIR|g" \
+      -e "s|$WT|\$WT|g" \
+      -e "s|$SP|\$SP|g" \
+      -e "s|$REALHOME|\$REALHOME|g"
+}
+
+# ascii: drop ANSI colour codes, show every non-ASCII character as '?'.
+ascii() {
+  perl -CS -pe 's/\e\[[0-9;]*m//g; s/[^\x00-\x7F]/?/g'
+}
+
+# isolated environment for every framework script (HR1)
+iso_env() {
+  mkdir -p "$HOMEISO" "$XDGROOT/config" "$XDGROOT/cache" "$XDGROOT/data" "$XDGROOT/state" "$TMPD" "$RAW" "$EV"
+  export HOME="$HOMEISO"
+  export XDG_CONFIG_HOME="$XDGROOT/config" XDG_CACHE_HOME="$XDGROOT/cache" XDG_DATA_HOME="$XDGROOT/data" XDG_STATE_HOME="$XDGROOT/state"
+  export TMPDIR="$TMPD"
+}

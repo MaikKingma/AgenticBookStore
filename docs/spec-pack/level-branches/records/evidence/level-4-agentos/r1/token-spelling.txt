@@ -1,0 +1,74 @@
+# C0-13b and C0-13c: where each token of the Agent OS scenario, the guide and the installed files occurs (script: token-spelling.py.txt).
+# Sources: P10 pack spec 10, P11 pack spec 11, SDD pack sdd-framework-guide, WP workshop-plan, BR feature briefs, G11 guide pages on origin/sdd/11-workshop-guide/spec,
+# GF the same pages on origin/factory, INS installed Agent OS files (clone), TREE the built level-4 tree. origin/factory 1ff175c7f76e, origin/sdd/11-workshop-guide/spec b7f053c7a9c6.
+token                                                          hits per source (file:line, up to 3)
+ok start/level-4-agentos
+    P10[2] spec10:13,spec10:467 | P11[0] | SDD[0] | WP[1] workshop-plan:307 | BR[0] | G11[2] 05-level-4-spec-driven-development.mdx:38,cheat-sheet.md:29 | GF[2] 05-level-4-spec-driven-development.mdx:38,cheat-sheet.md:29 | INS[0] | TREE[0]
+ok git switch start/level-4-<track>
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:96 | WP[0] | BR[0] | G11[2] 05-level-4-spec-driven-development.mdx:21,05-level-4-spec-driven-development.mdx:44 | GF[3] 05-level-4-spec-driven-development.mdx:21,05-level-4-spec-driven-development.mdx:44,troubleshooting.md:135 | INS[0] | TREE[0]
+ok git stash -u && git switch start/level-4-<track>
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[1] 05-level-4-spec-driven-development.mdx:21 | GF[2] 05-level-4-spec-driven-development.mdx:21,troubleshooting.md:135 | INS[0] | TREE[0]
+ok git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/agent-os/.git
+    P10[1] spec10:468 | P11[0] | SDD[2] sdd-framework-guide:79,sdd-framework-guide:151 | WP[0] | BR[0] | G11[1] 06-wrap-up.md:115 | GF[1] 06-wrap-up.md:115 | INS[0] | TREE[0]
+ok ~/agent-os/scripts/project-install.sh
+    P10[1] spec10:469 | P11[0] | SDD[2] sdd-framework-guide:80,sdd-framework-guide:151 | WP[0] | BR[0] | G11[1] 06-wrap-up.md:121 | GF[1] 06-wrap-up.md:121 | INS[0] | TREE[0] | PATH exists in the isolated home
+ok /plan-product
+    P10[2] spec10:470,spec10:489 | P11[0] | SDD[1] sdd-framework-guide:82 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:197 | TREE[1] .claude/commands/agent-os/plan-product.md:197
+ok /discover-standards
+    P10[1] spec10:473 | P11[0] | SDD[1] sdd-framework-guide:84 | WP[0] | BR[0] | G11[0] | GF[0] | INS[4] commands/agent-os/index-standards.md:120,commands/agent-os/inject-standards.md:65,scripts/project-install.sh:471 | TREE[2] .claude/commands/agent-os/index-standards.md:120,.claude/commands/agent-os/inject-standards.md:65
+ok /index-standards
+    P10[1] spec10:474 | P11[0] | SDD[1] sdd-framework-guide:84 | WP[0] | BR[0] | G11[0] | GF[0] | INS[5] commands/agent-os/inject-standards.md:66,commands/agent-os/inject-standards.md:286,scripts/project-install.sh:322 | TREE[2] .claude/commands/agent-os/inject-standards.md:66,.claude/commands/agent-os/inject-standards.md:286
+ok /shape-spec
+    P10[0] | P11[0] | SDD[4] sdd-framework-guide:31,sdd-framework-guide:85,sdd-framework-guide:131 | WP[1] workshop-plan:307 | BR[0] | G11[4] 05-level-4-spec-driven-development.mdx:38,05-level-4-spec-driven-development.mdx:174,05-level-4-spec-driven-development.mdx:191 | GF[4] 05-level-4-spec-driven-development.mdx:38,05-level-4-spec-driven-development.mdx:174,05-level-4-spec-driven-development.mdx:191 | INS[4] commands/agent-os/inject-standards.md:37,commands/agent-os/inject-standards.md:291,commands/agent-os/plan-product.md:204 | TREE[4] .claude/commands/agent-os/inject-standards.md:37,.claude/commands/agent-os/inject-standards.md:291,.claude/commands/agent-os/plan-product.md:204
+ok /inject-standards
+    P10[0] | P11[0] | SDD[2] sdd-framework-guide:86,sdd-framework-guide:133 | WP[1] workshop-plan:307 | BR[0] | G11[3] 05-level-4-spec-driven-development.mdx:38,05-level-4-spec-driven-development.mdx:182,cheat-sheet.md:29 | GF[3] 05-level-4-spec-driven-development.mdx:38,05-level-4-spec-driven-development.mdx:182,cheat-sheet.md:29 | INS[9] commands/agent-os/index-standards.md:7,commands/agent-os/index-standards.md:117,commands/agent-os/inject-standards.md:11 | TREE[8] .claude/commands/agent-os/index-standards.md:7,.claude/commands/agent-os/index-standards.md:117,.claude/commands/agent-os/inject-standards.md:11
+ok /inject-standards testing
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:133 | WP[0] | BR[0] | G11[2] 05-level-4-spec-driven-development.mdx:182,cheat-sheet.md:29 | GF[2] 05-level-4-spec-driven-development.mdx:182,cheat-sheet.md:29 | INS[0] | TREE[0]
+ok agent-os/product/
+    P10[1] spec10:472 | P11[0] | SDD[4] sdd-framework-guide:19,sdd-framework-guide:27,sdd-framework-guide:28 | WP[0] | BR[0] | G11[0] | GF[0] | INS[8] commands/agent-os/plan-product.md:3,commands/agent-os/plan-product.md:15,commands/agent-os/plan-product.md:125 | TREE[8] .claude/commands/agent-os/plan-product.md:3,.claude/commands/agent-os/plan-product.md:15,.claude/commands/agent-os/plan-product.md:125 | PATH exists on the built tree
+ok agent-os/product/mission.md
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:27 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:192 | TREE[1] .claude/commands/agent-os/plan-product.md:192 | PATH exists on the built tree
+ok agent-os/product/roadmap.md
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:30 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:193 | TREE[1] .claude/commands/agent-os/plan-product.md:193 | PATH exists on the built tree
+ok agent-os/product/tech-stack.md
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:28 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:194 | TREE[1] .claude/commands/agent-os/plan-product.md:194 | PATH exists on the built tree
+ok agent-os/standards/
+    P10[1] spec10:474 | P11[0] | SDD[4] sdd-framework-guide:19,sdd-framework-guide:29,sdd-framework-guide:83 | WP[0] | BR[0] | G11[1] 05-level-4-spec-driven-development.mdx:163 | GF[1] 05-level-4-spec-driven-development.mdx:163 | INS[26] commands/agent-os/discover-standards.md:120,commands/agent-os/discover-standards.md:127,commands/agent-os/discover-standards.md:139 | TREE[25] .claude/commands/agent-os/discover-standards.md:120,.claude/commands/agent-os/discover-standards.md:127,.claude/commands/agent-os/discover-standards.md:139 | PATH exists on the built tree
+ok agent-os/standards/index.yml
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[7] commands/agent-os/discover-standards.md:139,commands/agent-os/discover-standards.md:164,commands/agent-os/index-standards.md:27 | TREE[7] .claude/commands/agent-os/discover-standards.md:139,.claude/commands/agent-os/discover-standards.md:164,.claude/commands/agent-os/index-standards.md:27 | PATH exists on the built tree
+ok agent-os/standards/architecture/clean-hexagonal-onion.md
+    P10[0] | P11[0] | SDD[2] sdd-framework-guide:29,sdd-framework-guide:83 | WP[0] | BR[0] | G11[0] | GF[0] | INS[0] | TREE[0] | PATH exists on the built tree
+ok agent-os/standards/global/tech-stack.md
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:91 | TREE[1] .claude/commands/agent-os/plan-product.md:91
+ok agent-os/specs/
+    P10[0] | P11[0] | SDD[2] sdd-framework-guide:18,sdd-framework-guide:132 | WP[0] | BR[0] | G11[1] 05-level-4-spec-driven-development.mdx:177 | GF[1] 05-level-4-spec-driven-development.mdx:177 | INS[3] commands/agent-os/shape-spec.md:123,commands/agent-os/shape-spec.md:138,commands/agent-os/shape-spec.md:186 | TREE[3] .claude/commands/agent-os/shape-spec.md:123,.claude/commands/agent-os/shape-spec.md:138,.claude/commands/agent-os/shape-spec.md:186
+ok .claude/commands/agent-os
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[2] scripts/project-install.sh:389,scripts/project-install.sh:407 | TREE[0] | PATH exists on the built tree
+ok docs/architecture.md
+    P10[8] spec10:44,spec10:115,spec10:368 | P11[0] | SDD[2] sdd-framework-guide:68,sdd-framework-guide:120 | WP[2] workshop-plan:145,workshop-plan:146 | BR[1] level-4-feature-briefs:35 | G11[3] 05-level-4-spec-driven-development.mdx:126,05-level-4-spec-driven-development.mdx:223,cheat-sheet.md:17 | GF[3] 05-level-4-spec-driven-development.mdx:126,05-level-4-spec-driven-development.mdx:223,cheat-sheet.md:17 | INS[0] | TREE[3] agent-os/product/mission.md:20,agent-os/standards/architecture/clean-hexagonal-onion.md:3,agent-os/standards/architecture/dependency-rules.md:20 | PATH exists on the built tree
+ok product/mission.md
+    P10[1] spec10:470 | P11[0] | SDD[2] sdd-framework-guide:27,sdd-framework-guide:82 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:192 | TREE[1] .claude/commands/agent-os/plan-product.md:192
+ok product/tech-stack.md
+    P10[2] spec10:432,spec10:470 | P11[1] spec11:12 | SDD[4] sdd-framework-guide:28,sdd-framework-guide:53,sdd-framework-guide:72 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:194 | TREE[1] .claude/commands/agent-os/plan-product.md:194
+ok product/roadmap.md
+    P10[1] spec10:11 | P11[0] | SDD[3] sdd-framework-guide:30,sdd-framework-guide:44,sdd-framework-guide:82 | WP[0] | BR[0] | G11[0] | GF[0] | INS[1] commands/agent-os/plan-product.md:193 | TREE[1] .claude/commands/agent-os/plan-product.md:193
+ok product/architecture-standard.md
+    P10[0] | P11[0] | SDD[4] sdd-framework-guide:29,sdd-framework-guide:53,sdd-framework-guide:68 | WP[0] | BR[0] | G11[0] | GF[0] | INS[0] | TREE[0]
+MISSING /agent-os:plan-product
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[0] | TREE[0]
+ok AskUserQuestion
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[27] commands/agent-os/discover-standards.md:7,commands/agent-os/discover-standards.md:24,commands/agent-os/discover-standards.md:50 | TREE[27] .claude/commands/agent-os/discover-standards.md:7,.claude/commands/agent-os/discover-standards.md:24,.claude/commands/agent-os/discover-standards.md:50
+ok plan mode
+    P10[0] | P11[0] | SDD[4] sdd-framework-guide:16,sdd-framework-guide:85,sdd-framework-guide:131 | WP[0] | BR[0] | G11[2] 05-level-4-spec-driven-development.mdx:165,05-level-4-spec-driven-development.mdx:191 | GF[2] 05-level-4-spec-driven-development.mdx:165,05-level-4-spec-driven-development.mdx:191 | INS[9] commands/agent-os/inject-standards.md:31,commands/agent-os/inject-standards.md:37,commands/agent-os/inject-standards.md:41 | TREE[9] .claude/commands/agent-os/inject-standards.md:31,.claude/commands/agent-os/inject-standards.md:37,.claude/commands/agent-os/inject-standards.md:41
+ok Agent OS 3.0
+    P10[0] | P11[0] | SDD[1] sdd-framework-guide:7 | WP[0] | BR[0] | G11[0] | GF[0] | INS[0] | TREE[1] agent-os/product/tech-stack.md:42
+MISSING /plan-produkt
+    P10[0] | P11[0] | SDD[0] | WP[0] | BR[0] | G11[0] | GF[0] | INS[0] | TREE[0]
+SUMMARY: tokens 31, with no hit anywhere 2
+# Agent OS lines (lines matching agent.os, agentos, shape-spec or inject-standards) of the guide pages on the two refs, compared with diff:
+guide/docs/05-level-4-spec-driven-development.mdx: identical (10 lines)
+guide/docs/06-wrap-up.md: identical (5 lines)
+guide/docs/reference/cheat-sheet.md: identical (1 lines)
+guide/docs/reference/troubleshooting.md: DIFFERENT, diff sdd/11 against factory:
+1a2
+> Level 4 (replace `<track>` with `openspec`, `speckit` or `agentos`):

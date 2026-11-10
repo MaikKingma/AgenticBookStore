@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ./mvnw clean verify in a directory (arg 1), label (arg 2); HR1: TMPDIR and java.io.tmpdir in the scratchpad, budget 900.
+# Maven reads the shared ~/.m2 cache and Docker (J10), so HOME stays the caller's.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+DIR=$1
+LABEL=$2
+mkdir -p "$TMPD" "$RAW"
+export TMPDIR=$TMPD
+export JAVA_TOOL_OPTIONS="-Djava.io.tmpdir=$TMPD"
+start=$(date -u +%H:%M:%SZ)
+cd "$DIR"
+bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify > "$RAW/verify-$LABEL.txt" 2>&1
+rc=$?
+echo "$start $rc" > "$RAW/verify-$LABEL.rc"
+echo "verify $LABEL exit code $rc, started $start, finished $(date -u +%H:%M:%SZ)"
+grep -E 'Tests run:.*Fail|BUILD|Reactor Summary|SUCCESS|FAIL' "$RAW/verify-$LABEL.txt" | tail -15
