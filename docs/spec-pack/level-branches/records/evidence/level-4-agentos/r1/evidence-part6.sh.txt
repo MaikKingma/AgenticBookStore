@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Evidence part 6 (rework round 1): ArchUnit constants coverage, red run against the r0 trace, files changed since r0.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+fin() { ascii | mask; }
+CT=$COMMS_TMP
+{
+  echo "# All 22 @ArchTest constants of ArchitectureTest are covered by a written standard (RA1). Script: arch-constants-coverage.py.txt."
+  python3 -I "$CT/impl-t13-archcov.py" "$SBX1"
+  echo "# ---- control: the mapping of APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL dropped in memory"
+  python3 -I "$CT/impl-t13-archcov.py" "$SBX1" --drop APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL | grep -E 'UNCOVERED|SUMMARY'
+  echo "# ---- control: a constant that the test file does not have"
+  python3 -I "$CT/impl-t13-archcov.py" "$SBX1" --invent | grep -E 'UNCOVERED|SUMMARY'
+  echo "# ---- the r0 level-4 tree (sandbox of round 0) against the same mapping: the dropped rule shows up as MISSING"
+  python3 -I "$CT/impl-t13-archcov.py" "$SP/s10-t13-impl-sbx-2" | grep -E 'MISSING|SUMMARY'
+} 2>&1 | fin > "$EV/arch-constants-coverage.txt"
+{
+  echo "# RED of round 1: the round 0 trace table (written-files-trace.txt of the evidence root, kept unchanged) run against the round 1 files."
+  echo "# The new and moved lines are in no row and several needles no longer match; then the round 1 trace (r1/written-files-trace.txt) turns it green."
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$SP/s10-t13-impl-evidence-r0.orig/written-files-trace.txt" 2>&1 | grep -E '^(PASS|FAIL|trace rows|SUMMARY)|is in no trace row|needle'
+  echo "# GREEN: the round 1 trace"
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$EV/written-files-trace.txt" 2>&1 | grep -E '^(PASS|FAIL|trace rows|SUMMARY)'
+} 2>&1 | fin > "$EV/red-green-round-1.txt"
+{
+  echo "# Files of the staged step that differ between the round 0 level-4 commit and the round 1 commit (git diff --name-status), with the Required Action each serves."
+  git -C "$SBX1" diff --name-status origin/HEAD HEAD
+  echo "# trees: round 0 $(git -C "$SBX1" rev-parse 'origin/HEAD^{tree}')  round 1 $(git -C "$SBX1" rev-parse 'HEAD^{tree}')"
+  echo "# diff of each changed written file (round 0 to round 1):"
+  git -C "$SBX1" diff origin/HEAD HEAD -- agent-os | grep -E '^(diff|\+|-)' | grep -v '^+++\|^---' | cut -c1-200
+} 2>&1 | fin > "$EV/changed-files-since-r0.txt"
+cat "$EV/changed-files-since-r0.txt" | head -60 | cut -c1-170

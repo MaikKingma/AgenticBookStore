@@ -1,0 +1,38 @@
+# check-written-files.py over the files written from the pack (criterion 4). Script: check-written-files.py.txt in this folder.
+# command: python3 -I check-written-files.py <sandbox-1> <worktree> <trace-file> [--misspell]
+# ---- RED (re-run now with an empty trace file, as it first failed before the trace existed): only the summary lines and the first 6 problems are kept.
+PASS placeholders
+PASS ascii
+allcaps tokens checked: 19
+PASS allcaps
+forbidden-technology mentions classified as prohibitions: 10
+PASS forbidden
+trace rows: 0, uncovered content lines: 183
+FAIL trace: 183 problem(s)
+PASS mission
+PASS tech-stack
+PASS index
+SUMMARY: FAILED: trace
+  agent-os/product/mission.md:5 is in no trace row: Workshops about AI coding agents usually run on toy repositories. Part
+  agent-os/product/mission.md:6 is in no trace row: greenfield todo app and then fail on their first real codebase. Harnes
+  agent-os/product/mission.md:7 is in no trace row: something to protect: an architecture, conventions, a test suite, exte
+  agent-os/product/mission.md:11 is in no trace row: 1. **Workshop participants** (J-Fall 2026 pre-conference workshop, beg
+  agent-os/product/mission.md:12 is in no trace row:    a working, tested, *brownfield* codebase with no agent configuratio
+  agent-os/product/mission.md:13 is in no trace row:    over Levels 0 to 4.
+# ---- GREEN: the 184-row trace (written-files-trace.txt).
+PASS placeholders
+PASS ascii
+allcaps tokens checked: 19
+PASS allcaps
+forbidden-technology mentions classified as prohibitions: 10
+PASS forbidden
+trace rows: 184, uncovered content lines: 0
+PASS trace
+PASS mission
+PASS tech-stack
+PASS index
+SUMMARY: ALL PASS
+# ---- control: the first needle of the first trace row is misspelled in memory; the trace check must fail and name it.
+  trace line 2: needle 'toy repositorieQ' not in agent-os/product/mission.md:5-7
+  trace line 2: needle 'toy repositorieQ' not in MISSION:4-6
+SUMMARY: FAILED: trace

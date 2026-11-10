@@ -1,0 +1,32 @@
+# User-level paths written by the Agent OS steps (FF-T10-c), proved from my own zero-token run with HOME and XDG_* under $SP.
+# What the pack's step 1 writes for Maik (macOS, bash 3.2 /bin/bash used by the script's #! line):
+#  (1) git clone ... ~/agent-os: one new folder ~/agent-os, 22 files, 168 KB (listed in agent-os-clone.txt); then rm -rf ~/agent-os/.git removes the git folder.
+#  (2) ~/agent-os/scripts/project-install.sh in a repository: writes only inside that repository (.claude/commands/agent-os/, agent-os/standards/) plus one short-lived temp file.
+# See it:  ls -la ~/agent-os ; find ~/agent-os -type f | sort
+# Undo it: rm -rf ~/agent-os   (nothing else outside the repository is written); in the repository: git clean -fd .claude/commands/agent-os agent-os
+
+# --- proof 1: no other user-level path changed in the zero-token run (empty diffs, install-run.txt):
+home diff lines: 0   xdg diff lines: 0
+# --- proof 2: the install script names no user-level path other than its own folder (grep over both scripts):
+# every line that mentions HOME, ~, XDG, .config, .cache, .claude, settings, plugin or marketplace:
+scripts/project-install.sh:179:        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+scripts/project-install.sh:311:            $0 ~ "^"folder":$" { in_folder=1; next }
+scripts/project-install.sh:313:            in_folder && $0 ~ "^  "file":$" { in_file=1; next }
+scripts/project-install.sh:389:    local commands_dest="$PROJECT_DIR/.claude/commands/agent-os"
+scripts/project-install.sh:407:        print_success "Installed $count commands to .claude/commands/agent-os/"
+scripts/common-functions.sh:104:        in_profiles && $0 ~ "^  "profile":$" { in_target=1; next }
+# (lines 179, 311, 313 and 104 hold the bash or awk operator ~ or =~, a regex match, not a home folder)
+# control: the same grep finds the project-relative commands folder (so it can find .claude):
+lines naming .claude/commands/agent-os: 2
+# no 'claude plugin' and no marketplace command: $HOME/agent-os/scripts/project-install.sh:0 $HOME/agent-os/scripts/common-functions.sh:0 (0 in each file)
+# --- proof 3: bare mktemp on macOS ignores TMPDIR (the unshimmed run writes one temp file to the per-user temp folder, removed by the script's EXIT trap):
+bare mktemp with TMPDIR=$TMPDIR created: /var/folders/XX/XXXXXXXX/T/tmp.ky2dFKBf4h
+(that probe file was removed again; the install script itself was never run unshimmed)
+217:    local sources_file=$(mktemp)
+218:    trap "rm -f $sources_file" EXIT
+# --- proof 4: the pack's clone command fails without deleting anything when ~/agent-os already exists (isolated HOME; no network needed):
+fatal: destination path '$HOME/agent-os' already exists and is not an empty directory.
+exit status of the clone-and-remove pair: 128 (nonzero, so rm -rf did not run)
+~/agent-os file list and hashes unchanged after the failed re-clone
+# --- Claude Code plugins or marketplaces: none of these steps installs a plugin or adds a marketplace; no step here needs a plugin OK from Maik.
+# Claude Code itself (when Maik runs the slash commands in a session) writes its own session and memory state under ~/.claude; that is Claude Code behaviour, not an Agent OS step.

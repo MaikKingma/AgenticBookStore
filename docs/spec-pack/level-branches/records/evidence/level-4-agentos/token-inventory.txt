@@ -1,0 +1,214 @@
+# token-inventory.py: every backticked token of the written files resolves in a tracked text file of the sandbox or in the pack tech-stack and standard (C0-13b).
+FOUND    *AppService                                                  agent-os/standards/architecture/flows-and-ports.md:13
+FOUND    *DTO                                                         agent-os/standards/architecture/flows-and-ports.md:19
+FOUND    *DataService                                                 agent-os/standards/architecture/flows-and-ports.md:13
+FOUND    *DataServiceImpl                                             agent-os/standards/database/persistence-adapter.md:5
+FOUND    *Delegate                                                    agent-os/standards/architecture/inbound-adapters.md:22
+FOUND    *DomainMapper                                                agent-os/standards/architecture/flows-and-ports.md:6
+FOUND    *ExceptionHandler                                            agent-os/standards/architecture/inbound-adapters.md:16
+FOUND    *IntegrationTest                                             agent-os/standards/testing/layer-tests.md:18
+FOUND    *JPA                                                         agent-os/standards/database/persistence-adapter.md:6
+FOUND    *JPAMapper                                                   agent-os/standards/database/persistence-adapter.md:5
+FOUND    *Payload                                                     agent-os/product/tech-stack.md:23
+FOUND    *Repository                                                  agent-os/standards/database/persistence-adapter.md:5
+FOUND    *View                                                        agent-os/standards/architecture/inbound-adapters.md:12
+FOUND    ./mvnw                                                       agent-os/product/tech-stack.md:16
+FOUND    ./mvnw clean verify                                          agent-os/product/tech-stack.md:16
+FOUND    ./mvnw verify                                                agent-os/product/tech-stack.md:11
+FOUND    /                                                            agent-os/product/tech-stack.md:40
+FOUND    /actuator/health                                             agent-os/product/tech-stack.md:40
+FOUND    /api                                                         agent-os/product/tech-stack.md:40
+FOUND    /assistant                                                   agent-os/product/tech-stack.md:8
+FOUND    /books                                                       agent-os/product/tech-stack.md:8
+FOUND    /inventory                                                   agent-os/product/tech-stack.md:8
+FOUND    /mcp                                                         agent-os/product/tech-stack.md:20
+FOUND    /orders                                                      agent-os/product/tech-stack.md:8
+FOUND    /shop/                                                       agent-os/product/tech-stack.md:40
+FOUND    127.0.0.1                                                    agent-os/product/tech-stack.md:41
+FOUND    202 Accepted                                                 agent-os/standards/architecture/inbound-adapters.md:7
+FOUND    @ArchTest                                                    agent-os/standards/testing/layer-tests.md:15
+FOUND    @AutoConfigureTestDatabase(replace = NONE)                   agent-os/standards/testing/database-in-tests.md:8
+FOUND    @DataJpaTest                                                 agent-os/standards/testing/database-in-tests.md:8
+FOUND    @DirtiesContext                                              agent-os/standards/testing/database-in-tests.md:10
+FOUND    @Import(PostgresTestConfig.class)                            agent-os/standards/testing/database-in-tests.md:8
+FOUND    @MockBean                                                    agent-os/product/tech-stack.md:36
+FOUND    @MockitoBean                                                 agent-os/product/tech-stack.md:36
+FOUND    @RestController                                              agent-os/standards/architecture/dependency-rules.md:12
+FOUND    @RestControllerAdvice                                        agent-os/standards/architecture/inbound-adapters.md:16
+FOUND    @Service                                                     agent-os/standards/architecture/flows-and-ports.md:5
+FOUND    @ServiceConnection                                           agent-os/product/tech-stack.md:32
+FOUND    @SpringBootTest                                              agent-os/standards/testing/layer-tests.md:14
+FOUND    @Transactional                                               agent-os/standards/architecture/flows-and-ports.md:5
+FOUND    @TransactionalEventListener(phase = AFTER_COMMIT)            agent-os/standards/architecture/inbound-adapters.md:22
+FOUND    @WebMvcTest                                                  agent-os/standards/testing/layer-tests.md:9
+FOUND    @testing-library/jest-dom                                    agent-os/product/tech-stack.md:9
+FOUND    @testing-library/react                                       agent-os/product/tech-stack.md:9
+FOUND    @testing-library/user-event                                  agent-os/product/tech-stack.md:9
+FOUND    ANTHROPIC_API_KEY                                            agent-os/product/tech-stack.md:19
+FOUND    AddBookPayload.price                                         agent-os/standards/architecture/money-is-exact.md:8
+FOUND    AppService                                                   agent-os/standards/architecture/class-naming.md:13
+FOUND    AppServiceImpl                                               agent-os/standards/architecture/class-naming.md:12
+FOUND    ApplicationEventPublisher                                    agent-os/standards/architecture/flows-and-ports.md:7
+FOUND    ArchitectureTest                                             agent-os/standards/architecture/class-naming.md:3
+FOUND    AssistantCommands                                            agent-os/standards/architecture/inbound-adapters.md:27
+FOUND    AssistantCommandsTest                                        agent-os/standards/testing/layer-tests.md:10
+FOUND    BOOKSTORE_AI_API_KEY                                         agent-os/product/tech-stack.md:19
+FOUND    BigDecimal                                                   agent-os/standards/architecture/money-is-exact.md:7
+FOUND    Book                                                         agent-os/standards/architecture/domain-model.md:3
+FOUND    Book.addToCatalogue(...)                                     agent-os/standards/architecture/domain-model.md:5
+FOUND    BookCommandsTest                                             agent-os/standards/testing/layer-tests.md:9
+FOUND    BookDTO.priceAmount                                          agent-os/standards/architecture/money-is-exact.md:7
+FOUND    BookDTO.priceCurrency                                        agent-os/standards/architecture/money-is-exact.md:7
+FOUND    BookDataServiceImplTest                                      agent-os/standards/testing/layer-tests.md:11
+FOUND    BookTest                                                     agent-os/standards/testing/layer-tests.md:7
+FOUND    BookView.price                                               agent-os/standards/architecture/money-is-exact.md:8
+FOUND    BookstoreApplication                                         agent-os/standards/architecture/clean-hexagonal-onion.md:10
+FOUND    BookstoreTools                                               agent-os/standards/architecture/inbound-adapters.md:28
+FOUND    BookstoreToolsTest                                           agent-os/standards/testing/layer-tests.md:10
+FOUND    CatalogueFlow                                                agent-os/standards/architecture/flows-and-ports.md:3
+FOUND    CatalogueFlowTest                                            agent-os/standards/testing/layer-tests.md:8
+FOUND    CatalogueIntegrationTest                                     agent-os/standards/testing/layer-tests.md:14
+FOUND    ChatModel                                                    agent-os/standards/architecture/class-naming.md:10
+FOUND    ClockConfig                                                  agent-os/standards/architecture/clean-hexagonal-onion.md:10
+FOUND    CommandResult                                                agent-os/standards/architecture/class-naming.md:7
+FOUND    CommandResult(id)                                            agent-os/standards/architecture/inbound-adapters.md:7
+FOUND    Commands                                                     agent-os/standards/architecture/class-naming.md:7
+FOUND    Config                                                       agent-os/standards/architecture/class-naming.md:10
+FOUND    ConflictException                                            agent-os/standards/architecture/flows-and-ports.md:26
+FOUND    DTO                                                          agent-os/standards/architecture/class-naming.md:13
+FOUND    DataService                                                  agent-os/standards/architecture/class-naming.md:13
+FOUND    DataServiceImpl                                              agent-os/standards/architecture/class-naming.md:11
+FOUND    Delegate                                                     agent-os/standards/architecture/class-naming.md:9
+FOUND    DistributorAppService                                        agent-os/standards/architecture/clean-hexagonal-onion.md:11
+FOUND    DistributorAppService.DistributorUnavailableException        agent-os/standards/architecture/flows-and-ports.md:15
+FOUND    DistributorAppServiceImplTest                                agent-os/standards/testing/layer-tests.md:12
+FOUND    DomainMapper                                                 agent-os/standards/architecture/class-naming.md:13
+FOUND    Event                                                        agent-os/standards/architecture/dependency-rules.md:14
+FOUND    EventProcessor                                               agent-os/standards/architecture/class-naming.md:9
+FOUND    EventProcessorTest                                           agent-os/standards/testing/layer-tests.md:13
+FOUND    Exception                                                    agent-os/standards/architecture/class-naming.md:13
+FOUND    ExceptionHandler                                             agent-os/standards/architecture/class-naming.md:7
+FOUND    Flow                                                         agent-os/standards/architecture/class-naming.md:13
+FOUND    GET /{resource}                                              agent-os/standards/architecture/inbound-adapters.md:11
+FOUND    GET /{resource}/{id}                                         agent-os/standards/architecture/inbound-adapters.md:11
+FOUND    HALF_EVEN                                                    agent-os/standards/architecture/money-is-exact.md:5
+FOUND    IntegrationTestBase                                          agent-os/standards/testing/database-in-tests.md:9
+FOUND    InvalidInputException                                        agent-os/standards/architecture/flows-and-ports.md:27
+FOUND    InventoryFlow                                                agent-os/standards/architecture/flows-and-ports.md:3
+FOUND    Isbn                                                         agent-os/standards/architecture/domain-model.md:17
+FOUND    JPA                                                          agent-os/standards/architecture/class-naming.md:11
+FOUND    JPAMapper                                                    agent-os/standards/architecture/class-naming.md:11
+FOUND    Logger                                                       agent-os/standards/architecture/flows-and-ports.md:9
+FOUND    MockRestServiceServer                                        agent-os/product/tech-stack.md:38
+FOUND    Money                                                        agent-os/standards/architecture/domain-model.md:17
+FOUND    Money(BigDecimal amount, Currency currency)                  agent-os/standards/architecture/money-is-exact.md:5
+FOUND    Money.of("12.99")                                            agent-os/standards/architecture/money-is-exact.md:6
+FOUND    Money.of(BigDecimal)                                         agent-os/standards/architecture/money-is-exact.md:6
+FOUND    NO_DOUBLE_OR_FLOAT_FOR_MONEY                                 agent-os/standards/architecture/money-is-exact.md:9
+FOUND    NotFoundException                                            agent-os/standards/architecture/flows-and-ports.md:25
+FOUND    Order                                                        agent-os/standards/architecture/domain-model.md:3
+FOUND    Order.place(...)                                             agent-os/standards/architecture/domain-model.md:5
+FOUND    OrderFlow                                                    agent-os/standards/architecture/flows-and-ports.md:3
+FOUND    OrderLinePayload                                             agent-os/standards/architecture/class-naming.md:16
+FOUND    PERSISTENCE_TYPES_ONLY_IN_DATA                               agent-os/standards/database/persistence-adapter.md:7
+FOUND    POST /assistant/chat                                         agent-os/standards/architecture/inbound-adapters.md:27
+FOUND    POST /{resource}/commands/{action}                           agent-os/standards/architecture/inbound-adapters.md:5
+FOUND    POST /{resource}/{id}/commands/{action}                      agent-os/standards/architecture/inbound-adapters.md:5
+FOUND    Payload                                                      agent-os/standards/architecture/class-naming.md:7
+FOUND    PendingRestockView                                           agent-os/standards/architecture/class-naming.md:16
+FOUND    PostgresTestConfig                                           agent-os/standards/testing/database-in-tests.md:7
+FOUND    ProblemDetail                                                agent-os/standards/architecture/inbound-adapters.md:16
+FOUND    Properties                                                   agent-os/standards/architecture/class-naming.md:10
+FOUND    Quantity                                                     agent-os/standards/architecture/domain-model.md:17
+FOUND    Queries                                                      agent-os/standards/architecture/class-naming.md:8
+FOUND    REQUIRES_NEW                                                 agent-os/standards/architecture/inbound-adapters.md:23
+FOUND    RateLimiter                                                  agent-os/standards/architecture/class-naming.md:10
+FOUND    Repository                                                   agent-os/standards/architecture/class-naming.md:11
+FOUND    RestClient                                                   agent-os/product/tech-stack.md:22
+FOUND    RestClient.Builder                                           agent-os/standards/testing/layer-tests.md:12
+FOUND    RestTestClient                                               agent-os/standards/testing/layer-tests.md:14
+FOUND    ScriptedChatModel                                            agent-os/standards/testing/test-conventions.md:5
+FOUND    StockItem                                                    agent-os/standards/architecture/domain-model.md:3
+FOUND    StorefrontConfig                                             agent-os/standards/architecture/clean-hexagonal-onion.md:10
+FOUND    String                                                       agent-os/standards/architecture/money-is-exact.md:7
+FOUND    Tools                                                        agent-os/standards/architecture/class-naming.md:10
+FOUND    UnavailableException                                         agent-os/standards/architecture/flows-and-ports.md:28
+FOUND    View                                                         agent-os/standards/architecture/class-naming.md:8
+FOUND    V{n}__                                                       agent-os/standards/database/flyway-migrations.md:5
+FOUND    V{n}__{description}.sql                                      agent-os/product/tech-stack.md:29
+FOUND    acl                                                          agent-os/standards/architecture/class-naming.md:12
+FOUND    application-test.yml                                         agent-os/standards/testing/database-in-tests.md:11
+FOUND    application.yml                                              agent-os/standards/database/flyway-migrations.md:9
+FOUND    assistant                                                    agent-os/standards/architecture/class-naming.md:10
+FOUND    base: '/shop/'                                               agent-os/product/tech-stack.md:8
+FOUND    bookstore                                                    agent-os/product/tech-stack.md:16
+FOUND    bookstore/compose.yaml                                       agent-os/product/tech-stack.md:31
+FOUND    bookstore/src/main/resources/db/migration                    agent-os/standards/database/flyway-migrations.md:5
+FOUND    classpath:db/migration,classpath:db/seed                     agent-os/standards/database/flyway-migrations.md:9
+FOUND    code                                                         agent-os/standards/architecture/flows-and-ports.md:30
+FOUND    com.github.eirslett:frontend-maven-plugin                    agent-os/product/tech-stack.md:11
+FOUND    com.tngtech.archunit:archunit-junit6                         agent-os/product/tech-stack.md:37
+FOUND    command                                                      agent-os/standards/architecture/class-naming.md:7
+FOUND    data                                                         agent-os/standards/architecture/class-naming.md:11
+FOUND    db/seed/R__seed_demo_data.sql                                agent-os/standards/database/flyway-migrations.md:8
+FOUND    detail                                                       agent-os/standards/architecture/flows-and-ports.md:30
+FOUND    details                                                      agent-os/standards/architecture/flows-and-ports.md:30
+FOUND    distributor                                                  agent-os/product/tech-stack.md:16
+FOUND    docs/architecture.md                                         agent-os/product/mission.md:20
+FOUND    domain                                                       agent-os/standards/architecture/class-naming.md:15
+FOUND    domaininteraction                                            agent-os/standards/architecture/class-naming.md:13
+FOUND    double                                                       agent-os/standards/architecture/money-is-exact.md:3
+FOUND    float                                                        agent-os/standards/architecture/money-is-exact.md:3
+FOUND    frontend                                                     agent-os/product/tech-stack.md:16
+FOUND    frontend/                                                    agent-os/product/tech-stack.md:7
+FOUND    frontend/node/                                               agent-os/product/tech-stack.md:10
+FOUND    health                                                       agent-os/product/tech-stack.md:24
+FOUND    info                                                         agent-os/product/tech-stack.md:24
+FOUND    isbn-already-exists                                          agent-os/standards/architecture/flows-and-ports.md:30
+FOUND    jakarta.persistence..                                        agent-os/standards/architecture/dependency-rules.md:9
+FOUND    java..                                                       agent-os/standards/architecture/dependency-rules.md:8
+FOUND    jsdom                                                        agent-os/product/tech-stack.md:9
+FOUND    lifecycle-management=start-only                              agent-os/product/tech-stack.md:31
+FOUND    main                                                         agent-os/product/tech-stack.md:42
+FOUND    maven.compiler.release=25                                    agent-os/product/tech-stack.md:15
+FOUND    mvnw.cmd                                                     agent-os/product/tech-stack.md:16
+FOUND    nl.openvalue..                                               agent-os/standards/architecture/dependency-rules.md:21
+FOUND    nl.openvalue.bookstore                                       agent-os/standards/architecture/clean-hexagonal-onion.md:5
+FOUND    npm ci                                                       agent-os/product/tech-stack.md:11
+FOUND    npm run build                                                agent-os/product/tech-stack.md:11
+FOUND    npm test                                                     agent-os/product/tech-stack.md:11
+FOUND    numeric(10,2)                                                agent-os/standards/architecture/money-is-exact.md:10
+FOUND    org.springframework.ai..                                     agent-os/standards/architecture/dependency-rules.md:11
+FOUND    org.springframework.ai:spring-ai-bom:2.0.2                   agent-os/product/tech-stack.md:18
+FOUND    org.springframework.ai:spring-ai-starter-mcp-server-webmvc   agent-os/product/tech-stack.md:20
+FOUND    org.springframework.ai:spring-ai-starter-model-anthropic     agent-os/product/tech-stack.md:19
+FOUND    org.springframework.boot:spring-boot-docker-compose          agent-os/product/tech-stack.md:31
+FOUND    org.springframework.data..                                   agent-os/standards/architecture/dependency-rules.md:9
+FOUND    org.springframework.data.domain                              agent-os/standards/architecture/dependency-rules.md:21
+FOUND    org.springframework.web.client..                             agent-os/standards/architecture/dependency-rules.md:10
+FOUND    org.testcontainers:testcontainers-postgresql                 agent-os/product/tech-stack.md:32
+FOUND    package-info                                                 agent-os/standards/architecture/class-naming.md:3
+FOUND    postgres:18.6                                                agent-os/product/tech-stack.md:28
+FOUND    price_amount                                                 agent-os/standards/architecture/money-is-exact.md:10
+FOUND    price_currency                                               agent-os/standards/architecture/money-is-exact.md:10
+FOUND    process                                                      agent-os/standards/architecture/class-naming.md:9
+FOUND    pullDomainEvents()                                           agent-os/standards/architecture/domain-model.md:9
+FOUND    query                                                        agent-os/standards/architecture/class-naming.md:8
+FOUND    react-ts                                                     agent-os/product/tech-stack.md:7
+FOUND    receive                                                      agent-os/standards/architecture/domain-model.md:7
+FOUND    rejectsOrderWhenStockIsInsufficient                          agent-os/standards/testing/test-conventions.md:4
+FOUND    reserve                                                      agent-os/standards/architecture/domain-model.md:7
+FOUND    restore(...)                                                 agent-os/standards/architecture/domain-model.md:6
+FOUND    server.address                                               agent-os/product/tech-stack.md:41
+FOUND    ship                                                         agent-os/standards/architecture/domain-model.md:7
+FOUND    spring-boot-starter-validation                               agent-os/product/tech-stack.md:23
+FOUND    spring.ai.mcp.server.protocol=STREAMABLE                     agent-os/product/tech-stack.md:20
+FOUND    spring.jpa.hibernate.ddl-auto=validate                       agent-os/product/tech-stack.md:29
+FOUND    title                                                        agent-os/standards/architecture/flows-and-ports.md:30
+FOUND    validation-failed                                            agent-os/standards/architecture/inbound-adapters.md:18
+FOUND    varchar(3)                                                   agent-os/standards/architecture/money-is-exact.md:10
+FOUND    {field, message}                                             agent-os/standards/architecture/inbound-adapters.md:18
+SUMMARY: tokens 209, FOUND 209, PATTERN 0, MISSING 0
+# ---- control: PostgresTestConfig misspelled in memory as PostgresTestConfiq (only the summary and the MISSING line)
+MISSING  PostgresTestConfiq                                           agent-os/standards/testing/database-in-tests.md:7
+SUMMARY: tokens 209, FOUND 208, PATTERN 0, MISSING 1

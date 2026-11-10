@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""class-naming-table.py: the suffix table of standards/architecture/class-naming.md equals the suffix lists in
+ArchitectureTest (the referee) and the table of docs/architecture.md section 3, package by package.
+
+Usage: python3 -I class-naming-table.py <sandbox-root> [--misspell]
+--misspell drops one suffix from the written table in memory to show that a difference is reported.
+"""
+import re
+import sys
+
+sbx = sys.argv[1]
+MISSPELL = "--misspell" in sys.argv
+
+
+def read(path):
+    with open(sbx + "/" + path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def table(text, start_marker):
+    rows = {}
+    on = False
+    for line in text.split("\n"):
+        if start_marker in line:
+            on = True
+            continue
+        if on and line.startswith("|") and not line.startswith("|---"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) >= 2 and cells[0].startswith("`"):
+                rows[cells[0].strip("`")] = re.findall(r"`([^`]+)`", cells[1])
+        elif on and rows and not line.startswith("|"):
+            break
+    return rows
+
+
+written = table(read("agent-os/standards/architecture/class-naming.md"), "| Package | Class names must end with |")
+arch_doc = table(read("docs/architecture.md"), "| Package | Class names must end with | Constant in `ArchitectureTest` |")
+code = {}
+src = read("bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java")
+for m in re.finditer(r"classNames\((\w+),\s*((?:\"[A-Za-z]+\",?\s*)+)\)", src):
+    code[m.group(1).lower()] = re.findall(r"\"([A-Za-z]+)\"", m.group(2))
+if MISSPELL:
+    written["command"] = written["command"][:-1]
+bad = 0
+print("packages: written %d, docs/architecture.md %d, ArchitectureTest %d" % (len(written), len(arch_doc), len(code)))
+for pkg in sorted(set(written) | set(arch_doc) | set(code)):
+    a, b, c = written.get(pkg), arch_doc.get(pkg), code.get(pkg)
+    ok = a == b == c and a is not None
+    print("%s %-18s written=%s" % ("PASS" if ok else "FAIL", pkg, ",".join(a or [])))
+    if not ok:
+        bad += 1
+        print("     docs=%s code=%s" % (b, c))
+print("SUMMARY: %s" % ("ALL PASS" if not bad else "%d package(s) differ" % bad))
+sys.exit(1 if bad else 0)

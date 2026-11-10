@@ -1,0 +1,51 @@
+# Staging of the track (criterion 6). Step folder: S/level-4-agentos (manifest.tsv plus files/).
+# manifest.tsv (tabs shown as TAB):
+# op TAB group TAB staged TAB target TAB mode TAB base
+add TAB config TAB files/dot-claude/commands/agent-os/discover-standards.md TAB .claude/commands/agent-os/discover-standards.md TAB 644 TAB -
+add TAB config TAB files/dot-claude/commands/agent-os/index-standards.md TAB .claude/commands/agent-os/index-standards.md TAB 644 TAB -
+add TAB config TAB files/dot-claude/commands/agent-os/inject-standards.md TAB .claude/commands/agent-os/inject-standards.md TAB 644 TAB -
+add TAB config TAB files/dot-claude/commands/agent-os/plan-product.md TAB .claude/commands/agent-os/plan-product.md TAB 644 TAB -
+add TAB config TAB files/dot-claude/commands/agent-os/shape-spec.md TAB .claude/commands/agent-os/shape-spec.md TAB 644 TAB -
+add TAB config TAB files/agent-os/product/mission.md TAB agent-os/product/mission.md TAB 644 TAB -
+add TAB config TAB files/agent-os/product/roadmap.md TAB agent-os/product/roadmap.md TAB 644 TAB -
+add TAB config TAB files/agent-os/product/tech-stack.md TAB agent-os/product/tech-stack.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/class-naming.md TAB agent-os/standards/architecture/class-naming.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/clean-hexagonal-onion.md TAB agent-os/standards/architecture/clean-hexagonal-onion.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/dependency-rules.md TAB agent-os/standards/architecture/dependency-rules.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/domain-model.md TAB agent-os/standards/architecture/domain-model.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/flows-and-ports.md TAB agent-os/standards/architecture/flows-and-ports.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/inbound-adapters.md TAB agent-os/standards/architecture/inbound-adapters.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/money-is-exact.md TAB agent-os/standards/architecture/money-is-exact.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/architecture/outbound-acl.md TAB agent-os/standards/architecture/outbound-acl.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/database/flyway-migrations.md TAB agent-os/standards/database/flyway-migrations.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/database/persistence-adapter.md TAB agent-os/standards/database/persistence-adapter.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/index.yml TAB agent-os/standards/index.yml TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/testing/database-in-tests.md TAB agent-os/standards/testing/database-in-tests.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/testing/layer-tests.md TAB agent-os/standards/testing/layer-tests.md TAB 644 TAB -
+add TAB config TAB files/agent-os/standards/testing/test-conventions.md TAB agent-os/standards/testing/test-conventions.md TAB 644 TAB -
+# every file under files/ is named by exactly one row and every row's staged path exists (comm both ways, empty means equal):
+files not named by a row: 0   rows without a file: 0   rows: 22
+ops:  22 add;  groups:  22 config;  modes:  22 644;  base column: -;
+# path encoding rule: no staged path component starts with a dot or is named CLAUDE.md, CLAUDE.local.md or AGENTS.md:
+components starting with a dot: 0   components named CLAUDE.md, CLAUDE.local.md or AGENTS.md: 0
+# control: the encoded form of the five command files, decoded by apply-level.sh into targets starting with a dot:
+files/dot-claude/commands/agent-os/discover-standards.md -> .claude/commands/agent-os/discover-standards.md
+files/dot-claude/commands/agent-os/index-standards.md -> .claude/commands/agent-os/index-standards.md
+files/dot-claude/commands/agent-os/inject-standards.md -> .claude/commands/agent-os/inject-standards.md
+files/dot-claude/commands/agent-os/plan-product.md -> .claude/commands/agent-os/plan-product.md
+files/dot-claude/commands/agent-os/shape-spec.md -> .claude/commands/agent-os/shape-spec.md
+# staged files are byte copies of the sandbox 1 files (cmp over all rows):
+rows whose staged file differs from the sandbox 1 file: 0
+# upstream Agent OS files among the staged rows (installed by project-install.sh, copied byte for byte; exempt from the ASCII and dash rules):
+a3218bba20d11ea1  discover-standards.md  non-ASCII lines: 23
+    equal to the clone's commands/agent-os/discover-standards.md
+adf483013262a33a  index-standards.md  non-ASCII lines: 8
+    equal to the clone's commands/agent-os/index-standards.md
+334ff2ac64b56e70  inject-standards.md  non-ASCII lines: 29
+    equal to the clone's commands/agent-os/inject-standards.md
+ecd1abef7c3b7f12  plan-product.md  non-ASCII lines: 4
+    equal to the clone's commands/agent-os/plan-product.md
+fbe80764a0b39eea  shape-spec.md  non-ASCII lines: 23
+    equal to the clone's commands/agent-os/shape-spec.md
+# git: nothing under S is ignored (the scope check of the whole worktree is in hygiene.txt):
+ignored entries under S: 0

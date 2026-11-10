@@ -15,8 +15,7 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    "`git status --porcelain --ignored -- S` shows no `!!`" into the common block.
    **Why:** the task passes locally and the file is missing from the PR.
 
-2. **"CRLF kept" is undefined in git.** `text eol=crlf` stores LF blobs. Write the criterion as `git ls-files --eol`
-   on a fresh clone (`i/lf w/crlf attr/text eol=crlf`) plus `od -c` of the worktree bytes. A renamed folder
+2. **"CRLF kept" is undefined in git.** Check `git ls-files --eol` on a fresh clone plus `od -c`; a renamed folder
    (`dot-githooks`) no longer matches the root rule `.githooks/*`: check `git check-attr` on staged paths.
 
 3. **Re-run budget for headless scenario tasks.** Verifiers re-run every zero-token check (sandbox build and verify,
@@ -117,4 +116,5 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    printed command verbatim and compare its output with the literal; reject premises measured by a variant (spec 10 T12).
    Rework bounds on evidence: line-cited files stay insertion only; an uncited log may be regenerated if declared and every
    check re-run (grep `<file>:[0-9]` first). A cited file regenerated without a copy: revert the declared difference in
-   memory and hash; equal to the old round's hash = byte proof (spec 10 T11 r1, T12 r1: one factory sha on one line).
+   memory and hash; equal = byte proof (T11, T12 r1). A census check with a hard-coded expected list is circular (T13 r1).
+   Rows copied into a checklist: direct a field-by-field carry incl. observations and "not a failure" clauses (T13 r2).

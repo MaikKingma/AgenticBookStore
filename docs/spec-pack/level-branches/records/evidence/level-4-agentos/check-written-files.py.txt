@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""check-written-files.py: checks the Agent OS files that were written by hand from the pack (T13, criterion 4).
+
+Usage: python3 -I check-written-files.py <sandbox-root> <worktree-root> <trace-file> [--misspell]
+
+Checks, each printing one PASS/FAIL line and a final summary line:
+  placeholders  no bracket, brace or angle placeholder and no TODO-like word in any written file
+  ascii         no non-ASCII character and no dash character other than a hyphen
+  allcaps       every ALL_CAPS token of a written file also occurs in a source file (a real constant)
+  trace         every content line of every written file lies in a trace row, and each row's needles occur in
+                BOTH the written lines and the cited source lines
+  mission       every content line of product/mission.md is a line of the pack mission (one documented substitution)
+  tech-stack    every number of product/tech-stack.md occurs in the pack tech-stack
+  index         every standards file has an entry in index.yml and every entry has a file, alphabetised
+
+Trace file format: tab separated, '#' lines ignored:
+  written-file  line-range  source  line-range  needles(separated by ' @@ '; the needle LINE means: every non-blank written line is a substring of the source lines)
+Sources: aliases below, or 'sbx:<path>' (relative to the sandbox) or 'wt:<path>' (relative to the worktree).
+--misspell: copies the trace in memory and breaks one needle of the first row, to show the check reports it.
+"""
+import os
+import re
+import sys
+
+sbx, wt, trace_path = sys.argv[1], sys.argv[2], sys.argv[3]
+MISSPELL = "--misspell" in sys.argv
+
+ALIAS = {
+    "ARCH": os.path.join(sbx, "docs/architecture.md"),
+    "CLAUDE": os.path.join(sbx, "CLAUDE.md"),
+    "RULE-DATA": os.path.join(sbx, ".claude/rules/data-and-migrations.md"),
+    "RULE-TEST": os.path.join(sbx, ".claude/rules/testing.md"),
+    "STD": os.path.join(wt, "docs/spec-pack/product/architecture-standard.md"),
+    "MISSION": os.path.join(wt, "docs/spec-pack/product/mission.md"),
+    "TECH": os.path.join(wt, "docs/spec-pack/product/tech-stack.md"),
+    "ROADMAP": os.path.join(wt, "docs/spec-pack/product/roadmap.md"),
+    "SPEC10": os.path.join(wt, "docs/spec-pack/specs/10-harness-reference-solutions.md"),
+    "GUIDE": os.path.join(wt, "docs/spec-pack/workshop/sdd-framework-guide.md"),
+}
+
+WRITTEN = []
+for base in ("agent-os/product", "agent-os/standards"):
+    for root, _dirs, files in os.walk(os.path.join(sbx, base)):
+        for f in files:
+            WRITTEN.append(os.path.relpath(os.path.join(root, f), sbx))
+WRITTEN.sort()
+
+
+def read(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read().split("\n")
+
+
+def resolve(src):
+    if src in ALIAS:
+        return ALIAS[src]
+    if src.startswith("sbx:"):
+        return os.path.join(sbx, src[4:])
+    if src.startswith("wt:"):
+        return os.path.join(wt, src[3:])
+    raise SystemExit("unknown source " + src)
+
+
+def rng(text):
+    a, _, b = text.partition("-")
+    return int(a), int(b or a)
+
+
+fails = []
+
+
+def verdict(name, problems):
+    if problems:
+        print("FAIL %s: %d problem(s)" % (name, len(problems)))
+        for p in problems:
+            print("  " + p)
+        fails.append(name)
+    else:
+        print("PASS %s" % name)
+
+
+# ---- placeholders
+problems = []
+pat = re.compile(r"\[[A-Z][A-Z_ ]*\]|\{\{[^}]*\}\}|<[A-Z][A-Z_]*>|\bTODO\b|\bTBD\b|\bFIXME\b|\bXXX\b|To be defined|\[Insert|[Ll]orem")
+for f in WRITTEN:
+    for n, line in enumerate(read(os.path.join(sbx, f)), 1):
+        m = pat.search(line)
+        if m:
+            problems.append("%s:%d placeholder %r" % (f, n, m.group(0)))
+verdict("placeholders", problems)
+
+# ---- ascii
+problems = []
+for f in WRITTEN:
+    for n, line in enumerate(read(os.path.join(sbx, f)), 1):
+        for ch in line:
+            if ord(ch) > 127:
+                problems.append("%s:%d non-ASCII U+%04X" % (f, n, ord(ch)))
+                break
+verdict("ascii", problems)
+
+# ---- allcaps
+src_text = ""
+for p in list(ALIAS.values()):
+    if os.path.exists(p):
+        src_text += "\n".join(read(p)) + "\n"
+for root, _d, files in os.walk(os.path.join(sbx, "bookstore")):
+    if "/target" in root or "node_modules" in root:
+        continue
+    for f in files:
+        if f.endswith((".java", ".yml", ".sql", ".xml", ".json")):
+            try:
+                src_text += "\n".join(read(os.path.join(root, f))) + "\n"
+            except UnicodeDecodeError:
+                pass
+problems = []
+caps = re.compile(r"\b[A-Z][A-Z0-9_]{3,}\b")
+seen = {}
+for f in WRITTEN:
+    if f.endswith("index.yml"):
+        continue
+    for n, line in enumerate(read(os.path.join(sbx, f)), 1):
+        for t in caps.findall(line):
+            seen.setdefault(t, "%s:%d" % (f, n))
+for t, where in sorted(seen.items()):
+    if t not in src_text:
+        problems.append("%s (%s) occurs in no source file" % (t, where))
+print("allcaps tokens checked: %d" % len(seen))
+verdict("allcaps", problems)
+
+# ---- forbidden: Lombok, MapStruct, double or float money, embedded databases, edited migrations may appear only as prohibitions
+problems = []
+bad = re.compile(r"lombok|mapstruct|\bdouble\b|\bfloat\b|\bh2\b|embedded|in-memory|hsqldb|derby|edit(?:ed|ing)? (?:an )?(?:existing )?migration", re.I)
+neg = re.compile(r"\b(no|never|not|without)\b|NO_DOUBLE|^\s*$", re.I)
+hits = 0
+for f in WRITTEN:
+    for n, line in enumerate(read(os.path.join(sbx, f)), 1):
+        if bad.search(line):
+            hits += 1
+            if not neg.search(line):
+                problems.append("%s:%d mentions a forbidden technology without a prohibition: %s" % (f, n, line[:80]))
+print("forbidden-technology mentions classified as prohibitions: %d" % (hits - len(problems)))
+verdict("forbidden", problems)
+
+# ---- trace
+rows = []
+for n, line in enumerate(read(trace_path), 1):
+    if not line.strip() or line.startswith("#"):
+        continue
+    cols = line.split("\t")
+    if len(cols) != 5:
+        print("FAIL trace: %s:%d has %d columns" % (trace_path, n, len(cols)))
+        fails.append("trace-format")
+        continue
+    rows.append((n, cols))
+if MISSPELL and rows:
+    n0, cols0 = rows[0]
+    needles0 = cols0[4].split(" @@ ")
+    needles0[0] = needles0[0][:-1] + "Q"
+    cols0 = cols0[:4] + [" @@ ".join(needles0)]
+    rows[0] = (n0, cols0)
+problems = []
+covered = {}
+for n, (wf, wr, src, sr, needles) in rows:
+    wpath = os.path.join(sbx, wf)
+    if not os.path.exists(wpath):
+        problems.append("trace line %d: written file %s missing" % (n, wf))
+        continue
+    wl = read(wpath)
+    a, b = rng(wr)
+    if b > len(wl):
+        problems.append("trace line %d: %s has only %d lines" % (n, wf, len(wl)))
+        continue
+    for i in range(a, b + 1):
+        covered.setdefault(wf, set()).add(i)
+    wtext = "\n".join(wl[a - 1:b])
+    sp = resolve(src)
+    if not os.path.exists(sp):
+        problems.append("trace line %d: source %s missing" % (n, sp))
+        continue
+    sl = read(sp)
+    c, d = rng(sr)
+    if d > len(sl):
+        problems.append("trace line %d: %s has only %d lines" % (n, src, len(sl)))
+        continue
+    stext = "\n".join(sl[c - 1:d])
+    for nd in needles.split(" @@ "):
+        if nd == "LINE":
+            for k in range(a, b + 1):
+                one = wl[k - 1].strip()
+                if one and one not in stext:
+                    problems.append("trace line %d: line %s:%d is not a substring of %s:%s: %s" % (n, wf, k, src, sr, one[:60]))
+            continue
+        if nd not in wtext:
+            problems.append("trace line %d: needle %r not in %s:%s" % (n, nd, wf, wr))
+        if nd not in stext:
+            problems.append("trace line %d: needle %r not in %s:%s" % (n, nd, src, sr))
+unc = 0
+for f in WRITTEN:
+    if f.endswith("index.yml"):
+        continue
+    in_fence = False
+    for n, line in enumerate(read(os.path.join(sbx, f)), 1):
+        if line.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if not line.strip() or (line.startswith("#") and not in_fence):
+            continue
+        if n not in covered.get(f, set()):
+            problems.append("%s:%d is in no trace row: %s" % (f, n, line[:70]))
+            unc += 1
+print("trace rows: %d, uncovered content lines: %d" % (len(rows), unc))
+verdict("trace", problems)
+
+# ---- mission: every content line of the written mission is a line of the pack mission (after one substitution)
+problems = []
+pack = " ".join(x.strip() for x in read(ALIAS["MISSION"]))
+pack = re.sub(r"\s+", " ", pack)
+sub = ("`docs/architecture.md`", "`architecture-standard.md`")
+for n, line in enumerate(read(os.path.join(sbx, "agent-os/product/mission.md")), 1):
+    s = line.strip()
+    if not s or s.startswith("#"):
+        continue
+    s = s.replace(sub[0], sub[1])
+    s = re.sub(r"^\d+\.\s+", lambda m: m.group(0), s)
+    if s not in pack:
+        problems.append("mission.md:%d is not in the pack mission: %s" % (n, s[:70]))
+verdict("mission", problems)
+
+# ---- tech-stack numbers
+problems = []
+nums_pack = set(re.findall(r"\d+(?:\.\d+)*(?:\.x)?", "\n".join(read(ALIAS["TECH"]))))
+for n, line in enumerate(read(os.path.join(sbx, "agent-os/product/tech-stack.md")), 1):
+    for t in re.findall(r"\d+(?:\.\d+)*(?:\.x)?", line):
+        if t not in nums_pack:
+            problems.append("tech-stack.md:%d number %s is not in the pack tech-stack" % (n, t))
+verdict("tech-stack", problems)
+
+# ---- index
+problems = []
+idx = read(os.path.join(sbx, "agent-os/standards/index.yml"))
+entries = []
+folder = None
+for line in idx:
+    m = re.match(r"^([a-z0-9-]+):$", line)
+    if m:
+        folder = m.group(1)
+        continue
+    m = re.match(r"^  ([a-z0-9-]+):$", line)
+    if m:
+        entries.append((folder, m.group(1)))
+files = sorted(
+    (os.path.dirname(f).split("/")[-1], os.path.basename(f)[:-3])
+    for f in WRITTEN
+    if f.startswith("agent-os/standards/") and f.endswith(".md")
+)
+if sorted(entries) != files:
+    problems.append("index entries %s differ from files %s" % (sorted(entries), files))
+if entries != sorted(entries):
+    problems.append("index is not alphabetised")
+verdict("index", problems)
+
+print("SUMMARY: %s" % ("ALL PASS" if not fails else "FAILED: " + ", ".join(fails)))
+sys.exit(1 if fails else 0)

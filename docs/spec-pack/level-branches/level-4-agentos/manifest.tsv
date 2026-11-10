@@ -1,0 +1,23 @@
+# op	group	staged	target	mode	base
+add	config	files/dot-claude/commands/agent-os/discover-standards.md	.claude/commands/agent-os/discover-standards.md	644	-
+add	config	files/dot-claude/commands/agent-os/index-standards.md	.claude/commands/agent-os/index-standards.md	644	-
+add	config	files/dot-claude/commands/agent-os/inject-standards.md	.claude/commands/agent-os/inject-standards.md	644	-
+add	config	files/dot-claude/commands/agent-os/plan-product.md	.claude/commands/agent-os/plan-product.md	644	-
+add	config	files/dot-claude/commands/agent-os/shape-spec.md	.claude/commands/agent-os/shape-spec.md	644	-
+add	config	files/agent-os/product/mission.md	agent-os/product/mission.md	644	-
+add	config	files/agent-os/product/roadmap.md	agent-os/product/roadmap.md	644	-
+add	config	files/agent-os/product/tech-stack.md	agent-os/product/tech-stack.md	644	-
+add	config	files/agent-os/standards/architecture/class-naming.md	agent-os/standards/architecture/class-naming.md	644	-
+add	config	files/agent-os/standards/architecture/clean-hexagonal-onion.md	agent-os/standards/architecture/clean-hexagonal-onion.md	644	-
+add	config	files/agent-os/standards/architecture/dependency-rules.md	agent-os/standards/architecture/dependency-rules.md	644	-
+add	config	files/agent-os/standards/architecture/domain-model.md	agent-os/standards/architecture/domain-model.md	644	-
+add	config	files/agent-os/standards/architecture/flows-and-ports.md	agent-os/standards/architecture/flows-and-ports.md	644	-
+add	config	files/agent-os/standards/architecture/inbound-adapters.md	agent-os/standards/architecture/inbound-adapters.md	644	-
+add	config	files/agent-os/standards/architecture/money-is-exact.md	agent-os/standards/architecture/money-is-exact.md	644	-
+add	config	files/agent-os/standards/architecture/outbound-acl.md	agent-os/standards/architecture/outbound-acl.md	644	-
+add	config	files/agent-os/standards/database/flyway-migrations.md	agent-os/standards/database/flyway-migrations.md	644	-
+add	config	files/agent-os/standards/database/persistence-adapter.md	agent-os/standards/database/persistence-adapter.md	644	-
+add	config	files/agent-os/standards/index.yml	agent-os/standards/index.yml	644	-
+add	config	files/agent-os/standards/testing/database-in-tests.md	agent-os/standards/testing/database-in-tests.md	644	-
+add	config	files/agent-os/standards/testing/layer-tests.md	agent-os/standards/testing/layer-tests.md	644	-
+add	config	files/agent-os/standards/testing/test-conventions.md	agent-os/standards/testing/test-conventions.md	644	-
