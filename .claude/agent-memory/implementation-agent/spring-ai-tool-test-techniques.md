@@ -30,3 +30,22 @@ metadata:
 - `ChatClient.Builder.defaultSystem(Resource)` reads with the platform default charset; pass `UTF_8` explicitly.
 - Adding a bean method that injects `ChatClient.Builder` breaks every `ApplicationContextRunner` over that config:
   register a builder and the tools with `withBean(...)` (supporting beans only, the asserts stay unchanged).
+- Spring AI 2.0.2 here has no `spring-ai-retry`: `NonTransientAiException`/`TransientAiException` do not exist. A live
+  Anthropic failure is a `com.anthropic.errors.AnthropicException` subclass (SDK 2.72; `AnthropicIoException` and
+  `AnthropicRetryableException` take a `(String)`, the HTTP ones such as `RateLimitException` only a builder). Check a
+  plan's named types with `dependency:build-classpath` plus `javap` before writing tests on them.
+- Real `AnthropicChatModel` without a key or network: `AnthropicChatModel.builder().options(AnthropicChatOptions.builder()
+  .apiKey(dummy).baseUrl("http://127.0.0.1:<port>").model(..).maxTokens(..).build()).build()` against a JDK
+  `HttpServer` on port 0 (sendResponseHeaders with the byte length). The stub's response needs `id`, `type`, `role`,
+  `model`, `content`, `stop_reason`, `stop_sequence`, `usage`. Jackson 3 `JsonNode`: `path(..).asString(default)`,
+  `isString()`. `ChatClient.Builder.defaultOptions(..)` takes the options BUILDER (`.build()` does not compile) and merges
+  with the model's own defaults. Use `SoftAssertions` so one red run shows every broken fact; do not assert on a whole
+  request body string (the failure output floods).
+- Prompt and tool-description tests: `@Tool` description = `getToolDefinition().description()`; a `@ToolParam(description=..)`
+  shows under `inputSchema()` JSON `properties.<name>.description` (check both when a rule must live in both).
+  `Genre.parse` accepts `-`/`_` but not a space, so a readable "science fiction" in a search genre arg is rejected
+  (the error lists the valid constants). `ScriptedChatModel` tool args are fixed JSON strings; `toolContentOf` in
+  `AssistantIntegrationTest` needs exactly one tool message, so two tool rounds in one turn need a custom lookup.
+- Worktree Bash guard refuses redirects and `cd` in one command: put the mvnw run in a script under `.claude/comms/tmp/`.
+- `AssistantCommandsTest.useCaseExceptionsMapToTheirStatus` throws the four use-case exceptions out of the chat call:
+  a catch-all around that call must let them through or that pre-existing test goes red.

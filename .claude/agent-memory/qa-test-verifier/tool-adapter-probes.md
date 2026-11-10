@@ -42,5 +42,22 @@ ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
   `@Bean` to let the auto-configured bean take over, then pin the origin with `getFactoryBeanName()`.
 - Memory advisor order 200 vs tool-calling advisor 300: `.order(ToolCallingAdvisor.DEFAULT_ORDER + 1)` puts TOOL messages
   into memory, a cheap advisor-order mutant. 2.0.2 has no default conversation id and no PromptChatMemoryAdvisor.
+- Snapshot-and-restore around a chat call (catch at the controller boundary): one family per restore spelling (none,
+  remove-last, clear-only, skip-when-empty), one per use-case type dropped from the pass-through multi-catch, log
+  level/twice/no-throwable, detail or title from the cause. Remove-last dies only on a full-window conversation (tool
+  messages never reach memory, so a tool-round case cannot see it). Dropping the cause from the translated exception
+  survives by design (the handler never reads it; the WARN log carries it): report as advisory, not a gap of an AC.
+- Runs with exported dummy `SPRING_AI_*` vars: set `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:9` and grep the log for
+  `127.0.0.1:9` / `Connection refused` to prove escaped calls stayed local. To show a red there predates the task, rerun
+  that class on the pre-fix bytes in the same env (script swap, `clean`, `cp -p` restore), then a plain referee.
+- Stub-server contract tests of a ChatClient (real model client against a JDK `HttpServer`): probe the factory's
+  `defaultOptions(...)` line with a perl one-liner generator over the `.fixed` copy (replace the one line with each option
+  mutant: removed, `thinkingAdaptive()`, `thinkingEnabled(1024)`, `.model(..)`, `.maxTokens(512)`, `.temperature(0.2)`,
+  `.topP(0.9)`, empty builder), `clean` run each, `cp` restore plus hash in a script. A guard test on model, max_tokens and
+  sampling params passes on the fix by design, so only these option mutants show it bites. Also check the stub keys its
+  response off the parsed request body, not a test flag.
+- Worktree runs: the briefing's project-root (the worktree) can hold a partial `.claude/comms` copy with no mailbox of your
+  id, while the main checkout's mailbox of that id holds stale artifacts of another cycle. Use the worktree copy and create
+  your outbox there; do not touch the main checkout's.
 
 Related: [[env-switch-mutant-runner]], [[shell-traps]]

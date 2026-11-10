@@ -14,4 +14,4 @@
 - [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
-- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse, ChatClient without a context
+- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callback tests without a context, stackless tool exception, ListAppender, ChatClient mocks

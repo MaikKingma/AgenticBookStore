@@ -53,8 +53,12 @@ public class BookstoreTools {
     }
 
     @Tool(description = "Search the bookstore catalogue by title or author, optionally filtered by genre. "
-            + "Use this before mentioning any book.")
-    public List<BookSuggestionView> searchCatalogue(String query, @ToolParam(required = false) String genre) {
+            + "Use this before mentioning any book. "
+            + "The query is one title or one author name, or a fragment of one, never a title and an author together.")
+    public List<BookSuggestionView> searchCatalogue(
+            @ToolParam(description = "One title or one author name, or a fragment of one; "
+                    + "never a title and an author together.") String query,
+            @ToolParam(required = false) String genre) {
         return run("searchCatalogue", () -> catalogue.search(query, null, null, genre).stream()
                 .limit(SEARCH_LIMIT)
                 .map(book -> BookSuggestionView.from(book, inventory.findByBookId(book.id())))

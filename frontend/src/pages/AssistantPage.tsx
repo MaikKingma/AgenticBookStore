@@ -11,16 +11,21 @@ import { problemOf } from './problem'
 
 const OFFLINE_TITLE = 'The assistant is offline'
 const TOO_MANY_REQUESTS_TITLE = 'Too many requests, try again in a minute'
+const UNAVAILABLE_TITLE = 'The assistant is unavailable right now, try again later'
 
-// The two failures of the assistant that have a text of their own. A 429 is recognised by its status alone, because its
-// body is the one the framework writes (plain JSON, no code) or a problem of any code. The offline text is recognised by
-// the code `assistant-offline`, never by the status. Every other failure is shown as the bookstore described it.
+// The three failures of the assistant that have a text of their own. A 429 is recognised by its status alone, because its
+// body is the one the framework writes (plain JSON, no code) or a problem of any code. The offline text and the
+// unavailable text (a live model call that failed) are recognised by the codes `assistant-offline` and
+// `assistant-unavailable`, never by the status. Every other failure is shown as the bookstore described it.
 function shownProblem(problem: Problem): Problem {
   if (problem.status === 429) {
     return { status: 429, title: TOO_MANY_REQUESTS_TITLE, details: [] }
   }
   if (problem.code === 'assistant-offline') {
     return { status: problem.status, title: OFFLINE_TITLE, details: [] }
+  }
+  if (problem.code === 'assistant-unavailable') {
+    return { status: problem.status, title: UNAVAILABLE_TITLE, details: [] }
   }
   return problem
 }
