@@ -1,0 +1,24 @@
+schema: spec-driven
+
+context: |
+  Java 25, Spring Boot 4.1.2, Spring AI 2.0.2, Maven wrapper (./mvnw). Modules: frontend, bookstore, distributor.
+  Architecture: Clean Hexagonal Onion, see docs/architecture.md; ArchitectureTest is the referee.
+  Definition of done: ./mvnw verify green, every scenario covered by a test.
+rules:
+  design:
+    - Name the onion layer of every new or changed class.
+  tasks:
+    - Order tasks domain, flow, data and migration, adapter, integration test.
+    - Every requirement scenario maps to at least one test task.
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

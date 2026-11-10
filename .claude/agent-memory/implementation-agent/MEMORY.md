@@ -16,4 +16,4 @@
 - [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — callbacks plus default exception processor without a context, stackless tool exception, ListAppender (Level.ALL deprecated), lenient UUID parse, ChatClient without a context
-- [Consistency-check techniques](consistency-check-techniques.md) — glob test for rule paths, git grep -e on a sha, token inventory with overlay controls, wrapped-prose search, hooks run without Claude, docs drift
+- [Consistency-check techniques](consistency-check-techniques.md) — glob test for rule paths, git grep -e on a sha, token inventory with overlay controls, wrapped-prose search, hooks run without Claude, installer isolation, staging a generated tree

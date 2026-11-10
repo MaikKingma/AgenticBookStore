@@ -1,0 +1,70 @@
+# openspec init in sandbox 1 under HR1 isolation (acceptance criteria 1 and 5). $ISO = isolated user-level folders, $SBX = sandbox 1.
+# 1. The version, as printed by the pinned package (npx, same isolation):
+== version (isolated env, telemetry off)
+1.16.0
+exit code: 0
+
+# 2. The init run (stdout and stderr, stdin /dev/null):
+node: v24.20.0
+npm: 11.19.0
+command: npx -y @fission-ai/openspec@1.16.0 init --tools claude   (cwd = sandbox, stdin /dev/null)
+env: HOME XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME XDG_STATE_HOME npm_config_cache under $ISO, OPENSPEC_TELEMETRY=0, TMPDIR under $SP
+- Creating OpenSpec structure...
+? OpenSpec structure created
+- Setting up Claude Code...
+? Setup complete for Claude Code
+
+OpenSpec Setup Complete
+
+Created: Claude Code
+6 skills and 6 commands in .claude/
+Config: openspec/config.yaml (schema: spec-driven)
+
+Getting started:
+  Start your first change: /opsx:propose "your idea"
+
+Note: 6 more workflows are available (new, continue, ff, bulk-archive, verify, onboard).
+Add them with `openspec config profile`.
+
+Learn more: https://github.com/Fission-AI/OpenSpec
+Feedback:   https://github.com/Fission-AI/OpenSpec/issues
+
+exit code: 0
+seconds: 5
+
+# 3. git status --porcelain in sandbox 1 before the init (empty) and after it (only ?? rows):
+before: []
+after:
+?? .claude/commands/opsx/
+?? .claude/skills/openspec-apply-change/
+?? .claude/skills/openspec-archive-change/
+?? .claude/skills/openspec-explore/
+?? .claude/skills/openspec-propose/
+?? .claude/skills/openspec-sync-specs/
+?? .claude/skills/openspec-update-change/
+?? openspec/
+
+# 4. sha256 of every tracked file of the level-3 tree, before and after the init (cmp prints nothing when equal):
+tracked files: 446 before, 446 after
+cmp: tracked-sha256 lists identical (no tracked file changed)
+F5 subset (CLAUDE.md, .claude/, .githooks/): 12 files before, 12 after
+cmp: F5 sha256 lists identical
+F5 sha256 list (before = after):
+a33ce005c01593a28a4bea5604f13f29543ba6441a8d96b2a1a4befc7bc9ceb9  .claude/agents/architecture-reviewer.md
+57778e9eb8a1333001b6577fe5e518ba9c06dad1244bfa04e182e464d9696aa7  .claude/commands/ship.md
+55f7a6876cf5b0c476eca3fa5c65f54975769a1bb9c9f8f58ee44d6d5aa4e4b0  .claude/hooks/architecture-check-on-stop.sh
+950f19f43220c64d034775615b642c196e019e643a74cabb5bbc0fb1cc00eb46  .claude/hooks/tests-before-commit.sh
+da6caa68e76c4f847289b3d0ef1bbf858b66f9344b3b0561823dd3ba4eacbbf2  .claude/rules/data-and-migrations.md
+af5bc34d8afcea38746f30908137622a0ad61b5f169d71c6a628edbed0f0a475  .claude/rules/domain.md
+6111441d0b835ed5f8d9beda50132a938002dea4b31a2662de3cd030ff6bb061  .claude/rules/testing.md
+ef25c79abf739ef96c7254b1d46ff6aacae4891edb4351df7506bb9cd76923a6  .claude/settings.json
+8952539647e2d81b4e8a1bc9aa208323b651dbac56749df2a0df1f41d316d88d  .claude/skills/new-use-case/SKILL.md
+b6df84025bbc16e70157d547666208eeb459bed52e1ef92073ae4a718df3e932  .claude/skills/new-use-case/reference.md
+b1ff4eb474960a124c50167695900d84a23f556fdcf2ebe6eb30ff9c6092f4e2  .githooks/pre-commit
+310230867fd369c216874e1f99e830b42cd9eb24ebdef9cb4818f4fe7411b0e9  CLAUDE.md
+
+# 5. git ls-files before and after (the init only adds untracked files; ls-files lists tracked ones only):
+cmp: git ls-files identical (init tracked nothing)
+
+# 6. Ignored files in the sandbox after the init (git status --porcelain --ignored; none expected):
+(no !! rows)
