@@ -1,0 +1,31 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Second, independent run of the init (sbx-3 = the level-3 tree, HEAD~1 of sbx-2), compared file by file with the staged tree of sbx-2 (HEAD).
+# Command as in specify-init.txt, isolated HOME under $SP (own cache folder), stdin /dev/null.
+sbx-3 at e6c9ae8bf3fd3b28aaa19e62d96769c09dd855ff tree 309786e063b813e0f9248714f404b927d277d879
+init exit=0
+generated files:       29
+differs from the staged file: .specify/integrations/claude.manifest.json
+differs from the staged file: .specify/integrations/speckit.manifest.json
+differs from the staged file: .specify/memory/constitution.md
+differs from the staged file: .specify/workflows/workflow-registry.json
+identical: 25; different: 4
+file list of the fresh init == the 29 staged rows
+== diff of .specify/integrations/claude.manifest.json (staged, then fresh)
+4c4
+<   "installed_at": "2026-11-10T16:04:47.718032+00:00",
+---
+>   "installed_at": "2026-11-10T16:18:36.688455+00:00",
+== diff of .specify/integrations/speckit.manifest.json (staged, then fresh)
+4c4
+<   "installed_at": "2026-11-10T16:04:47.729330+00:00",
+---
+>   "installed_at": "2026-11-10T16:18:36.700572+00:00",
+== diff of .specify/workflows/workflow-registry.json (staged, then fresh)
+9,10c9,10
+<       "installed_at": "2026-11-10T16:04:47.734841+00:00",
+<       "updated_at": "2026-11-10T16:04:47.734845+00:00"
+---
+>       "installed_at": "2026-11-10T16:18:36.706672+00:00",
+>       "updated_at": "2026-11-10T16:18:36.706676+00:00"
+== the fourth difference is the constitution: the fresh init writes the template, the staged file is the written constitution
+fresh constitution.md == fresh constitution-template.md (cmp)

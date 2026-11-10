@@ -1,0 +1,89 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# The constitution is written directly (no Claude run). Script: check-constitution.py.txt (run as python3 -I check-constitution.py check|selftest <file> <trace> <wt> <sbx>); trace table: constitution-trace.tsv.txt.
+== RED first: the check on the unfilled template that the init wrote (constitution.md right after init)
+FINDING: placeholder token [PROJECT_NAME] at line 1
+FINDING: placeholder token [PRINCIPLE_1_NAME] at line 6
+FINDING: placeholder token [PRINCIPLE_1_DESCRIPTION] at line 8
+... (38 findings in all)
+constitution lines with statements: 8; trace rows: 0
+RESULT: FAIL
+== GREEN: check on the built tree's constitution (sbx-2)
+constitution lines with statements: 20; trace rows: 40
+RESULT: OK, no findings
+== SELFTEST: the real file must be clean and every mutant and trace mutant must be reported
+real file findings: 0
+CONTROL placeholder returns: reported (placeholder token [PROJECT_NAME] at line 9)
+CONTROL principle II term removed: reported (principle II lacks key term 'one test per acceptance scenario')
+CONTROL principle I term removed: reported (principle I lacks key term 'ArchitectureTest')
+CONTROL principle III term removed: reported (principle III lacks key term 'floating point')
+CONTROL principle IV term removed: reported (principle IV lacks key term 'new Flyway migrations')
+CONTROL principle V term removed: reported (principle V lacks key term 'before every commit')
+CONTROL principle V removed: reported (principle headings must be I to V in order, found ['I', 'II', 'III', 'IV'])
+CONTROL double money: reported (line 25 names a forbidden thing without forbidding it: - Money may be a `double`.)
+CONTROL Lombok allowed: reported (line 38 names a forbidden thing without forbidding it: - Lombok and MapStruct are fine: records and small hand-written mappers.)
+CONTROL embedded database: reported (line 37 names a forbidden thing without forbidding it: - PostgreSQL is the only database: an embedded database is fine, tests included.)
+CONTROL edited migration: reported (line 29 has no traced fragment: - An existing migration may be edited.)
+CONTROL em dash: reported (non-ASCII character at line 13)
+CONTROL untraced extra rule: reported (line 45 has no traced fragment: - Every class MUST be final.)
+CONTROL version line broken: reported (version line missing or malformed)
+CONTROL report version differs: reported (Sync Impact Report does not state the version of the version line)
+CONTROL report removed: reported (Sync Impact Report comment missing at the top)
+CONTROL trace line shifted by one: reported (trace row 3: source pack:specs/10-harness-reference-solutions.md:461 does not contain: I. Onion layers: code follows docs/architecture.md;)
+CONTROL trace source fragment altered: reported (trace row 3: source pack:specs/10-harness-reference-solutions.md:460 does not contain: I. Onion layers: code follows docs/architecture.md; zzz)
+CONTROL trace source file missing: reported (trace row 3: source file missing: pack:no/such/file.md)
+CONTROL trace constitution fragment altered: reported (trace row 3: fragment not in the constitution: Code follows docs/architecture.md. zzz)
+SELFTEST: OK
+== the staged copy is the file of the built tree
+staged constitution == sbx-2 constitution (cmp)
+sha256 e574f935323166bc1b89ec11e85e1b62c3258dbade901a1b9d613e2ecee279d6  .specify/memory/constitution.md
+== non-ASCII bytes in the constitution: 0 lines
+== the constitution with line numbers
+     1	<!--
+     2	Sync Impact Report
+     3	Version change: none -> 1.0.0 (initial ratification)
+     4	Modified principles: none (five principles added)
+     5	Added sections: Core Principles I to V, Technology Constraints, Development Workflow, Governance
+     6	Removed sections: none
+     7	Follow-up TODOs: none
+     8	-->
+     9	# Agentic Bookstore Constitution
+    10	
+    11	## Core Principles
+    12	
+    13	### I. Onion Layers
+    14	- Code follows docs/architecture.md.
+    15	- `ArchitectureTest` MUST stay green and its rules MUST NOT be weakened.
+    16	- The layer rules are enforced by ArchUnit, never by convention alone.
+    17	
+    18	### II. Tests First, Per Layer
+    19	- Tests MUST come first, per layer.
+    20	- Every new behaviour has a test in the layer where the behaviour lives.
+    21	- There MUST be one test per acceptance scenario; every requirement scenario in a spec maps to at least one test.
+    22	
+    23	### III. Exact Money
+    24	- Money is exact: it is always `Money` (`BigDecimal`, scale 2, HALF_EVEN), never floating point.
+    25	- Never use `double` or `float` for money.
+    26	
+    27	### IV. Schema Through New Migrations
+    28	- Schema changes MUST go only through new Flyway migrations in `bookstore/src/main/resources/db/migration`.
+    29	- An existing migration is never edited.
+    30	
+    31	### V. Small, Verified Changes
+    32	- Changes MUST be small and scoped: stay inside the scope of the request.
+    33	- `./mvnw verify` MUST pass before every commit; always use the Maven wrapper, never `mvn`.
+    34	
+    35	## Technology Constraints
+    36	- The build is Java 25 and Spring Boot 4.1.2 through the Maven wrapper (`./mvnw`), in the modules `frontend`, `bookstore` and `distributor`.
+    37	- PostgreSQL is the only database: no H2, no embedded or in-memory database, tests included.
+    38	- No Lombok and no MapStruct: records and small hand-written mappers.
+    39	
+    40	## Development Workflow
+    41	- The definition of done is `./mvnw verify` green, including `ArchitectureTest`; show the last lines of the output.
+    42	- Never say tests pass without having run them in this session.
+    43	- Commits are small and use conventional commit messages (feat:, fix:, test:, refactor:, docs:).
+    44	
+    45	## Governance
+    46	- Compliance is checked by `ArchitectureTest` (principle I) and `./mvnw verify` (principle V).
+    47	- The constitution is amended with `/speckit-constitution`; each amendment bumps the version by semantic versioning: MAJOR for backward incompatible removals or redefinitions of principles, MINOR for a new or materially expanded principle or section, PATCH for clarifications.
+    48	
+    49	**Version**: 1.0.0 | **Ratified**: 2026-11-10 | **Last Amended**: 2026-11-10

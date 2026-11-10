@@ -1,0 +1,74 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Rework r1 (RA2, O1): isolated zero-token uvx init runs of the RR-S4 command. B: no Python 3.11+ on PATH (python3 there is 3.9.6), a claude STUB that only logs, cold isolated HOME $HOME3. C: no claude on PATH, without and with --ignore-agent-tools, warm isolated HOME. Box-drawing characters of the tool output are printed as |; the wrapped working-path line of the tool box is dropped.
+== B. isolated uvx init, no Python 3.11+ on PATH (PATH = stub folder with a claude stub, then /opt/homebrew/bin /usr/bin /bin /usr/sbin /sbin), cold isolated HOME $HOME3
+python3 visible on that PATH: Python 3.9.6
+(the stub only appends its arguments to a log; it is not Claude Code)
+init exit 0
+-- first lines of the tool output (download and install lines):
+1:Downloading cpython-3.11.18-macos-aarch64-none (download) (25.5MiB)
+2: Downloaded cpython-3.11.18-macos-aarch64-none (download)
+3:Downloading specify-cli (1.1MiB)
+4:Downloading cryptography (3.7MiB)
+5:Downloading pydantic-core (2.0MiB)
+6:Downloading pygments (1.2MiB)
+7: Downloaded pygments
+8: Downloaded specify-cli
+9: Downloaded pydantic-core
+10: Downloaded cryptography
+11:Installed 42 packages in 31ms
+git status --short --untracked-files=all lines: 29
+paths in $HOME3 before: 6 (the six empty folders the script made plus the home folder itself)
+paths in $HOME3 after: 8378; by folder:
+3172 uv-cache/archive-v0/ADa8gOhE2rf_nt2l
+2400 xdg-data/uv/python
+ 513 uv-cache/archive-v0/fFYPq3BzurrTSh80
+ 357 uv-cache/archive-v0/v_9MjSDaOormITmV
+ 211 uv-cache/wheels-v7/pypi
+ 153 uv-cache/archive-v0/nCwu0k_QS2JLbZY5
+ 142 uv-cache/archive-v0/1Yb9dHp4m3TG5K9m
+ 121 uv-cache/archive-v0/vGQc13zuYG_6A7MC
+paths under xdg-data/uv/python: 2400
+size of xdg-data/uv/python (du -sk, KiB): 75372
+folders directly below xdg-data/uv/python:
+cpython-3.11-macos-aarch64-none
+cpython-3.11.18-macos-aarch64-none
+claude stub log:
+(no stub call: specify only looked the program up)
+-- the lookup of the claude program in the specify package (so that the stub is enough):
+32:        if shutil.which("docker-agent"):
+34:        executable = shutil.which("docker")
+163:    #   1. ~/.claude/local/claude          (after `claude migrate-installer`)
+164:    #   2. ~/.claude/local/node_modules/.bin/claude  (npm-local install, e.g. via nvm)
+-- how to see it:
+$ uv python dir
+$HOME3/xdg-data/uv/python
+$ uv python list --only-installed
+cpython-3.11.18-macos-aarch64-none    $HOME3/xdg-data/uv/python/cpython-3.11-macos-aarch64-none/bin/python3.11
+cpython-3.9.6-macos-aarch64-none      /usr/bin/python3
+-- how to remove it: $ uv python uninstall 3.11.18
+Searching for Python versions matching: Python 3.11.18
+Uninstalled Python 3.11.18 in 78ms
+ - cpython-3.11.18-macos-aarch64-none
+$ uv python list --only-installed (after the uninstall)
+cpython-3.9.6-macos-aarch64-none    /usr/bin/python3
+paths under xdg-data/uv/python after the uninstall: 3
+== C. init with no claude on PATH (PATH = python folder, then /opt/homebrew/bin /usr/bin /bin /usr/sbin /sbin), warm isolated HOME
+[plain] command ends with: sh --integration-options=--no-model-invocation
+[plain] exit 1
+[plain] git status --short --untracked-files=all lines: 0
+[plain] output lines that mention claude or the agent:
+    |  claude not found                                                            |
+    |  Install from: https://docs.anthropic.com/en/docs/claude-code/setup          |
+    |  Claude Code is required to continue with this project type.                 |
+    |  Tip: Use --ignore-agent-tools to skip this check                            |
+[ignore] command ends with: --integration-options=--no-model-invocation --ignore-agent-tools
+[ignore] exit 0
+[ignore] git status --short --untracked-files=all lines: 29
+[ignore] output lines that mention claude or the agent:
+    Selected coding agent integration: claude
+    ||| | Select coding agent integration (claude)
+    ||| | Install integration (Claude Code)
+    |  Some agents may store credentials, auth tokens, or other identifying and    |
+    |  Consider adding .claude/ (or parts of it) to .gitignore to prevent          |
+    |  2. Start Claude in this project directory; spec-kit skills were installed   |
+    |  to .claude/skills                                                           |

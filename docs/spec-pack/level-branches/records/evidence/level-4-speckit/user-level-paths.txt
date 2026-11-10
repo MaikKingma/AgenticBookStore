@@ -1,0 +1,84 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Part A: uvx run of the init, isolated HOME = $HOME (empty before). Part B: the pack's 'uv tool install specify-cli==1.3.1' in a second isolated HOME = $HOME2 with uv defaults for tool and cache folders (nothing set but HOME and XDG_*). Part C: undo. Part D: real default locations (read-only existence check).
+== A. before the uvx init: paths under $HOME:        0
+== A. after: total paths     5977; by folder:
+5970 uv-cache
+   3 uv-tools
+   1 xdg-cache
+   1 xdg-config
+   1 xdg-data
+   1 xdg-state
+== A. after: every path outside uv-cache/ (the four xdg-* folders were created by the script before the run)
+./uv-tools
+./uv-tools/.gitignore
+./uv-tools/.lock
+./xdg-cache
+./xdg-config
+./xdg-data
+./xdg-state
+== A. after: first level below uv-cache/
+   1 .gitignore
+   1 .lock
+   1 CACHEDIR.TAG
+5698 archive-v0
+   1 builds-v0
+   3 environments-v2
+   5 interpreter-v4
+   3 sdists-v10
+  44 simple-v27
+ 212 wheels-v7
+== A. new paths with a file named like the tool or the project (anything with specify in its path, first 5 of 1360)
+./uv-cache/archive-v0/7B0QLopSS8sC9wKy/bin/specify
+./uv-cache/archive-v0/7B0QLopSS8sC9wKy/lib/python3.13/site-packages/specify_cli
+./uv-cache/archive-v0/7B0QLopSS8sC9wKy/lib/python3.13/site-packages/specify_cli-1.3.1.dist-info
+./uv-cache/archive-v0/7B0QLopSS8sC9wKy/lib/python3.13/site-packages/specify_cli-1.3.1.dist-info/INSTALLER
+./uv-cache/archive-v0/7B0QLopSS8sC9wKy/lib/python3.13/site-packages/specify_cli-1.3.1.dist-info/METADATA
+== B. $ uv tool dir / uv tool dir --bin / uv cache dir / uv python dir (second isolated HOME)
+$ uv tool dir
+$HOME2/.local/share/uv/tools
+$ uv tool dir --bin
+$HOME2/.local/share/../bin
+$ uv cache dir
+$HOME2/.cache/uv
+$ uv python dir
+$HOME2/.local/share/uv/python
+== B. $ uv tool install specify-cli==1.3.1 (tail)
+Resolved 42 packages in 933ms
+Prepared 42 packages in 472ms
+Installed 42 packages in 40ms
+ + specify-cli==1.3.1
+Installed 1 executable: specify
+warning: `$HOME2/.local/share/../bin` is not on your PATH. To use installed tools, add the directory to your PATH.
+== B. paths before the install:        5 (only the four empty folders the script made)
+== B. paths after the install:     5403; outside the two big folders (cache .cache/uv/ and the tool environment .local/share/uv/tools/specify-cli/):
+./.cache
+./.cache/uv
+./.config
+./.local
+./.local/bin
+./.local/bin/specify
+./.local/share
+./.local/share/uv
+./.local/share/uv/tools
+./.local/share/uv/tools/.gitignore
+./.local/share/uv/tools/.lock
+./.local/share/uv/tools/specify-cli
+./.local/state
+files in the tool environment: 2599; files in the uv cache: 2791
+== B. how to see it
+$ uv tool list
+specify-cli v1.3.1
+- specify
+$ specify --version
+specify 1.3.1
+== C. $ uv tool uninstall specify-cli
+Uninstalled 1 executable: specify
+paths after the uninstall:     2803; under .local/share/uv/tools/specify-cli: 0; .local/bin/specify present: 0; cache files: 2792
+== C. $ uv cache clean specify-cli
+$ uv cache clean specify-cli
+Removed 398 files (4.6MiB)
+paths after the cache clean:     2284; cache files: 2273
+== D. real default locations of the tool install on this machine (read-only check, no uv call against the real HOME)
+absent: ~/.local/bin/specify
+absent: ~/.local/share/uv/tools/specify-cli
+exists: ~/.cache/uv

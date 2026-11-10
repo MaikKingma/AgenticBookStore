@@ -1,0 +1,252 @@
+#!/usr/bin/env python3
+"""check-constitution.py: checks the directly written Spec Kit constitution (task T12, criterion 3).
+
+Usage (run with python3 -I):
+  check-constitution.py check <constitution.md> <trace.tsv> <wt> <sbx>   findings on the real file, exit 0 when none
+  check-constitution.py selftest <constitution.md> <trace.tsv> <wt> <sbx>   negative controls: every mutant must be reported
+
+<trace.tsv>: one row per line, four tab separated fields: fragment of the constitution, source (pack:<path under
+docs/spec-pack> or sbx:<path under the sandbox>), source line number, fragment of that source line.
+Lines starting with # are ignored.
+"""
+import re
+import sys
+from pathlib import Path
+
+PRINCIPLES = [
+    ("I", "Onion Layers", ["docs/architecture.md", "ArchitectureTest", "weakened"]),
+    ("II", "Tests First, Per Layer", ["first", "per layer", "one test per acceptance scenario"]),
+    ("III", "Exact Money", ["Money", "BigDecimal", "floating point"]),
+    ("IV", "Schema Through New Migrations", ["Flyway", "new Flyway migrations"]),
+    ("V", "Small, Verified Changes", ["./mvnw verify", "before every commit"]),
+]
+NEGATION = re.compile(r"\b(No|no|never|Never|not|NOT)\b")
+FORBIDDEN = re.compile(r"Lombok|MapStruct|\bdouble\b|\bfloat\b|\bH2\b|embedded|in-memory|--no-verify|ddl-auto|powershell|pwsh|\.ps1|git push", re.I)
+VERSION_LINE = re.compile(r"^\*\*Version\*\*: (\d+\.\d+\.\d+) \| \*\*Ratified\*\*: (\d{4}-\d{2}-\d{2}) \| \*\*Last Amended\*\*: (\d{4}-\d{2}-\d{2})$")
+
+
+def squash(s):
+    return " ".join(s.split())
+
+
+def sections(lines):
+    """Map principle roman numeral to the text of its section (### I. ... up to the next ## or ###)."""
+    out, cur = {}, None
+    for ln in lines:
+        m = re.match(r"^### ([IVX]+)\. (.*)$", ln)
+        if m:
+            cur = m.group(1)
+            out[cur] = []
+            continue
+        if ln.startswith("## ") or ln.startswith("# "):
+            cur = None
+            continue
+        if cur:
+            out[cur].append(ln)
+    return {k: "\n".join(v) for k, v in out.items()}
+
+
+def content_lines(text):
+    """Statement lines: not blank, not a heading, not inside the HTML comment, not the version line."""
+    res, in_comment = [], False
+    for n, ln in enumerate(text.split("\n"), 1):
+        s = ln.strip()
+        if s.startswith("<!--"):
+            in_comment = True
+        if in_comment:
+            if s.endswith("-->"):
+                in_comment = False
+            continue
+        if not s or s.startswith("#") or s.startswith("**Version**"):
+            continue
+        res.append((n, ln))
+    return res
+
+
+def load_trace(path):
+    rows = []
+    for n, ln in enumerate(Path(path).read_text(encoding="utf-8").split("\n"), 1):
+        if not ln or ln.startswith("#"):
+            continue
+        parts = ln.split("\t")
+        if len(parts) != 4:
+            rows.append((n, None))
+            continue
+        rows.append((n, tuple(parts)))
+    return rows
+
+
+def resolve(src, wt, sbx):
+    kind, _, rel = src.partition(":")
+    if kind == "pack":
+        return Path(wt) / "docs/spec-pack" / rel
+    if kind == "sbx":
+        return Path(sbx) / rel
+    return None
+
+
+def check(text, trace, wt, sbx):
+    f = []
+    lines = text.split("\n")
+    # 1 placeholders
+    for n, ln in enumerate(lines, 1):
+        for m in re.finditer(r"\[[A-Z][A-Z0-9_]*\]", ln):
+            f.append(f"placeholder token {m.group(0)} at line {n}")
+    # 2 hygiene
+    for n, ln in enumerate(lines, 1):
+        if re.search(r"[^\x00-\x7f]", ln):
+            f.append(f"non-ASCII character at line {n}")
+        if ln != ln.rstrip():
+            f.append(f"trailing whitespace at line {n}")
+    if "\r" in text:
+        f.append("carriage return found")
+    if not text.endswith("\n") or text.endswith("\n\n"):
+        f.append("file must end with exactly one newline")
+    # 3 structure
+    if not re.match(r"^<!--\nSync Impact Report\n", text):
+        f.append("Sync Impact Report comment missing at the top")
+    if not any(re.match(r"^# .+ Constitution$", ln) for ln in lines):
+        f.append("title line '# <name> Constitution' missing")
+    for h in ["## Core Principles", "## Governance"]:
+        if h not in lines:
+            f.append(f"heading missing: {h}")
+    h2 = [ln for ln in lines if ln.startswith("## ")]
+    if len(h2) != 4:
+        f.append(f"expected 4 level-2 headings (Core Principles, two sections, Governance), found {len(h2)}")
+    vl = [ln for ln in lines if ln.startswith("**Version**")]
+    ver = None
+    if len(vl) != 1 or not VERSION_LINE.match(vl[0]):
+        f.append("version line missing or malformed")
+    else:
+        ver = VERSION_LINE.match(vl[0]).group(1)
+        if lines[[i for i, x in enumerate(lines) if x == vl[0]][0] + 1:] != [""]:
+            f.append("version line must be the last line")
+    if ver and f"Version change: none -> {ver}" not in text:
+        f.append("Sync Impact Report does not state the version of the version line")
+    # 4 principles and key terms
+    secs = sections(lines)
+    heads = re.findall(r"^### ([IVX]+)\. (.*)$", text, re.M)
+    if [h[0] for h in heads] != [p[0] for p in PRINCIPLES]:
+        f.append(f"principle headings must be I to V in order, found {[h[0] for h in heads]}")
+    for num, title, terms in PRINCIPLES:
+        body = secs.get(num)
+        if body is None:
+            f.append(f"principle {num} missing")
+            continue
+        for t in terms:
+            if t not in body:
+                f.append(f"principle {num} lacks key term '{t}'")
+    # 5 contradictions: a forbidden term may only appear on a line that forbids it
+    for n, ln in enumerate(lines, 1):
+        if ln.startswith("<!--") or ln.startswith("Sync") or ln.startswith("Version change") or ln.startswith("Added sections"):
+            continue
+        if FORBIDDEN.search(ln) and not NEGATION.search(ln):
+            f.append(f"line {n} names a forbidden thing without forbidding it: {ln.strip()}")
+    # 6 trace
+    covered = set()
+    body_text = text
+    for n, row in trace:
+        if row is None:
+            f.append(f"trace row {n} malformed")
+            continue
+        frag, src, sline, sfrag = row
+        if frag not in body_text:
+            f.append(f"trace row {n}: fragment not in the constitution: {frag}")
+            continue
+        p = resolve(src, wt, sbx)
+        if p is None or not p.is_file():
+            f.append(f"trace row {n}: source file missing: {src}")
+            continue
+        sl = p.read_text(encoding="utf-8").split("\n")
+        i = int(sline)
+        if i < 1 or i > len(sl) or squash(sfrag) not in squash(sl[i - 1]):
+            f.append(f"trace row {n}: source {src}:{sline} does not contain: {sfrag}")
+            continue
+        for cn, cl in content_lines(text):
+            if frag in cl:
+                covered.add(cn)
+    for cn, cl in content_lines(text):
+        if cn not in covered:
+            f.append(f"line {cn} has no traced fragment: {cl.strip()}")
+    return f
+
+
+def mutants(text):
+    """(name, mutated text, substring the findings must contain)"""
+    m = []
+    m.append(("placeholder returns", text.replace("# Agentic Bookstore Constitution", "# [PROJECT_NAME] Constitution"), "placeholder token [PROJECT_NAME]"))
+    m.append(("principle II term removed", text.replace("one test per acceptance scenario", "one test"), "principle II lacks key term"))
+    m.append(("principle I term removed", text.replace("ArchitectureTest", "the architecture test", 1), "principle I lacks key term 'ArchitectureTest'"))
+    m.append(("principle III term removed", text.replace("floating point", "binary types"), "principle III lacks key term 'floating point'"))
+    m.append(("principle IV term removed", text.replace("new Flyway migrations", "Flyway migrations"), "principle IV lacks key term 'new Flyway migrations'"))
+    m.append(("principle V term removed", text.replace("before every commit", "now and then"), "principle V lacks key term 'before every commit'"))
+    m.append(("principle V removed", re.sub(r"### V\. .*?(?=\n## )", "", text, flags=re.S), "principle headings must be I to V"))
+    m.append(("double money", text.replace("Never use `double` or `float` for money.", "Money may be a `double`."), "forbidden thing without forbidding"))
+    m.append(("Lombok allowed", text.replace("No Lombok and no MapStruct", "Lombok and MapStruct are fine"), "forbidden thing without forbidding"))
+    m.append(("embedded database", text.replace("no H2, no embedded or in-memory database", "an embedded database is fine"), "forbidden thing without forbidding"))
+    m.append(("edited migration", text.replace("An existing migration is never edited.", "An existing migration may be edited."), "has no traced fragment"))
+    m.append(("em dash", text.replace("Onion Layers", "Onion " + chr(0x2014) + " Layers", 1), "non-ASCII"))
+    m.append(("untraced extra rule", text.replace("## Governance", "- Every class MUST be final.\n\n## Governance"), "has no traced fragment"))
+    m.append(("version line broken", text.replace("**Version**: 1.0.0", "**Version**: 1.0"), "version line missing or malformed"))
+    m.append(("report version differs", text.replace("none -> 1.0.0", "none -> 2.0.0"), "Sync Impact Report does not state"))
+    m.append(("report removed", text.replace("<!--\nSync Impact Report", "<!--\nReport", 1), "Sync Impact Report comment missing"))
+    return m
+
+
+def trace_mutants(trace):
+    out = []
+    # wrong source line, wrong source fragment, missing source file, fragment not in constitution
+    rows = [(n, r) for n, r in trace if r]
+    n0, r0 = rows[0]
+    t1 = [(n, ((r[0], r[1], str(int(r[2]) + 1), r[3]) if n == n0 else r)) for n, r in trace if r]
+    out.append(("trace line shifted by one", t1, "does not contain"))
+    t2 = [(n, ((r[0], r[1], r[2], r[3] + " zzz") if n == n0 else r)) for n, r in trace if r]
+    out.append(("trace source fragment altered", t2, "does not contain"))
+    t3 = [(n, ((r[0], "pack:no/such/file.md", r[2], r[3]) if n == n0 else r)) for n, r in trace if r]
+    out.append(("trace source file missing", t3, "source file missing"))
+    t4 = [(n, ((r[0] + " zzz", r[1], r[2], r[3]) if n == n0 else r)) for n, r in trace if r]
+    out.append(("trace constitution fragment altered", t4, "fragment not in the constitution"))
+    return out
+
+
+def main():
+    if len(sys.argv) != 6 or sys.argv[1] not in ("check", "selftest"):
+        print(__doc__)
+        return 2
+    mode, cpath, tpath, wt, sbx = sys.argv[1:]
+    text = Path(cpath).read_text(encoding="utf-8")
+    trace = load_trace(tpath)
+    findings = check(text, trace, wt, sbx)
+    if mode == "check":
+        for x in findings:
+            print("FINDING:", x)
+        print(f"constitution lines with statements: {len(content_lines(text))}; trace rows: {len([1 for _, r in trace if r])}")
+        print("RESULT:", "FAIL" if findings else "OK, no findings")
+        return 1 if findings else 0
+    # selftest: the real file must be clean and every mutant reported
+    ok = True
+    print("real file findings:", len(findings))
+    if findings:
+        ok = False
+        for x in findings:
+            print("  unexpected:", x)
+    for name, mt, want in mutants(text):
+        if mt == text:
+            print(f"CONTROL {name}: mutation did not change the text (bad control)")
+            ok = False
+            continue
+        got = check(mt, trace, wt, sbx)
+        hit = [g for g in got if want in g]
+        print(f"CONTROL {name}: {'reported' if hit else 'MISSED'} ({hit[0] if hit else 'no finding with: ' + want})")
+        ok = ok and bool(hit)
+    for name, tr, want in trace_mutants(trace):
+        got = check(text, tr, wt, sbx)
+        hit = [g for g in got if want in g]
+        print(f"CONTROL {name}: {'reported' if hit else 'MISSED'} ({hit[0] if hit else 'no finding with: ' + want})")
+        ok = ok and bool(hit)
+    print("SELFTEST:", "OK" if ok else "FAIL")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

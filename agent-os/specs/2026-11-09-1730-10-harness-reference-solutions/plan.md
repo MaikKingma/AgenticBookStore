@@ -44,7 +44,7 @@ and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | sonnet (A8) | opus | #157 | sdd/10-harness-reference-solutions/T9 | ENDORSE (r0) |
 | T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | #161 | sdd/10-harness-reference-solutions/T10 | ENDORSE (r1) |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | #163 | sdd/10-harness-reference-solutions/T11 | ENDORSE (r1) |
-| T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | | | |
+| T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | #164 | sdd/10-harness-reference-solutions/T12 | ENDORSE (r1) |
 | T13 | Level 4 Agent OS track | root | [T10] | 13 | elevated | sonnet | sonnet | | | |
 
 ### T1 Staging infrastructure and branch-cut tooling
@@ -346,6 +346,17 @@ for all three tracks is a manual check for Maik.
   in RR-S4 count with `git status --short --untracked-files=all` (29), ten lines from the plain command is not a
   failure; in RR-S2 ask the step 2 question before `/skills` runs; RR-S4 needs `claude` on PATH and, without a Python
   3.11+ on PATH, uv downloads a managed Python.
+- FF-T12-d (from the T12 r1 meta-review; T13 and the closing round): when a cited evidence file had to be regenerated
+  without a pre-edit copy, the verifier reverts the declared difference in memory and shows the result hashes to the
+  previous round's value.
+- FF-T12-e (closing round): the last track to merge (T13) applies FU-T10-1 (A11) and FU-T12-1 (record
+  `S/records/level-4-speckit.md` lines 336-337: the rerun was pinned to the factory sha of line 4, which is the whole
+  byte difference); the Level 4 checklist section copies RR-S1 to RR-S4 from T12's r1 bytes (RR-S2 listing question
+  first, RR-S4 with `--untracked-files=all`).
+- Product findings from T12 for Maik: PF-T12-1 to PF-T12-7 in `S/records/level-4-speckit.md` (generated
+  `tasks-template.md` calls tests OPTIONAL against principle II and CLAUDE.md; Spec Kit scripts prompt under the
+  Level 3 allow list; the guide gives an unpinned `uv tool install specify-cli` and `--script ps`; pack step 6 Level 4
+  solution branch, dropped on factory by 5b80da3).
 - Product findings from T11 for Maik: PF-T11-1 to PF-T11-7 in `S/records/level-4-openspec.md` (the branch installs
   no `openspec` program and the guide setup page names none; pack spec 10 line 502 still offers a Level 4 solution
   branch; guide Track A runs `/ship` before `/opsx:archive`; CLI `archive` writes a placeholder Purpose after which

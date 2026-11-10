@@ -110,11 +110,11 @@ Traps found while writing the spec 10 strategy (harness reference solutions stag
    through. At strategy time list the chained form as a must-block case and a word-internal `gitcommit` as must-pass,
    and probe each quantified part widened AND deleted. Found in a bounded round with the task open: REJECT, closed
    test-only RA (protected property; not the rule 23 narrowing loop of [[review-calibration]]) (spec 10 T8 r3).
-   Write an "insert exactly these lines after line N" bound as `diff --minimal` plus a split check (head N, the block,
-   the tail): when the block's last line equals line N, plain `diff` may report a shifted hunk (spec 10 T8 r4).
+   Bound "insert these lines after line N" as `diff --minimal` plus a head/block/tail split check (spec 10 T8 r4).
 
 15. **Row literals measured with another command.** Dry runs count with `git status --porcelain -uall`, rows print plain
    `git status --short`, which folds a new untracked folder into one line (29 files -> 10 lines). In every row review, run the
    printed command verbatim and compare its output with the literal; reject premises measured by a variant (spec 10 T12).
-   Rework bounds on evidence: line-cited files stay insertion only; an uncited generated check log may be regenerated if
-   the rework declares it and the verifier re-runs every check it reports (grep `<file>:[0-9]` first) (spec 10 T11 r1).
+   Rework bounds on evidence: line-cited files stay insertion only; an uncited log may be regenerated if declared and every
+   check re-run (grep `<file>:[0-9]` first). A cited file regenerated without a copy: revert the declared difference in
+   memory and hash; equal to the old round's hash = byte proof (spec 10 T11 r1, T12 r1: one factory sha on one line).
