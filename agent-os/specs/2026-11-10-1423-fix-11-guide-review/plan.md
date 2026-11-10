@@ -108,7 +108,8 @@ Open question the code does not settle in minutes: none.
 ### T2: the pack agrees with the guide on the Level 0/1 catch-up; FF-2 pins
 
 - fileScope: `docs/spec-pack/workshop/workshop-plan.md` (line 132 and line 347 only, A1), `guide/scripts/level-start.test.mjs`,
-  and `guide/scripts/coverage.mjs` (TS-11 only, and only if the anchor needs it). Any other file that pins the
+  `guide/scripts/coverage.mjs` (TS-11 only, and only if the anchor needs it), and
+  `guide/scripts/coverage-manifest.test.mjs` (A2: two `SWEEP_EXCLUDED` keys only). Any other file that pins the
   text of those two pack lines (for example a self-test that reads the real pack) is not in scope: block and ask.
 - Wording (D6, orchestrator): line 132 becomes
   `**Start:** the tag `level-0-start` again (clean): `git stash -u && git switch -C level-1 level-0-start`. Catch-up / compare: `solution/level-1`.`
@@ -219,3 +220,11 @@ Open question the code does not settle in minutes: none.
   `decisions.md` stay untouched. Consequence: new task T2 (below), cut after T1 merged; the bug.md Blast radius
   item "Docs or pack text" moves from deferred to task T2. The QA lead's FF-2 is folded into T2. Gate 1 re-run:
   self-accepted by the orchestrator (owner-delegated).
+- A2 (2026-11-10T15:02Z, orchestrator, on impl-t2's question): the pack-literal sweep of
+  `guide/scripts/coverage-manifest.test.mjs` reports the two new line-132 literals. T2's fileScope gains that file for
+  exactly two `SWEEP_EXCLUDED` keys (`plan:132 git stash -u && git switch -C level-1 level-0-start`,
+  `plan:132 level-0-start`) with reasons in the style of the existing `plan:89 level-0-start` and
+  `plan:132 solution/level-1` keys (the at a glance values are checked by the structure rule and
+  `level-start.test.mjs`), plus removal of a key only if its literal left line 132. No sweep logic or count changes;
+  the coverage line stays `anchored 304/304`. Not a weakening: the sweep still covers every other pack literal, and
+  the two literals are pinned by the structure rule and the regression test.
