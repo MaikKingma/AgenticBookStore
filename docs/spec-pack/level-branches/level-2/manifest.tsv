@@ -2,3 +2,6 @@
 add	config	files/dot-mcp.json	.mcp.json	644	-
 add	config	files/dot-claude/settings.json	.claude/settings.json	644	-
 add	config	files/docs/lsp-setup.md	docs/lsp-setup.md	644	-
+patch	exercise	patches/bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java.patch	bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java	644	60d9d896ed4a9e5fb16e9c94a4547c01eca5c3a7
+add	exercise	files/bookstore/src/test/resources/contracts/distributor/title-9789900010395.json	bookstore/src/test/resources/contracts/distributor/title-9789900010395.json	644	-
+patch	exercise	patches/bookstore/src/test/resources/contracts/distributor/README.md.patch	bookstore/src/test/resources/contracts/distributor/README.md	644	52a2b6b7b73edaafca03da2e8f6c4ae07ffabe3b
