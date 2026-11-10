@@ -64,4 +64,13 @@ metadata:
   of the real model client and a prompt-text test set up front; a readable genre list needs the tool argument form too.
 - **Pausing for a main-session check as a subagent:** the harness forces a hand-back when the run idles; hand back
   with a precise resume point instead of waiting.
+- **Spec 09 (scripts, docs, seed amendments):** a mid-cycle amendment can contradict the pack (D12: 10 genres x 10
+  AVAILABLE with exactly 100 books leaves no room for discontinued books); count the enum before planning and stop
+  with options. I cannot TaskStop my own children; stop a superseded verifier with an urgent inbox directive and accept
+  a BLOCKED verdict. Merging the spec tip into an in-flight task branch: WIP-commit, merge, leave only the doc conflict
+  to the implementer, commit the merge myself. A "line N reads X" criterion deletes other sentences on that line; name
+  the sentence. Rewriting a census test (T8) silently dropped an all-rows check: ask the lead to diff old clauses, not
+  counts. The qa-final base can move mid-sweep: re-check `ls-remote factory` before readiness, merge, re-baseline
+  changed gated files by patch-id, re-run only tip-dependent items. Opus held for the publish script and its follow-up
+  (both one test-only rework round); sonnet held for seed, http, docs, cap, count tasks.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.

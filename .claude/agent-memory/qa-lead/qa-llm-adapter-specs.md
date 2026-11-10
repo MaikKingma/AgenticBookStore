@@ -96,6 +96,8 @@ Settled while writing the spec 08 (bookstore assistant) strategy. See also [[qa-
     red fidelity by matching the red body's message/content indices to the provider's error text; demand a guard
     test for `defaultOptions` merge side effects (model, `max_tokens`, sampling params) killed by override mutants;
     an unconditional option vs a model chosen by env variable is a residual. Live acceptance stays a keyed re-check.
+    A loopback stub answering 500 sees 3 requests per chat (no retry setting in `AssistantConfig`, the client retries
+    twice) but the app logs 1 WARN: brief stub counts as chats x 3, WARN counts per chat (spec 09 qa-final R19).
 
 15. **Test contexts against exported variables (fix-08 T3, A4).** Env vars outrank `application-test.yml`. Pin a blank
     key plus a loopback base URL (`http://127.0.0.1:9`) in the test base's `@TestPropertySource`; never

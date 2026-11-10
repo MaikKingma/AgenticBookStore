@@ -1,6 +1,11 @@
 # JetBrains HTTP Client format: run the requests top to bottom against a locally running bookstore.
+# The bookstore starts with demo data: 103 books, their stock and 6 orders. Every ISBN these requests add or import is one that the demo data leaves out.
+# Run the files of this folder in this order on one database: catalogue.http, inventory.http, orders.http, distributor.http, demo-flow.http.
+# Every file also runs alone on a freshly seeded database. Run this file once per database: a second run is refused with 409, because its ISBNs are in the catalogue by then.
+# Each request has a line "Expected status:" in its comment. A label in parentheses names the run mode that the status belongs to.
 
-# Add Frankenstein and remember the new book id for the requests below.
+# Add Frankenstein and remember the new book id for the requests below. The demo data already holds a Frankenstein under another ISBN (9789900010043), so this one is a second, separate book. The body of the answer holds the id of the new book.
+# Expected status: 202.
 POST http://localhost:8080/books/commands/add
 Content-Type: application/json
 
@@ -17,12 +22,14 @@ Content-Type: application/json
 
 ###
 
-# Show the stock of the new book. Every new book starts with no stock, at or below the reorder level.
+# Show the stock of the new book. Every new book starts with no stock, at or below the reorder level: onHand is 0 and lowStock is true.
+# Expected status: 200.
 GET http://localhost:8080/inventory/{{bookId}}
 
 ###
 
 # Receive a delivery of 5 copies.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{bookId}}/commands/receive
 Content-Type: application/json
 
@@ -33,6 +40,7 @@ Content-Type: application/json
 ###
 
 # Correct the stock on hand to 3 after counting the shelf.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{bookId}}/commands/correct
 Content-Type: application/json
 
@@ -43,28 +51,32 @@ Content-Type: application/json
 
 ###
 
-# List the books that are running low on stock.
+# List the books that are running low on stock. The list holds the 7 low-stock books of the demo data and every book added earlier that is still at or below its reorder level, so Frankenstein is in it.
+# Expected status: 200.
 GET http://localhost:8080/inventory?lowStock=true
 
 ###
 
-# Show the details of the book, which now includes its available stock.
+# Show the details of the book, which now includes its available stock of 3.
+# Expected status: 200.
 GET http://localhost:8080/books/{{bookId}}
 
 ###
 
 # The requests below ask the distributor (default port 8090) to restock books, so the bookstore needs a distributor to talk to.
-# Ask the distributor to restock Frankenstein now. Frankenstein (ISBN 9780141439471) is a bookstore-only title that the distributor does not list.
+# Ask the distributor to restock Frankenstein now. This Frankenstein (ISBN 9780141439471) is a bookstore-only title that the distributor does not list.
 # With the distributor running, the answer is 404 with the error code title-not-found-at-distributor and the stock row stays as it was.
 # With the distributor stopped, the answer is 503 with the error code distributor-unavailable and the stock and the low-stock signal stay as they were.
 # Either way no restock is recorded, so the stock of Frankenstein shows no pending restock.
+# Expected status: 404 (distributor running); 503 (distributor stopped).
 POST http://localhost:8080/inventory/{{bookId}}/commands/request-restock
 
 ###
 
-# Add Sense and Sensibility, a title the distributor does list (ISBN 9789900010029), and remember the new book id for the requests below.
+# Add Sense and Sensibility, a title the distributor does list (ISBN 9789900010029), and remember the new book id for the requests below. The demo data leaves this book out on purpose.
 # Run the requests from here to the end with the distributor running.
 # With the distributor stopped, the receive and the correct below still work, but the correct leaves no pending restock behind: it answers 202 as usual and the bookstore log shows a warning.
+# Expected status: 202.
 POST http://localhost:8080/books/commands/add
 Content-Type: application/json
 
@@ -82,6 +94,7 @@ Content-Type: application/json
 ###
 
 # Receive a delivery of 5 copies of Sense and Sensibility.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{senseBookId}}/commands/receive
 Content-Type: application/json
 
@@ -94,6 +107,7 @@ Content-Type: application/json
 # Correct the stock on hand to 3 after counting the shelf. This stocktake dips the stock to the reorder level of 3.
 # With the distributor running, the bookstore requests a restock from the distributor right after the commit, through the automatic path, so the restock is already pending when this answer arrives.
 # The answer to the correction itself is 202 with an empty body.
+# Expected status: 202.
 POST http://localhost:8080/inventory/{{senseBookId}}/commands/correct
 Content-Type: application/json
 
@@ -107,14 +121,18 @@ Content-Type: application/json
 # Show the stock of Sense and Sensibility. The stocktake above already created the pending restock: pendingRestock holds the restockOrderId from the distributor, a quantity of 10 (the reorder quantity), the expected delivery date and backordered false.
 # Note the restockOrderId in this answer, the last request of this file shows the same one.
 # With the distributor stopped, pendingRestock would be null here.
+# Expected status: 200.
 GET http://localhost:8080/inventory/{{senseBookId}}
 
 ###
 
 # Request a restock of Sense and Sensibility by hand. A restock is already pending, so the answer is 202 with an empty body and the bookstore places no second order with the distributor.
+# With the distributor stopped, no restock is pending and the bookstore cannot reach the distributor, so the answer is 503 with the error code distributor-unavailable.
+# Expected status: 202 (distributor running); 503 (distributor stopped).
 POST http://localhost:8080/inventory/{{senseBookId}}/commands/request-restock
 
 ###
 
 # Show the stock of Sense and Sensibility once more. The pendingRestock is the one from before the manual request, with the same restockOrderId.
+# Expected status: 200.
 GET http://localhost:8080/inventory/{{senseBookId}}

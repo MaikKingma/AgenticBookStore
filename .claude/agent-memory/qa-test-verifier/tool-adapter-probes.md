@@ -23,10 +23,6 @@ the type-swap mutant stayed green. The fix is a row that passes the guard and fa
   sort-after-limit on every column, inStock at every site (`>=0`, `>1`, `onHand`, `!lowStock`, `|| pending`, status), comparator
   tiebreaks (id, isbn, price, author, case-insensitive, descending), clamp bounds, null limit, blank-genre guard
   (`isEmpty`, `trim().isEmpty`), helper catch order, suffix hard-coded or sorted, log level and throwable.
-- Equivalent survivors to expect and reason once: `stock.bookId()` for `book.id()` (stock is named by the book id),
-  `strip()` on domain-normalised strings, `toString()` for `toPlainString()` on scale-2 money, stackless exception variants.
-- Prove a Required Action before sending it: patch the test copy from the `.orig` (python3 -I, assert exact-once), install
-  test plus survivor mutant, run, restore both by `cp -p`, print both hashes next to snap-before.
 - Spring AI default exception processor returns only the message: assert texts through `callback.call` plus
   `DefaultToolExecutionExceptionProcessor.builder().build().process(e)` on the thrown `ToolExecutionException`.
 
@@ -36,12 +32,6 @@ ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
   advisor stored the USER message (a failed model call), then N/2 more turns; the dangling question shows in N+1.
 - `ToolCallingChatOptions.builder().build()` has null tool callbacks when the client has no tools; a double that streams
   `getToolCallbacks()` NPEs, and a "defaultTools dropped" mutant is then killed only by that NPE. Check the kill reason.
-  Once the double is null-safe, its guard-removal mutant may die by the NPE in a no-tools test (the NPE is the
-  defect), while the tools-dropped mutant must die on the tool-set assertion (Spring AI adds `No ToolCallback found`).
-- Removing a bean method breaks compilation of tests that call it (`-Dtest` still compiles every test); drop only the
-  `@Bean` to let the auto-configured bean take over, then pin the origin with `getFactoryBeanName()`.
-- Memory advisor order 200 vs tool-calling advisor 300: `.order(ToolCallingAdvisor.DEFAULT_ORDER + 1)` puts TOOL messages
-  into memory, a cheap advisor-order mutant. 2.0.2 has no default conversation id and no PromptChatMemoryAdvisor.
 - Snapshot-and-restore around a chat call (catch at the controller boundary): one family per restore spelling (none,
   remove-last, clear-only, skip-when-empty), one per use-case type dropped from the pass-through multi-catch, log
   level/twice/no-throwable, detail or title from the cause. Remove-last dies only on a full-window conversation (tool
@@ -56,8 +46,5 @@ ChatClient wiring and scripted chat-model doubles (Spring AI 2.0.2):
   `.topP(0.9)`, empty builder), `clean` run each, `cp` restore plus hash in a script. A guard test on model, max_tokens and
   sampling params passes on the fix by design, so only these option mutants show it bites. Also check the stub keys its
   response off the parsed request body, not a test flag.
-- Worktree runs: the briefing's project-root (the worktree) can hold a partial `.claude/comms` copy with no mailbox of your
-  id, while the main checkout's mailbox of that id holds stale artifacts of another cycle. Use the worktree copy and create
-  your outbox there; do not touch the main checkout's.
 
 Related: [[env-switch-mutant-runner]], [[shell-traps]]

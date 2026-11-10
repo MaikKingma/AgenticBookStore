@@ -4,4 +4,5 @@
 - [Spring AI ChatClient traps](spring-ai-chat-client-traps.md) — tool loop in advisor, double needs ToolCallingChatOptions, blank key/env fallbacks, null temperature, offline createRequest probe
 - [Deterministic regression test techniques](deterministic-regression-test-techniques.md) — thread-based midnight probe clock, shared @Primary clock without new context, unseedable randoms need a seam, pre-fix line as negative control
 - [CI Testcontainers research techniques](ci-testcontainers-research-techniques.md) — run-log pull timings, registry digest HEADs, Ryuk env-only, cache branch scoping, mirror no-fallback
+- [Shell script and git research techniques](shell-script-git-research-techniques.md) — bash 3.2/5/GNU matrix via Docker, actionlint/shellcheck image, hermetic git tests, ls-tree cwd trap, atomic leased push
 - [JPA/PostgreSQL persistence traps](jpa-postgres-persistence-traps.md) — Instant micro rounding, Limit ignored with join fetch, element collection version bump, unsorted-update deadlocks, statistics probe

@@ -16,3 +16,5 @@
 - [Frontend Vitest probes](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, sort and CSS mutants
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques, annotations, log and cache traps
 - [Final sweep and coverage](final-sweep-checks.md) — qa-final traps, bugfix control ladder, JaCoCo from the CLI, heartbeat stamps
+- [Bash script test probes](bash-script-test-probes.md) — PATH-bash interpreter trap, exact-replace mutant dirs, push trace/lease/atomic witnesses, CI internal-error runs
+- [HTTP collection replay probes](http-collection-replay-probes.md) — .http replay driver, fresh DB per scenario, node handler harness, mutant pairing, rg -E trap
