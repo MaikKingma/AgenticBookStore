@@ -42,7 +42,6 @@ Rule: for a rehype/remark plugin or built-HTML guard, probe through the real pip
 **How to apply:**
 - Scratch copy: `rsync -a --exclude node_modules --exclude build --exclude build-offline --exclude .docusaurus guide <dir>/`, symlink `node_modules`, drop in an extra docs page, build, read attributes back with `grep -o`. A probe image needs a remote URL.
 - Negative controls as copies: delete the registration line (Pages and offline); for "offline inherits via spread" clone the presets in a copy of the offline config with the plugin list emptied. Run the same rendered script in modes real/neg/negoffline.
-- Console: tag messages by phase (load, DOM reads, axe). axe on `file://` makes Chromium and WebKit log XHR/CORS errors in the axe phase only, and the WebKit offline XHR pair at load (about 200 per page) is identical in the no-plugin control: compare with the control, not with zero. Entity-encoded blank names (`aria-label="&#32;"`) pass a scanner that does not decode entities: documented limit when the card says "non-empty".
 
 Rule: verify a pack-anchored coverage manifest with your own section-aware sweep, not the implementer's sweep test.
 
@@ -59,12 +58,6 @@ Rule: for a built-HTML tab reader (tab label -> panel lines), probe the Tabs pro
 **How to apply:**
 - Probe page set in a scratch copy (one page per probe): label case/extra words, `values` prop, value-only item, `default`, `queryString`, `lazy`, nested Tabs, details, MDX component wrapper, table cell, admonition, `<pre><code>`, `<pre>{expr}`, `<br/>` in pre, showLineNumbers, title + `{1}`, magic comment, entities and real NBSP; run the source rule on the same text. The offline build writes only index.html (panel text lives in a JS chunk), so check:built on it is vacuous.
 - Invisible-character label stripping: a closed code-point list misses 17 of 23 Default_Ignorable characters (U+200E/F, U+034F, U+2061-4, U+2066-9, tag chars); offer `/\p{Default_Ignorable_Code_Point}/gu`. Verify such a fix over all 0..0x10FFFF (skip surrogates) raw, as `&#x..;` and `&#..;`; narrowing mutants (`[\p{Cf}\p{Mn}]`) survive when the test list holds only Cf/Mn. NBSP, hair space and Cyrillic look-alikes are not DI: residuals.
-- Language-class detection on `pre`: probe `<pre><code className="language-powershell">`, a fence info string without a space (`powershell{1}` gives class `language-powershell{1}`), class order and extra classes in raw JSX, `<CodeBlock language=...>`, upper-case fences.
-
-Rule: when self-tests move from a live tree to a committed snapshot, derive the moved set empirically and run every probe in scratch copies.
-
-**Why:** a static list of "tests that read the tree" is a guess; a snapshot probe (strip the markers from the fixture) and the base red probe give the dependent set by name, and they should be identical.
-**How to apply:** scratch copy = `rsync -a --exclude node_modules --exclude build* guide <dir>/`, symlink `node_modules`, `rsync` `docs/spec-pack` next to it; `diff -rq` the copy's scripts against the worktree first. CLI-vs-runChecks consistency tests are state-dependent: run the CLI mutant set in a clean and an error state; a mutant of a constant both sides share is equivalent for them by construction.
 
 Rule: for a content-page task, bind the pages to the frozen oracle with page mutants in a scratch copy plus a rendered cross-check.
 
@@ -74,5 +67,10 @@ Rule: for a content-page task, bind the pages to the frozen oracle with page mut
 - Rendered cross-check imports `ENTRIES` and `packCommandLines` read-only. Tab panel n pairs with tab n; copy buttons must equal the `pre` count with hidden panels. A `pre`'s `textContent` has no newlines (join `.token-line`s); offline hash-router hrefs are `#/route#anchor`. Leakage rule ("no spec line longer than N chars"): also run an 8-word shingle overlap with an appended-line control that must hit; compare with backticks stripped and tags removed WITHOUT inserting a space. Docusaurus heading hash-links add one U+200B per heading, and it can garble a built meta description from an unchanged `**Goal:** ...: ...` line: report, not a leak.
 - Dev mode: spawn `docusaurus start --port N --no-open --host localhost` from the script, drive the flow, kill the child, show `lsof` empty. `gh run view <id> --json jobs,headSha,event,conclusion > file` binds CI evidence to the head sha.
 - Two-layer kill table: run each page mutant through the frozen `check.mjs` AND an own `semChecks(sourceText)` module (pack line equality of JSON/script blocks, whole-line fenced commands, exact checkpoint commands plus Expected lines, script block count, no PowerShell tokens in any fence, pinned prose). Checker survivors that the own layer kills are unguarded gaps: report as residuals for qa-final (the checker is frozen). Check that a "killed" mutant dies for the stated reason (a fence inserted mid-paragraph made the checker report a body H1 via `#!`: accidental). A pack quote inside a list item is indented by the item: remove exactly that indent. Before calling a link to a skeleton anchor "dangling", grep the skeleton page; use a made-up anchor as the build-failure control.
+
+Rule: for a pack-line edit pinned by a node:test case, probe each pinned literal separately and prove the sweep exclusions bite both ways.
+
+**Why:** a case that asserts several things in one `test()` stops at the first failure, so only a per-literal mutant shows each assertion is live; and `coverage-manifest.test.mjs` SWEEP_EXCLUDED keys are checked by two tests (exact set, no stale key).
+**How to apply:** one runner with a `files` map (pack, page, manifest test) copy-asides all of them and restores in `finally` with `utimesSync`; probes = base line only (132-only, 347-only), one command removed from a table row, a banned phrase re-added, a page link made plain text, a sentence replaced. A/B the exclusion keys: keys removed with the fixed pack -> sweep test fails; keys kept with the pre-fix pack -> "no stale exclusion" fails. Full `node scripts/check.mjs` stays green on the pre-fix pack (the structure rule only needs the pack to exist), so the self-test, not `check`, is the witness.
 
 Related: [[shell-traps]], [[scaffold-verification-techniques]]
