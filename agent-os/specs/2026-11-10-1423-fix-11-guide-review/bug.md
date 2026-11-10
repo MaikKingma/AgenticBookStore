@@ -83,6 +83,10 @@ closes: [review S1 Level 0 and 1 catch-up on main, review S2 no run command for 
   workflow on the push to factory (approved, GUIDE_DEPLOY=true).
 - [x] Docs or pack text encoding the wrong assumption: `docs/spec-pack/workshop/workshop-plan.md:132,347` -> task T2
   (plan.md amendment A1: the main session authorised exactly these two lines).
+- [x] Pack product text (QA lead FF-4, T2 review): `docs/spec-pack/product/roadmap.md:62` "Catch-up rule for
+  participants: `git stash -u && git switch solution/level-N`" -> deferred: outside amendment A1 (which allows only
+  `workshop-plan.md` lines 132 and 347), and `roadmap.md` is the main session's; owner residual reported at hand-back.
+  `docs/spec-pack/orchestrator/decisions.md:55` is decision history and needs nothing.
 - [x] Sibling environments: none (no CI config or seed carries the catch-up).
 
 ## Fix strategy
