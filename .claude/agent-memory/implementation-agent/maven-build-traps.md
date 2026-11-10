@@ -33,6 +33,8 @@ metadata:
 
 - Worktree Bash guard rejects backslash-escaped spaces in a path ("too complex"): double-quote every path containing
   "OpenValue AI". Run mvnw as `with-budget.sh N "<root>/mvnw" -f "<root>/pom.xml" -pl <mod> ...` with `> log 2>&1`.
+- A probe resource under `src/test/resources` (e.g. a temporary migration) is copied to `target/test-classes` and stays
+  there after the source is removed (no clean): move `target/test-classes/<dir>` aside too before the no-probe run.
 - Outbox `updated` stamps: always take them from `date -u`, never estimate. Estimated stamps once ran ahead of the real
   clock, and QA orders its evidence by time.
 
