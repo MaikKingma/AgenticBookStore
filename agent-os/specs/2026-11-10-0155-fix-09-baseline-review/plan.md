@@ -1,12 +1,13 @@
 ---
 spec: fix-09-baseline-review
 source: docs/spec-pack/specs/09-workshop-baseline.md
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous; Maik delegated plan and gate approvals, approves only the end result)
 created: 2026-11-10T01:57:00Z
 origin: fresh read-only review of spec 09 at dfcd01b (main session); decision D15 (spec text at dfcd01b)
 gate1: 2026-11-10T01:58:30Z
 qa-lead: on
+gate2: 2026-11-10T03:45:46Z
 base: factory
 branch: sdd/fix-09-baseline-review/spec
 module-vocabulary: [root, bookstore, distributor, frontend, guide]
@@ -290,3 +291,27 @@ From the QA lead's T3 r0 meta-review (no feed-forward, last task):
 ## Amendments
 
 (none)
+
+## Final QA and Gate 2
+
+- qa-final (opus): PASS, all 14 items of the QA lead's directive on spec tip c247b74 against factory dfcd01b
+  (verdict `.claude/comms/mailboxes/qa-final/outbox/task-final-verdict.md`). Referee `./mvnw clean verify` 26.3 s;
+  T1 recipe with V5: recipe classes 24/0 and the whole bookstore module 1379/0; branch-level negative controls: T1
+  factory test + V5 red at `:40` with `["5"]`, T2 grep 0/0 -> 1/1, T3 tip test vs factory script 263/19 with the gate's
+  19 names; QF-1 both directions of `:49` red; QF-5 live scratch publish strips the guide and keeps T1 and T2 on main;
+  this repository's main and level-0-start untouched. PR readiness: failing 0, skips 0 -> 0, gitlinks none, base
+  ancestor yes; CI on #149 green.
+- QA lead final-review: META ENDORSE final r0, Gate 2 QA confidence high (ledger
+  `.claude/comms/mailboxes/qa-lead/outbox/qa-ledger-fix-09-baseline-review.md`): every criterion traced; T1 not a
+  weakening (five pieces of evidence); the script test green on macOS /bin/bash 3.2.57 and in CI on bash 5.3.9; the
+  accepted residuals deferred, not fixed.
+- Residual risks (owner): R-T2-1 the documented causes are pinned only through the catch-all (optional test-only
+  follow-up: `UnauthorizedException` and `RateLimitException` in `failedChatCalls()`); R-T3-1 no test asserts the
+  `--dry-run` listing (since spec 09); R-T2-2 jar paragraph no longer says the run seeds the database ("Demo data"
+  does); R-T3-2 wording "agent configuration" for guide files (consistent with D15).
+- Standards proposals (follow-ups, not blockers): tests reading `flyway_schema_history` never pin a literal version
+  list; a strip script's `--dry-run` test asserts every listed path; a task adding a ProblemDetail `code` updates every
+  human doc listing that endpoint's errors.
+- Gate 2 self-accepted by the orchestrator at 2026-11-10T03:45:46Z (checklist: qa-final PASS + ENDORSE, confidence
+  high, no untraced criterion; T1 #151, T2 #152, T3 #153 merged; no stragglers; diff confined to the task file scopes,
+  the spec folder and agent memory).

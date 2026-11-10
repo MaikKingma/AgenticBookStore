@@ -2,7 +2,7 @@
 bug: fix-09-baseline-review
 severity: S2
 path: lite
-status: open
+status: fixed
 closes: [review S2 migration history test pins the migration list, review S3 assistant-unavailable undocumented, D15 publish script strips the guide]
 ---
 # Bug - a correct new migration turns a seed guard test red on the frozen main
