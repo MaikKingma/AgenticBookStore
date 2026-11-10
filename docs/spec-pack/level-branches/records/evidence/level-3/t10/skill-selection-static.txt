@@ -1,0 +1,28 @@
+# Static check for 'Skill is selected automatically' (consistency evidence only, rehearsal row R3-5 holds the behaviour)
+scenario sentence: Customers must be able to cancel an order that has not shipped yet.
+skill description: Adds or changes a bookstore use case end to end through the Clean Hexagonal Onion layers (domain behaviour, flow, ports, command or query adapter, data adapter, migration, tests). Use when asked to add a feature, endpoint, business rule, command or query in the bookstore module.
+description length: 279 characters
+run 1: staged description
+  sentence words (stop words removed): able, cancel, customers, must, order, shipped, yet
+  shared with the description:         none
+
+kinds of request the description names (substring search in the description):
+  add a feature      present
+  endpoint           present
+  business rule      present
+  command or query   present
+  bookstore module   present
+reading (not a search): the sentence is a feature request that adds behaviour to the bookstore Order (a business rule:
+  only an order that has not shipped can be cancelled); the description says to use the skill 'when asked to add a feature,
+  endpoint, business rule, command or query in the bookstore module'. The link is meaning, not shared words.
+
+control: the description with the words of the sentence added
+  sentence words (stop words removed): able, cancel, customers, must, order, shipped, yet
+  shared with the description:         cancel, order, shipped
+  control result: reported (3 shared words)
+
+docs quotes (skills.md, fetched 2026-11-10; non-ASCII shown as '?'):
+  398 | | `description` | Recommended | What the skill does and when to use it. Claude uses this to decide when to apply the skill. If omitted, uses the first non-empty line of the markdown content. Put the key use case first: the combined `description` and `when_to_use` text is truncated at 1,536 characters in the skill listing to reduce context usage. Angle brackets in the text [show as `&lt;` and `&gt;`](#angle-brackets-in-a-skill-description). |
+  138 | **Let Claude invoke it automatically** by asking something that matches the description:
+  557 | By default, both you and Claude can invoke any skill. You can type `/skill-name` to invoke it directly, and Claude can load it automatically when relevant to your conversation. Two frontmatter fields let you restrict this:
+exit code: 0

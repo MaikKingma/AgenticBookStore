@@ -1,0 +1,68 @@
+# Searches for the claims of level-3.md (FF-T7-b: every universal or descriptive claim gets a counterexample search plus a control that must hit)
+# L0 = git tag level-0-start (b668073); SBX1 = full level-3 sandbox (tree 309786e0)
+
+## FF-T9-a part 1: README.md line 70 on level-0-start (the Orders endpoints) and the word cancel
+L0 README.md:70: - Orders: `GET /orders/{id}`, `GET /orders?customerEmail=`, `POST /orders/commands/place`, `POST /orders/{id}/commands/ship`
+claim: README.md on level-0-start names no cancel endpoint -> hits of 'cancel' (case-insensitive): 0   (expected 0)
+control: hits of 'commands/ship' in the same file: 1   (expected 1, line 70)
+SBX1 README.md identical to L0 README.md: yes
+claim: README.md on the level-3 tree names no cancel endpoint -> hits: 0   (expected 0)
+
+## FF-T9-a part 2: http/orders.http (and every other .http file) on level-0-start and on the level-3 tree
+files in http/ on L0: http/assistant.http http/catalogue.http http/demo-flow.http http/distributor.http http/inventory.http http/orders.http 
+claim: no .http file on L0 names cancel -> files with a hit: 0   (expected 0)
+control: files in http/ with 'commands/ship': http/orders.http 
+claim: no .http file on the level-3 tree names cancel -> files with a hit: 0   (expected 0)
+http/ files on the level-3 tree that differ from L0: 0   (expected 0)
+
+## FF-T9-a part 3: the level-3 manifest has no row for README.md or http/
+rows with README.md as target: 0   (expected 0)
+rows with a target under http/: 0   (expected 0)
+control: rows with a target under bookstore/src/main: 15   (expected above 0)
+
+## FF-T9-a part 4: the staged skill never asks for README or http updates
+SKILL.md: hits of README, '.http' or 'http/': 0   (expected 0)
+reference.md: hits of README, '.http' or 'http/': 0   (expected 0)
+control: hits of 'docs/architecture.md' in reference.md: 2   (expected above 0)
+ship.md: hits of README, '.http' or 'http/': 0   (expected 0)
+
+## T9 frontend residual: the storefront shows no cancelled order
+claim: no frontend/src file knows the status CANCELLED or a cancelledAt field -> files with a hit: L0 0 SBX1 0   (expected 0 and 0)
+counterexample search for the plain word (case-insensitive cancel) in frontend/src on L0, every hit (none is about orders):
+  L0 frontend/src/pages/CataloguePage.test.tsx:225:    // A listener on the document runs after React's listener on the root, so it sees whether the page cancelled the
+  L0 frontend/src/pages/CataloguePage.test.tsx:227:    const submitCancelled: boolean[] = []
+  L0 frontend/src/pages/CataloguePage.test.tsx:228:    const recordSubmit = (event: Event) => submitCancelled.push(event.defaultPrevented)
+  L0 frontend/src/pages/CataloguePage.test.tsx:243:    expect(submitCancelled).toEqual([true])
+L0 frontend/src/api/types.ts:18:export type OrderStatus = 'PLACED' | 'SHIPPED'
+L0 frontend/src/pages/OrderPage.tsx:29:        <dd>{order.shippedAt === null ? 'Not shipped yet' : formatInstant(order.shippedAt)}</dd>
+SBX1 types.ts and OrderPage.tsx identical to L0: yes and yes
+control: the backend of SBX1 does name CANCELLED or cancelledAt: files in bookstore/src/main/java with a hit: 7   (expected above 0)
+control: the frontend does know SHIPPED: files in frontend/src with a hit on L0: 4   (expected above 0)
+
+## .env
+claim: level-0-start tracks no .env* file -> tracked paths with a .env component: 0   (expected 0)
+control: tracked paths named .gitignore: 1   (expected above 0)
+L0 .gitignore:27:.env*
+L0 .gitignore:28:!.env.example
+git check-ignore -v .env in SBX1: .gitignore:27:.env*	.env
+
+## base has no .claude and no .githooks (the level-3 settings file is a replace of the level-2 file)
+L0 paths under .claude or .githooks: 0   (expected 0)
+L0 files that name tests-before-commit: 0   (expected 0)
+control: SBX1 files that name tests-before-commit: .claude/settings.json 
+core.hooksPath set in the SBX1 repository: '' (expected empty: the git hook is inactive until the participant runs the activation command)
+
+## guide pages on the two refs
+git diff --stat between origin/sdd/11-workshop-guide/spec and origin/factory over guide/docs: 0 lines   (expected 0)
+control: the same diff between page 03 and page 04 of origin/factory is not empty: 308 lines
+
+## branch name solution/level-3 (D17) in the scripts, the pack, the plan and the guide
+lib-steps.sh step_branch level-3 prints: solution/level-3   (line 41: level-1|level-2|level-3) echo "solution/$1" ;;)
+cut-level-branches.sh mentions solution/level-3 in 3 lines
+spec 10: 12 19 217 431 500 
+workshop plan: 230 300 344 
+guide on origin/factory: 04-level-3-behavioral-control.mdx:24 04-level-3-behavioral-control.mdx:101 04-level-3-behavioral-control.mdx:107 04-level-3-behavioral-control.mdx:176 04-level-3-behavioral-control.mdx:210 05-level-4-spec-driven-development.mdx:32 05-level-4-spec-driven-development.mdx:48 
+variant spellings of the branch name (solution/level3, solution-level-3, solution/lvl-3) in the guide, the plan and spec 10: 0   (expected 0)
+
+## T9 evidence is read-only for this task
+files changed under records/evidence/level-3/cancel-order since the last commit (git status): 0   (expected 0)

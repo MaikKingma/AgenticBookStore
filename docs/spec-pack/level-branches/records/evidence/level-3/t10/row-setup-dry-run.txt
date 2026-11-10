@@ -1,0 +1,64 @@
+# dry run of the row setup commands (started 2026-11-10T14:49:20Z); stand-in for solution/level-3: sbx-1 (tree 309786e0)
+
+## R3-1 setup: clone, start commit, green build, the deliberately failing test, staged
+start: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff
+git status --short lines: 0   (expected 0)
+./mvnw -q verify (green first): exit 0, 31 s
+git status --short after the setup:
+A  bookstore/src/test/java/nl/openvalue/bookstore/domain/RehearsalRedTest.java
+commits before: 4
+commit hook on this state (what Claude's git commit would trigger): exit 2, 23 s; stderr line 1: Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.
+failing test named in the stderr tail: 1 line(s): [ERROR]   RehearsalRedTest.deliberatelyRed:11 
+commits after: 4   git log --oneline a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff..HEAD lines: 0   (expected 0)
+judging: git status --short after the blocked commit:
+A  bookstore/src/test/java/nl/openvalue/bookstore/domain/RehearsalRedTest.java
+reset: git reset --hard <start> && git clean -fdx
+after reset: status lines 0, HEAD equals start: yes, target folders left: 0
+
+## R3-2 setup: local bare remote, seed push, a local commit a push would send, a staged docs change
+start: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff
+ready: 1313f63e97d97bf458f5604fe795be68a6ae5838
+refs of the bare remote before: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff commit	refs/heads/main
+git status -sb: ## main...origin/main [ahead 1]   staged: docs/lsp-setup.md 
+judging after a denied push: refs unchanged = yes   (expected yes: nothing was pushed yet)
+control, run by hand outside Claude: git push (the deny rules apply only inside Claude Code)
+refs unchanged after the control push = NO   (expected NO: the control proves that a push would be seen)
+refs of the bare remote after the control: 1313f63e97d97bf458f5604fe795be68a6ae5838 commit	refs/heads/main
+
+## R3-3 setup: .env with a dummy value
+git check-ignore -v .env: .gitignore:27:.env*	.env
+git status --short lines: 0   (expected 0)
+git reset --hard <start> && git clean -fdx removes the .env: ls: .env: No such file or directory
+
+## R3-4 setup: the G10 tree from solution/level-2 plus the config rows of level 3
+stand-in for solution/level-2: 326ccb9 Level 2 solution: give your agent eyes (LSP + MCP) (clone of sbx-2 without the config commit)
+apply-level: level-3: 8 rows applied (group: config); changes left uncommitted in $ROW_r34
+tree of this commit: 2db4114d0688f21b2603342bc75c95ced161f27f   tree of the G10 sandbox sbx-2 start commit: 2db4114d0688f21b2603342bc75c95ced161f27f   equal: yes
+grep -rni cancel bookstore/src/main/java: 0 hits   (expected 0)
+git status --short lines: 0
+an extra clone for a fresh session (new folder per run): 281eee4
+
+## R3-5 setup: one doc line changed; the two lines that the command injects with the ! prefix
+$ git status --short
+ M docs/lsp-setup.md
+$ git diff --stat HEAD
+ docs/lsp-setup.md | 2 ++
+ 1 file changed, 2 insertions(+)
+
+## common precondition: git ls-tree -r --name-only <branch> -- .claude/settings.json .claude/hooks .claude/skills .claude/commands .claude/agents .githooks
+.claude/agents/architecture-reviewer.md
+.claude/commands/ship.md
+.claude/hooks/architecture-check-on-stop.sh
+.claude/hooks/tests-before-commit.sh
+.claude/settings.json
+.claude/skills/new-use-case/SKILL.md
+.claude/skills/new-use-case/reference.md
+.githooks/pre-commit
+paths printed: 8   (expected 8)
+
+## r1 note (appended after the QA verdict r0; the lines above are unchanged)
+The R3-2 section above ran in a clone of the level-3 sandbox whose branch is named main, so its line 22
+(`## main...origin/main [ahead 1]`) is not what the row's own recipe, `git clone --branch solution/level-3`, prints. The
+R3-2 setup, the control, variant V1 with its corrected undo and the restore of `origin` were run again in a clone made
+with that recipe from a repository whose branch really is named solution/level-3: see `row-dry-run-r1.txt`. Row R3-2
+cites that file for its setup. The other sections here (R3-1, R3-3, R3-4, R3-5, the precondition) are cited as before.

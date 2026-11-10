@@ -1,0 +1,212 @@
+# T10 sandboxes (criterion 1). Built only with the T1 scripts from the published baseline, outside Claude Code.
+# Raw logs: $SP/s10-t10-impl-raw/build-sbx-1.txt, build-sbx-2.txt, sbx2-start-commit.txt, sbx-proofs.txt (this file is their masked copy).
+# sbx-1 and sbx-3: simulate-level-0.sh level-0-start, build-level.sh level-3 (full level 3 with the T9 exercise).
+# sbx-2 (G10): simulate-level-0.sh level-0-start, build-level.sh level-2, apply-level.sh --group config level-3, then one commit.
+
+== sbx-1 build log
+== git rev-parse level-0-start
+b668073eb44bfea453c291509a615f6de081e54a
+== simulate-level-0 level-0-start
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $SBX1 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+== build-level level-3
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX1
+build-level: committed level-1 as e910d90: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX1
+build-level: committed level-2 as 8016072: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3 line 10: patch bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java (644, exercise)
+apply-level: level-3 line 11: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java (644, exercise)
+apply-level: level-3 line 12: patch bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java (644, exercise)
+apply-level: level-3 line 13: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java (644, exercise)
+apply-level: level-3 line 14: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java (644, exercise)
+apply-level: level-3 line 15: add bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyCancelledException.java (644, exercise)
+apply-level: level-3 line 16: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderAlreadyShippedException.java (644, exercise)
+apply-level: level-3 line 17: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/OrderStatus.java (644, exercise)
+apply-level: level-3 line 18: patch bookstore/src/main/java/nl/openvalue/bookstore/domain/StockItem.java (644, exercise)
+apply-level: level-3 line 19: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java (644, exercise)
+apply-level: level-3 line 20: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java (644, exercise)
+apply-level: level-3 line 21: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java (644, exercise)
+apply-level: level-3 line 22: patch bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java (644, exercise)
+apply-level: level-3 line 23: patch bookstore/src/main/java/nl/openvalue/bookstore/query/OrderView.java (644, exercise)
+apply-level: level-3 line 24: add bookstore/src/main/resources/db/migration/V5__add_order_cancelled_at.sql (644, exercise)
+apply-level: level-3 line 25: patch bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java (644, exercise)
+apply-level: level-3 line 26: patch bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java (644, exercise)
+apply-level: level-3 line 27: patch bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java (644, exercise)
+apply-level: level-3 line 28: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/OrderTest.java (644, exercise)
+apply-level: level-3 line 29: patch bookstore/src/test/java/nl/openvalue/bookstore/domain/StockItemTest.java (644, exercise)
+apply-level: level-3 line 30: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapperTest.java (644, exercise)
+apply-level: level-3 line 31: patch bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java (644, exercise)
+apply-level: level-3 line 32: patch bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java (644, exercise)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $SBX1
+build-level: committed level-3 as a20c4ad: Level 3 solution: behavioral control
+build-level: level-3 built in $SBX1
+== sandbox log
+a20c4ad Level 3 solution: behavioral control
+8016072 Level 2 solution: give your agent eyes (LSP + MCP)
+e910d90 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+sandbox HEAD: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff
+== status
+
+== sbx-2 (G10) build log
+== git rev-parse level-0-start
+b668073eb44bfea453c291509a615f6de081e54a
+== simulate-level-0 level-0-start
+list: scripts/publish-workshop-main.sh --list-paths
+strip-path: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude
+strip-path: .mcp.json
+strip-path: openspec
+strip-path: .specify
+strip-path: specs
+strip-path: agent-os
+strip-path: .githooks
+strip-path: docs/spec-pack
+strip-path: guide
+strip-path: .github/workflows/guide.yml
+simulated level-0: $SBX2 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+== build-level level-2
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-1 as 2786e48: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SBX2
+build-level: committed level-2 as 326ccb9: Level 2 solution: give your agent eyes (LSP + MCP)
+build-level: level-2 built in $SBX2
+== apply-level --group config level-3
+apply-level: level-3 line 2: replace .claude/settings.json (644, config)
+apply-level: level-3 line 3: add .claude/skills/new-use-case/SKILL.md (644, config)
+apply-level: level-3 line 4: add .claude/skills/new-use-case/reference.md (644, config)
+apply-level: level-3 line 5: add .claude/commands/ship.md (644, config)
+apply-level: level-3 line 6: add .claude/agents/architecture-reviewer.md (644, config)
+apply-level: level-3 line 7: add .claude/hooks/tests-before-commit.sh (755, config)
+apply-level: level-3 line 8: add .claude/hooks/architecture-check-on-stop.sh (755, config)
+apply-level: level-3 line 9: add .githooks/pre-commit (755, config)
+apply-level: level-3: 8 rows applied (group: config); changes left uncommitted in $SBX2
+== sandbox log
+326ccb9 Level 2 solution: give your agent eyes (LSP + MCP)
+2786e48 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+sandbox HEAD: 326ccb92713f02a8517416bd1be6d68984dea69c
+== status
+ M .claude/settings.json
+?? .claude/agents/
+?? .claude/commands/
+?? .claude/hooks/
+?? .claude/skills/
+?? .githooks/
+
+== sbx-2 (G10) start commit
+== in the G10 sandbox, after apply-level --group config level-3
+6505a32 Level 3 config only (G10 start)
+326ccb9 Level 2 solution: give your agent eyes (LSP + MCP)
+2786e48 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+start: 6505a32e3651f23012e3afc0d66c6b87f082a483
+== status after commit (clean)
+       0
+== grep -rni cancel bookstore/src/main/java after the commit (count of hits)
+       0
+== committed .claude and .githooks files (git ls-files)
+.claude/agents/architecture-reviewer.md
+.claude/commands/ship.md
+.claude/hooks/architecture-check-on-stop.sh
+.claude/hooks/tests-before-commit.sh
+.claude/rules/data-and-migrations.md
+.claude/rules/domain.md
+.claude/rules/testing.md
+.claude/settings.json
+.claude/skills/new-use-case/SKILL.md
+.claude/skills/new-use-case/reference.md
+.githooks/pre-commit
+== modes in the commit
+100755 004a8bba8a80da4b7a74c403b0cbb878754a4863 0	.claude/hooks/architecture-check-on-stop.sh
+100755 dfc8d44c338bee5fd2c65d02e9205cee0d3f0a24 0	.claude/hooks/tests-before-commit.sh
+100755 3a2a135a3a0224e406b20d32c62495bac1929472 0	.githooks/pre-commit
+
+== proofs
+== level-0-start
+b668073eb44bfea453c291509a615f6de081e54a
+== sandbox base commit (simulated level-0) and HEADs
+sbx-1 base: 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c
+sbx-1 HEAD: a20c4ad7d4a5a21538d83b0daf8f8cc5ecaa8bff
+sbx-1 tree: 309786e063b813e0f9248714f404b927d277d879
+sbx-2 base: 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c
+sbx-2 HEAD: 326ccb92713f02a8517416bd1be6d68984dea69c
+sbx-2 tree: 3f75a361ce6b9fd6edb00321808a2212ee5daf0a
+sbx-3 base: 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c
+sbx-3 HEAD: 8a0ccd8995c6865ca4d0296a00a409d15c7cef21
+sbx-3 tree: 309786e063b813e0f9248714f404b927d277d879
+== level-3 manifest rows by group
+config 8
+exercise 23
+== sbx-1 and sbx-3 commit name-status (level-3 commit)
+      31
+== sbx-1: files changed by the level-3 commit equal the manifest targets
+identical (31 targets)
+== sbx-2 (G10: level-2 + config level-3): grep -rni cancel bookstore/src/main/java
+       0
+== sbx-2: same grep, positive control on sbx-1 (full level 3), file count
+      13
+== sbx-2: each config row, staged file against the file in the sandbox (cmp) and mode
+equal -rw-r--r-- .claude/settings.json (manifest mode 644)
+equal -rw-r--r-- .claude/skills/new-use-case/SKILL.md (manifest mode 644)
+equal -rw-r--r-- .claude/skills/new-use-case/reference.md (manifest mode 644)
+equal -rw-r--r-- .claude/commands/ship.md (manifest mode 644)
+equal -rw-r--r-- .claude/agents/architecture-reviewer.md (manifest mode 644)
+equal -rwxr-xr-x .claude/hooks/tests-before-commit.sh (manifest mode 755)
+equal -rwxr-xr-x .claude/hooks/architecture-check-on-stop.sh (manifest mode 755)
+equal -rwxr-xr-x .githooks/pre-commit (manifest mode 755)
+config rows differing: 0
+== sbx-2: .claude file set against the staged config set
+same set (10 files: 3 level-1 rules + 7 level-3 config files under .claude)
+== sbx-2 status before the start commit
+ M .claude/settings.json
+?? .claude/agents/
+?? .claude/commands/
+?? .claude/hooks/
+?? .claude/skills/
+?? .githooks/

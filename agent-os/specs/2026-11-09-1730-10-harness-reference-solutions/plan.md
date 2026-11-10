@@ -23,10 +23,10 @@ runs Claude Code for this spec (amendment A2, decision D14); CLI-only tools run 
 `COMPOSE_PROJECT_NAME` and ports where the app starts, never `ANTHROPIC_API_KEY`. Evidence
 files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.log` and `notes/`).
 
-## Status (2026-11-10, T9 in review)
+## Status (2026-11-10, T10 in review)
 
-T1 to T8 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155); T9 is PR #157. Next:
-T10, then T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4, D17), qa-final
+T1 to T9 are merged into the spec branch (PRs #135, #139, #144, #142, #148, #150, #154, #155, #157); T10 is PR #161.
+Next: T11, T12 and T13 in parallel (A5), then a merge of `origin/factory`, T14 cut and verify (A4, D17), qa-final
 and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 
 ## Tasks
@@ -42,7 +42,7 @@ and Gate 2. The run ledger (comms, not committed) holds the full resume point.
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | #154 | sdd/10-harness-reference-solutions/T7 | ENDORSE (r2) |
 | T8 | Level 3 hooks (sh, git hook), harness, Git Bash note (ps1 dropped, A6) | root | [T7] | 8 | critical | opus | opus | #155 | sdd/10-harness-reference-solutions/T8 | ENDORSE (r4) |
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | sonnet (A8) | opus | #157 | sdd/10-harness-reference-solutions/T9 | ENDORSE (r0) |
-| T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | | | |
+| T10 | Level 3 consistency check and rehearsal rows (A2) | root | [T9] | 10 | elevated | sonnet | sonnet | #161 | sdd/10-harness-reference-solutions/T10 | ENDORSE (r1) |
 | T11 | Level 4 OpenSpec track | root | [T10] | 11 | standard | sonnet | sonnet | | | |
 | T12 | Level 4 Spec Kit track | root | [T10] | 12 | elevated | sonnet | sonnet | | | |
 | T13 | Level 4 Agent OS track | root | [T10] | 13 | elevated | sonnet | sonnet | | | |
@@ -297,6 +297,34 @@ for all three tracks is a manual check for Maik.
   every difference is explained; a fresh `build-level.sh level-3` gives tree `309786e0` while no later task touches the
   level-3 exercise rows; Gate 2 lists the frontend residual (`OrderPage.tsx` line 29, `types.ts` line 18) and FF-T9-a;
   seed compatibility with V5 stays inspection-only.
+- FF-T10-a (from T10; T11 to T13 under A5): each track touches only `S/level-4-<track>/**`,
+  `S/records/level-4-<track>.md` and `S/records/evidence/level-4-<track>/**`; the verifier proves no path of another
+  track changed (`git diff --name-only <spec tip>`, `git status --porcelain`); `S/records/rehearsal-checklist.md`
+  stays byte-equal to the spec tip except in the last track to merge, which inserts the Level 4 section as one block,
+  applies FU-T10-1 (A11) and proves Levels 1 to 3 otherwise unchanged and every pointer to the three records
+  resolving on the merged tree; F5 stays (level-3 CLAUDE.md, settings, hooks, skills, commands byte-identical on each
+  track's built tree).
+- FF-T10-b (from T10; T11 to T13, D17 addendum): records and rows name only `start/level-4-<track>` as `step_branch`
+  prints it; `grep -rnE 'solution/level-4|level-4-[a-z]+-(done|solution)|done/level-4'` over the track's files is
+  empty (positive control on a copy); every rehearsal row starts from `git clone --branch start/level-4-<track>` with
+  the FF-T3-a/b witnesses; a pack or guide sentence promising a Level 4 solution branch is a product finding.
+- FF-T10-c (from T10; T11 to T13): every row where Maik runs openspec through npx, specify through uvx or the Agent
+  OS install scripts lists the user-level paths it writes (npm and uv caches, `~/agent-os`, `~/.config` entries) with
+  how to see and undo them; the verifier proves the list from its own zero-token run with HOME, XDG and cache
+  variables in its scratch folder (file lists before and after); a step that installs a Claude Code plugin or adds a
+  marketplace is marked as needing Maik's explicit OK.
+- FF-T10-d (from T10; all verifiers): every nit is classed: false and able to change what Maik does or concludes
+  (FAIL in the task's own file); a wrong pointer that the citing document gets right (fixed in the same round with an
+  appended correction line); wording. An environment-dependent nit is checked against the environment the product
+  uses (hooks run under `sh -c` on macOS and Linux, Git Bash on Windows).
+- FU-T10-1 (from the T10 r1 meta-review; applied by the last Level 4 track to merge, A11; checked by qa-final):
+  checklist "added here" list names variants C, D and E of R3-1; "Z4 lists the four cases of the commit hook";
+  R3-5 redo says "redo R3-1 setup steps 2 and 3"; one appended correction line in
+  `S/records/evidence/level-3/t10/skill-selection-static.txt` (its line 1 says R3-5, the row is R3-4).
+- Product findings from T10 for Maik: PF-T10-1 to PF-T10-9 in `S/records/level-3.md` (skill description shares no
+  content word with the scenario sentence; PowerShell text left after D16 in spec 10, spec 11 and the workshop plan;
+  "any other non-zero code does not block" stale under `onFailure: "block"`; current permission docs say Read deny
+  rules also cover `cat`, `head`, `tail`, `sed`, `tee` and `<` in Bash; the staging README has no `records/` line).
 - Product findings from T8 for Maik: PF-T8-1 a quote before `git commit` in the command (`cd "<folder>" && git
   commit`) makes the pack commit hook exit 0 without the build; PF-T8-2 the docs and D9 say that without Git Bash the
   commit hook never fires (no gate at all), so Windows needs Git Bash; PF-T8-3 the Stop hook skips its check when
@@ -429,6 +457,18 @@ for all three tracks is a manual check for Maik.
   goes live before spec 10 ends): `solution/level-1` from `level-0-start`, `solution/level-2` from `solution/level-1`,
   `solution/level-3` from `solution/level-2`, the three `start/level-4-*` branches from `solution/level-3`. T14 creates
   exactly these; `S/scripts/lib-steps.sh` and `cut-level-branches.sh` already do.
+- A9 (2026-11-10, orchestrator, decision J19): T10's file scope gains `S/README.md` for one item, naming
+  `tests/test-hooks.sh` with its run command in the layout list and the Self-test section (T8 follow-up). Docs only,
+  cheap, reversible. Gate 1 re-run and self-accepted.
+- A10 (2026-11-10, Maik via the coordinator, addendum to D17): no done or solution branch for any Level 4 track; pack
+  Tasks step 6 (`solution/level-4-<track>-<brief>`) is dropped and the Level 4 brief is implemented on no branch.
+  T11 to T13 stage only the `start/level-4-*` contents (level 3 plus the framework installed, initialised and
+  committed) with their consistency checks. This plan never contained such a branch (shape.md lists it as out); T14
+  cuts exactly the six D17 branches. Gate 1 re-run and self-accepted.
+- A11 (2026-11-10, orchestrator, from the T10 r1 meta-review): FU-T10-1 (four doc-only wording fixes in the Level 3
+  rows and one appended evidence correction line) is applied by the last Level 4 track to merge, which already edits
+  `S/records/rehearsal-checklist.md`; that track's file scope gains exactly those lines and
+  `S/records/evidence/level-3/t10/skill-selection-static.txt` (append only). Gate 1 re-run and self-accepted.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME

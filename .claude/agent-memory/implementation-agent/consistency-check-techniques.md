@@ -49,6 +49,25 @@ Techniques that held for the spec 10 consistency-check tasks (D14, no Claude run
 - **Universal and descriptive claims**: `git grep` each for a counterexample on the recorded tag plus a control that
   must hit (macOS `git grep -E` has no `\w`/`\b`; use `-P`). Split the file into units (sentences, cells), give every
   unit a source tag and resolve each tag with a script; prefer prescriptive wording and name the real exceptions.
+- **Token inventory with controls that mean something**: a misspelling control must land in the staged copy AND in the
+  in-memory copy of the built tree (overlay dict), else the generic "staged differs from tree" row reports it and a
+  missing token-specific check hides; assert each control is reported by its own finding text. Spelling search must
+  tolerate hard-wrapped pack prose (turn spaces in the needle into `\s+`, map the match start to a line) or `Git for
+  Windows (Git Bash)` is "missing". Loose-variant regexes flag headings ("New use case") as misspellings: anchor them.
+- **Hooks without Claude**: run the staged PreToolUse hook as settings name it, from another folder, with only
+  `CLAUDE_PROJECT_DIR` set and a one-line JSON payload on stdin; a real red build takes ~25 s and gives the true stderr.
+  Plant the red test as an untracked file so `git reset --hard && git clean -fdx` removes it. Fresh clone of a sandbox
+  replays row setup commands; a local bare remote plus a by-hand `git push` proves "refs unchanged" can fail.
+- **Rehearsal-row dry-run traps** (QA FAIL r0 of spec 10 T10): dry-run each row in a clone made with the row's own
+  recipe from a source repo that really has the branch name (`git clone --branch solution/level-3` prints that name in
+  `git status -sb`; a stand-in on `main` gives a false literal). Run the row to the NEXT step: `git reset --hard
+  <ready>` drops a staged change (use `--soft`), a control commit must be undone before the next variant, and the
+  clone's `origin` keeps pointing at the scratch bare repo after `reset --hard && clean -fdx` (record and restore the
+  url). Observable "hook cannot start": `chmod -x` the hook, `sh -c` of the settings command exits 126 `Permission
+  denied`, status shows a mode change that `git add -A` would stage, `git reset --hard` restores the bit. Cite a
+  hook-failure row from the docs block that prints the notice (`failed; blocking because onFailure is "block"`).
+- Claude Code docs drift: the permissions page now says Read deny rules cover `cat`/`head` in Bash and that project
+  allow rules wait for the trust dialog; re-read the page before repeating a plan's "rules do not cover X" premise.
 - Pack headings repeat: `### .claude/settings.json` is a prefix of the level-2 heading too, so match the level-3
   section by exact line. When a level file merges a pack block into an earlier staged file, build the expected text
   from the earlier file plus the pack lines and compare bytes, with one mutant per key and list.
