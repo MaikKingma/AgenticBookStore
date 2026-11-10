@@ -118,4 +118,36 @@ test('the setup page starts the app in the terminal that holds the key', () => {
 
   const level0 = scan(LEVEL_PAGES[0]).lines.map((line) => line.text).join('\n');
   assert.ok(level0.includes('(./00-setup-check.md#start-the-app)'), 'Level 0 does not link to ./00-setup-check.md#start-the-app');
+
+  // The key section sends the reader to the run section, and the run section says it is the same terminal.
+  const keySection = section(setup, /^## Set the workshop key\s*$/);
+  assert.ok(keySection.text.includes('(#start-the-app)'), 'the "Set the workshop key" section does not link (#start-the-app)');
+  assert.ok(run.text.includes('In the same terminal that holds the key'), 'the "Start the app" section does not say to use the same terminal that holds the key');
+});
+
+// The workshop plan (the pack) is located the way check.mjs locates it: guide/scripts/../../docs/spec-pack/workshop/.
+const PACK_PLAN = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'docs', 'spec-pack', 'workshop', 'workshop-plan.md');
+
+test('the workshop plan names the same Level 0 and 1 catch-up as the guide', () => {
+  const lines = readFileSync(PACK_PLAN, 'utf8').split(/\r?\n/);
+
+  // The Level 1 section: from its H2 to the next H2.
+  const level1From = lines.findIndex((line) => /^## 5\. Level 1:/.test(line));
+  assert.notEqual(level1From, -1, 'the workshop plan has no "## 5. Level 1:" section');
+  const nextH2 = lines.findIndex((line, i) => i > level1From && /^## /.test(line));
+  const level1 = lines.slice(level1From, nextH2 === -1 ? lines.length : nextH2);
+  const startLine = level1.find((line) => line.startsWith('**Start:**'));
+  assert.notEqual(startLine, undefined, 'the Level 1 section of the workshop plan has no **Start:** line');
+  const level1Command = glance(LEVEL_PAGES[1]).catchUp[0];
+  assert.equal(level1Command, LEVEL_1_CATCH_UP, 'the Level 1 page no longer shows the Level 1 catch-up');
+  assert.ok(startLine.includes(level1Command), `the Level 1 **Start:** line of the workshop plan does not hold "${level1Command}": ${startLine}`);
+  assert.doesNotMatch(startLine, /`main` again/, 'the Level 1 **Start:** line of the workshop plan still says `main` again');
+
+  // The far-behind row names the catch-up of Level 0, Level 1 and Level 4 exactly as the level pages show them.
+  const row = lines.find((line) => /^\|\s*Someone is far behind\s*\|/.test(line));
+  assert.notEqual(row, undefined, 'the workshop plan has no "Someone is far behind" row');
+  for (const [level, page] of [[0, LEVEL_PAGES[0]], [1, LEVEL_PAGES[1]], [4, LEVEL_PAGES[4]]]) {
+    const command = glance(page).catchUp[0];
+    assert.ok(row.includes(command), `the "Someone is far behind" row of the workshop plan does not hold "${command}" (Level ${level}): ${row}`);
+  }
 });
