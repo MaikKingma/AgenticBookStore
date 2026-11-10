@@ -2,7 +2,7 @@
 
 Product goal: A small, realistic, test-enforced brownfield bookstore (Spring Boot 4, Java 25, Clean Hexagonal Onion) that workshop participants harness with Claude Code over five levels (Level 0 to Level 4).
 Current phase: 3, spec 09 (run the cycle); spec 08 merged, its review runs in parallel
-Current spec: 09 (in progress, parallel with 10 prepare; 11 ready). Spec 08 and 12 done (`spec-08-done`, `spec-12-done` on 2ab37a7). D6 applied on factory (e604bac).
+Current spec: 10 (prepare phase, branches are cut from `level-0-start` at b668073 next); 11 spec PR ready, waits for `spec-10-done`. Specs 01 to 09 and 12 done.
 Factory skills installed and invocable: yes (all four invoked on 2026-11-06, Phase 1 step 9)
 Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the spec 07 merge (budget 60)
 
@@ -17,7 +17,7 @@ Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the sp
 | 07 | done | spec-07-done | 24 s wall clock (23.88 s) | PR #91 merged as 776bf86 (task PRs #94, #97, #98, #102, #103, #107, #109); review found no violation; 1166 + 190 Java tests, Vitest green, 0 skipped; CI run 42617213153 green on 776bf86; see DoD 07 below |
 | 08 | done | `spec-08-done` on 2ab37a7 | 29.8 s wall clock on 2ab37a7 | PR #111 merged as a56dfbc (task PRs #113, #116, #120, #125, #126, #127); review fixes and the live-check defects through /sdd-bugfix `fix-08-assistant-review`, PR #130 merged as 2ab37a7 (task PRs #134, #138, #141, #143, #145); live-key gate passed (transcript in PR #111); main session referee on 2ab37a7: 1348 + 190 Java tests, Vitest 689 + 2 expected fail, 0 failed or skipped |
 | 12 | done | `spec-12-done` on 2ab37a7 | 29.8 s wall clock on 2ab37a7 (frontend included) | PR #66 merged as 6c17253; review fixes PR #104 (98f3455); D11 genre labels and footer PR #131 (2824f41); assistant-unavailable text through fix-08 T2 (#141); Maik walked the storefront live on 2026-11-10 (genre labels, footer, assistant page with the live key); referee on 2ab37a7 as for 08 |
-| 09 | merged and fixed, publishing | | 29.7 s wall clock on 879db8b | PR #117 merged as 2cd03f4 (task PRs #121, #123, #128, #132, #136, #140, #146, #147); review fixes through /sdd-bugfix `fix-09-baseline-review`, PR #149 merged as 879db8b (task PRs #151, #152, #153); main session referee on 879db8b: 1379 + 190 Java tests, Vitest 689 + 2 expected fail, 0 failed or skipped; publish-script test 263/0 on /bin/bash 3.2; CI green on 879db8b. Next: publish `main` and tag `level-0-start` (approved by Maik), then `spec-09-done` |
+| 09 | done | `spec-09-done` on bad2bb9 | 29.7 s wall clock on 879db8b and on the published main | PR #117 merged as 2cd03f4; review fixes PR #149 merged as 879db8b; `main` published by the main session from factory bad2bb9 (Maik's approval of 2026-11-09): `main` and `level-0-start` at b668073 (one commit, tree ceed869); fresh clone: 1 commit, guard check clean, verify green 29.7 s (1379 + 190, Vitest 689 + 2); GitHub: no-agent-config green on the main push and the tag push, CI run 42752233323 verify, publish-script-test and windows-build green. Level 0 rehearsal record: Maik, 2026-11-10 (template in the fix spec folder of spec 09) |
 | 10 | in progress (prepare, parallel) | | | orchestrator agent in its own worktree since 2026-11-09, `merge: false`, prepare-only: shapes the spec, stages every level file on `sdd/10-harness-reference-solutions/spec` from factory, runs the scenarios that do not need `main` (macOS LSP per D8); cuts the branches from `level-0-start` only after spec 09 publishes `main` |
 | 11 | spec PR ready, waits for `spec-10-done` | | 28.6 s (qa-final) | spec PR #68 ready on fb958b3 (task PRs #71, #73, #76, #79, #83, #87, #100, #110, #112, #114, #115, #118, #119, #124, #129); qa-final PASS on e7e7dea, QA lead ENDORSE, Gate 2 self-accepted; guide checks green (coverage 304/304, 514 checker tests, built-HTML checks, three byte-identical builds, browser checks 0 failures); CI green on fb958b3. Merge after `spec-10-done` (re-merge factory and re-run the guide checks first), then the approved deploy (enable Pages, `GUIDE_DEPLOY=true`, release zip) and the follow-ups F1 to F8, R-G2 link check. For Maik's rehearsal: `.env` checkpoint without an instruction to create `.env`, Git Bash wording differs between pages, cheat-sheet print headroom 8 px; R-G3 25 npm audit findings in the pinned Docusaurus tree (bump after the release is Maik's call) |
 
@@ -119,6 +119,12 @@ Clean `./mvnw clean verify` time: 24 s wall clock with the frontend after the sp
 - `./mvnw clean verify` green from the repo root including the frontend tests and build (see DoD 08 line 1).
 - Every page works in a browser against the running bookstore: Maik's live walk on 2026-11-10 (catalogue with readable genre labels, footer at the bottom of a short page, assistant page round trip with the live key); 503 `assistant-unavailable` text walked by fix-08 qa-final.
 - Branding screenshots in the spec 12 folder `visuals/` (from PR #66), plus fix-12 genre-label and footer screenshots from its qa-final.
+
+### DoD 09 (2026-11-10, on factory bad2bb9 and the published main b668073)
+- Seed loaded only outside tests: `application.yml` locations `db/migration,db/seed`, `application-test.yml` `db/migration` only; `EmptyCatalogueAtStartIntegrationTest` (now accepts new migrations, fix-09 T1) and the isolated census test; review live run: `GET /books` 103 (100 AVAILABLE, 10 per genre, 3 discontinued).
+- README (120 lines), `docs/architecture.md`, `http/` collection checked against the code by the review; README names `assistant-unavailable` (fix-09 T2).
+- `main` = one commit (b668073), verify green (fresh clone 29.7 s, GitHub CI run 42752233323), guard green (no-agent-config on main and on the tag), tag `level-0-start` at b668073. The publish strips guide/ and guide.yml too (D15).
+- Rehearsal recorded: open, Maik's Level 0 rehearsal on 2026-11-10.
 
 ## Decision log
 
