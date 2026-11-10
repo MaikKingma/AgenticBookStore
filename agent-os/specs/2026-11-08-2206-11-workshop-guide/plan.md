@@ -51,7 +51,7 @@ task directives); the live ledger is `.claude/comms/mailboxes/qa-lead/outbox/qa-
 | T10 | Level 4 page | guide | [T5] | B10 | elevated | sonnet | sonnet | PASS r1 | #119 | sdd/11-workshop-guide/T10 | ENDORSE |
 | T11 | reference pages, marker ban, site-wide pass in both builds and three engines | guide | [T6, T7, T8, T9, T10] | B11 | elevated | sonnet | sonnet | PASS r1, red CI check reworked, PASS r2 | #124 | sdd/11-workshop-guide/T11 | ENDORSE r2 |
 | T12 | D9: Git Bash prerequisite on the setup and Level 3 pages, the commit hook's onFailure behaviour, cheat sheet print fit (A14) | guide | [T11] | B12 | elevated | sonnet | sonnet | PASS r1, REJECT r1 reworked, PASS r2 | #129 | sdd/11-workshop-guide/T12 | ENDORSE r2 |
-| T13 | D16 (F2): no PowerShell hook text on the Level 3 and troubleshooting pages; Git Bash wording on wrap-up; JDK 21 floor on the setup page (A15) | guide | [T12] | B13 | elevated | sonnet | sonnet | PASS r1 | (pending) | sdd/11-workshop-guide/T13 | ENDORSE |
+| T13 | D16 (F2): no PowerShell hook text on the Level 3 and troubleshooting pages; Git Bash wording on wrap-up; JDK 21 floor on the setup page (A15) | guide | [T12] | B13 | elevated | sonnet | sonnet | PASS r1 | #156 | sdd/11-workshop-guide/T13 | ENDORSE |
 
 Batches are sequential: T6 to T10 share the module `guide` (one build output, one lockfile), and every task branch is
 cut from the spec branch tip after the previous task's PR is merged.
