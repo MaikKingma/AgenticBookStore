@@ -11,12 +11,12 @@ import LevelProgress from '@site/src/components/LevelProgress';
 
 **Goal:** Give the agent the smallest set of high-signal context that makes the right thing the obvious thing.
 
-**Start branch:** `main`
+**Start branch:** `level-0-start`
 
 **Catch-up:**
 
 ```bash
-git stash -u && git switch main
+git stash -u && git switch -C level-1 level-0-start
 ```
 
 **Time:** 35 minutes
@@ -25,7 +25,7 @@ git stash -u && git switch main
 
 :::
 
-Start on `main` again, clean. Levels 1 to 4 work through the columns of your Level 0 observation card.
+Start from the tag `level-0-start`, clean: the catch-up above puts you on your own branch `level-1` there, whatever Level 0 left behind. Levels 1 to 4 work through the columns of your Level 0 observation card.
 
 :::info[Sync moment]
 

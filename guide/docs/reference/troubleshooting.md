@@ -103,8 +103,34 @@ If this fails, start Docker Desktop (or your Docker engine) and run it again. A 
 
 ## I am far behind {/* #far-behind */}
 
-Skip the stretch goals and the optional Stop hook first, and keep Level 4. If you are still far behind at the start of a level, run the catch-up command from the at a glance box of that level page. It has this form, with the branch the page names:
+Skip the stretch goals and the optional Stop hook first, and keep Level 4. If you are still far behind at the start of a level, run the catch-up command of that level. It is the same command as in the at a glance box of the level page. Your uncommitted work stays recoverable in the stash.
+
+Level 0:
 
 ```bash
-git stash -u && git switch solution/level-N
+git stash -u && git switch -C level-0 level-0-start
+```
+
+Level 1:
+
+```bash
+git stash -u && git switch -C level-1 level-0-start
+```
+
+Level 2:
+
+```bash
+git stash -u && git switch solution/level-1
+```
+
+Level 3:
+
+```bash
+git stash -u && git switch solution/level-2
+```
+
+Level 4 (replace `<track>` with `openspec`, `speckit` or `agentos`):
+
+```bash
+git stash -u && git switch start/level-4-<track>
 ```

@@ -454,7 +454,7 @@ export const ENTRIES = [
   ),
   risks('TS-09', 'S11:38', 'text', 'BOOKSTORE_AI_API_KEY'),
   risks('TS-10', 'S11:38', 'text', '/status'),
-  risks('TS-11', 'S11:38', 'command', 'git stash -u && git switch solution/level-N'),
+  risks('TS-11', 'S11:38', 'command', 'git stash -u && git switch solution/level-N', 'git stash -u && git switch solution/level-1'),
   risks('TS-12', 'S11:38', 'text', 'switch to that key'),
   plan(PART_A_LSP, 'TS')('TS-13', 'S11:38', 'command', 'claude --debug'),
   plan(PART_A_LSP, 'TS')('TS-14', 'S11:38', 'text', 'Executable not found in $PATH: "jdtls"'),

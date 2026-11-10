@@ -122,7 +122,7 @@ The setup check covers the binary only. The `jdtls-lsp` plugin is installed in [
 
 ## Set the workshop key
 
-The workshop key is shown on the screen. Never commit it. Set it in the terminal where you run the app:
+The workshop key is shown on the screen. Never commit it. Set it in the terminal where you [start the app](#start-the-app):
 
 <Tabs groupId="os">
   <TabItem value="unix" label="macOS/Linux">
@@ -148,6 +148,16 @@ In WSL use the macOS/Linux form.
 The workshop only ever uses `BOOKSTORE_AI_API_KEY`. If `ANTHROPIC_API_KEY` is defined in your shell, Claude Code would switch to that key. The `/status` check above is how you confirm that Claude Code uses your subscription. More in [the `ANTHROPIC_API_KEY` pitfall](./reference/troubleshooting.md#anthropic-api-key).
 
 :::
+
+## Start the app
+
+In the same terminal that holds the key, from the repository root, start the bookstore:
+
+```bash
+./mvnw -pl bookstore spring-boot:run
+```
+
+Docker must be running: the app starts PostgreSQL in a container. When it is up, open the storefront at http://localhost:8080/shop/. Stop the app with Ctrl+C. The database keeps running when the app stops.
 
 ## Choose the model
 
