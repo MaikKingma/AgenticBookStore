@@ -236,3 +236,26 @@ requires. Every PowerShell hook, PowerShell hook tab in the guide and PowerShell
 
 Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble). Spec 11's guide drops its PowerShell hook
 tabs when it merges (follow-up F2).
+
+## D17. Level branch names are a fixed contract, and the guide goes live before spec 10 ends
+
+Maik, 2026-11-10: "lets publish a first version of the docusaurus page. we can agree on branch names in a contract for
+the upcoming solution branches for reference". The guide deploys as soon as spec 11 is merged, without waiting for
+spec 10's branches. Its links point at branches that do not exist yet, so the names are frozen now:
+
+| Branch | Cut from | Level |
+|---|---|---|
+| `level-0-start` | (exists, b668073) | Level 0 |
+| `solution/level-1` | `level-0-start` | Level 1 |
+| `solution/level-2` | `solution/level-1` | Level 2 |
+| `solution/level-3` | `solution/level-2` | Level 3 |
+| `start/level-4-openspec` | `solution/level-3` | Level 4, OpenSpec track |
+| `start/level-4-speckit` | `solution/level-3` | Level 4, Spec Kit track |
+| `start/level-4-agentos` | `solution/level-3` | Level 4, Agent OS track |
+
+Rules: spec 10 task T14 creates exactly these names. Renaming one needs Maik's OK and a guide change in the same
+change. Optional rehearsal branches use `solution/level-4-<track>-<brief>` and the guide does not link them. Until
+spec-10-done the guide's branch links answer 404; check R-G2 (every guide link resolves) moves to after spec-10-done.
+Tags stay in build order: spec 11's merge and deploy happen now, the `spec-11-done` tag follows `spec-10-done`.
+
+Changed files: none in the specs (spec 10 already names these branches; this decision freezes them).
