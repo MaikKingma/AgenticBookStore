@@ -13,8 +13,6 @@ Rule: run every MCP tool mutant against BOTH the unit class and the SDK-client i
 - Spring AI validates `@McpToolParam` requiredness at runtime (`ToolInputValidator ... required property 'x' not found`, tool result isError). `required = false` on a required param is therefore a testable mutant: probe it, and a test needs `tool.inputSchema()` (a `Map<String,Object>`, read `getOrDefault("required", ...)`) or a call without the argument.
 - Output caps ("text under N characters", trim loop): compute the fixture's prefix lengths first (a small `python3 -I` replay of the JSON). Uniform items step by a constant, so `>=` vs `>` and `N-1` survive unless a fixture lands exactly on N and N-1. Prove the gap with a temporary witness test that pads the last item with the same mapper as oracle until the text is exactly N (expect one item fewer) and N-1 (expect all).
 - A thrown exception from an `@McpTool` method surfaces as an isError result whose text repeats the message twice on two lines; an exact single-line text assertion kills "throw instead of error result".
-- A test that calls a tool without a required argument makes the server log one `ToolInputValidator` WARN per referee. That line is on purpose, not a defect. Classify it and record its exact count in the warning inventory, the same way as the scanner's BeanPostProcessorChecker lines.
-- Rework rounds: load the r1 generator's PROBES list by path (`importlib.util.spec_from_file_location`) into an r2 generator that reads fresh `r2` `.orig` copies. That way the mutants are byte-identical by construction. Re-run the full list, not just the targeted survivors: new tests shift line numbers and add kills, and the whole list runs in about 6 s per probe.
 
 ## In-process STDIO test in a shared Surefire fork
 

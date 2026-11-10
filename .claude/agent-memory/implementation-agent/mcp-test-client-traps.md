@@ -18,5 +18,4 @@ metadata:
   and logs one `ToolInputValidator` WARN line; name that line in the outbox, since QA inventories warnings.
 - A length-cap comparison (`>=` vs `>`, off by one) needs fixtures that hit the cap exactly: grow one fixture
   field one ASCII character at a time, using the production mapper as the oracle, to land on N and N-1.
-- Recipe and the other server-side traps (protocol STREAMABLE, boxed params, CallToolResult errors): the res-1
-  research artifact of spec 05 and `agent-os/specs/2026-11-08-1040-05-distributor/shape.md` "MCP recipe".
+- Recipe and other server-side traps: `agent-os/specs/2026-11-08-1040-05-distributor/shape.md` "MCP recipe".

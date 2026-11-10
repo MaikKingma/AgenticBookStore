@@ -3,5 +3,6 @@
 - [Spring AI MCP probe technique](spring-ai-mcp-probe-technique.md) — javap conditions, stdio smoke script, System.in/out swap test, slow-probe trap
 - [Spring web config probe](spring-web-config-probe-technique.md) — MockMvc vs real server, Boot error JSON vs ProblemDetail, Maven resources replacement
 - [Frontend Maven probe](frontend-maven-probe-technique.md) — frontend-maven-plugin sources jars, scratch Maven+npm probe, resources/PATH/-fae traps
+- [Docs census probes](docs-census-probes.md) — jar run without Docker, endpoint grep, http ISBN collisions, unmerged-branch reads
 - [gh Actions measurement](gh-actions-measurement-technique.md) — step times, log greps, cache scoping check via gh, bash guard quirks
 - [Worktree shell guard](worktree-agent-shell-guard.md) — relative paths, git grep, referee wall time and Surefire totals, claude-api model table

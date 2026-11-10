@@ -27,5 +27,3 @@ Boot 4.1.2, logback. Verified on the sources jar (`spring-boot-4.1.2-sources.jar
   says `Started ForkedBooter`. Add `.main(App.class)` to get `Started App`.
 - Default properties (`.properties(...)`) lose to profile YAML. To override a profile value in a test, pass it as a
   command-line argument (`.run("--logging.file.name=target/x.log")`).
-
-In-process STDIO recipe and transport traps: res-2's artifact for spec 05 (`research-mcp-stdio.md`).

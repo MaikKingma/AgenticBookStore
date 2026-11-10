@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class CatalogueFlow {
 
-    private static final int SEARCH_LIMIT = 100;
+    private static final int SEARCH_LIMIT = 200;
 
     private final BookDataService books;
     private final StockItemDataService stockItems;

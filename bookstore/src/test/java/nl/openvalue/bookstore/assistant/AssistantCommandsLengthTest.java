@@ -22,6 +22,7 @@ class AssistantCommandsLengthTest {
 
     private final ScriptedChatModel model = new ScriptedChatModel();
     private final AssistantCommands commands = new AssistantCommands(ChatClient.create(model), model,
+            org.springframework.ai.chat.memory.MessageWindowChatMemory.builder().build(),
             new AssistantRateLimiter(new MutableClock(Instant.parse("2002-03-04T05:06:07.890Z")),
                     new AssistantProperties(20, 5)),
             new AssistantProperties(20, 5));

@@ -13,6 +13,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+    # The schema migrations plus the demo data. Keep this a single comma separated value: the test profile replaces it
+    # with the schema location only, so tests never see the demo data.
+    locations: classpath:db/migration,classpath:db/seed
   ai:
     anthropic:
       # The key comes only from BOOKSTORE_AI_API_KEY. Without it the assistant is offline and the application still

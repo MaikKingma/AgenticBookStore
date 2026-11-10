@@ -59,7 +59,9 @@ that Level 0 actually produces the failure modes the keynote promises.
    `openspec/`, `.specify/`, `specs/`, `agent-os/` (including the `agent-os/product` symlink and
    `agent-os/specs/`, where the SDD cycle writes its plan artefacts), `.githooks/`,
    `docs/spec-pack/` (this pack contains the level solutions, the orchestrator progress file and facilitator notes,
-   so it must never reach `main`). The list lives once, in the script, and the CI guard below reads the same list.
+   so it must never reach `main`), `guide/` and `.github/workflows/guide.yml` (decision D15: the workshop guide
+   holds the Level 0 failure-mode checklist and the solution links, so a Level 0 agent must not find it in the
+   repository; it lives on `factory` and on GitHub Pages only). The list lives once, in the script, and the CI guard below reads the same list.
 3. Commits the result as a single commit "Agentic Bookstore: workshop baseline" on an orphan-based `main`
    (history starts fresh, so participants do not see agent-generated history), force-updates `main`, and moves tag
    `level-0-start` to it. Prints what it removed.

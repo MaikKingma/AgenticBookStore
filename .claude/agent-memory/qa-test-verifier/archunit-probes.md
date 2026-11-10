@@ -31,9 +31,5 @@ Enclosing-class walk predicates ("nested at any depth in a class named *X"):
 - Each control/witness fixture gets a vacuity probe: retype its field to `Object`; only its own test must fail.
 - Prove a proposed kill before you write the Required Action: generator probes that add the fixture (real predicate green) and fixture plus mutant (red), with a temporary `QaT6Probe*Test` in the test package, deleted afterwards and covered by the snap diff.
 - A rule-dump temp test that evaluates every `@ArchTest` field on the fixture import, filtered origin-anchored to the new fixtures, answers "which rules does each fixture trip" in one run. Calling the private predicate by reflection on the production import shows the should-set is non-empty.
-- `ignoreDependency` exception fixtures: widen the target (`simpleNameContaining`, `.or(simpleNameEndingWith("Exception"))`, `.or(assignableTo(Throwable.class))`), widen the origin (`resideInAnyPackage(PROCESS, QUERY)`, company root), narrow it (`simpleName("<one event>")`, `simpleNameStartingWith`), drop it. "Each fixture is the only violator of its aspect" is proven when each widening fails only its own fixture's pin plus its list entry. With `clean`, a `-Dtest=ArchitectureSelfTest,ArchitectureTest` run takes about 5 s.
 
-Grep traps:
-- The directive grep `grep -l '@\|^import '` on package-info hits Javadoc `{@code ...}`. Back it with a refined grep (`'^\s*@|^\s*import |@[A-Z]'`) and with `javap -v` on the `.class`: `attributes: 1` (SourceFile only) means no annotations.
-- Suffix set equality: script-parse the section 3 table and the test, then prove the checker can fail on a mutated scratch copy.
 Related: [[spring-runtime-probes]], [[scaffold-verification-techniques]], [[shell-traps]]

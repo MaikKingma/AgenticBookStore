@@ -216,3 +216,23 @@ for Maik's review. Scenarios that need a Claude Code session, the macOS LSP rehe
 are Maik's manual checks.
 
 Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble, Definition of done).
+
+## D15. The publish script also strips the guide
+
+Main session, 2026-11-10, from the spec 09 review: spec 11's guide (`guide/` and `.github/workflows/guide.yml`)
+merges into `factory` after `main` is first published, so the first publish carries no guide. Any later republish
+would copy it to `main`, and the guide holds the Level 0 failure-mode checklist and the links to the solution
+branches, which a Level 0 agent could then read. Spec 11 already says nothing deploys from `main`. So the publish
+script's path list (and with it the `no-agent-config` guard) includes `guide/` and `.github/workflows/guide.yml`.
+
+Changed file: `specs/09-workshop-baseline.md` (publish script path list). Implemented through /sdd-bugfix
+(`fix-09-baseline-review`) before `main` is published.
+
+## D16. No PowerShell hook variants
+
+Maik, 2026-11-10, during spec 10 task T8: "Skip the powershell stuff. It's too much effort for now." Level 3 ships the
+bash hooks and the git pre-commit hook only. Windows participants run them through Git Bash, which D9 already
+requires. Every PowerShell hook, PowerShell hook tab in the guide and PowerShell parity test is dropped.
+
+Changed file: `specs/10-harness-reference-solutions.md` (Tasks preamble). Spec 11's guide drops its PowerShell hook
+tabs when it merges (follow-up F2).

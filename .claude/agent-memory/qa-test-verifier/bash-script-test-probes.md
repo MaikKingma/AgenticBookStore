@@ -1,0 +1,27 @@
+---
+name: bash-script-test-probes
+description: Verifying bash scripts and their bash tests (git publish scripts) - interpreter trap, mutant generator, trace and lease witnesses, CI startup errors
+metadata:
+  type: feedback
+---
+
+Rule: before you accept a "green on macOS /bin/bash 3.2" claim, find out which bash runs the script under test, not only which bash runs the test.
+
+**Why:** a test that calls `bash "$SCRIPT"` resolves bash from PATH. Here that is Homebrew 5.x, so `/bin/bash test.sh` ran the script under bash 5. Bash-4-only mutants (`${x,,}`, an empty `"${a[@]}"` under `set -u`) passed the test, CI (ubuntu, bash 5) and shellcheck.
+**How to apply:**
+- Prove the interpreter with a logging `bash` shim first on `PATH=<shim>:/bin:/usr/bin:/usr/sbin:/sbin`. The shim echoes `$BASH_VERSION` to a log and then runs `exec /bin/bash "$@"`. Count the invocations.
+- Ask for `"$BASH" "$SCRIPT"` in the test. Show that the fix bites: run the same bash-4 mutants with the fixed test copy under the default PATH.
+- Mutants: write a `python3 -I` generator that makes exact replacements from a `.orig` copy (abort unless each old string occurs once). Give every mutant its own directory with the script, a copy of the test (it finds the script via `dirname $0`) and its own `TMPDIR`. Run 5 parallel batches of about 20 s per run.
+- A summary line that prints `$BASH` names the test's interpreter, not the script's: a test copy with the fix reverted still printed `/bin/bash 3.2`. Prove the script's interpreter with the shim (exec the PATH bash, expect 0 calls), not with the summary.
+- Rework rounds: for each fixed gap, build a "fix reverted" test variant next to the mutant it targets (reverted `"$BASH"` + bash-4 mutant, removed new refusal + M5c). The variant must let the mutant survive; that attributes the kill to the new test lines.
+- Never let two batches share a probe directory. The runner `rm -rf`s the TMPDIR and clobbers the other batch's run. Copy the directory under a new id instead.
+- Idempotency of `commit-tree` (same tree, message and dates give the same SHA): prove the date-variation witness with a negative control. A test copy with pinned dates must let the "always commit" mutant survive.
+- Push witnesses: an `update` hook in the bare remote that rejects the tag (atomic push). A PATH `git` shim that moves the remote ref right before `push` (lease). `GIT_TRACE=1` greps for `built-in: git push|ls-remote` (exact argv, plus "no network in default mode", with the `--push` trace as positive control).
+- A hostile-config positive control with a failing `reference-transaction` hook breaks even `git init`. That still proves the config bites.
+- Precedence tests ("remote baseline wins over a local one"): besides the plain order swap, build date-preference mutants (prefer the newer / the older baseline by `%ct`). A single case with one date order kills the swap and one date mutant but lets the other survive by construction; the falsifier needs both orders (local newer and local older than the remote). Prove it with a QA-only test variant in SP, never the project file. Also run tag-first, tag-agrees and object-id-order (`[[ a < b ]]`) mutants: two cases with different SHAs also pin id order. A setup check ("dated before", "differs from") gets its own test-variant probe (flip the date, alias the commit) so it is shown to bite; otherwise a fixture drift silently turns the case vacuous for one mutant.
+- A run with only some jobs created and conclusion `failure`: the jobs API shows nothing. Download the public run page and grep the annotation (`Internal server error. Correlation ID`). Compare with other branches' runs in the same window before you blame the workflow file.
+- "No local main" harness: a `--single-branch --branch factory` clone of the bare still fetched the publish tag, so a default run moves it locally; check "no main, no origin/main". Keep mutated script copies OUTSIDE the clone (dirty-tree refusal); `sleep 2` before a default-mode commit in a control, else same second = same SHA.
+- Path-list look-alike probes (strip list + `--check`): `git ls-tree -- "$p*"` matches nothing (ls-tree paths are literal prefixes, no wildcards), so that "prefix" mutant only proves "finds nothing". For `--check` look-alikes, mutate to `ls-tree -r --name-only "$rev" | awk -v p="$p" 'index($0,p)==1'` (prefix) and `| grep -F -- "$p"` (substring).
+- Strip-loop look-alikes: `"$p*"` (ls-files/rm wildcards cross `/`) is clean, but it cannot reach a sibling that differs in the last char (`guide.yaml` vs `guide.yml`): add a stem mutant `"${p%.yml}*"` and a "list names the parent dir" mutant. `:(glob)$p*` and `:(glob)**/$p` trip the script's internal re-check and abort, so they are not clean witnesses; for unanchored use `"$p" "*/$p/*"` with `rm --ignore-unmatch`.
+- Map each look-alike assertion to its killing mutant by number; one identity mutant (unmutated copy) in the same harness proves the harness itself is green.
+Related: [[shell-traps]], [[ci-workflow-verification]], [[env-switch-mutant-runner]]

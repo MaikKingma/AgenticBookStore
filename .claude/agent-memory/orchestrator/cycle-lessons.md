@@ -10,7 +10,7 @@ metadata:
 - **GitHub job summaries (`$GITHUB_STEP_SUMMARY`) are invisible to logged-out viewers and to every API** (`summary_raw` 404, check-run output null). Never gate a criterion on summary content: no agent can verify it, and the QA lead rejects log-line or `checks: write` substitutes. Gate "full report on failure" on `-fae` reactor lines, the annotations API, the uploaded Surefire artifact and the red job; list the summary as unverified in the PR body (owner-delegated decision, ci-performance plan.md A3, after a needs-decision stop).
 - **CI hang/timeout bugs: prove with a throwaway probe pair** (fix-ci-report-on-timeout plan.md). Red: base workflow plus a `Thread.sleep` probe test, job timeout lowered for speed. Green: the exact gated workflow plus only the probe test (never lower its timeouts). I write probes myself (sdd-bugfix 1a.2) in scratchpad worktrees, push over SSH, draft PR, close unmerged, delete. A job timeout, manual cancel and supersede all set `cancelled()`; only a step timeout ends as failure. Lite path with sonnet impl and opus QA held in one round.
 - **Worktree Bash guard (isolated orchestrator):** it refuses `cd X && git ...`, `$(...)` and any compound command naming git or gh; run one plain git command per call from the worktree root (or `git -C <scratch worktree>`).
-- **CI check names** are `verify` (ubuntu, full tests with Docker) and `windows-build` (compile-only). Every push and pull_request runs both, so a task PR gets two runs per push; use `gh run view <id> --json headSha` to find the runs on a given commit (the pull_request run's headSha is the PR merge commit).
+- **CI check names** are `verify` (ubuntu, full tests with Docker), `windows-build` (compile-only) and, since spec 09, `publish-script-test`. Every push and pull_request runs both, so a task PR gets two runs per push; use `gh run view <id> --json headSha` to find the runs on a given commit (the pull_request run's headSha is the PR merge commit).
 - **Base moved during a cycle** (owner committed to `factory`): qa-final fails the base-ancestor item. Fix is `git merge origin/factory` into the spec branch (merge commit, never rebase or force-push), then re-run only the tip-dependent sweep items; carry the rest forward with a `git diff --name-status <old tip> <new tip>` proof. An untracked byte-identical copy of the owner's file blocks the merge: move it aside, merge, `cmp`. When factory moves while qa-final runs (spec 07: fix-12 landed mid-sweep), let the sweep finish, then merge, curate memory, push and resume qa-final for only M0 to M3 plus PR readiness with the delta proof; the QA lead's final-review then covers both rounds.
 - **Parallel cycle in an isolated Agent-tool worktree** (spec 05): the worktree starts on stripped `main`, not factory; cut the spec branch with `git switch -c sdd/<slug>/spec --no-track origin/factory`. Comms live in the worktree's own `.claude/comms/`. Other cycles merge into factory meanwhile: merge `origin/factory` into the spec branch after the last task PR and BEFORE the final sweep, so qa-final reviews exactly what merges and no sweep re-run is needed. Expect agent-memory conflicts only: union the `MEMORY.md` index files yourself, let the owning agent type (sonnet) curate its conflicted topic files to budget.
 - **Headless Claude Code proxy for the manual smoke item:** `claude -p "<prompt>" --mcp-config <scratch json> --strict-mcp-config --allowedTools mcp__<server>__<tool> --output-format stream-json --verbose` writes no user config (never `claude mcp add`). The CLI default model can hit a usage limit (429): pre-authorize a `--model sonnet` retry in the directive and name the model in the record. Judge on the init event (server connected, exact tool list) plus one tool_result.
@@ -33,8 +33,9 @@ metadata:
   field untouched needs that field asserted. Leaving these to the verifier cost two rework rounds per task.
 - **Before planning a defence-in-depth check, grep every fixture that feeds it** (fix-06 D3): one helper with a foreign
   isbn fed about twenty flow tests; aligning stub literals without touching assertions is within authority, log it.
-- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06) and for web config and
-  frontend state (fix-12); every rework was test-only. The main session's model rule (opus only for qa-lead,
+- **Lite bugfix with sonnet impl and verifiers held** for acl, flow and e2e tasks (fix-06), web config and frontend
+  state (fix-12), and chat-client options, test config and prompt text (fix-08; opus only for the boundary catch T1);
+  every rework was test-only. The main session's model rule (opus only for qa-lead,
   qa-final, critical tasks) overrides "rework >= 2 -> opus". Shared in-flight state: name "every reset branch has a
   test that sends again" in round 0 (fix-12 T2 r0 survivor). Bugfix criteria for new UI elements: "red set = the named
   tests plus any test of a new element; no pre-existing test red" up front (fix-12 plan.md A1). Also held in one
@@ -56,4 +57,27 @@ metadata:
 - **Live replays on a shared machine must name an isolated database** in the directive: `spring-boot:run` plus `docker compose down -v` removes the shared `bookstore-postgres-1` volume of every checkout (spec 07 T7), and `spring-boot:run` alone creates it (spec 08 T4). `bookstore/compose.yaml` binds host 5432, so a second compose project cannot run beside it. Ask for an own `docker run` Postgres on a free port, `java -jar` with `--spring.docker.compose.enabled=false`, app port never 8080, a quoted teardown, and a name-based docker proof (other cycles start containers mid-run, so an empty `docker ps -a` diff never holds).
 - **Spec cut from another unmerged spec branch (spec 08 on 07):** merge `origin/factory` in a scratch `git worktree add` on the local spec branch while a task branch is checked out in the main worktree; then each open task branch merges the spec tip before its ship gate (memory-only conflicts). PR checks can register after 60 s: the watch script must loop on "no checks reported".
 - **LLM adapter specs (spec 08):** check vendor API rules against the pack config (a sampling setting the API now rejects was dropped as a self-accepted, flagged decision); keep tests offline by construction and run every gate's referee twice, plain and with a fake key exported. Sonnet held for tools, integration tests and README; opus for config, ChatClient wiring and the HTTP adapter. Every round-0 FAIL was one surviving mutant, closed test-only in one round.
+- **Offline pin for integration tests (fix-08 A4):** pinning `spring.ai.model.chat` in a shared test base makes the
+  offline EnvironmentPostProcessor skip and breaks its full-boot witness; pin the blank key plus a loopback base URL
+  instead (inlined test properties outrank the environment). Prove exported-variable safety with a decoy loopback
+  base URL and a per-host connection count.
+- **LLM live checks find what offline tests cannot** (fix-08 A2, A3): thinking-block replay order (Spring AI 2.0.2),
+  follow-up lookups without tool results in memory, fields the prompt never names. Plan a stub-server contract test
+  of the real model client and a prompt-text test set up front; a readable genre list needs the tool argument form too.
+- **Pausing for a main-session check as a subagent:** the harness forces a hand-back when the run idles; hand back
+  with a precise resume point instead of waiting.
+- **Spec 09 (scripts, docs, seed amendments):** a mid-cycle amendment can contradict the pack (D12: 10 genres x 10
+  AVAILABLE with exactly 100 books leaves no room for discontinued books); count the enum before planning and stop
+  with options. I cannot TaskStop my own children; stop a superseded verifier with an urgent inbox directive and accept
+  a BLOCKED verdict. Merging the spec tip into an in-flight task branch: WIP-commit, merge, leave only the doc conflict
+  to the implementer, commit the merge myself. A "line N reads X" criterion deletes other sentences on that line; name
+  the sentence. Rewriting a census test (T8) silently dropped an all-rows check: ask the lead to diff old clauses, not
+  counts. The qa-final base can move mid-sweep: re-check `ls-remote factory` before readiness, merge, re-baseline
+  changed gated files by patch-id, re-run only tip-dependent items. Opus held for the publish script and its follow-up
+  (both one test-only rework round); sonnet held for seed, http, docs, cap, count tasks.
+- **Participant-baseline probes (fix-09):** a temporary `V<n+1>__*.sql` under `bookstore/src/test/resources/db/migration/`
+  is applied by the test profile, so "a participant adds a migration" needs no production file; Maven keeps removed
+  test resources in `target/test-classes`, so probes need `clean` or a manual move. Brief qa-final to run the whole
+  module with the probe. Feed-forward only lands if copied into plan.md and the next task prompt (ledger-only items
+  were skipped by verifiers). Lite bugfix with sonnet docs/test tasks and opus script task held in one round each.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.
