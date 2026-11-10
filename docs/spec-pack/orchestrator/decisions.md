@@ -259,3 +259,14 @@ spec-10-done the guide's branch links answer 404; check R-G2 (every guide link r
 Tags stay in build order: spec 11's merge and deploy happen now, the `spec-11-done` tag follows `spec-10-done`.
 
 Changed files: none in the specs (spec 10 already names these branches; this decision freezes them).
+
+## D18. The guide takes the keynote deck's look
+
+Maik, 2026-11-10: the guide header gets the OpenValue logo (left of the title, opens https://openvalue.eu in a new
+tab), a repository link and a LinkedIn link (https://www.linkedin.com/in/maik-kingma/). The level bar becomes a
+breadcrumb: done levels green with a check mark, the current level solid deck blue, upcoming levels slightly grayed
+out. Colours follow the deck "Shift Left, Look Right": slate grey `#1d242c` backgrounds in dark mode and blue
+`#3c7ec9` for buttons and links. The logo is extracted from the deck. This replaces D7's teal primary for the guide
+only; the storefront keeps D7. Montserrat stays.
+
+Changed files: new `specs/14-guide-branding.md`, `product/roadmap.md` (row 14).

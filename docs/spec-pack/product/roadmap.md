@@ -31,6 +31,7 @@ Build strictly in this order. Each spec assumes the previous ones are merged and
 | 10 | Harness reference solutions and level branches | all | Catch-up branches for every level |
 | 11 | Workshop guide site (Docusaurus) | guide | Participant-facing instructions |
 | 13 | Assistant chat widget with streamed answers (after the first release, decision D13) | bookstore, frontend | Optional; not part of the first release |
+| 14 | Guide header links, OpenValue logo, breadcrumb level bar and deck colours (decision D18) | guide | The guide matches the keynote deck |
 
 ## The factory branch (important)
 
