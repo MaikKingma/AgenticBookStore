@@ -18,7 +18,7 @@ merge.
 
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | | sdd/14-guide-branding/T1 | | |
+| T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | #165 | sdd/14-guide-branding/T1 | PASS r1 | ENDORSE |
 | T2 | guide | [T1] | 2 | LevelProgress chevron breadcrumb with links, done/current/upcoming states, level-progress built rule | critical | sonnet (owner policy, see Decisions) | | sdd/14-guide-branding/T2 | | |
 | T3 | guide | [T1, T2] | 3 | deck colours across the site, brand rule to D18, visual sweep, screenshots | elevated | sonnet | | sdd/14-guide-branding/T3 | | |
 
@@ -177,7 +177,30 @@ offline build over `file://`), and the referee `./mvnw clean verify` from the re
 
 ## QA feed-forward
 
-(none yet)
+From the T1 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
+
+- FF-T1-1 (T2): one inserted test in `guide/scripts/navbar.test.mjs`: two copies of the good logo link in the left part
+  of the navbar give exactly `['navbar: index.html: more than one logo link in the navbar (found 2)']` (deepEqual).
+  The T2 verifier shows that mutant NM25 (the `logos.length > 1` check removed) and its twin (`> 2`) fail it, that every
+  other existing assertion line is unchanged, and that `rules/navbar-built.mjs` keeps its T1 hash.
+- FF-T1-2 (T2): T1's entry-point tests run `check-built.mjs` with no argument on fixture builds holding only
+  `index.html` and `setup-check.html` and expect exit 0 and `ok   navbar: 2 pages`. If T2's level rule uses the same
+  default-dir switch and fails on a missing level page, either the level rule takes its expected pages from a source
+  the copied fixture lacks (T2 tests prove both directions) or the fixture builds gain level pages (listed old -> new
+  under FF-T1-1). Never by loosening an assertion. The verifier re-runs T1 wiring mutants W1, W2, W3 and W8 after T2.
+- FF-T1-3 (T2, T3; replaces C0-6 "N equals grep count"): node:test total at least the previous gate's (T2: 602), no
+  titles lost (`comm -23` empty) except listed renames; the `check.mjs` `ascii`, `lab` and `colors` count lines change
+  only by the number of new files in that rule's scope, each listed.
+- FF-T1-4 (T3): the Level 2 admonition paragraph in axe `incomplete`: compute its ratio from computed styles on the
+  final palette, or show it is gone.
+- FF-T1-5 (T3): re-decide every T1 navbar variable that uses teal or mist, keep the 8 navbar pairs per mode; light-mode
+  hover and active use `var(--ifm-color-primary)` (under A1 `#3371B8`, 5.01:1 on white); keep `--guide-navbar-logo`
+  slate `#1D242C` in light and white in dark (`logo.test.mjs` ties it to the PNG pixels); state the D18 value for the
+  navbar accent line (still `--ov-blue` `#3D7DC9`).
+- FF-T1-6 (T2, T3; aligns the task blocks with A1): T2 items on the `large` kind lapse; `rules/contrast.mjs` and
+  `contrast.test.mjs` keep their T1 hashes, `level progress current label` stays `text`, and a current fill of
+  `#3C7EC9` must make `npm run check` fail at 4.18. T3 item 1 must-fails: light primary `#014046`, light primary
+  `#3C7EC9`, dark primary `#3C7EC9`, dark primary swapped with the light value; drop every mention of `large`.
 
 ## Amendments
 
@@ -197,6 +220,9 @@ offline build over `file://`), and the referee `./mvnw clean verify` from the re
     `nontext` pairs) and the extended restricted rule forbids it as fg or bg of any `text` pair. G-1 reduces to the
     census: a rendered walk of every text node on the 11 pages in both modes (hover and active states, TOC active
     entry, tabs, breadcrumbs, pagination) finds no text in `rgb(60, 126, 201)` and no text on that background.
+- A2 (2026-11-10, orchestrator, from the T1 meta-review; gate re-run self-accepted, test-only scope). T2's fileScope
+  gains `guide/scripts/navbar.test.mjs`, limited to the FF-T1-1 inserted test and the FF-T1-2 fixture edits (listed
+  old -> new). `guide/scripts/rules/navbar-built.mjs` stays byte-identical.
 
 ## Residuals for the owner
 
