@@ -18,28 +18,17 @@ metadata:
 - `rg` is not on the Bash tool PATH here and BSD grep has no `-P`. Byte-level ASCII check, in a script: `env LC_ALL=C grep
   -rnI $'[\x80-\xff]' <paths>`. The Write tool stores U+2003 as a plain space, so a Written control file proves nothing; use
   a committed file known to hold non-ASCII as the positive control.
-- C0-6 greps are literal and also hit test titles and comments: `fontsource` (6e) and `document title` (6d, the dot is a
-  wildcard) in an `it(...)` title fail the gate. Run the whole C0-6 list before handing off.
 - Must-fail probes for a shared setup file: one script with a loop that deletes one line per run via `grep -vF`, restores from
   a copy and compares `shasum` (see the T2 outbox for the pattern).
 - Vitest 5 turns every `*.css` import into an empty string, the `?raw`, `?inline` and glob forms too (plugin
   `vitest:css-empty-post` matches `.css?`). To read stylesheets in a test use `node:fs`; tsconfig.app.json has
   `types: ["vite/client"]` only, so start the test with `/// <reference types="node" />` (no config change). Use
   `import.meta.dirname`, not `import.meta.url` (jsdom makes it a non-file URL). `?raw` works for html and other files.
-- Test sources are grepped for `https?://`, `.fails(`, module-level `const x = [`/`new`: write URL fixtures as
-  `${'https'}://host`, keep fixtures inside `it`/`describe`, and use `as const` for module-level tables.
-- A pinned font licence text can trip the QA greps (`reserved`, `https?://`): strip only the URL schemes and say so.
 - A mocked `fetch` that rejects on an unmatched request is swallowed by a client that maps rejections to its own error, so
   the test still passes. Record unmatched requests in the mock and check them in `onTestFinished` (a throw there fails the
   test; verified); take injection of the registrar as a parameter so a plain test can prove the wiring. Plain `Response`,
   `Headers` and `ReadableStream` work under the jsdom environment. Probe runners: a `python3 -I` script that replaces text,
   runs `vitest run src/api`, restores from a copy and compares sha256 per probe.
-- Order pass-through fixtures (C0-16): at least three elements, and for every attribute the middle value strictly above
-  or below both neighbours (never ascending or descending). Numeric strings need this under string AND numeric
-  comparison ("12.50" sorts before "6.99" as text). Keep `inStock = available > 0`. A python sweep of sort mutants per
-  attribute and direction proves it. The rule covers EVERY array under a `toEqual`, not only lists named "in order":
-  arrays nested in a view (`authors`), sent payloads (`lines`), and a test helper's call log. One UUID per entity across
-  all test files (a not-found id is its own literal; a 404 or 409 detail must not reuse a live order or book id).
 - Hash router tests: assigning `window.location.hash` fires `hashchange` in a later task, so await a `findBy*` right after
   (RTL turns the act environment off while it polls, no act warning); set the hash before `render` for a start route.
   A stale async answer needs a body-read witness (`vi.spyOn(response, 'text')`, then `waitFor`), not a timer, before the
@@ -62,10 +51,6 @@ metadata:
   so edge-whitespace witnesses never reach the payload. Use `type="text"` with `inputMode="email"`; keep `noValidate` on
   the form anyway when the card names it. Controlled `type="number"` inputs reset to the state value after a refused
   `fireEvent.change` (React restores it), which is what a "value stays 3" test needs.
-- C0-6c limit grep (`-w 10|20|1000`) also hits production COMMENTS and date examples ("10:00:00"): write comment
-  examples without those numbers and name limits in words. Order-fixture search: when no permutation of three lines
-  makes every attribute a peak or valley, change one price (a python brute force over candidate prices found
-  `7.99, 12.50, 3.50` with quantities 2, 3, 1); a data-only test double may differ from the basket it answers.
 - Form pages that call an id helper inside the send path: make the send an `async` function with try/catch around
   `await chat({ id: helper(), ... })`, so a throwing helper (`crypto.randomUUID` is absent on plain-http non-localhost
   origins) becomes the generic alert instead of a stuck pending state. A reply with edge whitespace cannot be awaited with
@@ -85,6 +70,3 @@ metadata:
   declaration wins; comments and media queries excluded) and put the real assertions in helpers that throw; run the helper on
   the real file and, via `expect(() => helper(css)).toThrow()`, on one-mutation variants of a passing fixture. `Number(` and
   `parseFloat` hit the C0-6c greps: use unary `+x`. DOM element arrays: `toEqual` is `isEqualNode`, compare identity with `toBe`.
-- Rule of the plan: the QA verifier asks for a guard test per afterEach statement (`setupTests.test.ts`: a dirty test, then
-  a test asserting clean state). The assertion at the very end of the afterEach itself is only killed by a probe in another
-  test file, not by the guard.
