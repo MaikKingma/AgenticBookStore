@@ -254,7 +254,7 @@ spec 10's branches. Its links point at branches that do not exist yet, so the na
 | `start/level-4-agentos` | `solution/level-3` | Level 4, Agent OS track |
 
 Rules: spec 10 task T14 creates exactly these names. Renaming one needs Maik's OK and a guide change in the same
-change. Optional rehearsal branches use `solution/level-4-<track>-<brief>` and the guide does not link them. Until
+change. There are no Level 4 solution branches: Maik, 2026-11-10, "the t11 to t13 do not need a done branch. thats up to the participants." Spec 10's optional `solution/level-4-<track>-<brief>` step is dropped; the Level 4 tasks stage only the three `start/level-4-*` branches. Until
 spec-10-done the guide's branch links answer 404; check R-G2 (every guide link resolves) moves to after spec-10-done.
 Tags stay in build order: spec 11's merge and deploy happen now, the `spec-11-done` tag follows `spec-10-done`.
 
