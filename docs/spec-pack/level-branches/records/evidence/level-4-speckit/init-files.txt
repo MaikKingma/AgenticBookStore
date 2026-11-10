@@ -1,0 +1,77 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+== $ cat .specify/init-options.json  (sbx-2, the built tree)
+{
+  "ai": "claude",
+  "ai_skills": true,
+  "allow_symlinks": false,
+  "feature_numbering": "sequential",
+  "here": true,
+  "integration": "claude",
+  "script": "sh",
+  "speckit_version": "1.3.1"
+}
+== $ cat .specify/integration.json
+{
+  "version": "1.3.1",
+  "integration_state_schema": 1,
+  "installed_integrations": [
+    "claude"
+  ],
+  "integration_settings": {
+    "claude": {
+      "script": "sh",
+      "raw_options": "--no-model-invocation",
+      "parsed_options": {
+        "no_model_invocation": true
+      },
+      "invoke_separator": "-"
+    }
+  },
+  "integration": "claude",
+  "default_integration": "claude"
+}
+== $ git grep -n 'disable-model-invocation\|user-invocable' HEAD -- .claude/skills/speckit-*
+.claude/skills/speckit-analyze/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-analyze/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-checklist/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-checklist/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-clarify/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-clarify/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-constitution/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-constitution/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-converge/SKILL.md:8:user-invocable: true
+.claude/skills/speckit-converge/SKILL.md:9:disable-model-invocation: true
+.claude/skills/speckit-implement/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-implement/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-plan/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-plan/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-specify/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-specify/SKILL.md:10:disable-model-invocation: true
+.claude/skills/speckit-tasks/SKILL.md:9:user-invocable: true
+.claude/skills/speckit-tasks/SKILL.md:10:disable-model-invocation: true
+== $ git ls-tree -r --name-only HEAD -- .claude/skills | grep speckit
+.claude/skills/speckit-analyze/SKILL.md
+.claude/skills/speckit-checklist/SKILL.md
+.claude/skills/speckit-clarify/SKILL.md
+.claude/skills/speckit-constitution/SKILL.md
+.claude/skills/speckit-converge/SKILL.md
+.claude/skills/speckit-implement/SKILL.md
+.claude/skills/speckit-plan/SKILL.md
+.claude/skills/speckit-specify/SKILL.md
+.claude/skills/speckit-tasks/SKILL.md
+== the constitution right after the init is the template: cmp of the init output with the template shipped by the init
+(sbx-1 constitution before it was written, from the staged template: ce7549540fa45543cca797a150201d868e64495fdff39dc38246fb17bd4024b3  .specify/templates/constitution-template.md)
+(.constitution-template.json records:)
+{
+  "sha256": "ce7549540fa45543cca797a150201d868e64495fdff39dc38246fb17bd4024b3",
+  "source": "core"
+}
+== init-stage constitution, first 8 lines (raw init output of sbx-1 was overwritten by the direct write; the template has the same bytes, init log says 'Constitution setup (copied from template)')
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+
+## Core Principles
+
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]

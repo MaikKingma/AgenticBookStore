@@ -1,0 +1,158 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Script: token-inventory.py.txt. Scans the pack documents and the guide pages (two refs, read with git show) for every Spec Kit token and resolves it on the built tree of sbx-2 (skills, files, flags of 'specify init --help', branch names).
+# docs scanned: pack spec 10, spec 11, sdd-framework-guide, workshop-plan, level-4-feature-briefs, tech-stack; guide/docs/** at origin/sdd/11-workshop-guide/spec and origin/factory
+# refs: origin/sdd/11-workshop-guide/spec b7f053c7a9c64de408831179b44289404c8bb4e5, origin/factory 711dd9dcdc7562e1d7cae5f5ef7f45ca6fdd8f86
+# guide/docs/05-level-4-spec-driven-development.mdx: identical at the two refs
+# guide/docs/06-wrap-up.md: identical at the two refs
+# guide/docs/reference/cheat-sheet.md: identical at the two refs
+== RUN
+skills on the built tree: analyze checklist clarify constitution converge implement plan specify tasks (9)
+documents scanned: 28
+ok	start/level-4-openspec	pack:specs/10-harness-reference-solutions.md:12	step_branch name
+ok	start/level-4-speckit	pack:specs/10-harness-reference-solutions.md:12	step_branch name
+ok	start/level-4-agentos	pack:specs/10-harness-reference-solutions.md:13	step_branch name
+ok	start/level-4-openspec	pack:specs/10-harness-reference-solutions.md:435	step_branch name
+ok	start/level-4-speckit	pack:specs/10-harness-reference-solutions.md:455	step_branch name
+ok	specify-cli==1.3.1	pack:specs/10-harness-reference-solutions.md:456	pinned 1.3.1
+ok	integration option --no-model-invocation	pack:specs/10-harness-reference-solutions.md:457	recorded in .specify/integration.json raw_options
+ok	specify init --here	pack:specs/10-harness-reference-solutions.md:457	flag in `specify init --help`
+ok	specify init --force	pack:specs/10-harness-reference-solutions.md:457	flag in `specify init --help`
+ok	specify init --integration	pack:specs/10-harness-reference-solutions.md:457	flag in `specify init --help`
+ok	specify init --script	pack:specs/10-harness-reference-solutions.md:457	flag in `specify init --help`
+ok	specify init --integration-options	pack:specs/10-harness-reference-solutions.md:457	flag in `specify init --help`
+ok	/speckit-constitution	pack:specs/10-harness-reference-solutions.md:459	skill dir exists
+ok	.specify/memory/constitution.md	pack:specs/10-harness-reference-solutions.md:459	exists on the built tree
+ok	start/level-4-agentos	pack:specs/10-harness-reference-solutions.md:467	step_branch name
+unpinned	specify-cli	pack:workshop/sdd-framework-guide.md:7	no version: the pack pins ==1.3.1
+ok	.specify/memory/constitution.md	pack:workshop/sdd-framework-guide.md:19	exists on the built tree
+ok	/speckit-specify	pack:workshop/sdd-framework-guide.md:27	skill dir exists
+ok	/speckit-plan	pack:workshop/sdd-framework-guide.md:28	skill dir exists
+ok	/speckit-specify	pack:workshop/sdd-framework-guide.md:31	skill dir exists
+ok	/speckit-plan	pack:workshop/sdd-framework-guide.md:33	skill dir exists
+ok	/speckit-tasks	pack:workshop/sdd-framework-guide.md:34	skill dir exists
+ok	start/level-4-openspec	pack:workshop/sdd-framework-guide.md:54	step_branch name
+ok	specify-cli==1.3.1	pack:workshop/sdd-framework-guide.md:64	pinned 1.3.1
+ok	integration option --no-model-invocation	pack:workshop/sdd-framework-guide.md:65	recorded in .specify/integration.json raw_options
+ok	specify init --here	pack:workshop/sdd-framework-guide.md:65	flag in `specify init --help`
+ok	specify init --force	pack:workshop/sdd-framework-guide.md:65	flag in `specify init --help`
+ok	specify init --integration	pack:workshop/sdd-framework-guide.md:65	flag in `specify init --help`
+ok	specify init --script	pack:workshop/sdd-framework-guide.md:65	flag in `specify init --help`
+ok	specify init --integration-options	pack:workshop/sdd-framework-guide.md:65	flag in `specify init --help`
+ok	/speckit-constitution	pack:workshop/sdd-framework-guide.md:67	skill dir exists
+ok	/speckit-specify	pack:workshop/sdd-framework-guide.md:70	skill dir exists
+ok	/speckit-clarify	pack:workshop/sdd-framework-guide.md:71	skill dir exists
+ok	/speckit-plan	pack:workshop/sdd-framework-guide.md:72	skill dir exists
+ok	/speckit-tasks	pack:workshop/sdd-framework-guide.md:73	skill dir exists
+ok	/speckit-analyze	pack:workshop/sdd-framework-guide.md:73	skill dir exists
+ok	/speckit-implement	pack:workshop/sdd-framework-guide.md:74	skill dir exists
+ok	/speckit-converge	pack:workshop/sdd-framework-guide.md:74	skill dir exists
+notation	start/level-4-<track>	pack:workshop/sdd-framework-guide.md:96	placeholder form of the branch name
+ok	/speckit-specify	pack:workshop/sdd-framework-guide.md:118	skill dir exists
+ok	/speckit-clarify	pack:workshop/sdd-framework-guide.md:119	skill dir exists
+ok	/speckit-plan	pack:workshop/sdd-framework-guide.md:120	skill dir exists
+ok	/speckit-tasks	pack:workshop/sdd-framework-guide.md:121	skill dir exists
+ok	/speckit-implement	pack:workshop/sdd-framework-guide.md:122	skill dir exists
+ok	/speckit-converge	pack:workshop/sdd-framework-guide.md:122	skill dir exists
+ok	/speckit-checklist	pack:workshop/sdd-framework-guide.md:124	skill dir exists
+ok	/speckit-analyze	pack:workshop/sdd-framework-guide.md:124	skill dir exists
+ok	/speckit-specify	pack:workshop/sdd-framework-guide.md:126	skill dir exists
+runtime	.specify/feature.json	pack:workshop/sdd-framework-guide.md:127	created at run time by /speckit-specify, git-ignored
+unpinned	specify-cli	pack:workshop/sdd-framework-guide.md:150	no version: the pack pins ==1.3.1
+ok	specify init --here	pack:workshop/sdd-framework-guide.md:150	flag in `specify init --help`
+ok	specify init --force	pack:workshop/sdd-framework-guide.md:150	flag in `specify init --help`
+ok	specify init --integration	pack:workshop/sdd-framework-guide.md:150	flag in `specify init --help`
+ok	specify init --script	pack:workshop/sdd-framework-guide.md:150	flag in `specify init --help`
+ok	start/level-4-openspec	pack:workshop/workshop-plan.md:305	step_branch name
+ok	/speckit-specify	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	/speckit-clarify	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	/speckit-plan	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	/speckit-tasks	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	/speckit-implement	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	/speckit-converge	pack:workshop/workshop-plan.md:306	skill dir exists
+ok	start/level-4-speckit	pack:workshop/workshop-plan.md:306	step_branch name
+ok	start/level-4-agentos	pack:workshop/workshop-plan.md:307	step_branch name
+ok	specify-cli==1.3.1	pack:product/tech-stack.md:71	pinned 1.3.1
+notation	start/level-4-<track>	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:16	placeholder form of the branch name
+notation	start/level-4-<track>	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:21	placeholder form of the branch name
+ok	start/level-4-openspec	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:36	step_branch name
+ok	/speckit-specify	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-clarify	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-plan	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-tasks	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-implement	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-converge	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	start/level-4-speckit	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:37	step_branch name
+ok	start/level-4-agentos	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:38	step_branch name
+notation	start/level-4-<track>	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:44	placeholder form of the branch name
+ok	/speckit-specify	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:117	skill dir exists
+ok	/speckit-clarify	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:123	skill dir exists
+ok	/speckit-plan	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:129	skill dir exists
+ok	/speckit-tasks	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:135	skill dir exists
+ok	/speckit-implement	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:141	skill dir exists
+ok	/speckit-converge	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:145	skill dir exists
+ok	/speckit-checklist	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:154	skill dir exists
+ok	/speckit-analyze	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:154	skill dir exists
+ok	/speckit-specify	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:156	skill dir exists
+runtime	.specify/feature.json	origin/sdd/11-workshop-guide/spec:guide/docs/05-level-4-spec-driven-development.mdx:156	created at run time by /speckit-specify, git-ignored
+unpinned	specify-cli	origin/sdd/11-workshop-guide/spec:guide/docs/06-wrap-up.md:101	no version: the pack pins ==1.3.1
+ok	specify init --here	origin/sdd/11-workshop-guide/spec:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --force	origin/sdd/11-workshop-guide/spec:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --integration	origin/sdd/11-workshop-guide/spec:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --script	origin/sdd/11-workshop-guide/spec:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	start/level-4-openspec	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:27	step_branch name
+ok	/speckit-specify	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-clarify	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-plan	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-tasks	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-implement	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-converge	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	start/level-4-speckit	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:28	step_branch name
+ok	start/level-4-agentos	origin/sdd/11-workshop-guide/spec:guide/docs/reference/cheat-sheet.md:29	step_branch name
+notation	start/level-4-<track>	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:16	placeholder form of the branch name
+notation	start/level-4-<track>	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:21	placeholder form of the branch name
+ok	start/level-4-openspec	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:36	step_branch name
+ok	/speckit-specify	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-clarify	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-plan	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-tasks	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-implement	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	/speckit-converge	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	skill dir exists
+ok	start/level-4-speckit	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:37	step_branch name
+ok	start/level-4-agentos	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:38	step_branch name
+notation	start/level-4-<track>	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:44	placeholder form of the branch name
+ok	/speckit-specify	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:117	skill dir exists
+ok	/speckit-clarify	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:123	skill dir exists
+ok	/speckit-plan	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:129	skill dir exists
+ok	/speckit-tasks	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:135	skill dir exists
+ok	/speckit-implement	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:141	skill dir exists
+ok	/speckit-converge	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:145	skill dir exists
+ok	/speckit-checklist	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:154	skill dir exists
+ok	/speckit-analyze	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:154	skill dir exists
+ok	/speckit-specify	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:156	skill dir exists
+runtime	.specify/feature.json	origin/factory:guide/docs/05-level-4-spec-driven-development.mdx:156	created at run time by /speckit-specify, git-ignored
+unpinned	specify-cli	origin/factory:guide/docs/06-wrap-up.md:101	no version: the pack pins ==1.3.1
+ok	specify init --here	origin/factory:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --force	origin/factory:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --integration	origin/factory:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	specify init --script	origin/factory:guide/docs/06-wrap-up.md:107	flag in `specify init --help`
+ok	start/level-4-openspec	origin/factory:guide/docs/reference/cheat-sheet.md:27	step_branch name
+ok	/speckit-specify	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-clarify	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-plan	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-tasks	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-implement	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	/speckit-converge	origin/factory:guide/docs/reference/cheat-sheet.md:28	skill dir exists
+ok	start/level-4-speckit	origin/factory:guide/docs/reference/cheat-sheet.md:28	step_branch name
+ok	start/level-4-agentos	origin/factory:guide/docs/reference/cheat-sheet.md:29	step_branch name
+notation	start/level-4-<track>	origin/factory:guide/docs/reference/troubleshooting.md:135	placeholder form of the branch name
+COUNTS: {'ok': 122, 'unpinned': 4, 'notation': 8, 'runtime': 3}
+RESULT: no mismatch
+== SELFTEST (misspelled tokens planted in an in-memory copy of one document)
+real mismatches before controls: 0
+CONTROL skill name misspelled in pack:specs/10-harness-reference-solutions.md: reported (/speckit-consitution)
+CONTROL version differs in pack:specs/10-harness-reference-solutions.md: reported (specify-cli==1.3.0)
+CONTROL flag misspelled in pack:specs/10-harness-reference-solutions.md: reported (specify init --integration-option)
+CONTROL integration option misspelled in pack:specs/10-harness-reference-solutions.md: reported (integration option --no-model-invokation)
+CONTROL path misspelled in pack:specs/10-harness-reference-solutions.md: reported (.specify/memory/constitutoin.md)
+CONTROL branch misspelled in pack:specs/10-harness-reference-solutions.md: reported (start/level-4-speckitt)
+SELFTEST: OK

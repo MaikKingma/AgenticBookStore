@@ -1,0 +1,9 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+== $ .specify/scripts/bash/resolve-template.sh constitution-template --json   (skill step 1; run in sbx-3, fresh init, under env -i with the isolated HOME)
+exit=0
+stdout bytes: 2460; stderr bytes: 0
+JSON keys and the first 60 characters of each value:
+TEMPLATE_NAME = 'constitution-template'
+TEMPLATE_CONTENT = '# [PROJECT_NAME] Constitution\n<!-- Example: Spec Constitut
+TEMPLATE_CONTENT equals the template file: True
+git status changed by the call: no
