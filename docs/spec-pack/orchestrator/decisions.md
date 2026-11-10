@@ -270,3 +270,8 @@ out. Colours follow the deck "Shift Left, Look Right": slate grey `#1d242c` back
 only; the storefront keeps D7. Montserrat stays.
 
 Changed files: new `specs/14-guide-branding.md`, `product/roadmap.md` (row 14).
+
+Addendum (main session, 2026-11-10, spec 14 OD-1): the deck blue `#3c7ec9` reaches only 4.18:1 against white and
+3.74:1 on slate, below the guide's pinned 4.5:1 text contrast. To keep that check unchanged, text-bearing uses (the
+primary colour, the current crumb) use the AA shade `#3371B8` in light mode and a lighter AA shade on slate in dark
+mode; the exact `#3c7ec9` is kept for non-text accents (borders, bars).
