@@ -1,0 +1,100 @@
+# D9 check: does the field onFailure exist in the hooks schema of the current Claude Code docs?
+# Read-only fetch of public pages with curl on 2026-11-10 (UTC), then text extraction. No Claude process, no login.
+# Pages (HTTP 200 each): https://code.claude.com/docs/en/hooks , /hooks-guide , /settings , /settings-reference ,
+# /changelog and the public JSON schema https://json.schemastore.org/claude-code-settings.json
+# Extraction: tags stripped, whitespace collapsed, HTML entities decoded. The pages use curly apostrophes and a few other
+# non-ASCII glyphs; they show as '?' below because this evidence is ASCII only. All other characters are as printed.
+
+## Result
+The field EXISTS in the official hooks documentation (command hook fields and HTTP hook fields), with the values
+"continue" (default) and "block", and it requires Claude Code v2.1.295 or later. The changelog confirms the release.
+Decision under D9: the pack block is staged as it is, with "onFailure": "block" on the commit hook handler.
+Gap for the guide and for Maik (reported, see the last section): the PUBLIC settings JSON schema on schemastore does
+not list onFailure, and its command hook definition forbids unknown keys, so an editor that validates against it
+will underline the field. Claude Code itself documents the field; the schema copy is behind.
+
+## 1. The docs: command hook fields (hooks page, section Hook handler fields)
+[1a] hooks.txt
+  "onFailure no Whether the action that triggered the hook goes ahead when the hook fails: "continue" or "block" . See Block the action when a hook fails for "block" and for leaving the field unset. Requires Claude Code v2.1.295 or later"
+
+## 2. The docs: section Block the action when a hook fails
+[2a] hooks.txt
+  "Block the action when a hook fails On most events, when a hook fails or times out, Claude Code still carries out the action. A policy hook with a wrong path or a crashing script then lets everything through. To block the action instead, set "onFailure": "block" on a command or http hook. Requires Claude Code v2.1.295 or later."
+
+## 3. The docs: failure modes that onFailure covers (timeout, hook that cannot start)
+[3a] hooks.txt
+  "a timed-out command , http , or mcp_tool hook doesn?t block the tool call, except for hooks whose failure blocks the action . The call continues through the normal permission flow , so don?t count on a stalled hook to act as a gate. To block the call when a command or http hook times out, set onFailure: "block" ."
+
+[3b] hooks.txt
+  "Unless the hook is one whose failure blocks the action , a hook that can?t start is a non-blocking error too. When you set up a policy hook, watch for this notice on its first run, because a mistyped path in settings.json means the hook never runs. To block the action when the hook can?t start, set onFailure: "block" ."
+
+## 4. The changelog (https://code.claude.com/docs/en/changelog)
+  entry found: True
+  entry position is after the 2.1.295 heading anchor and before the 2.1.294 one: True
+  (the 2.1.296 anchor is before the entry, i.e. the entry belongs to 2.1.295)
+  "Added onFailure: "block" for command and HTTP hooks: a hook that can?t start, times out, or exits with an unexpected code blocks the action instead of letting it through"
+
+## 5. The public settings JSON schema (hookCommand, Bash command hook)
+  description: Bash command hook
+  additionalProperties: False
+  required: ['type', 'command']
+  properties: ['type', 'command', 'timeout', 'async', 'asyncRewake', 'shell', 'if', 'statusMessage', 'args']
+  onFailure listed: False
+  timeout property description: Optional timeout in seconds (default: 600; lowered to 30 on UserPromptSubmit and 10 on MessageDisplay)
+  if property description (first sentence): Optional permission-rule-syntax filter (e.g., "Bash(git *)")
+  occurrences of the text onFailure anywhere in the schema file: 0
+
+## 6. Triggers of the two hooks in the Level 3 settings file (FF-T6-a), from the hooks page
+settings.json: PreToolUse, matcher Bash, if "Bash(git commit *)", timeout 180, onFailure block; Stop, timeout 120.
+
+[6a PreToolUse event] hooks.txt
+  "Runs after Claude creates tool parameters and before processing the tool call. Matches on any tool name except EndConversation : built-in tools such as Bash , PowerShell , Edit , Write , Read , Glob , Grep , Agent , Workflow , WebFetch , WebSearch , AskUserQuestion , and ExitPlanMode , and any MCP tool names ."
+
+[6b matcher] hooks.txt
+  "Bash matches the Bash tool, and on PreToolUse and PermissionRequest also Monitor commands ; Edit|Write and Edit, Write each match either tool exactly"
+
+[6c if field] hooks.txt
+  "if no Permission rule syntax to filter when this hook runs, such as "Bash(git *)" or "Edit(*.ts)" . The hook command only runs if the tool call matches the pattern. See the Bash matching table for how Bash patterns evaluate against subcommands, $() , and backticks. Only evaluated on tool events: PreToolUse , PostToolUse , PostToolUseFailure , PermissionRequest , and PermissionDenied . On other events, a hook with if set never runs"
+
+[6d if is best-effort] hooks.txt
+  "When Claude Code can?t determine which commands the Bash input runs, it runs your hook regardless of the pattern. Because the if filter is best-effort, use the permission system rather than a hook to enforce a hard allow or deny."
+
+[6e PreToolUse exit code 2] hooks.txt
+  "PreToolUse Yes Blocks the tool call"
+
+[6f Stop event] hooks.txt
+  "Runs when the main Claude Code agent has finished responding. Does not run if the stoppage occurred due to a user interrupt."
+
+[6g Stop exit code 2] hooks.txt
+  "Stop Yes Prevents Claude from stopping, continues the conversation"
+
+[6h stop_hook_active] hooks.txt
+  "The stop_hook_active field is true when Claude Code is already continuing as a result of a stop hook. Check this value or process the transcript to avoid blocking on a condition that will never resolve."
+
+[6i timeout] hooks.txt
+  "timeout no Seconds before canceling. Claude Code doesn?t enforce it on a command hook you run with async: true . Defaults: 600 for command , http , and mcp_tool ; 30 for prompt ; 60 for agent ."
+
+[6j Windows without Git Bash] hooks.txt
+  "On Windows without Git Bash, a shell-form PreToolUse or PermissionRequest command hook that fails with onFailure unset can instead block the tool call ."
+
+What the quotes mean for the staged file:
+- The commit hook runs before a Bash tool call (PreToolUse, matcher Bash) and only when the call matches the permission
+  rule in if, here Bash(git commit *). The filter is best-effort, so the script checks the command itself (pack text).
+- A hook that times out (180 s) or cannot start blocks the call only because of onFailure block; without it the call
+  would go ahead (quote 3a, 3b). Exit code 2 blocks on PreToolUse (6e).
+- The Stop entry in the file has no matcher and no if (an if on a non-tool event would never run, quote 6c): it runs
+  each time the main agent finishes responding (6f). Exit code 2 keeps
+  Claude working (6g); stop_hook_active is true when it is already continuing because of a stop hook (6h).
+
+## 7. Notes for the guide and for Maik
+- G1: the schemastore schema does not know onFailure (section 5). Claude Code v2.1.295 or later accepts it (section 1,
+  4). The Claude Code version in use for this spec is 2.1.319 (plan amendment A1, not checked by a run here: no agent
+  starts Claude Code under D14), so it is above the floor. Participants on an older Claude Code would not get the
+  block-on-failure behaviour (the docs do not say what an older version does with an unknown hook key: not checked).
+- G2: the docs warn that a hook with onFailure unset and a mistyped path never runs (quote 3b); with the field set a
+  missing script blocks every matching commit. T10 adds the timeout probe (A1).
+- G4 (read off the pack text, not run): the if rule Bash(git commit *) and the grep of tests-before-commit.sh both look
+  for the words git and commit separated by spaces, so a variant such as git -C . commit matches neither; plan A2
+  hands the variants to T10 as rehearsal rows.
+- G3: the docs sentence 6j (Windows without Git Bash) matches pack decision D9: Windows participants need Git for
+  Windows. T8 states it in the Windows note.
