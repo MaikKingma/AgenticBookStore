@@ -55,6 +55,8 @@
   --ov-mist: #CBD9DA;
   --ov-snow: #F1F5F6;
   --ov-white: #FFFFFF;
+  /* Deck slate (spec 14): the dark navbar, and the colour of the slate logo file. */
+  --ov-slate: #1D242C;
 
   /* Typography: Montserrat, code keeps the default monospace stack. */
   --ifm-font-family-base: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -109,16 +111,18 @@
   --guide-code-accent: var(--ov-teal);
   --guide-code-border: var(--ov-mist);
 
-  /* Navbar: navy with white text, a blue accent line. */
-  --ifm-navbar-background-color: var(--ov-navy);
-  --ifm-navbar-link-color: var(--ov-white);
-  --ifm-navbar-link-hover-color: var(--ov-mist);
-  --ifm-navbar-link-active-color: var(--ov-mist);
+  /* Navbar, light mode: a light bar with slate text and a blue accent line, so the slate logo
+     file shows. The logo variable names the colour of the logo file shown in this mode. */
+  --ifm-navbar-background-color: var(--ov-white);
+  --ifm-navbar-link-color: var(--ov-slate);
+  --ifm-navbar-link-hover-color: var(--ifm-color-primary);
+  --ifm-navbar-link-active-color: var(--ifm-color-primary);
   --guide-navbar-accent: var(--ov-blue);
-  --guide-navbar-hover-bg: var(--ov-teal);
-  --guide-navbar-menu-color: var(--ov-white);
-  --guide-navbar-menu-active: var(--ov-mist);
-  --guide-navbar-menu-bg: var(--ov-teal);
+  --guide-navbar-hover-bg: var(--ov-mist);
+  --guide-navbar-menu-color: var(--ov-slate);
+  --guide-navbar-menu-active: var(--ov-slate);
+  --guide-navbar-menu-bg: var(--ov-mist);
+  --guide-navbar-logo: var(--ov-slate);
 
   /* Sidebar menu, breadcrumbs, tabs, table of contents. */
   --ifm-menu-color: var(--ov-navy);
@@ -208,6 +212,17 @@ html[data-theme='dark'] {
   --guide-code-accent: var(--ov-mist);
   --guide-code-border: var(--ov-sage);
 
+  /* Navbar, dark mode: a slate bar with light text, so the white logo file shows. */
+  --ifm-navbar-background-color: var(--ov-slate);
+  --ifm-navbar-link-color: var(--ov-white);
+  --ifm-navbar-link-hover-color: var(--ov-mist);
+  --ifm-navbar-link-active-color: var(--ov-mist);
+  --guide-navbar-hover-bg: var(--ov-teal);
+  --guide-navbar-menu-color: var(--ov-white);
+  --guide-navbar-menu-active: var(--ov-mist);
+  --guide-navbar-menu-bg: var(--ov-teal);
+  --guide-navbar-logo: var(--ov-white);
+
   --ifm-menu-color: var(--ov-white);
   --ifm-tabs-color: var(--ov-white);
   --ifm-toc-link-color: var(--ov-white);
@@ -233,8 +248,9 @@ html[data-theme='dark'] {
   --guide-level-current-border: var(--ov-white);
 }
 
-/* Navbar: white text on navy in both modes. The mobile menu lives inside the navbar, so the
-   menu colours are scoped here too (Infima would otherwise use the page colours on navy). */
+/* Navbar: slate text on a light bar in light mode, light text on slate in dark mode. The mobile
+   menu lives inside the navbar, so the menu colours are scoped here too (Infima would otherwise
+   use the page colours on the navbar). */
 .navbar {
   border-bottom: 3px solid var(--guide-navbar-accent);
   color: var(--ifm-navbar-link-color);
@@ -243,6 +259,28 @@ html[data-theme='dark'] {
   --ifm-menu-color-background-active: var(--guide-navbar-menu-bg);
   --ifm-menu-color-background-hover: var(--guide-navbar-menu-bg);
   --ifm-color-emphasis-200: var(--guide-navbar-hover-bg);
+}
+
+/* The hover and active colours of a navbar link are close to its normal colour in light mode,
+   so an underline carries the state too. */
+.navbar__link:hover,
+.navbar__link--active {
+  text-decoration: underline;
+}
+
+/* The logo link in front of the title (src/theme/Navbar/Logo): 32 px high, never squeezed. */
+.guide-navbar-logo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: 0.75rem;
+}
+
+/* No display value here: the theme hides the image of the other colour mode with its own display
+   rule, and a display set on the image would show both files before the page is hydrated. */
+.guide-navbar-logo img {
+  height: 32px;
+  width: auto;
 }
 
 /* Links in page text are underlined, so colour is not the only cue (teal is close to navy). */

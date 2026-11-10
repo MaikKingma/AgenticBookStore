@@ -74,6 +74,7 @@ export const CONTRAST_PAIRS = [
   text('level progress inactive label', '--guide-level-inactive-fg', '--guide-level-inactive-bg'),
   nontext('navbar accent line', '--guide-navbar-accent', '--ifm-navbar-background-color'),
   nontext('navbar toggle on hover', '--ifm-navbar-link-color', '--guide-navbar-hover-bg'),
+  nontext('navbar logo', '--guide-navbar-logo', '--ifm-navbar-background-color'),
   nontext('level progress current fill', '--guide-level-current-bg', '--ifm-background-color'),
   nontext('level progress current outline', '--guide-level-current-border', '--ifm-background-color'),
 ];

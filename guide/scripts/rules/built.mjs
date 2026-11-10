@@ -5,6 +5,7 @@ import {checkboxes, lineOf} from '../lib/html.mjs';
 import {SOURCE_FILES} from '../coverage.mjs';
 import {packCommandLines} from './content.mjs';
 import {powershellLineErrors} from './built-powershell.mjs';
+import {navbarErrors} from './navbar-built.mjs';
 
 // The built-output rules behind `npm run check:built`.
 // 1. With the Docusaurus 3 title syntax (:::info[Title]) an admonition renders as a box.
@@ -42,11 +43,14 @@ function htmlFiles(dir, relDir, out) {
   return out;
 }
 
-// Returns {errors, count, checkboxes, windowsLines}: count is the number of html files
-// scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
+// Returns {errors, count, checkboxes, windowsLines, navbarPages}: count is the number of html
+// files scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
 // number of lines read in PowerShell tab panels and PowerShell-language code blocks, a line
-// counted once (in the list or not).
-export function scanBuilt(dir) {
+// counted once (in the list or not). options.navbar ({base}) switches on rule 4 below, the navbar
+// of every page (rules/navbar-built.mjs); it describes the real site, so check-built.mjs sets it
+// for the default build dir only and the fixture builds of the self-tests leave it off.
+// 4. The navbar of the Pages build: logo link, title link, GitHub and LinkedIn links.
+export function scanBuilt(dir, options = {}) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {
     return {errors: [`built: ${dir} is missing; run npm run build first`], count: 0};
   }
@@ -57,6 +61,7 @@ export function scanBuilt(dir) {
   const errors = [];
   let checkboxCount = 0;
   let windowsLines = 0;
+  let navbarPages = 0;
   const allowed = packAllowList();
   for (const file of files) {
     const html = readFileSync(join(dir, file), 'utf8');
@@ -78,8 +83,12 @@ export function scanBuilt(dir) {
     const windows = powershellLineErrors(file, html, allowed);
     errors.push(...windows.errors);
     windowsLines += windows.checked;
+    if (options.navbar) {
+      errors.push(...navbarErrors({file, html, base: options.navbar.base}));
+      navbarPages++;
+    }
   }
-  return {errors, count: files.length, checkboxes: checkboxCount, windowsLines};
+  return {errors, count: files.length, checkboxes: checkboxCount, windowsLines, navbarPages};
 }
 
 export function builtErrors(dir) {

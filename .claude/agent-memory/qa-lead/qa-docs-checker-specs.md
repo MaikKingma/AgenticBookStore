@@ -36,8 +36,7 @@ contrast), the checker is production code AND the oracle for every later task. T
    parsing); drop backticks (kills markup-stripping normalisation); a heading with two parentheticals
    (`(LSP + MCP) (20 min)`) needs the last one; an in-section `(8 min)` must not be accepted as the level time; the
    source may quote the anchor phrase elsewhere (a table cell), so a count guard needs a sixth-block probe.
-5. **H1 and heading rules** must skip fenced code: bash `# comment` lines are not headings.
-6. **Hex colour rules** hit Markdown anchors: `#add-book-reviews` matches `#[0-9a-f]{3}\b` because `-` is a word
+5. **H1 and heading rules** skip fenced code (bash `# comment`). **Hex colour rules** hit Markdown anchors: `#add-book-reviews` matches `#[0-9a-f]{3}\b` because `-` is a word
    boundary. Witnesses: `#add-...`, `#bad`, `#cafe`, `{#deadbeef}`. "Colour value" also covers CSS named colours.
 7. **Contrast checkers**: recompute every ratio independently; witnesses `#767676`/`#777777` on white straddle 4.5;
    a saturated blue pair catches swapped R/B coefficients; a `var()` chain two deep; dark values falling back to
@@ -65,7 +64,8 @@ contrast), the checker is production code AND the oracle for every later task. T
     on reachability through other frozen rules (checklists pinned to pack text). A built-HTML guard passes
     vacuously with zero matches and a wrong default dir; when earlier CLI tests and `package.json` are pinned, an
     in-checker floor breaks them, so require a quoted exact tail line (`N html files, M checkboxes`) in every later
-    verifier instead.
+    verifier instead. Rules on one default-dir switch collide: a later rule needing pages (five level pages) breaks
+    the earlier rule's entry-point fixture builds; settle the design before the later task (spec 14 FF-T1-2).
 14. **Regex scanners of MDX** (spec 11 T5, four FAIL rounds): each fresh-probe round found one new construct where the
     scanner and MDX disagree about code, comments or tags. Neither a false span NOR a missed span is safe: a false span
     blanks or hides text, a missed span hands its literal `</TabItem>` or `{/*` to the tag reader and comment blanker

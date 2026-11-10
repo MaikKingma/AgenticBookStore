@@ -77,4 +77,14 @@ Rule: when a recipe says "commands copied from the BUILT pages", read them from 
 **Why:** the built HTML is minified: unquoted attributes (`id=far-behind`, `href=/AgenticBookStore/...`), no `</p>`, and code lines are `<div class=token-line>` with Prism spans. A reader written for quoted attributes and closed `<p>` finds nothing and looks like "no such anchor".
 **How to apply:** scan `<(p|pre|h2)\b` openers; a `p` ends at the next `</p>|<p|<div|<pre|<h[1-6]|<ul`; split a `pre` on `<(span|div)[^>]*class="?token-line"?`; decode entities last. Match ids as `id="?x[\s">]`. Blast-radius greps on a page-grammar bug: also cover `docs/spec-pack/specs/` (the spec states the grammar), not only guide/ and the workshop plan.
 
+Rule: for a navbar/theme-wrapper task, run three witness layers and fix the rig's console classifier before trusting a red run.
+
+**Why:** a first rig run showed 16 (Chromium) and 7096 (WebKit) "unexpected" console lines that were only the spec 11 FF-37 / FF-5 shapes: the rig truncated messages to 200 chars, so end-anchored regexes (`due to access control checks\.$`) and the CORS tail missed them. WebKit offline also logs the pair `Cross origin requests are only supported for HTTP.` plus the XHR pageerror once per chunk (thousands per run).
+**How to apply:**
+- Keep full text (700 chars) in the capture; classify by shape per engine, build and phase (offline + axe phase = FF-37, WebKit offline = FF-5 pair, `control` phase = the abort-control fetch); print the unexpected remainder and require 0. Re-run all three engines after a classifier edit.
+- `perl -pi` swaps on built HTML must target the element, not the filename: the `<head>` holds preload links with the same file names, so a first-match swap changed the preloads and the real `check:built` stayed green (a false survivor). Anchor on `name alt=""`. Run real-build controls in place with a `cp -p` backup and hash proof (build/ is untracked): href, swapped imgs, title target, rel token.
+- `node --test --experimental-test-coverage` reports a low `check-built.mjs` figure when its tests spawn a COPY of scripts/ (different path); say so and rely on wiring mutants (one per branch, each killed) instead of the number.
+- Dev-mode walk: Docusaurus colour toggle cycles system -> light -> dark, so a "click once, theme differs" assertion fails in a light-scheme context; click until it differs. The React DevTools info line proves the dev build and the console hook are live (positive control).
+- Dev-mode check is one `docusaurus start --port 344x` per task, engines can share it; `lsof` both ports free afterwards.
+
 Related: [[shell-traps]], [[scaffold-verification-techniques]]

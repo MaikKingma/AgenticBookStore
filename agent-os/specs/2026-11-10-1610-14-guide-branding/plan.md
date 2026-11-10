@@ -18,16 +18,22 @@ merge.
 
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | | sdd/14-guide-branding/T1 | | |
+| T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | #165 | sdd/14-guide-branding/T1 | PASS r1 | ENDORSE |
 | T2 | guide | [T1] | 2 | LevelProgress chevron breadcrumb with links, done/current/upcoming states, level-progress built rule | critical | sonnet (owner policy, see Decisions) | | sdd/14-guide-branding/T2 | | |
 | T3 | guide | [T1, T2] | 3 | deck colours across the site, brand rule to D18, visual sweep, screenshots | elevated | sonnet | | sdd/14-guide-branding/T3 | | |
 
 qaDirective per task = `qa-strategy.md` C0 plus that task's block under "Task directives", plus every
 `## QA feed-forward` entry below.
 
-## Open owner decision
+## Owner decision OD-1 (resolved)
 
-- OD-1 (blocks T2 and T3 only; T1 proceeds). Keeping the deck blue exact for text-bearing uses conflicts with the
+Resolved 2026-11-10 by the main session under delegated gates (Maik may overrule): OD-1a option 2 and OD-1b option 2.
+The spec already requires AA for text on blue, and "never weaken a check" wins over the exact hex. The current crumb is
+filled with `#3371B8` and keeps a normal-size label (pair stays `text` 4.5). `--ifm-color-primary` is the AA shade per
+mode (light `#3371B8`, dark a lighter deck-blue shade at 4.5:1 or more on slate). The exact `#3c7ec9` is used only for
+non-text accents. No contrast kind changes; amendment A1 applies this to T2 and T3. The question as it was put:
+
+- OD-1 (blocked T2 and T3 only; T1 proceeded). Keeping the deck blue exact for text-bearing uses conflicts with the
   pinned 4.5:1 text pairs (white on `#3c7ec9` = 4.18:1, `#3c7ec9` on slate = 3.74:1). See `qa-strategy.md` OD-1,
   G-1, G-2. Options per part:
   - OD-1a current crumb: (1) exact `#3c7ec9` fill, white bold label at least 18.67 px (WCAG large text), new contrast
@@ -171,15 +177,57 @@ offline build over `file://`), and the referee `./mvnw clean verify` from the re
 
 ## QA feed-forward
 
-(none yet)
+From the T1 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
+
+- FF-T1-1 (T2): one inserted test in `guide/scripts/navbar.test.mjs`: two copies of the good logo link in the left part
+  of the navbar give exactly `['navbar: index.html: more than one logo link in the navbar (found 2)']` (deepEqual).
+  The T2 verifier shows that mutant NM25 (the `logos.length > 1` check removed) and its twin (`> 2`) fail it, that every
+  other existing assertion line is unchanged, and that `rules/navbar-built.mjs` keeps its T1 hash.
+- FF-T1-2 (T2): T1's entry-point tests run `check-built.mjs` with no argument on fixture builds holding only
+  `index.html` and `setup-check.html` and expect exit 0 and `ok   navbar: 2 pages`. If T2's level rule uses the same
+  default-dir switch and fails on a missing level page, either the level rule takes its expected pages from a source
+  the copied fixture lacks (T2 tests prove both directions) or the fixture builds gain level pages (listed old -> new
+  under FF-T1-1). Never by loosening an assertion. The verifier re-runs T1 wiring mutants W1, W2, W3 and W8 after T2.
+- FF-T1-3 (T2, T3; replaces C0-6 "N equals grep count"): node:test total at least the previous gate's (T2: 602), no
+  titles lost (`comm -23` empty) except listed renames; the `check.mjs` `ascii`, `lab` and `colors` count lines change
+  only by the number of new files in that rule's scope, each listed.
+- FF-T1-4 (T3): the Level 2 admonition paragraph in axe `incomplete`: compute its ratio from computed styles on the
+  final palette, or show it is gone.
+- FF-T1-5 (T3): re-decide every T1 navbar variable that uses teal or mist, keep the 8 navbar pairs per mode; light-mode
+  hover and active use `var(--ifm-color-primary)` (under A1 `#3371B8`, 5.01:1 on white); keep `--guide-navbar-logo`
+  slate `#1D242C` in light and white in dark (`logo.test.mjs` ties it to the PNG pixels); state the D18 value for the
+  navbar accent line (still `--ov-blue` `#3D7DC9`).
+- FF-T1-6 (T2, T3; aligns the task blocks with A1): T2 items on the `large` kind lapse; `rules/contrast.mjs` and
+  `contrast.test.mjs` keep their T1 hashes, `level progress current label` stays `text`, and a current fill of
+  `#3C7EC9` must make `npm run check` fail at 4.18. T3 item 1 must-fails: light primary `#014046`, light primary
+  `#3C7EC9`, dark primary `#3C7EC9`, dark primary swapped with the light value; drop every mention of `large`.
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-10, orchestrator, applying OD-1 resolved; gate re-run self-accepted). Supersedes the conflicting text
+  of the T2 and T3 criteria above:
+  - T2 AC3: current crumb fill `#3371B8` (the deck blue's derived `-dark` shade), white label at normal size.
+  - T2 AC4: the current label is a `text` pair (4.5:1; white on `#3371B8` = 5.01:1) in both modes. No new contrast
+    kind: `rules/contrast.mjs` and `contrast.test.mjs` leave T2's fileScope and stay byte-identical. G-2 lapses;
+    `level progress current label` keeps kind `text` in REQUIRED.
+  - T3 AC1: `--ifm-color-primary` is `#3371B8` in light mode and, in dark mode, a lighter shade of the deck blue that
+    reaches 4.5:1 or more on every dark surface it is text on; the six shade variables per mode are taken from the
+    deck-blue family (the derivation in `research-docusaurus-navbar-palette.md`, further steps of the same ratios if
+    needed) and stay ordered. `BRAND` gains deck blue `#3C7EC9` and slate `#1D242C`; `PRIMARY` pins the two AA
+    shades; the swap tests still prove any other primary fails (mutants: restoring `#014046`, and setting exactly
+    `#3C7EC9`, both fail `npm run check`).
+  - T3 AC2: the `primary` pair stays `text` 4.5; `#3C7EC9` appears only in non-text roles (borders, bars, outlines,
+    `nontext` pairs) and the extended restricted rule forbids it as fg or bg of any `text` pair. G-1 reduces to the
+    census: a rendered walk of every text node on the 11 pages in both modes (hover and active states, TOC active
+    entry, tabs, breadcrumbs, pagination) finds no text in `rgb(60, 126, 201)` and no text on that background.
+- A2 (2026-11-10, orchestrator, from the T1 meta-review; gate re-run self-accepted, test-only scope). T2's fileScope
+  gains `guide/scripts/navbar.test.mjs`, limited to the FF-T1-1 inserted test and the FF-T1-2 fixture edits (listed
+  old -> new). `guide/scripts/rules/navbar-built.mjs` stays byte-identical.
 
 ## Residuals for the owner
 
 - R1 pack wording "Every crumb links to its level page, as today": today the crumbs are not links (F3).
 - R2 the logo recipe script stays session-local; the README records the steps and hashes (F1).
-- R3 the large-text exemption, if chosen, is CI-guarded only by the source pin; its rendered proof is local (F2).
+- R3 OD-1 was decided by the main session under delegated gates: the exact deck blue `#3c7ec9` is used only for
+  non-text accents; text and the current crumb use the AA shade `#3371B8` (Maik may overrule).
 - R4 at 32 px the "TECH TRIBES" line of the logo is about 10 px tall (OD-2).
