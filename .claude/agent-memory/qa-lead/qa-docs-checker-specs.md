@@ -17,7 +17,10 @@ contrast), the checker is production code AND the oracle for every later task. T
    Lockfiles hold third-party names (`postcss-lab-function`), so a word ban must exempt the top-level lockfile by
    exact path.
 2. **Freeze the oracle.** Content tasks must not touch the checker: hash every checker file against the last gated
-   baseline in each content task (a hash chain), not only a fileScope rule.
+   baseline in each content task (a hash chain), not only a fileScope rule. A decision that drops a feature may name
+   an artefact the site never had (spec 11 D16 "PowerShell hook tab"): before scoping a checker change, grep the
+   checker for a pin and tell computed counts from fixture expectations. A pack-derived allow-list (command lines,
+   inline spans) inherits pack text the decision left stale, so the dropped feature passes: pin it after the freeze.
 3. **Coverage-manifest gaming.** Name these witnesses: snippet only inside `{/* */}` or `<!-- -->` must not count; a
    command only in prose inline code must not count when `kind: command`; a snippet that exists in the source but in
    another section must fail; a pack line plus an appended command must fail (whole-line, not `includes`). Guard
@@ -47,11 +50,10 @@ contrast), the checker is production code AND the oracle for every later task. T
 10. **Generated folders before their ignore rule.** If task N creates a build folder and the ignore line arrives in a
     later task, the orchestrator's `git add` can sweep it in. Check every folder a task generates against the ignore
     file AT that task (`git check-ignore -v`), and move the line forward if needed.
-11. **Self-hosted static sites in Docusaurus**: the hash-router build skips SSG and link checks (exit 0 on broken
-    links and crashing pages), so only the browser build is evidence; a missing `.md` link failing the hash build
-    too proves `markdown.hooks.onBrokenMarkdownLinks: 'throw'` survived a config spread (res-1, spec 11 folder).
-    `onBrokenLinks` never checks external links: a DoD "no broken links" with links to refs a later publish creates
-    (solution branches, `main` paths) needs a strategy-time link inventory and a deploy-gate check (spec 11 R-G2).
+11. **Docusaurus link checks**: the hash-router build skips SSG and link checks (exit 0 on broken links), so only the
+    browser build is evidence (a `.md` link failing both proves `onBrokenMarkdownLinks: 'throw'` survived a spread).
+    External links are never checked: inventory them at strategy time; refs a later publish creates get a deploy-gate
+    check, every other URL one request in qa-final (spec 11 R-G2, D17).
 12. **Docusaurus markup traps for a page grammar**: `{#id}` heading ids do not compile under `future.v4` (use
     `{/* #id */}`, spec 11 plan.md A3); `- [ ]` task lists render bare disabled checkboxes that fail axe `label`
     (critical). At strategy time say whether "axe" means color-contrast only or the full ruleset, and give every
@@ -94,11 +96,9 @@ contrast), the checker is production code AND the oracle for every later task. T
     (optional/stretch, pack facts), not only tokens; its oracle is a word-sequence diff vs the previous bytes with
     bullet markers and `; ` joins stripped. A literal ban needs replacement wording that keeps the referent (T12).
 
-17. **axe on `file://`** (spec 11 T4a to T7): axe-core's CSSOM preload fetches stylesheets by XHR; on `file://` it
-    fails and axe logs `Couldn't load preload assets:` (string only in `axe-core/axe.min.js`), Chromium adds a CORS
-    error and `net::ERR_FAILED`: one triple per axe run, then axe runs without the CSSOM. Write the console rule at
-    strategy time: accepted only in the axe phase with phase-tagged logs and one-per-run counts, never in Firefox,
-    Pages or dev mode; full-axe evidence must include the http build. Grep the message string to find its emitter.
+17. **axe on `file://`** (spec 11 T4a to T7): axe-core's CSSOM preload XHR fails, logging `Couldn't load preload
+    assets:` plus a Chromium CORS error and `net::ERR_FAILED`, one triple per run. Accept it only in the axe phase with
+    phase-tagged one-per-run counts, never in Firefox, Pages or dev mode; full-axe evidence includes the http build.
 18. **Shape rules are not count rules**: a frozen structure rule that validates a Checkpoint's shape passes a page
     with none (a retitled tip escapes). Put per-page block counts into the content verifiers' rendered assertions,
     with one must-fail retitle mutant. Before sending an anchor or markup form in a directive, read the skeleton and
