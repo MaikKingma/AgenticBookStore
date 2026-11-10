@@ -32,7 +32,7 @@ files are `.txt`, `.jsonl` or `.md`, never `.log` (root `.gitignore` ignores `*.
 | T3 | Level 1 consistency check and rehearsal rows (A2) | root | [T2] | 3 | elevated | sonnet | sonnet | #144 | sdd/10-harness-reference-solutions/T3 | ENDORSE (r2) |
 | T4 | Level 2 config and `docs/lsp-setup.md` | root | [T2] | 4 | standard | sonnet | sonnet | #142 | sdd/10-harness-reference-solutions/T4 | ENDORSE (r0) |
 | T5 | Level 2 multi-role ACL contract test from MCP data (built by TDD, A2) | bookstore | [T4] | 5 | elevated | sonnet | sonnet | #148 | sdd/10-harness-reference-solutions/T5 | ENDORSE (r2) |
-| T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | | | |
+| T6 | Level 2 consistency check and LSP rehearsal rows (A2) | root | [T5] | 6 | elevated | sonnet | sonnet | #150 | sdd/10-harness-reference-solutions/T6 | ENDORSE (r2) |
 | T7 | Level 3 settings, skill, reference, command, subagent | root | [T4] | 7 | elevated | sonnet | sonnet | | | |
 | T8 | Level 3 hooks (sh, ps1, git hook), harness, Windows note | root | [T7] | 8 | critical | opus | opus | | | |
 | T9 | Level 3 cancel order built by TDD (A2) | bookstore | [T8] | 9 | critical | opus | opus | | | |
@@ -238,6 +238,27 @@ for all three tracks is a manual check for Maik.
   (`!TRANSLATOR && !ILLUSTRATOR`) survives the Level 2 reference test, because the only historical multi-role title has
   no EDITOR; killing it needs a second contract (for example 9789900020264) and test, beyond the pack's one small
   reference test; qa-final probes the deny-list mutant.
+- FF-T6-a (from T6; QA directives of T7 to T13): any rehearsal row whose order, measurement or failure column depends
+  on when Claude Code starts or loads something (LSP server, MCP server, plugin, hook, skill, settings reload) cites
+  the documented trigger in an evidence file and gives a branch for when the trigger differs; verifiers cross-check
+  it against res-1 and the fetched docs pages.
+- FF-T6-b (from T6): evidence-file edits are insertion only, modulo trailing whitespace (the root `.editorconfig`
+  trims it); verifiers prove insertion with a trailing-whitespace-insensitive compare.
+- FF-T6-c (from T6; every rehearsal row with a branch or a timing): a branch that pulls in a step from another row
+  states the tree state it leaves and how the next row's premise is restored; every measured time names its start
+  event, stop event and what to record when the first answer is "started but not ready"; a retry rule says which
+  answer the failure judgement uses; verifiers dry-run each branch through the next row in the suggested order.
+- FU-T6-1 (from the T6 r2 meta-review, folded into T7, amendment A3): three sentences of the Level 2 rows: (1) an
+  empty first `LSP` answer (failure (d)) is judged on the second answer, with clock times t0 to t3 and the cold time
+  reported as a range that includes the wait, never t1-t0 alone; (2) in the "No server running yet" branch, R2-2
+  prompt 1 is not sent again, R2-2 continues with prompt 2, then the tree is reset before R2-4 Measure 2 (b); (3) the
+  warm comparison repeats the prompt that started the server and records which one; plus the optional extra source
+  for N7 (the tools page sentence on LSP calls whose server cannot start) and the long-line nit.
+- Product findings from T6 for Maik: PF-T6-1 JDK floor 17 also in guide `00-setup-check.md` line 92; PF-T6-2 guide
+  `03-level-2-give-your-agent-eyes.mdx` line 124 and `reference/cheat-sheet.md` line 14 use `claude mcp add` (literal
+  URL); PF-T6-3 spec 10 lines 182-183 "Built in Claude Code" stale under D14; PF-QA-T6-1 spec 05 line 159 lacks
+  `--scope project`; guide order: the workshop plan Part A and guide page 03 ask for references before the first edit,
+  while the docs start the server at the first edit.
 - Product findings from T4 for Maik: PF-T4-1 the JDK floor reads "JDK 17 or later" in spec 10 line 168 and in
   workshop-plan line 59 (J8 and `docs/lsp-setup.md`: 21); PF-T4-2 workshop-plan line 207 `claude mcp add` writes a
   literal URL while the staged `.mcp.json` uses `DISTRIBUTOR_MCP_URL` (name, transport and port agree).
@@ -311,6 +332,10 @@ for all three tracks is a manual check for Maik.
     rehearsal-only scenario as an unproven residual until Maik rehearses.
   Gate 1 re-run and self-accepted: the scope narrows, no task is added, the per-task file scopes are unchanged except
   that `S/records/rehearsal-checklist.md` joins the file scope of T3, T6, T10, T11, T12 and T13.
+- A3 (2026-11-10, orchestrator, from the T6 r2 meta-review): FU-T6-1 is folded into T7, whose file scope gains
+  `S/records/rehearsal-checklist.md` for the three Level 2 sentences only (and the two optional items); Maik rehearses
+  on 2026-11-10, so the fix ships with the next task instead of T10. Gate 1 re-run and self-accepted: one docs-only
+  addition to T7, no new task.
 - HR2 (2026-11-09, coordinator, Maik's global plugin guard): each staged settings file that declares the plugin (T4,
   T7) is written once, in one Write of its final content, so Maik sees a single prompt; no workaround of the guard;
   plugin scenarios use the isolated HOME and `--plugin-dir`; a denied `claude plugin install` in the isolated HOME
