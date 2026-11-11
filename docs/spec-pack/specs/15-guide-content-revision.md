@@ -49,6 +49,16 @@ frameworks' own getting-started order.
    Review the existing Level 4 track steps against each framework's official docs (pinned versions in
    `product/tech-stack.md`) and correct any command or order that differs. Cite the doc pages in the spec folder.
 
+### Carried over from spec 14, spec 10 and the reviews
+7. **OpenSpec install route (PF-T11-1, blocker for Track A):** `start/level-4-openspec` ships no `openspec` CLI and the
+   setup page says Node.js is not needed. Give a working, pinned install route (version from `product/tech-stack.md`)
+   on the setup page and the Level 4 OpenSpec track, and correct the Node.js sentence. The branch stays as it is.
+8. **Wide tables at phone width (spec 14 R5, A4):** axe `scrollable-region-focusable` on the wide tables of Level 4,
+   reference/architecture and reference/cheat-sheet at 390 px. Wrap them in a focusable, labelled scroll container
+   and drop spec 14's A4 exclusion so the 390 px sweep covers those tables again.
+9. **Spec 14 test gaps RA-1 to RA-4** (see `agent-os/specs/2026-11-10-1610-14-guide-branding/plan.md`): close them
+   if they touch pages this spec edits anyway.
+
 ## Out of scope
 Spec 14's branding (header, logo, breadcrumb, colours). Level branch content (spec 10). The storefront.
 

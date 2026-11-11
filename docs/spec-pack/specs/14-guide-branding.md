@@ -19,7 +19,7 @@ Maik's LinkedIn and to OpenValue. The level bar should read as a breadcrumb that
    - Current level: solid deck blue `#3c7ec9` with white text, marked `aria-current="step"`.
    - Upcoming levels: slightly grayed out (muted fill and text), still readable (WCAG AA contrast for the label).
    - Every crumb links to its level page, as today. The page usage `<LevelProgress current={N}/>` does not change.
-4. **Colours from the deck** (`/Users/maikkingma/OpenValue AI/Projects/NS/Shift Left, Look Right.pdf`, read-only,
+4. **Colours from the deck** ("Shift Left, Look Right" (Maik's local copy), read-only,
    outside the repo; title slide sampled: background `#1d242c`, accent blue `#3c7ec9`):
    - Primary colour (buttons, links, active navbar and sidebar items, admonition accents, the current crumb) is the
      deck blue in both modes, with the `--ifm-color-primary-*` shades derived from it. Text on blue meets AA.
