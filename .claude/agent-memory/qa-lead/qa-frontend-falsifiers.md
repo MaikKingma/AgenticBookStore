@@ -43,6 +43,10 @@ Split out of [[qa-test-data-falsifiers]] (first written for spec 12). Write thes
   above it) while the pair stays green, and a muted fill on the page (snow on white) leaves no shape. Pin the layer
   geometry or measure the band pixels. A `:hover` colour pin says "no hover rule declares another colour": deleting a
   redundant hover colour is equivalent when the base rule outranks Infima's `a:hover` (spec 14 T2 MC9, MC10).
+- A palette rule that enumerates a list (admonition types, dark surface variables) gets tested on one or a subset;
+  dropping an unpaired entry survives (spec 14 T3: 4 types, 1 tested; 20 surfaces, 10 tested). Falsifier: "each list
+  entry dies when dropped", the test list checked against the rule's length. Also read every original criterion word
+  against each amendment: A1's dark primary made "white button text" and "light grey text" literally false.
 - A checker that reads only `:root` and the dark block misses scoped re-maps (`.navbar { --x: var(--y) }`): ask for rendered agreement (computed colours equal the checker's hex per pair) and a declaration census (spec 14 G-9). An outline on a `clip-path` element is clipped: crumb links need a focus check.
 - A text pin on a stylesheet (exact selector list plus value) cannot see the cascade: a later overriding rule survives it. Close that with a live `getComputedStyle(cell)` value plus the hash pin, not a REJECT (spec 12 T11). A cascade-aware reader that skips at-rules (so a never-true `@media (min-width: 9999px)` dies) still misses an always-true media override and a same-specificity rule on another selector (`main.page` vs `.app-shell > main`): to pin it in a test, name a closed-world allow-list of (selector, context) pairs over ALL contexts in the falsifier list (fix-12g T2).
 

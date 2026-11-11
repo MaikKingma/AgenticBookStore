@@ -86,6 +86,20 @@ No stack skill exists for Node/Docusaurus; follow the spec folder's strategy.md 
 - Mutation sweeps over a copy: record the baseline's failing titles and count only NEW failing titles as kills (a mutant
   `from` string that no longer matched source left a pin test red at baseline and hid a survivor behind `status != 0`).
 
+## Palette swaps (custom.css, brand rule) and sweeps
+- `npm exec node scripts/x.mjs` is NOT a way to run node: it tries to fetch `node@alpha` from the registry. Run the pinned node
+  binary on a script file. A `import.meta.url === file://${argv[1]}` main guard fails on a path with a space: use `pathToFileURL`.
+- Bare `--ifm-color-primary` is painted as text by Infima (TOC link hover/active), so a restricted-contrast brand blue forces
+  primary itself to be the AA shade per mode; surfaces under primary text must stay as light as snow (4.56:1) in light mode.
+- Test mutants that edit custom.css via `replaceOnce` hit the FIRST declaration; an injected dark override must be a second
+  `html[data-theme='dark']` block appended after the real one (`cssVariables` merges blocks, last wins).
+- Rig selectors: `.markdown a` also matches the LevelProgress crumb links and links inside `.alert` (alert foreground colour);
+  exclude with `:not(nav a):not(.alert a)`. The active sidebar entry of a category is `.menu__link--sublist` (no active bg).
+- axe `scrollable-region-focusable` fires on any `.markdown table` wider than 390 px (block + overflow auto, not focusable);
+  pre-existing, CSS cannot fix it (`overflow-wrap: anywhere` breaks words); needs `tabindex=0` from the rehype plugin.
+- The `console.error` of a deliberate aborted control fetch (`Failed to load resource: net::ERR_FAILED`, Chromium) must be
+  tagged as its own phase or it reads as a console finding.
+
 ## Edit/Write traps
 - Edit/Write turn a backslash-u escape (NBSP) into the literal character, failing the ascii rule: use
   `String.fromCharCode(0xa0)` / `new RegExp` from char codes, and grep edited files for non-ASCII. To keep a real `✓`
