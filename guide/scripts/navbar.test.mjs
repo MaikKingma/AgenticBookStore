@@ -11,6 +11,7 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {baseUrlOf, navbarErrors} from './rules/navbar-built.mjs';
 import {scanBuilt} from './rules/built.mjs';
+import {ROUTES, routeFile} from './rules/routes-built.mjs';
 
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const BASE = '/AgenticBookStore/';
@@ -275,7 +276,7 @@ const run = (script, args = []) => spawnSync(process.execPath, [script, ...args]
 // Spec 14, T2 (FF-T1-2): the default build dir also runs the level progress rule (rules/level-progress-built.mjs),
 // which needs the five level pages with their breadcrumb. These fixture builds gain them (page() plus the nav).
 function levelProgressNav(current) {
-  const routes = ['level-0-a', 'level-1-b', 'level-2-c', 'level-3-d', 'level-4-e'];
+  const routes = ['level-0-break-the-agent', 'level-1-context-engineering', 'level-2-give-your-agent-eyes', 'level-3-behavioral-control', 'level-4-spec-driven-development'];
   const crumbs = routes.map((route, level) => {
     const state = level < current ? 'done' : level === current ? 'current' : 'upcoming';
     const check = state === 'done' ? '<span aria-hidden=true data-part=check></span>' : '';
@@ -287,22 +288,45 @@ function levelProgressNav(current) {
 }
 const LEVEL_PAGES = Object.fromEntries(
   [0, 1, 2, 3, 4].map((level) => [
-    `level-${level}-${'abcde'[level]}.html`,
+    routeFile(ROUTES[level + 2]),
     page().replace('<main><h1>Welcome</h1>', `<main><h1>Welcome</h1>${levelProgressNav(level)}`),
   ]),
 );
 
+// Spec 16, T1 (G-1, option A): the default build dir also runs the routes rule (rules/routes-built.mjs), which needs
+// the sitemap and the 11 route files with their pagination nav. These fixture builds gain them: ROUTE_PAGES is the
+// whole set of route files (the level pages keep their breadcrumb, every page gets its previous and next link in
+// the chain order) and the sitemap. The level pages, index.html and setup-check.html are built from page() as before.
+const chainHref = (index) => new URL(ROUTES[index]).pathname;
+function withPagination(html, index) {
+  const link = (kind, target) =>
+    `<a class="pagination-nav__link pagination-nav__link--${kind}" href=${chainHref(target)}><div class=pagination-nav__sublabel>${kind}</div><div class=pagination-nav__label>Label</div></a>`;
+  const links = (index > 0 ? link('prev', index - 1) : '') + (index < ROUTES.length - 1 ? link('next', index + 1) : '');
+  return html.replace('</main>', `<nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages">${links}</nav></main>`);
+}
+const SITEMAP =
+  '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+  ROUTES.map((loc) => `<url><loc>${loc}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`).join('') +
+  '</urlset>';
+const ROUTE_PAGES = {
+  'sitemap.xml': SITEMAP,
+  ...Object.fromEntries(
+    ROUTES.map((loc, index) => [routeFile(loc), withPagination(LEVEL_PAGES[routeFile(loc)] ?? page(), index)]),
+  ),
+};
+
 test('check-built with no argument checks the default build dir and runs the navbar rule', () => {
-  withCopiedScripts({...LEVEL_PAGES, 'index.html': page(), 'setup-check.html': page()}, (root, script) => {
+  withCopiedScripts(ROUTE_PAGES, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}navbar: 7 pages, /m);
-    assert.match(result.stdout, /^ok {3}built: 7 html files/m);
+    assert.match(result.stdout, /^ok {3}navbar: 11 pages, /m);
+    assert.match(result.stdout, /^ok {3}built: 11 html files/m);
+    assert.match(result.stdout, /^ok {3}routes: 11 routes in the sitemap and the build, prev\/next chain of 11 pages$/m);
   });
 });
 
 test('check-built with no argument fails on a default build whose navbar is wrong', () => {
-  withCopiedScripts({...LEVEL_PAGES, 'index.html': page(), 'setup-check.html': page({github: ''})}, (root, script) => {
+  withCopiedScripts({...ROUTE_PAGES, 'setup-check.html': withPagination(page({github: ''}), 1)}, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 1, result.stdout + result.stderr);
     assert.match(result.stderr, /navbar: setup-check\.html: no GitHub link/);

@@ -1,9 +1,10 @@
-- [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit vacuity, warnings, evidence files, hash baselines, tool escapes, .http replays, headless claude -p, bugfix cycles, mid-cycle merges; read before writing a directive
-- [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex and unicode, timeouts, log escapes; read before a falsifier list
-- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout, live-browser witnesses, negctl worktree Node setup; read before a UI falsifier list or final brief
-- [CI-config specs](qa-ci-config-specs.md) — traps when the proof is GitHub Actions runs: job summaries, baselines, hangs, caches, warning greps, Linux-only reds, armed deploy gates; read before a CI strategy, final brief or red-CI rework
-- [Docs and checker specs](qa-docs-checker-specs.md) — checker-as-oracle traps for docs/MDX checkers, probes, self-tests, axe on file://, block counts, print margins; read before a docs strategy or content review
-- [Git-script specs](qa-git-script-specs.md) — bash scripts that rewrite or push git refs: commit-tree determinism, lease witnesses, reuse precedence, the `"$BASH"` interpreter trap; read before such a strategy or review
-- [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI specs: keyed referee, env-reading tests, network-safe probes, default-equivalent mutants, EPP order, memory window, tool double and helpers, failure translation, provider stubs
-- [Review calibration](review-calibration.md) — meta-review rules: carrying probe evidence into rework, null guards, REJECT vs inspection threshold, oracle helpers, scope edits, survivors in files that freeze; read before every review
-- [Harness staging specs](qa-harness-staging-specs.md) — staged agent config: ignore/eol traps, isolation, consistency checks, rehearsal rows, lifecycle premises, row literals vs printed command, locale twins, gate-regex input forms
+- [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit vacuity, evidence files, hash baselines, bugfix cycles; read before writing a directive
+- [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, unicode; read before a falsifier list
+- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout, live-browser witnesses; read before a UI falsifier list or final brief
+- [CI-config specs](qa-ci-config-specs.md) — traps when the proof is GitHub Actions runs; read before a CI strategy, final brief or red-CI rework
+- [Docs and checker specs](qa-docs-checker-specs.md) — checker-as-oracle traps for docs/MDX checkers, probes, self-tests, axe; read before a docs strategy or content review
+- [Git-script specs](qa-git-script-specs.md) — bash scripts that rewrite or push git refs; read before such a strategy or review
+- [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI specs: keyed referee, env-reading tests, EPP order, memory window, tool doubles, provider stubs
+- [Review calibration](review-calibration.md) — meta-review rules: probe carry into rework, REJECT vs inspection, oracle helpers, scope edits; read before every review
+- [Live guide page addition](qa-live-page-addition.md) — adding a page to the live guide: routes, count pins, sweep literals, claim closure
+- [Harness staging specs](qa-harness-staging-specs.md) — staged agent config: ignore/eol traps, isolation, rehearsal rows, lifecycle premises, gate-regex forms

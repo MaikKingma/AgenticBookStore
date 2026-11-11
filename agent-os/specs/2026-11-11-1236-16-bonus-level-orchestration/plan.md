@@ -24,7 +24,7 @@ lead's opus meta-review compensates on the critical tier.
 
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | | | | |
+| T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
 | T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | | | | |
 | T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | | | | |
 | T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | | | | |
@@ -91,7 +91,7 @@ lead's opus meta-review compensates on the critical tier.
   `guide/scripts/fixtures/skeleton-docs/README.md`, `guide/scripts/fixtures/skeleton-docs.mjs` (comment),
   `guide/scripts/coverage.mjs`, `guide/scripts/coverage-manifest.test.mjs`, `guide/scripts/check.mjs` (comment only),
   `guide/scripts/rules/routes-built.mjs`, `guide/scripts/routes-built.test.mjs`, `guide/scripts/navbar.test.mjs`
-  and `guide/scripts/level-progress.test.mjs` (only if their T1 fixtures must follow the 12-route list; listed
+  and `guide/scripts/level-progress.test.mjs` (required, A1: their fixtures follow the 12-route list; listed
   retargets), `guide/README.md`.
 - Acceptance criteria:
   1. Page: frontmatter exactly `title: "Bonus level: orchestrate your own team"` and `sidebar_position: 7.5`; no
@@ -236,11 +236,34 @@ lead's opus meta-review compensates on the critical tier.
 
 ## QA feed-forward
 
-(none yet)
+Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaDirective includes these.
+
+- FF-T1-1 (T2 scope and implementer): `guide/scripts/navbar.test.mjs` and `guide/scripts/level-progress.test.mjs` are
+  REQUIRED edits in T2 (see A1). `level-progress.test.mjs` `fullBuild()` looks up a page per route of the list, so a
+  12th route throws a TypeError unless `'bonus-level-orchestration.html': page('')` is added. Expected retargets:
+  `navbar.test.mjs` `navbar: 11 pages` -> 12 and `built: 11 html files` -> 12; `level-progress.test.mjs`
+  `none on the 6 other pages` -> 7 and `navbar: 11 pages` -> 12; the routes ok line 11 -> 12 in all three test files;
+  `routes-built.test.mjs` typed `LIVE` list gains the bonus loc between Level 4 and Wrap-up and
+  `{routes: 11, chainPages: 11}` -> 12.
+- FF-T1-2 (C0-9 correction, T2 to T4 and qa-final): the non-ASCII grep over
+  `docs/spec-pack/specs/16-bonus-level-orchestration.md` prints exactly one pre-existing line (line 3, a middle dot
+  U+00B7 in the pack header); that line is the accepted baseline and must stay the only hit. The plan prints nothing.
+- FF-T1-3 (T2 verifier): the rule changes in T2, so copy `.claude/comms/tmp/s16-t1-qa-mutants.mjs` to an `s16-t2-qa-`
+  name (diff quoted), re-run all 41 mutants plus a new one (Level 4 next straight to Wrap-up must fail), and re-run the
+  real-build replays R1 to R15 on the 12-page build.
+- FF-T1-4 (T2 implementer): add a dated reason line for the bonus page to the rule's header comment in the T1 form
+  `- 2026-11-11 (spec 16, T2): ...`.
+- FF-T1-5 (qa-final): right before hand-back, re-run the live chain check on the 11 live pages (0 errors) and re-curl
+  the live sitemap; it must equal the T1 list.
+- Optional (T3 owns README edits): `guide/README.md:24` still describes `check:built` as a `:::` scan only (predates
+  spec 16); T3 may correct it while adding its rule bullets.
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-11, orchestrator, from FF-T1-1): T2's scope entry for `guide/scripts/navbar.test.mjs` and
+  `guide/scripts/level-progress.test.mjs` changes from "only if their T1 fixtures must follow" to required; the edits
+  are listed retargets plus the `fullBuild()` page for the bonus route. Test-only, inside T2, no criterion weakened;
+  Gate 1 re-run self-accepted.
 
 ## Decisions
 
