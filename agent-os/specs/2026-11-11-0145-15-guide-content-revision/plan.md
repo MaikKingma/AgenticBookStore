@@ -20,13 +20,15 @@ owner's merge.
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | | | | |
-| T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock | elevated | sonnet | | | | |
-| T3 | guide | [T1, T2] | 3 | Level 2 step 5 debugging section in `<details>`, demo text removed | elevated | sonnet | | | | |
-| T4 | guide | [T1, T3] | 4 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence | elevated | sonnet | | | | |
-| T5 | guide | [T4] | 5 | wide tables in focusable labelled regions, A4 exclusion dropped, full 390 px sweep | critical | sonnet | | | | |
-| T6 | guide | [T5] | 6 | creativity tips Level 1 to Level 4 | standard | sonnet | | | | |
+| T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock, Level 1 creativity tip (A1) | elevated | sonnet | | | | |
+| T3 | guide | [T1] | 2 | Level 2 step 5 debugging section in `<details>`, demo text removed, Level 2 creativity tip (A1) | elevated | sonnet | | | | |
+| T4 | guide | [T1] | 2 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence, Level 4 creativity tip (A1) | elevated | sonnet | | | | |
+| T5 | guide | [] | 1 | wide tables in focusable labelled regions, A4 exclusion dropped, full 390 px sweep | critical | sonnet | | | | |
+| T6 | guide | [T1] | 2 | Level 3 creativity tip (A1) | standard | sonnet | | | | |
 
-All tasks share module `guide` and shift `workshop-plan.md` lines, so they run one at a time in the order above.
+Amendment A1 (owner request: parallelise the updates per level): T5 runs beside T1 and T2, T3, T4, T6 run beside each
+other after T1, each in its own git worktree (own build dirs, own ports), never two agents in one worktree. Task PRs
+merge into the spec branch one at a time; a later branch merges the spec tip and re-proves its gates before its merge.
 qaDirective per task = `qa-strategy.md` C0 plus that task's block under "Task directives" plus every
 `## QA feed-forward` entry below. qaModel is sonnet for every task by owner policy (see Decisions); the QA lead's opus
 meta-review compensates on the critical tasks.
@@ -237,7 +239,23 @@ meta-review compensates on the critical tasks.
 
 ## Amendments
 
-(none yet)
+- A1 (2026-11-11, owner request "parallelise the updates per level", relayed mid-run; gate re-run self-accepted).
+  - Task order and dependencies: T5 depends on nothing and runs in parallel with T1. T2, T3, T4 and T6 depend only on
+    T1 and run in parallel with each other once T1 is merged into the spec branch. Each parallel task works in its own
+    git worktree (separate `guide/build`, `guide/build-offline`, `node_modules`, `target`, and distinct local ports);
+    two agents never share a worktree.
+  - Creativity tips (pack item 2) move into the level tasks: T2 adds the Level 1 tip, T3 the Level 2 tip, T4 the Level 4
+    tip, and T6 becomes the Level 3 tip only. The T6 criteria above apply per tip to the task that adds it (one
+    `:::tip[Make it yours]` per level, at most 60 words, mirrored in the plan, pinned by one coverage entry, never a
+    step or checklist item); the T6 fileScope shrinks to `guide/docs/04-level-3-behavioral-control.mdx`,
+    `docs/spec-pack/workshop/workshop-plan.md`, `guide/scripts/coverage.mjs`, `guide/scripts/coverage-manifest.test.mjs`.
+    T6 criterion 2 ("checklists and step headings byte-identical") applies to every level task's tip edit.
+  - T5: "the T4-gate build" in criterion 4 (A8) reads "the T5 base build" (the spec tip T5 was cut from); its rendered
+    sweep covers its own branch, and qa-final repeats the full unfiltered sweep on the final tip.
+  - Merge discipline: task PRs merge into the spec branch one at a time in the order they pass. Every later open task
+    branch then merges the spec tip (merge commit, never rebase); conflicts in `workshop-plan.md`, `coverage.mjs` and
+    `coverage-manifest.test.mjs` are resolved by that task's implementer (floors equal live counts, `SWEEP_EXCLUDED`
+    keys recomputed against the merged plan), and the task's gates and a delta verification run again before its merge.
 
 ## Residuals for the owner (expected)
 
