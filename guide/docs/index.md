@@ -14,7 +14,7 @@ Run the [setup check](./00-setup-check.md) before the workshop, and again in the
 
 ## Agenda
 
-The workshop is five levels that build on each other. Level 0 is the tutorial level. Each level opens with a short live demo and closes with a short debrief, so the room stays together.
+The workshop is five levels that build on each other. Level 0 is the tutorial level. Each level closes with a short debrief, so the room stays together.
 
 Times are relative to the start of the workshop.
 
@@ -22,15 +22,17 @@ Times are relative to the start of the workshop.
 |---|---|---|---|
 | 0:00 | [Welcome, setup check while people settle](./00-setup-check.md) | 10 | Room |
 | 0:10 | Keynote: Agentic engineering and the harness | 45 | Slides |
-| 0:55 | [Level 0: Break the agent](./01-level-0-break-the-agent.mdx) | 25 | Sync 3, solo 19, debrief 3 |
-| 1:20 | [Level 1: Context engineering](./02-level-1-context-engineering.mdx) | 35 | Sync 5, solo 27, debrief 3 |
+| 0:55 | [Level 0: Break the agent](./01-level-0-break-the-agent.mdx) | 25 | Solo 22, debrief 3 |
+| 1:20 | [Level 1: Context engineering](./02-level-1-context-engineering.mdx) | 35 | Solo 32, debrief 3 |
 | 1:55 | Break | 15 | |
-| 2:10 | [Level 2: Give your agent eyes (LSP + MCP)](./03-level-2-give-your-agent-eyes.mdx) | 20 | Sync 3, solo 15 (LSP 8, MCP 7), debrief 2 |
-| 2:30 | [Level 3: Behavioral control (permissions, hooks, skills, commands, subagents)](./04-level-3-behavioral-control.mdx) | 30 | Sync 4, solo 24 (permissions 4, hooks 11, skill and command 9), debrief 2 |
-| 3:00 | [Level 4: Spec-driven development](./05-level-4-spec-driven-development.mdx) | 45 | Sync 5, solo 37, debrief 3 |
+| 2:10 | [Level 2: Give your agent eyes (LSP + MCP)](./03-level-2-give-your-agent-eyes.mdx) | 20 | Solo 18 (LSP 10, MCP 8), debrief 2 |
+| 2:30 | [Level 3: Behavioral control (permissions, hooks, skills, commands, subagents)](./04-level-3-behavioral-control.mdx) | 30 | Solo 28 (permissions 4, hooks 14, skill and command 10), debrief 2 |
+| 3:00 | [Level 4: Spec-driven development](./05-level-4-spec-driven-development.mdx) | 45 | Solo 42, debrief 3 |
 | 3:45 | [Wrap-up: who cleared which level, show and tell, Q&A](./06-wrap-up.md) | 15 | Room |
 
 Together that is 240 minutes.
+
+During the levels Maik and Tom walk around and help.
 
 Level 2 and Level 3 have stretch goals, and Level 3 has an optional Stop hook. If you are behind, skip them and keep Level 4, because shipping a feature end to end is the payoff of the day.
 
@@ -46,7 +48,6 @@ Level 2 and Level 3 have stretch goals, and Level 3 has an optional Stop hook. I
 
 - Work at your own pace. Fast people move on, slow people catch up.
 - Every level page starts with a progress indicator and an at a glance box: the goal, the branch to start from, the catch-up command and the time.
-- Sync moments are the live demos. When the page says "Look up, Maik demos this now", look up.
 - Checkpoints give you a command and the output to expect.
 - Every level ends with "Level cleared when", a checklist you run yourself.
 - If you are far behind, run the catch-up command from the at a glance box at the start of a level. Each level page names its own, and [I am far behind](./reference/troubleshooting.md#far-behind) lists them all.

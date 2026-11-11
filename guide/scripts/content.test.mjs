@@ -30,11 +30,24 @@ const fails = (errors, pattern) => {
 // (d) the deny-list
 
 test('deny-list: each term fails on a page, in any letter case, and the message names the term and the line', () => {
-  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms']) {
+  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms', 'sync moment', 'maik demos', 'live demo']) {
     for (const variant of [term, term.toUpperCase(), `${term[0].toUpperCase()}${term.slice(1)}`]) {
       fails(denyListErrors(OTHER, `first line\nsee ${variant} here\n`), new RegExp(`${OTHER}: line 2: "${term.replace(/[.\-/]/g, '\\$&')}" must not appear`));
     }
   }
+});
+
+// Spec 15 (decision D19): the workshop has no sync moments and no live demo. Each term allows any run of whitespace
+// between its words, a line break included, and each row is pinned on its own.
+test('deny-list: the demo terms fail across a line break, a double space and a tab, and name the term and the line', () => {
+  for (const [term, words] of [['sync moment', ['sync', 'moment']], ['maik demos', ['maik', 'demos']], ['live demo', ['live', 'demo']]]) {
+    for (const gap of [' ', '  ', '\n', ' \n', '\t']) {
+      fails(denyListErrors(OTHER, `first line\n${words[0]}${gap}${words[1]} here\n`), new RegExp(`${OTHER}: line 2: "${term}" must not appear`));
+    }
+  }
+  fails(denyListErrors(OTHER, 'Look up, Maik demos this now.'), /"maik demos"/);
+  fails(denyListErrors(OTHER, 'Each level opens with a short live demo and closes with a debrief.'), /"live demo"/);
+  fails(denyListErrors(OTHER, 'Sync moments are the live demos.'), /"sync moment"[\s\S]*"live demo"/);
 });
 
 test('deny-list: "spec NN" is the word spec and a number, in any case', () => {
@@ -42,7 +55,7 @@ test('deny-list: "spec NN" is the word spec and a number, in any case', () => {
 });
 
 test('deny-list: near misses pass', () => {
-  for (const text of ['.claude/rules/domain.md', 'your spec', 'spec artefacts', 'Spec Kit', 'a spec and a plan', 'the workshop plan', 'specs/10', 'facilitat', 'rehearse']) {
+  for (const text of ['.claude/rules/domain.md', 'your spec', 'spec artefacts', 'Spec Kit', 'a spec and a plan', 'the workshop plan', 'specs/10', 'facilitat', 'rehearse', 'demo data', 'the demo data', 'in sync', 'a moment', 'sync the moment', 'Maik and Tom walk around', 'olive demo']) {
     passes(denyListErrors(OTHER, text));
   }
 });

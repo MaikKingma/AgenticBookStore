@@ -142,8 +142,6 @@ ${wrap(`**Goal:** ${l.goal}`, 60, '')}
 
 **Start:** somewhere. Catch-up / compare: \`solution/level-${n}\`.
 
-**Sync moment (3 min):** the facilitator shows something.
-
 **Steps**
 1. Do the thing. Level cleared when you are done is not a heading here.
 2. Look at \`x\`.
@@ -217,9 +215,6 @@ export function levelPage(n, {skeleton = true} = {}) {
   lines.push('', ':::', '');
   if (skeleton) lines.push(MARKER, '');
   for (const [text, id] of l.anchors) lines.push(`## ${text} {/* #${id} */}`, '');
-  if (!skeleton) {
-    lines.push(':::info[Sync moment]', 'Look up, Maik demos this now.', ':::', '');
-  }
   lines.push('## Level cleared when', '', ...l.items.map((item) => `- [ ] ${item}`), '');
   return lines.join('\n');
 }

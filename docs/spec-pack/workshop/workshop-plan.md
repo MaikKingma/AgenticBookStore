@@ -12,7 +12,7 @@ so keep this file the single source of truth for level content.
 | Harness | **Claude Code** | Four hours, beginner level. Claude Code exposes every harness lever (context files, rules, skills, commands, subagents, hooks, permissions, MCP, language servers) as plain files or plugins, so participants learn the concepts without building a harness from scratch. Open harnesses such as OpenCode, or writing your own on the Claude Agent SDK, are the recommended next step after the workshop, not a 4-hour beginner topic. |
 | Structure | **Levels 0 to 4 that build on each other** | Developers like games. The levels match the four levels of agentic harness engineering from the J-Spring talk: context engineering, give your agent eyes, behavioral control, spec-driven development. Level 0 is the tutorial level. Each level ends with a check participants run themselves: "Level cleared when". |
 | Codebase | **Agentic Bookstore** (own build, Clean Hexagonal Onion) | A brownfield app with a strict, test-enforced architecture gives the harness something to protect. Own code, no reuse from earlier workshop repositories. |
-| Guidance | **Docusaurus guide + live sync moments** | Participants work at their own pace from the guide. Each level opens with a short live demo and closes with a short debrief, so the room stays together. Catch-up branches exist for every level. |
+| Guidance | **Docusaurus guide, Maik and Tom walking around** | Participants work at their own pace from the guide. Maik and Tom walk around and help, and each level closes with a short debrief, so the room stays together. Catch-up branches exist for every level. |
 | Code intelligence | **Claude Code's built-in LSP tool with the `jdtls-lsp` plugin** | Hands-on for every participant in Level 2. The agent gets the same view of the code as an IDE: references, types and compiler diagnostics after every edit. |
 | MCP | **Our own distributor MCP server, prebuilt** | Participants connect it and use it; they see a real Spring AI MCP server in the repo. Writing an extra MCP tool is a stretch goal. |
 | LLM for the app's chat | **Workshop API key provided by Maik** | A Claude Pro subscription does not include API credits. The key is capped, handed out on the day, and revoked afterwards. Env var `BOOKSTORE_AI_API_KEY` (never `ANTHROPIC_API_KEY`). |
@@ -26,15 +26,17 @@ Times are relative to the start. Adjust the clock to the J-Fall schedule.
 |---|---|---|---|
 | 0:00 | Welcome, setup check while people settle | 10 | Room |
 | 0:10 | **Keynote**: Agentic engineering and the harness | 45 | Slides |
-| 0:55 | **Level 0**: Break the agent | 25 | Sync 3, solo 19, debrief 3 |
-| 1:20 | **Level 1**: Context engineering | 35 | Sync 5, solo 27, debrief 3 |
+| 0:55 | **Level 0**: Break the agent | 25 | Solo 22, debrief 3 |
+| 1:20 | **Level 1**: Context engineering | 35 | Solo 32, debrief 3 |
 | 1:55 | Break | 15 | |
-| 2:10 | **Level 2**: Give your agent eyes (LSP + MCP) | 20 | Sync 3, solo 15 (LSP 8, MCP 7), debrief 2 |
-| 2:30 | **Level 3**: Behavioral control (permissions, hooks, skills, commands, subagents) | 30 | Sync 4, solo 24 (permissions 4, hooks 11, skill and command 9), debrief 2 |
-| 3:00 | **Level 4**: Spec-driven development | 45 | Sync 5, solo 37, debrief 3 |
+| 2:10 | **Level 2**: Give your agent eyes (LSP + MCP) | 20 | Solo 18 (LSP 10, MCP 8), debrief 2 |
+| 2:30 | **Level 3**: Behavioral control (permissions, hooks, skills, commands, subagents) | 30 | Solo 28 (permissions 4, hooks 14, skill and command 10), debrief 2 |
+| 3:00 | **Level 4**: Spec-driven development | 45 | Solo 42, debrief 3 |
 | 3:45 | Wrap-up: who cleared which level, show and tell, Q&A | 15 | Room |
 
 Total: 10 + 45 + 25 + 35 + 15 + 20 + 30 + 45 + 15 = 240 minutes.
+
+During the levels Maik and Tom walk around and help.
 
 Buffer strategy: Level 2 and Level 3 have stretch goals (the `list_new_releases` MCP tool, the review subagent) and
 Level 3 has an optional Stop hook. If the room is behind, skip them and keep Level 4 intact, because shipping a
@@ -89,8 +91,8 @@ and the distributor jar.
 **Start:** `main` (tag `level-0-start`). No `CLAUDE.md`, no `.claude/`, no MCP. The app has a React storefront in
 `frontend/`; the task below is about the catalogue API, and the storefront is where participants see the result.
 
-**Sync moment (3 min):** Maik opens the repo, shows the onion diagram and the `ArchitectureTest`, then gives the
-task below to Claude Code live without any context. The room sees the first minute of what it does.
+Before pasting the task, participants look at the onion diagram on the guide's Architecture page and find the
+`ArchitectureTest` in the repo: that is the standard the agent does not know yet.
 
 **Task for participants (paste literally, do not add hints):**
 
@@ -131,11 +133,9 @@ prices, no migration (app fails at startup with `ddl-auto=validate`), ArchUnit v
 
 **Start:** the tag `level-0-start` again (clean): `git stash -u && git switch -C level-1 level-0-start`. Catch-up / compare: `solution/level-1`.
 
-**Sync moment (5 min):** run `/init` live, then read the generated `CLAUDE.md` together and cross out everything
-Claude could have read from the code itself. Show `/context` and `/memory`.
-
 **Steps**
-1. Run `/init`. Read the result critically. Anthropic's own guidance: every line costs attention on every task, and
+1. Run `/init`. Read the result critically and cross out everything Claude could have read from the code itself.
+   Anthropic's own guidance: every line costs attention on every task, and
    the most useful line is the command that runs the tests.
 2. Rewrite `CLAUDE.md` to at most 60 lines. It must contain:
    - Build and test commands (`./mvnw verify`, single test: `./mvnw -pl bookstore test -Dtest=BookTest`).
@@ -179,11 +179,9 @@ own MCP server, instead of guessing.
 
 **Start:** your Level 1 result, or `solution/level-1`. Catch-up / compare: `solution/level-2`.
 
-**Sync moment (3 min):** Maik shows the LSP install check (`which jdtls`, `/plugin install
-jdtls-lsp@claude-plugins-official`, the **Installed** tab of `/plugin`), then `claude mcp add` for the distributor
-and one MCP question in the chat.
+Part A starts with the LSP install check. Part B registers the distributor and asks one MCP question in the chat.
 
-### Part A: LSP (8 min)
+### Part A: LSP (10 min)
 Claude Code has a built-in, read-only LSP tool. With a code intelligence plugin installed, it gives go to
 definition, find references, type info, document and workspace symbols, implementations and call hierarchy, and
 Claude Code reports diagnostics automatically after every edit.
@@ -201,7 +199,7 @@ Claude Code reports diagnostics automatically after every edit.
    `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes: watch the
    facilitator demo and continue with Part B.
 
-### Part B: MCP (7 min)
+### Part B: MCP (8 min)
 1. Start the distributor: `./mvnw -pl distributor spring-boot:run` (or `java -jar distributor.jar`).
 2. Register it for the project:
    `claude mcp add --transport http --scope project distributor http://localhost:8090/mcp`
@@ -229,9 +227,6 @@ an edit, references by symbol, real payloads instead of invented ones?
 
 **Start:** your Level 2 result, or `solution/level-2`. Catch-up / compare: `solution/level-3`.
 
-**Sync moment (4 min):** live demo of one hook blocking a commit (red tests, exit code 2, the agent reads the
-stderr and fixes the test).
-
 ### Part A: Permissions (4 min)
 Create `.claude/settings.json` (shared, committed), or add the `permissions` block if the file already exists
 (on `solution/level-2` it declares the `jdtls-lsp` plugin):
@@ -246,7 +241,8 @@ Create `.claude/settings.json` (shared, committed), or add the `permissions` blo
 Rules are evaluated deny, then ask, then allow. Try `Shift+Tab` to cycle modes (from auto: default, acceptEdits,
 plan) and `/plan` for read-only planning.
 
-### Part B: Hooks: no green tests, no commit (11 min)
+### Part B: Hooks: no green tests, no commit (14 min)
+Watch for the moment the hook blocks a red commit with exit code 2 and the agent reads the stderr and fixes the test.
 1. Add a PreToolUse hook to `.claude/settings.json` that runs before Bash commands that are git commits:
    ```json
    "hooks": {
@@ -270,7 +266,7 @@ plan) and `/plan` for read-only planning.
 Optional: a Stop hook that runs only the fast `ArchitectureTest` when Java files changed, and checks
 `stop_hook_active` to avoid loops.
 
-### Part C: A skill and a command (9 min)
+### Part C: A skill and a command (10 min)
 1. Create `.claude/skills/new-use-case/SKILL.md`: a repeatable workflow for adding a use case through all onion
    layers (domain behaviour, flow method, port change, adapter, migration if needed, tests per layer, verify).
    Frontmatter: `name`, a precise `description` (this is what makes Claude pick it), `allowed-tools`.
@@ -311,8 +307,8 @@ Detailed track instructions: `sdd-framework-guide.md`, Part 2.
 **Pick a feature brief** (`level-4-feature-briefs.md`): A) book reviews and ratings, B) wishlist with back-in-stock
 notification, C) the assistant recommends titles from the distributor.
 
-**Sync moment (5 min):** Maik shows one spec artefact per framework side by side (OpenSpec delta spec, Spec Kit
-spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes.
+Once your spec artefact is committed, ask someone on another track to show theirs: an OpenSpec delta spec, a Spec Kit
+spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 **Level cleared when**
 - Spec artefacts committed next to the code.
