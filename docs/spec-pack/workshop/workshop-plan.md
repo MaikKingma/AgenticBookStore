@@ -280,6 +280,10 @@ Optional: a Stop hook that runs only the fast `ArchitectureTest` when Java files
 Stretch: a review subagent `.claude/agents/architecture-reviewer.md` (`tools: Read, Glob, Grep, Bash`, instructed to use
 Bash only for `git diff` and `git status`) that reviews the diff against the layer rules before `/ship`.
 
+Make it yours (optional, never a step): the best harness has a creative engineer tweaking it all the time. Once your
+hook and skill work, invent one more guardrail of your own: a deny rule for a command you never want Claude to run, a
+hook that blocks a risky edit, or a second command next to `/ship`. Keep it only if it helps.
+
 **Level cleared when**
 - A deliberately red commit is blocked by the hook (exit 2) and then fixed by the agent.
 - `git commit --no-verify` is denied.
