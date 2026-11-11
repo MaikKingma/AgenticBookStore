@@ -10,7 +10,7 @@ export const SKELETON_MARKER = '{/* guide-skeleton */}';
 
 const PROGRESS_IMPORT = "import LevelProgress from '@site/src/components/LevelProgress';";
 const BOX_OPENER = ':::note[At a glance]';
-const SYNC_MOMENT_TITLE = /sync\s*moment/i;
+const SYNC_MOMENT_TITLE = /sync[\s_-]*moment/i;
 const CHECKLIST_HEADING = '## Level cleared when';
 const CATEGORY_FILE = 'docs/reference/_category_.json';
 const WRAP_UP_POSITION = 8;
