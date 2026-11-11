@@ -134,6 +134,34 @@ fi
 rm -f "$log"
 exit 2`;
 
+// Spec 15 task T4: the pinned OpenSpec install lines (the version equals product/tech-stack.md; the variable sits on sh, never
+// on curl), and the Level 4 sentences that the plan and the page carry word for word.
+const OPENSPEC_SCRIPT = 'curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.16.0 sh';
+const OPENSPEC_POWERSHELL = '$env:OPENSPEC_VERSION = "v1.16.0"\nirm https://openspec.dev/cli/install.ps1 | iex';
+const OPENSPEC_NPM = 'npm install -g @fission-ai/openspec@1.16.0';
+const OPENSPEC_CHECK = 'openspec --version';
+const LEVEL4_SOLO_SENTENCE =
+  'A track takes about 35 minutes; the rest of the 42 solo minutes is for choosing a track and a brief at the start and for the final checks at the end.';
+const HOLDS_OPENSPEC =
+  'The start branch holds an initialised OpenSpec project: `openspec/config.yaml` and one spec in `openspec/specs/ordering/spec.md`, plus the `/opsx` commands in `.claude/commands/opsx/`. It does not hold the `openspec` program.';
+const HOLDS_SPECKIT =
+  'The start branch holds a Spec Kit project: the `.specify/` folder with a constitution already written in `.specify/memory/constitution.md`, plus the `/speckit-*` skills in `.claude/skills/`.';
+const HOLDS_AGENTOS =
+  'The start branch holds Agent OS product docs in `agent-os/product/` and standards written for this repo and indexed in `agent-os/standards/index.yml`, plus the commands in `.claude/commands/agent-os/`.';
+// The documented first steps of each framework for a project of your own (D-S6), as the numbered list of the note.
+const NOTE_OPENSPEC = `1. \`openspec init\` in your repository.
+2. Optionally fill in \`context:\` in \`openspec/config.yaml\` with your stack and conventions.
+3. Then the same flow as in this track: \`/opsx:explore\`, \`/opsx:propose\`, \`/opsx:apply\` and \`/opsx:archive\`.`;
+const NOTE_SPECKIT = `1. \`specify init --here --force --integration claude\` in your repository.
+2. \`/speckit-constitution\` with the rules your project already follows.
+3. Then \`/speckit-specify\` for one small change, followed by \`/speckit-clarify\`, \`/speckit-plan\`, \`/speckit-tasks\` and \`/speckit-implement\`.`;
+const NOTE_AGENTOS = `1. \`/discover-standards\` to extract the patterns your code already follows.
+2. \`/inject-standards\` before you implement.
+3. \`/plan-product\` for the mission and the roadmap.
+4. \`/shape-spec\` in plan mode, for each change.`;
+const LEVEL4_TIP =
+  "Spec-driven does not mean someone else's rules. Invent one of your own that every future spec must follow, and see whether the agent keeps to it: a rule in `openspec/config.yaml`, a principle in `.specify/memory/constitution.md` or a standard in `agent-os/standards/`. The best harness has a creative engineer tweaking it all the time.";
+
 // Level 1 (spec 15): the rule file of step 3, byte-equal to the level-1 solution branch (level-1-rule.test.mjs compares
 // the page with the staged file), and the illustrative /context mock of step 5.
 const LEVEL1_DOMAIN_RULE = `---
@@ -184,6 +212,13 @@ export const ENTRIES = [
   setup('SU-19', 'WP:45-47', 'text', 'Temurin 25'),
   setup('SU-20', 'WP:45-47', 'text', 'Docker Desktop'),
   setup('SU-21', 'WP:45-47', 'text', 'Node.js is not needed'),
+  // Spec 15 (decision D19, item 7): the Node.js qualification and the pinned OpenSpec install of Track A. SU-21 still guards that
+  // the page does not demand Node.js for the build; SU-22 guards the qualification (the base sentence fails it).
+  setup('SU-22', 'WP:45-47', 'text', 'You only need Node.js 22.12 or later if you pick Track A (OpenSpec) and install it with npm'),
+  setup('SU-23', 'WP:45-47', 'command', OPENSPEC_SCRIPT),
+  setup('SU-24', 'WP:45-47', 'command', OPENSPEC_POWERSHELL),
+  setup('SU-25', 'WP:45-47', 'command', OPENSPEC_NPM),
+  setup('SU-26', 'WP:45-47', 'command', OPENSPEC_CHECK),
 
   // Level 0 (WP section 4)
   level0('L0-01', 'WP:92-93', 'text', 'look at the onion diagram'),
@@ -369,6 +404,23 @@ export const ENTRIES = [
   common('L4-07', 'SDD:93-97', 'command', 'git switch start/level-4-<track>'),
   common('L4-08', 'SDD:93-97', 'text', '/model sonnet'),
   common('L4-65', 'SDD:93-97', 'command', 'claude # new session'),
+  // Spec 15 (decision D19, items 6 and 7): what each start branch holds, the brownfield notes, the pinned OpenSpec install in
+  // Track A (the lines are the plan's setup check lines), the 42-minute sentence, the Level 4 tip.
+  level4('L4-66', 'WP:303-307', 'text', LEVEL4_SOLO_SENTENCE),
+  level4('L4-67', 'WP:303-307', 'text', HOLDS_OPENSPEC),
+  level4('L4-68', 'WP:303-307', 'text', HOLDS_SPECKIT),
+  level4('L4-69', 'WP:303-307', 'text', HOLDS_AGENTOS),
+  level4('L4-70', 'WP:303-307', 'text', NOTE_OPENSPEC),
+  level4('L4-71', 'WP:303-307', 'text', NOTE_SPECKIT),
+  level4('L4-72', 'WP:303-307', 'text', NOTE_AGENTOS),
+  level4('L4-73', 'WP:311-312', 'text', LEVEL4_TIP),
+  level4('L4-74', 'WP:314-315', 'text', 'Whichever brief you pick, once your spec artefact is committed, ask someone on another track to show theirs'),
+  plan(SETUP, 'L4')('L4-75', 'WP:45-47', 'command', OPENSPEC_SCRIPT),
+  plan(SETUP, 'L4')('L4-76', 'WP:45-47', 'command', OPENSPEC_POWERSHELL),
+  plan(SETUP, 'L4')('L4-77', 'WP:45-47', 'command', OPENSPEC_NPM),
+  plan(SETUP, 'L4')('L4-78', 'WP:45-47', 'command', OPENSPEC_CHECK),
+  // The Track C row of the table (R2 of the T4 QA round): its `/plan` literal was an excluded sweep literal; this entry pins it.
+  level4('L4-79', 'WP:303-307', 'text', 'Light, standards-centric | `/plan` then `/shape-spec`, `/inject-standards`, implement the plan'),
   common('L4-09', 'SDD:99-102', 'text', 'your own words'),
   common('L4-10', 'SDD:99-102', 'text', 'your contribution as the human'),
   common('L4-63', 'SDD:99-102', 'text', 'built from `solution/level-3`'),

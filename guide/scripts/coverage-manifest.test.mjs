@@ -82,7 +82,9 @@ test('manifest: each page has at least its pinned number of entries, so entries 
   // L2 rose from 28 to 34 in spec 15 task T3 (L2-29 to L2-34: the diagnosis prompt, the Java 21 check, the new session
   // check, the first Java edit, the Level 2 tip and the debug log sentence of amendment A4); L2-17 was retargeted in place.
   // L3 rose from 34 to 35 in task T6 (L3-35, the Level 3 "Make it yours" tip).
-  const floor = {SU: 21, L0: 23, L1: 41, L2: 34, L3: 35, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
+  // SU rose from 21 to 26 and L4 from 65 to 79 in spec 15 task T4 (Node.js qualification and the pinned OpenSpec install
+  // on the setup page, the start-branch sentences, the brownfield notes, the 42-minute sentence, the Level 4 tip).
+  const floor = {SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -240,6 +242,180 @@ test('manifest: SU-21 pins the sentence "Node.js is not needed": a setup page th
   assert.match(run(su, page('You need Node.js 22 installed.')).errors.join('\n'), /^coverage: SU-21: docs\/00-setup-check\.md: the text "Node\.js is not needed" is not on the page/);
 });
 
+// Spec 15 task T4 (decision D19, items 6 and 7, owner review of the live guide): the Node.js qualification, the pinned OpenSpec
+// install route, what each start branch holds, the brownfield notes, the 42-minute sentence and the Level 4 tip. The tests read the
+// live pages (the snapshot pages are skeletons, where rule (b) is silent).
+const T4_NODE_SENTENCE =
+  'Node.js is not needed for the build: it installs its own copy. You only need Node.js 22.12 or later if you pick Track A (OpenSpec) and install it with npm; the install script needs no Node.js.';
+const T4_HOLDS = {
+  openspec:
+    'The start branch holds an initialised OpenSpec project: `openspec/config.yaml` and one spec in `openspec/specs/ordering/spec.md`, plus the `/opsx` commands in `.claude/commands/opsx/`. It does not hold the `openspec` program.',
+  speckit:
+    'The start branch holds a Spec Kit project: the `.specify/` folder with a constitution already written in `.specify/memory/constitution.md`, plus the `/speckit-*` skills in `.claude/skills/`.',
+  agentos:
+    'The start branch holds Agent OS product docs in `agent-os/product/` and standards written for this repo and indexed in `agent-os/standards/index.yml`, plus the commands in `.claude/commands/agent-os/`.',
+};
+const T4_NOTES = {
+  openspec: {
+    docs: 'https://github.com/Fission-AI/OpenSpec/blob/v1.16.0/docs/existing-projects.md',
+    commands: ['openspec init', 'context:', 'openspec/config.yaml', '/opsx:explore', '/opsx:propose', '/opsx:apply', '/opsx:archive'],
+  },
+  speckit: {
+    docs: 'https://github.com/github/spec-kit/blob/v1.3.1/docs/how-to/existing-projects.md',
+    commands: [
+      'specify init --here --force --integration claude',
+      '/speckit-constitution',
+      '/speckit-specify',
+      '/speckit-clarify',
+      '/speckit-plan',
+      '/speckit-tasks',
+      '/speckit-implement',
+    ],
+  },
+  agentos: {
+    docs: 'https://buildermethods.com/agent-os/workflow',
+    commands: ['/discover-standards', '/inject-standards', '/plan-product', '/shape-spec'],
+  },
+};
+const T4_NOTE_INTRO = '**For your own brownfield project**';
+const T4_LEVEL4_SENTENCE =
+  'A track takes about 35 minutes; the rest of the 42 solo minutes is for choosing a track and a brief at the start and for the final checks at the end.';
+
+const t4Live = () => ({pages: readPages(join(GUIDE, 'docs')), pack: readPack()});
+// The text of one track tab of the Level 4 page: up to the next track tab, or the end of the track group (the OpenSpec tab holds
+// a nested os group with its own TabItems, so the first closing tag is not the end).
+const t4Tab = (level4, value) => {
+  const start = level4.indexOf(`<TabItem value="${value}"`);
+  assert.notEqual(start, -1, `the Level 4 page has the ${value} tab`);
+  const ends = Object.keys(T4_NOTES)
+    .filter((other) => other !== value)
+    .map((other) => level4.indexOf(`<TabItem value="${other}"`, start))
+    .filter((index) => index !== -1);
+  const end = ends.length > 0 ? Math.min(...ends) : level4.indexOf('\n</Tabs>', start);
+  return level4.slice(start, end);
+};
+// The brownfield note of a tab: the intro line and the numbered list under it (lines, as written).
+const t4Note = (tab) => {
+  const lines = tab.split('\n');
+  const from = lines.findIndex((line) => line.startsWith(T4_NOTE_INTRO));
+  assert.notEqual(from, -1, 'the tab has a brownfield note');
+  const note = [lines[from]];
+  let seenItem = false;
+  for (const line of lines.slice(from + 1)) {
+    if (/^\d+\. /.test(line)) {
+      seenItem = true;
+      note.push(line);
+    } else if (line.trim() === '' && !seenItem) note.push(line);
+    else if (line.trim() === '' && seenItem) break;
+    else break;
+  }
+  return note;
+};
+
+test('manifest: SU-22 pins the Node.js qualification and SU-21 stays; the setup page and the plan carry one identical sentence (A12)', () => {
+  const byId = (id) => ENTRIES.filter((e) => e.id === id);
+  const setup = (body) => ({pages: {...readPages(), [PAGE_FILES.SU]: `---\ntitle: Setup check\n---\n\n${body}\n`}});
+  const base = 'Node.js is not needed: the build installs its own copy.';
+  // SU-21 cannot tell the base sentence from the corrected one, which is why SU-22 exists.
+  assert.deepEqual(run(byId('SU-21'), setup(base)).errors, []);
+  assert.deepEqual(run(byId('SU-21'), setup(T4_NODE_SENTENCE)).errors, []);
+  assert.match(run(byId('SU-22'), setup(base)).errors.join('\n'), /^coverage: SU-22: docs\/00-setup-check\.md: the text "You only need Node\.js 22\.12 or later/);
+  assert.deepEqual(run(byId('SU-22'), setup(T4_NODE_SENTENCE)).errors, []);
+  const {pages, pack} = t4Live();
+  for (const [name, text] of [['setup page', pages[PAGE_FILES.SU]], ['workshop plan', pack.plan]]) {
+    assert.equal(fold(text).split(fold(T4_NODE_SENTENCE)).length - 1, 1, `the ${name} carries the Node.js sentence once`);
+  }
+});
+
+test('manifest: the OpenSpec install route is pinned to the version of tech-stack.md on the setup page, the Level 4 page and the plan, the variable sits on sh (U10)', () => {
+  const stack = readFileSync(join(PACK, 'product/tech-stack.md'), 'utf8');
+  const version = /\| OpenSpec \| (\d+\.\d+\.\d+) \|/.exec(stack)?.[1];
+  assert.equal(version, '1.16.0', 'tech-stack.md pins OpenSpec 1.16.0');
+  const {pages, pack} = t4Live();
+  const route = [
+    `curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v${version} sh`,
+    `$env:OPENSPEC_VERSION = "v${version}"`,
+    `npm install -g @fission-ai/openspec@${version}`,
+    'openspec --version',
+  ];
+  for (const [name, text] of [['setup page', pages[PAGE_FILES.SU]], ['Level 4 page', pages[PAGE_FILES.L4]], ['workshop plan', pack.plan]]) {
+    for (const line of route) assert.ok(text.split('\n').some((l) => l.trim().startsWith(line)), `the ${name} has the line ${line}`);
+  }
+  for (const name of [PAGE_FILES.SU, PAGE_FILES.L4]) {
+    assert.ok(pages[name].split('\n').some((l) => l.trim() === 'irm https://openspec.dev/cli/install.ps1 | iex'), `${name} has the PowerShell installer line`);
+  }
+  // The variable on curl pins nothing (it reaches curl, not the script); every pin everywhere names the tech-stack version.
+  for (const [name, text] of [...Object.entries(pages), ['workshop plan', pack.plan]]) {
+    assert.doesNotMatch(text, /OPENSPEC_VERSION=\S+\s+curl/, `${name}: the variable must sit on sh, not on curl`);
+    for (const m of text.matchAll(/OPENSPEC_VERSION(?:=|\s*=\s*)"?v?(\d+\.\d+\.\d+)/g)) assert.equal(m[1], version, `${name}: ${m[0]}`);
+  }
+});
+
+test('manifest: each track says what its start branch holds, the page and the plan agree, and no page or plan claims an installed framework or discovered standards (U9, A7)', () => {
+  const {pages, pack} = t4Live();
+  const level4 = pages[PAGE_FILES.L4];
+  for (const [value, sentence] of Object.entries(T4_HOLDS)) {
+    assert.ok(fold(t4Tab(level4, value)).includes(fold(sentence)), `the ${value} tab says what its branch holds`);
+    assert.ok(fold(pack.plan).includes(fold(sentence)), `the plan says what the ${value} branch holds`);
+  }
+  // The "SDD in Level 4" row of the plan (line 19, A7 and G-4): no longer says that the install is removed from the level.
+  const [row] = pack.plan.split('\n').filter((line) => line.startsWith('| SDD in Level 4 |'));
+  assert.ok(row?.includes('Only Track A needs one install, the OpenSpec program'), 'the SDD row names the one install of Track A');
+  assert.ok(!row.includes('remove the install'), 'the SDD row does not claim the install is removed');
+  for (const [name, text] of [['Level 4 page', level4], ['workshop plan', pack.plan]]) {
+    assert.doesNotMatch(text, /discovered/i, `${name}: nothing was discovered, the standards were written for this repo`);
+    assert.doesNotMatch(fold(text), /framework installed|already installed and configured/i, `${name}: no framework is installed on a start branch`);
+  }
+});
+
+test('manifest: each track has a short brownfield note with the documented first steps in order, the page and the plan list them alike (U8, D-S6)', () => {
+  const {pages, pack} = t4Live();
+  const level4 = pages[PAGE_FILES.L4];
+  const plan = fold(pack.plan);
+  for (const [value, {docs, commands}] of Object.entries(T4_NOTES)) {
+    const note = t4Note(t4Tab(level4, value));
+    const items = note.filter((line) => /^\d+\. /.test(line));
+    const spans = items.flatMap((line) => [...line.matchAll(/`([^`]+)`/g)].map((m) => m[1]));
+    assert.deepEqual(spans, commands, `${value}: the commands of the note, in the documented order`);
+    assert.ok(note.filter((line) => line.trim() !== '').length <= 8, `${value}: at most 8 lines`);
+    assert.ok(note.join(' ').split(/\s+/).filter(Boolean).length <= 120, `${value}: at most 120 words`);
+    assert.ok(note[0].includes(`](${docs})`), `${value}: the note cites ${docs}`);
+    assert.ok(plan.includes(fold(items.join('\n'))), `${value}: the plan lists the same steps`);
+  }
+});
+
+test('manifest: the Level 4 page says what the rest of the 42 solo minutes is for, the plan agrees, and the shared-spec sentence is no part of Brief C (FF-T1-3)', () => {
+  const {pages, pack} = t4Live();
+  const level4 = pages[PAGE_FILES.L4];
+  assert.equal(fold(level4).split(fold(T4_LEVEL4_SENTENCE)).length - 1, 1, 'the page carries the 42-minute sentence once');
+  assert.ok(fold(pack.plan).includes(fold(T4_LEVEL4_SENTENCE)), 'the plan carries it');
+  assert.equal((level4.match(/About 35 minutes/g) ?? []).length, 3, 'the three track times stay');
+  const paragraph = level4.split('\n').find((line) => line.includes('hold the same idea in three shapes'));
+  assert.ok(paragraph?.startsWith('Whichever brief you pick, once your spec artefact is committed'), 'the sentence names every brief, so it does not read as part of Brief C');
+});
+
+test('manifest: the Level 4 page holds one Make it yours tip of at most 60 words, outside the box and the checklist, mirrored in the plan (T6 1 and 3)', () => {
+  const {pages, pack} = t4Live();
+  const level4 = pages[PAGE_FILES.L4];
+  const tips = [...level4.matchAll(/^:::tip\[Make it yours\]\n\n([\s\S]*?)\n\n:::$/gm)];
+  assert.equal(tips.length, 1, 'one Make it yours tip');
+  const [{0: whole, 1: body, index}] = tips;
+  assert.ok(body.split(/\s+/).filter(Boolean).length <= 60, 'at most 60 words');
+  assert.doesNotMatch(body, /^\s*(?:\d+\.|-)\s/m, 'a tip is no step and no checklist item');
+  assert.ok(index > level4.indexOf('## Tracks') && index + whole.length < level4.indexOf('## Level cleared when'), 'inside the page, before the checklist');
+  assert.ok(index > level4.indexOf('\n:::\n'), 'after the at a glance box');
+  assert.ok(fold(pack.plan).includes(fold(`**Make it yours:** ${body}`)), 'the plan mirrors the tip');
+  assert.doesNotMatch(level4.replace(whole, ''), /Make it yours/, 'nothing refers to the tip');
+});
+
+// Amendment A3 of spec 15: the wrap-up page must not say that Level 4 needed no install (Track A needs the OpenSpec program).
+// The sentence is on no pack line (the plan does not carry it), so no coverage entry can anchor it: this test pins it.
+test('manifest: the wrap-up page says that only Track A needed an install in Level 4 (A3)', () => {
+  const wrapUp = readPages(join(GUIDE, 'docs'))[PAGE_FILES.WU];
+  assert.ok(wrapUp.includes('Level 4 used prepared branches, so only Track A needed one install, the OpenSpec program.'));
+  assert.doesNotMatch(wrapUp, /did not install anything/);
+});
+
 test('manifest: an entry attributed to the wrong pack section fails (an L1 command in the Level 3 section)', () => {
   const moved = ENTRIES.map((e) => (e.id === 'L1-04' ? {...e, section: LEVEL3} : e));
   assert.match(run(moved).errors.join('\n'), /L1-04: the snippet "\.\/mvnw -pl bookstore test -Dtest=BookTest" is not in .*section "8\. Level 3"/);
@@ -352,34 +528,37 @@ const SWEEPS = [
 // "/clear") is no reason: that is the case the sweep exists to catch.
 const SWEEP_EXCLUDED = {
   'plan:48 PATH': 'a word of the prerequisites sentence: SU-06 and SU-07 carry the jdtls binary check, SU-19 to SU-21 the other prerequisites',
-  'plan:67 PATH': 'the wrapper-script half of the Other Linux row, which SU-12 carries; the word PATH alone says nothing to check',
-  'plan:70 jdtls-lsp': 'the plugin is installed in Level 2 Part A, which SU-15 carries and L2-04 shows as a command; the plugin id is the sentence subject here',
-  'plan:91 main': 'Start branch line of the Level 0 box, checked by the structure rule',
-  'plan:91 level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
-  'plan:91 CLAUDE.md': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
-  'plan:91 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
-  'plan:110 double': 'a hint inside the money question, which L0-11 (for money) carries',
-  'plan:134 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
-  'plan:134 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
-  'plan:134 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
-  'plan:143 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
-  'plan:225 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
-  'plan:225 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
-  'plan:236 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
-  'plan:241 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
-  'plan:296 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
-  'plan:296 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
-  'plan:300 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:300 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:314 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
-  'plan:324 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
-  'plan:331 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
-  'plan:331 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
-  'plan:349 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
-  'plan:368 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
-  'plan:375 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
-  'plan:377 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'plan:379 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:68 PATH': 'the wrapper-script half of the Other Linux row, which SU-12 carries; the word PATH alone says nothing to check',
+  'plan:71 jdtls-lsp': 'the plugin is installed in Level 2 Part A, which SU-15 carries and L2-04 shows as a command; the plugin id is the sentence subject here',
+  'plan:118 main': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:118 level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:118 CLAUDE.md': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:118 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:137 double': 'a hint inside the money question, which L0-11 (for money) carries',
+  'plan:161 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
+  'plan:161 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
+  'plan:161 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
+  'plan:170 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
+  'plan:252 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
+  'plan:252 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
+  'plan:263 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
+  'plan:268 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
+  'plan:323 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
+  'plan:323 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
+  'plan:327 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:327 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:341 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
+  'plan:351 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
+  'plan:358 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
+  'plan:358 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
+  'plan:376 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
+  'plan:395 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  // Spec 15 task T4: the key `plan:375 /plan` (the Track C row of the table) is gone. The literal `/plan` is now covered by L4-79,
+  // whose snippet is the whole Track C cell of that row on the page and in the plan (R2 of the T4 QA round; deleting the cell
+  // from the plan or the page fails L4-79), and by substring in L4-72 (the Agent OS brownfield note names `/plan-product`).
+  // The step itself stays pinned by L4-37 (`/plan`, SDD Part 2).
+  'plan:404 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:437 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
   'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
@@ -423,9 +602,9 @@ test('manifest: the sweep counts coverage per section and per page, a snippet of
   // "/clear" is also in L1-27 (Level 1 section, page L1) and CS-08 (cheat sheet), "./mvnw verify"
   // in SU-09, L0-06 and L1-03 (three sections of the plan, three pages).
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-64')).includes('sdd:110 /clear'), 'the Track A step is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:58 ./mvnw verify'), 'the setup check command is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:59 ./mvnw verify'), 'the setup check command is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-65')).includes('sdd:97 claude'), 'the common start line is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:340 name'), 'the skill frontmatter field is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:367 name'), 'the skill frontmatter field is covered by its own entry only');
   // The right snippet on the wrong page, and on the right page but attributed to another section.
   const wrongPage = ENTRIES.map((e) => (e.id === 'L4-11' ? {...e, page: 'WU'} : e));
   assert.ok(sweep(wrongPage).includes('sdd:105 /opsx:explore'));

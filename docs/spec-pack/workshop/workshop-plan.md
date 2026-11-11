@@ -16,7 +16,7 @@ so keep this file the single source of truth for level content.
 | Code intelligence | **Claude Code's built-in LSP tool with the `jdtls-lsp` plugin** | Hands-on for every participant in Level 2. The agent gets the same view of the code as an IDE: references, types and compiler diagnostics after every edit. |
 | MCP | **Our own distributor MCP server, prebuilt** | Participants connect it and use it; they see a real Spring AI MCP server in the repo. Writing an extra MCP tool is a stretch goal. |
 | LLM for the app's chat | **Workshop API key provided by Maik** | A Claude Pro subscription does not include API credits. The key is capped, handed out on the day, and revoked afterwards. Env var `BOOKSTORE_AI_API_KEY` (never `ANTHROPIC_API_KEY`). |
-| SDD in Level 4 | **Participant's choice: OpenSpec, Spec Kit or Agent OS** | Prepared start branches per framework remove the install and init time from the level. |
+| SDD in Level 4 | **Participant's choice: OpenSpec, Spec Kit or Agent OS** | Prepared start branches per framework hold the project files, so the level skips the init time. Only Track A needs one install, the OpenSpec program (see the setup check). |
 
 ## 2. Agenda (4 hours)
 
@@ -46,7 +46,8 @@ feature end-to-end is the payoff of the day.
 
 Participants should arrive with this done (see the participant email): Claude Code, Temurin 25, git, Docker
 Desktop (or another Docker engine) installed and running, and the Java language server `jdtls` on the `PATH`.
-Node.js is not needed: the build installs its own copy. On the day, in the first 10 minutes:
+Node.js is not needed for the build: it installs its own copy. You only need Node.js 22.12 or later if you pick Track A (OpenSpec) and install it with npm; the install script needs no Node.js.
+On the day, in the first 10 minutes:
 
 ```bash
 claude --version            # Claude Code installed
@@ -69,6 +70,32 @@ Installing `jdtls` (the plugin does not ship the binary; it needs JDK 21 or late
 
 The setup check covers the binary only. The `jdtls-lsp` plugin is installed in Level 2 Part A, so Levels 0 and 1
 run without it.
+
+Installing OpenSpec (Track A of Level 4 only: the start branch holds the OpenSpec project files but not the `openspec`
+program). The install script needs no Node.js. The version is pinned to 1.16.0, so everybody has the same one:
+
+```bash
+curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.16.0 sh     # macOS / Linux / WSL
+```
+
+In Windows PowerShell:
+
+```powershell
+$env:OPENSPEC_VERSION = "v1.16.0"
+irm https://openspec.dev/cli/install.ps1 | iex
+```
+
+With Node.js 22.12 or later, npm installs the same version:
+
+```bash
+npm install -g @fission-ai/openspec@1.16.0
+```
+
+Check the install, it prints 1.16.0:
+
+```bash
+openspec --version
+```
 
 Then set the workshop key (shown on the screen, never committed):
 
@@ -365,8 +392,8 @@ only less likely?
 **Goal:** turn a vague request into a spec, a plan and tasks, then let the agent implement and verify it inside the
 harness you built.
 
-**Start:** pick a track and switch to its prepared branch (built from `solution/level-3`, framework installed,
-project conventions captured):
+**Start:** pick a track and switch to its prepared branch (built from `solution/level-3`, with the framework's
+project files already in place):
 
 | Track | Branch | Weight | Commands you will use |
 |---|---|---|---|
@@ -376,10 +403,43 @@ project conventions captured):
 
 Detailed track instructions: `sdd-framework-guide.md`, Part 2.
 
+A track takes about 35 minutes; the rest of the 42 solo minutes is for choosing a track and a brief at the start and for the final checks at the end.
+
+**What each start branch already holds:**
+
+**Track A:** The start branch holds an initialised OpenSpec project: `openspec/config.yaml` and one spec in `openspec/specs/ordering/spec.md`, plus the `/opsx` commands in `.claude/commands/opsx/`. It does not hold the `openspec` program.
+
+**Track B:** The start branch holds a Spec Kit project: the `.specify/` folder with a constitution already written in `.specify/memory/constitution.md`, plus the `/speckit-*` skills in `.claude/skills/`.
+
+**Track C:** The start branch holds Agent OS product docs in `agent-os/product/` and standards written for this repo and indexed in `agent-os/standards/index.yml`, plus the commands in `.claude/commands/agent-os/`.
+
+**For your own brownfield project**, the documented first steps of each framework, in order:
+
+**Track A:**
+
+1. `openspec init` in your repository.
+2. Optionally fill in `context:` in `openspec/config.yaml` with your stack and conventions.
+3. Then the same flow as in this track: `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`.
+
+**Track B:**
+
+1. `specify init --here --force --integration claude` in your repository.
+2. `/speckit-constitution` with the rules your project already follows.
+3. Then `/speckit-specify` for one small change, followed by `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks` and `/speckit-implement`.
+
+**Track C:**
+
+1. `/discover-standards` to extract the patterns your code already follows.
+2. `/inject-standards` before you implement.
+3. `/plan-product` for the mission and the roadmap.
+4. `/shape-spec` in plan mode, for each change.
+
 **Pick a feature brief** (`level-4-feature-briefs.md`): A) book reviews and ratings, B) wishlist with back-in-stock
 notification, C) the assistant recommends titles from the distributor.
 
-Once your spec artefact is committed, ask someone on another track to show theirs: an OpenSpec delta spec, a Spec Kit
+**Make it yours:** Spec-driven does not mean someone else's rules. Invent one of your own that every future spec must follow, and see whether the agent keeps to it: a rule in `openspec/config.yaml`, a principle in `.specify/memory/constitution.md` or a standard in `agent-os/standards/`. The best harness has a creative engineer tweaking it all the time.
+
+Whichever brief you pick, once your spec artefact is committed, ask someone on another track to show theirs: an OpenSpec delta spec, a Spec Kit
 spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 **Level cleared when**

@@ -389,6 +389,25 @@ test('powershell: the innermost tab decides, so a bash fence in a PowerShell tab
   passes(psCheck(text.replace('label="Windows PowerShell"', 'label="macOS/Linux"')));
 });
 
+// Spec 15 task T4: the pinned OpenSpec install in a Windows PowerShell tab. The pack states both lines whole; the version in the
+// variable line is the pin, so v1.15.0, an appended switch, the variable on the same line or in the bash form each fail.
+const PACK_OPENSPEC = [
+  '## Installing OpenSpec\n\n```powershell\n$env:OPENSPEC_VERSION = "v1.16.0"\nirm https://openspec.dev/cli/install.ps1 | iex\n```\n',
+];
+const osCheck = (lines) => powershellErrors(OTHER, scanMarkdown(psTab(lines)), packCommandLines(PACK_OPENSPEC));
+
+test('powershell: the pinned OpenSpec install lines pass when the pack states them whole', () => {
+  passes(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"', 'irm https://openspec.dev/cli/install.ps1 | iex']));
+});
+
+test('powershell: a different pin, an appended switch, one joined line, the bash form and a missing quote each fail (the version is the pin)', () => {
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.15.0"', 'irm https://openspec.dev/cli/install.ps1 | iex']), /the PowerShell line "\$env:OPENSPEC_VERSION = "v1\.15\.0"" is not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"', 'irm https://openspec.dev/cli/install.ps1 | iex -Verbose']), /the PowerShell line "irm https:\/\/openspec\.dev\/cli\/install\.ps1 \| iex -Verbose" is not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"; irm https://openspec.dev/cli/install.ps1 | iex']), /not a command line/);
+  fails(osCheck(['OPENSPEC_VERSION=v1.16.0 irm https://openspec.dev/cli/install.ps1 | iex']), /not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = v1.16.0']), /not a command line/);
+});
+
 test('powershell and tabs: a comment opener in inline code hides neither a Windows line nor a tab group (the unclosed {/* witness)', () => {
   for (const opener of ['{/*', '<!--']) {
     const intro = `Type \`${opener}\` with care.\n\n`;

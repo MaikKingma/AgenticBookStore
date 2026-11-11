@@ -221,7 +221,9 @@ test('runChecks with content: the coverage and content rules read the pack from 
   assert.ok(coverage.every((e) => /the pack file workshop\/level-4-feature-briefs\.md is missing/.test(e)), coverage.join('\n'));
   assert.ok(noBriefs.lines.some((line) => line.startsWith('FAIL coverage')), noBriefs.lines.join('\n'));
   // The PowerShell rule reads the same pack: a line that only the SDD guide states passes with the guide and fails without it.
-  const install = 'irm https://openspec.dev/cli/install.ps1 | iex';
+  // Spec 15 task T4: the workshop plan now states the irm line too (the pinned OpenSpec install), so the witness is another line
+  // of the guide's install section that the plan does not state: the unpinned npm install.
+  const install = 'npm install -g @fission-ai/openspec@latest';
   const tab = `<Tabs groupId="os">\n<TabItem value="a" label="macOS/Linux">\n\n\`\`\`bash\nls\n\`\`\`\n\n</TabItem>\n<TabItem value="b" label="Windows PowerShell">\n\n\`\`\`powershell\n${install}\n\`\`\`\n\n</TabItem>\n</Tabs>`;
   const withGuide = withScratchPack([], (workshopDir) => check(page(SETUP, tab), {workshopDir}));
   assert.deepEqual(withGuide.errors, []);
@@ -378,6 +380,32 @@ test('runChecks with content: a raw <pre> element in the Windows tab is checked,
 test('the allow-list of the real pack holds the collapsed form of its one span over a line break (PK-3)', () => {
   const pack = Object.values(SOURCE_FILES).map((rel) => readFileSync(new URL(`../../docs/spec-pack/${rel}`, import.meta.url), 'utf8'));
   assert.ok(packCommandLines(pack).has('/plugin install jdtls-lsp@claude-plugins-official'));
+});
+
+// Spec 15 task T4: the pinned OpenSpec install in the Windows tab of the setup page, against the real pack. The workshop plan now
+// states both lines whole (the plan is where a new Windows command is added); only whole lines count.
+const OPENSPEC_PS = ['$env:OPENSPEC_VERSION = "v1.16.0"', 'irm https://openspec.dev/cli/install.ps1 | iex'];
+const openspecTab = (lines) => windowsTab(`\`\`\`powershell\n${lines.join('\n')}\n\`\`\``);
+
+test('the real pack states the pinned OpenSpec install lines of the Windows tab whole, a different pin or an added switch is no pack line (T4)', () => {
+  const pack = Object.values(SOURCE_FILES).map((rel) => readFileSync(new URL(`../../docs/spec-pack/${rel}`, import.meta.url), 'utf8'));
+  const allowed = packCommandLines(pack);
+  for (const line of OPENSPEC_PS) assert.ok(allowed.has(line), line);
+  for (const line of ['$env:OPENSPEC_VERSION = "v1.15.0"', '$env:OPENSPEC_VERSION = "latest"', 'irm https://openspec.dev/cli/install.ps1 | iex -Verbose', 'OPENSPEC_VERSION=v1.16.0 irm https://openspec.dev/cli/install.ps1 | iex']) {
+    assert.ok(!allowed.has(line), line);
+  }
+});
+
+test('runChecks with content: the pinned install lines pass in the Windows tab of the setup page, another pin or an added switch fails (T4)', () => {
+  assert.deepEqual(check(page(SETUP, openspecTab(OPENSPEC_PS))).errors, []);
+  oneContentError(
+    check(page(SETUP, openspecTab(['$env:OPENSPEC_VERSION = "v1.15.0"', OPENSPEC_PS[1]]))),
+    /^content: docs\/00-setup-check\.md: line \d+: the PowerShell line "\$env:OPENSPEC_VERSION = "v1\.15\.0"" is not a command line/,
+  );
+  oneContentError(
+    check(page(SETUP, openspecTab([OPENSPEC_PS[0], `${OPENSPEC_PS[1]} -Verbose`]))),
+    /^content: docs\/00-setup-check\.md: line \d+: the PowerShell line "irm https:\/\/openspec\.dev\/cli\/install\.ps1 \| iex -Verbose" is not a command line/,
+  );
 });
 
 test('runChecks with content: Set-Item -Path Env:\\ANTHROPIC_API_KEY fails on the setup page as the Env: form (RA-F)', () => {
