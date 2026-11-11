@@ -3,9 +3,10 @@ spec: 14-guide-branding
 pack: docs/spec-pack/specs/14-guide-branding.md
 decision: D18
 base: factory
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-10T16:24:19Z
+gate2: 2026-11-11T01:15:14Z
 qa-lead: on
 ---
 
@@ -258,6 +259,21 @@ From the T2 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
   Every other axe rule stays at 0 violations on every page run, and the verifier proves the hit is identical on the
   spec base.
 
+## Final QA and Gate 2
+
+- qa-final r1: PASS on 6f87cb7 (merge base 8c3269f): 713/713 checker tests, 130 contrast checks recomputed, 33/33
+  must-fail mutants killed, 264 rendered runs (11 pages x 2 modes x 2 widths x 3 engines x Pages and offline) with
+  0 FAIL, the A4 axe hit identical to the base in both builds, screenshots 0 differing pixels, CI artifact identical
+  and green. Checker baseline: `checker-baseline-hashes.txt` (99 `guide/scripts` files, sha256 of the tip bytes).
+- QA lead final-review: ENDORSE; Gate 2 QA confidence high (rendered checks run in a local rig, not in CI).
+- Gate 2 self-accepted by the orchestrator (owner delegated): every task PR merged (#165, #167, #169), no stragglers,
+  diff confined to the task file scopes, the spec folder, agent memory and two factory merges.
+- Standards proposals S1 to S5 (QA ledger; follow-ups, not blockers): enumerated checker lists exported and pinned by
+  their tests; task-prefixed mutant ids; rendered checks in CI from a committed rig (owner decision); a checker
+  baseline per guide spec; amendments list the criterion sentences they make literally false.
+- Outside spec 14: `docs/spec-pack/specs/14-guide-branding.md` line 22 holds an absolute home path (qa-final F-4),
+  a pack-hygiene fix for the owner.
+
 ## Residuals for the owner
 
 - R1 pack wording "Every crumb links to its level page, as today": today the crumbs are not links (F3).
@@ -270,7 +286,9 @@ From the T2 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
 - R6 test-only gaps from the T3 review (qa-lead ENDORSE r1; criteria met, the real `npm run check` catches every
   production edit): the admonition-border test mutates only `info`; the dark-surface test lists 10 of the 20
   surfaces; no equal-neighbour shade fixture; the README test does not compare shade-table cells and quoted ratios.
-  The QA ledger holds the exact test list (RA-1 to RA-3). Proposed for spec 15 next to R5.
+  The QA ledger holds the exact test list (RA-1 to RA-3). Proposed for spec 15 next to R5. RA-4 (qa-final F-1): one
+  insertion-only `moduleErrors()` check that the `.steps > .step:first-child` rule draws the flat-left first crumb;
+  the T2 mutant that deletes it renders wrong only in the rig and survives the unit tests.
 - D1 (A1 consequence) dark-mode filled buttons use slate text on `#79A7DA` (6.23:1); white would be about 2.5:1.
 - D2 dark-mode body text stays white `#FFFFFF` (15.66:1) rather than "light grey" as the pack wording says.
 - R4 at 32 px the "TECH TRIBES" line of the logo is about 10 px tall (OD-2).
