@@ -58,7 +58,7 @@ git clone https://github.com/MaikKingma/AgenticBookStore.git && cd AgenticBookSt
 ./mvnw verify               # green, under a minute (dependencies and the PostgreSQL image were downloaded at home)
 ```
 
-Installing `jdtls` (the plugin does not ship the binary; it needs JDK 17 or later, participants have 25):
+Installing `jdtls` (the plugin does not ship the binary; it needs JDK 21 or later, participants have 25):
 
 | OS | Install |
 |---|---|
@@ -195,9 +195,28 @@ Claude Code reports diagnostics automatically after every edit.
 4. Make one deliberate type error: "In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch
    the callers yet." Claude Code prints `Found N new diagnostic issues ...` under the edit. Then: "Fix the new
    diagnostics." Watch the agent read them and repair the code.
-5. Nothing appears? Check `/plugin` (tab **Errors**) and start `claude --debug`. The error
-   `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes: watch the
-   facilitator demo and continue with Part B.
+5. Nothing appears? Check `/plugin` (tab **Errors**) and start `claude --debug`. The debug output goes to a log file
+   under `~/.claude/debug/` and prints nothing extra in the terminal. Look in that file for a line with `LSP server` and
+   `failed to start`. The error
+   `Executable not found in $PATH: "jdtls"` means the binary is missing. The guide keeps the debugging options in one
+   collapsed section, five checks to try in order until the diagnostics appear, and a diagnosis prompt:
+   1. The binary: run `which jdtls` in the same terminal that you start `claude` from. It must print a path (Windows:
+      inside WSL). If it prints nothing, install it as in the setup check, open a new terminal and start `claude` again.
+   2. Java: run `java -version`. The language server needs Java 21 or later.
+   3. The plugin: open `/plugin`. `jdtls-lsp` must be on the **Installed** tab and enabled, and the **Errors** tab must
+      not list it.
+   4. A new session: if you installed `jdtls` or the plugin after Claude Code started, or put `jdtls` on the `PATH` in
+      another terminal, start a new session from a shell where `which jdtls` prints a path.
+   5. The first Java edit: the language server starts the first time Claude edits a `.java` file. Repeat the deliberate
+      type error (Part A, step 4) before you decide that it is broken.
+
+   Or paste this prompt and let Claude check what it can. It only reads and changes nothing:
+   ```text
+   The jdtls language server plugin shows no diagnostics. Check without changing anything: run which jdtls and java -version and tell me the results, read .claude/settings.json and ~/.claude/settings.json and tell me whether jdtls-lsp@claude-plugins-official is enabled, and tell me what else I should check on the Errors tab of /plugin. Then name the most likely cause and the one fix to try first. Do not edit, install or delete anything.
+   ```
+   Claude may not see exactly the shell that you start it from, so trust your own `which jdtls` over its answer.
+
+   Still stuck after two minutes: continue with Part B.
 
 ### Part B: MCP (8 min)
 1. Start the distributor: `./mvnw -pl distributor spring-boot:run` (or `java -jar distributor.jar`).
@@ -210,6 +229,10 @@ Claude Code reports diagnostics automatically after every edit.
    among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payload shape
    and prove that only authors end up in our catalogue." (The existing tests deliberately do not cover this case.)
 5. An MCP tool is little code: see `distributor/src/main/java/.../mcp/CatalogMcpTools.java`.
+
+**Make it yours:** The best harness has a creative engineer tweaking it all the time. Think of a fifth tool that Claude
+would use on the bookstore, and write down its name, its inputs and what it returns. Or add one rule to `CLAUDE.md` that
+tells Claude to ask the language server before it searches the text.
 
 Stretch: add an MCP tool `list_new_releases(days)` to the distributor and use it from Claude Code.
 
@@ -340,7 +363,7 @@ spec.md and an Agent OS shape.md hold the same idea in three shapes.
 | Pro usage limit reached | `/model sonnet` from the setup check. `/usage` to check. Pair up if someone hits the limit. Facilitator has a spare Max account for demos. |
 | `ANTHROPIC_API_KEY` exported by a participant | Claude Code would switch to that key. We only ever use `BOOKSTORE_AI_API_KEY`. The setup check confirms `/status` shows the subscription. |
 | Workshop key abuse | Console spend limit, key scoped to a workshop workspace, revoked after the session. |
-| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`which jdtls`). The plugin is installed only in Level 2 Part A, so Levels 0 and 1 run without it. On the day, the facilitator demo is the fallback; continue with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
+| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`which jdtls`). The plugin is installed only in Level 2 Part A, so Levels 0 and 1 run without it. On the day, a participant whose jdtls still does not start after the debugging options of Level 2 Part A continues with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
 | Windows participants | Claude Code runs natively; hooks are bash scripts, so recommend Git for Windows (Git Bash) or WSL2. Provide `.ps1` variants of the hook scripts in `solution/level-3`. Agent OS needs bash (WSL or Git Bash). jdtls via WSL. |
 | MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fallback: STDIO transport (`./mvnw -pl distributor package`, then `claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=stdio`). |
 | Corporate laptops block installs | Email asks for admin rights or a personal laptop. Pairing as fallback. |

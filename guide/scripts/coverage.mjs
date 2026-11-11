@@ -235,7 +235,8 @@ export const ENTRIES = [
   partA('L2-14', 'WP:200-202', 'text', 'Errors'),
   partA('L2-15', 'WP:200-202', 'command', 'claude --debug'),
   partA('L2-16', 'WP:200-202', 'text', 'Executable not found in $PATH: "jdtls"'),
-  partA('L2-17', 'WP:200-202', 'text', 'two minutes'),
+  // Spec 15 task T3: L2-17 guarded "two minutes"; it now pins the whole Part B fallback sentence (the demo is gone).
+  partA('L2-17', 'WP:200-202', 'text', 'Still stuck after two minutes: continue with Part B.'),
   partB('L2-18', 'WP:205', 'command', './mvnw -pl distributor spring-boot:run'),
   partB('L2-19', 'WP:205', 'text', 'java -jar distributor.jar'),
   partB('L2-20', 'WP:207-208', 'command', 'claude mcp add --transport http --scope project distributor http://localhost:8090/mcp'),
@@ -258,6 +259,29 @@ export const ENTRIES = [
   ),
   partB('L2-27', 'WP:216', 'text', 'list_new_releases(days)'),
   entries('spec10', 'Scenario: MCP is available', 'L2')('L2-28', 'S10:209', 'text', 'connected with 4 tools'),
+  // Spec 15 task T3: the debugging section of Part A step 5 (a collapsed details block on the page) and the Level 2 tip.
+  partA(
+    'L2-29',
+    'WP:200-202',
+    'command',
+    'The jdtls language server plugin shows no diagnostics. Check without changing anything: run which jdtls and java -version and tell me the results, read .claude/settings.json and ~/.claude/settings.json and tell me whether jdtls-lsp@claude-plugins-official is enabled, and tell me what else I should check on the Errors tab of /plugin. Then name the most likely cause and the one fix to try first. Do not edit, install or delete anything.',
+  ),
+  partA('L2-30', 'WP:200-202', 'text', 'run `java -version`. The language server needs Java 21 or later.'),
+  partA('L2-31', 'WP:200-202', 'text', 'start a new session from a shell where `which jdtls` prints a path'),
+  partA('L2-32', 'WP:200-202', 'text', 'the language server starts the first time Claude edits a `.java` file'),
+  // Spec 15 amendment A4: `claude --debug` writes a log file and prints nothing extra in the terminal (official plugins troubleshooting).
+  partA(
+    'L2-34',
+    'WP:200-202',
+    'text',
+    'The debug output goes to a log file under `~/.claude/debug/` and prints nothing extra in the terminal. Look in that file for a line with `LSP server` and `failed to start`.',
+  ),
+  partB(
+    'L2-33',
+    'WP:214',
+    'text',
+    'The best harness has a creative engineer tweaking it all the time. Think of a fifth tool that Claude would use on the bookstore, and write down its name, its inputs and what it returns. Or add one rule to `CLAUDE.md` that tells Claude to ask the language server before it searches the text.',
+  ),
 
   // Level 3 (WP section 8, spec 10)
   level3('L3-01', 'WP:232-233', 'text', 'the agent reads the stderr and fixes the test'),

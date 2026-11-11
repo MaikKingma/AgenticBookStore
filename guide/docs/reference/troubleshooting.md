@@ -47,7 +47,9 @@ claude --debug
 
 The error `Executable not found in $PATH: "jdtls"` means the binary is missing.
 
-Still stuck after two minutes? Watch the demo and continue with Part B of [Level 2](../03-level-2-give-your-agent-eyes.mdx#part-b-mcp).
+The debugging options in step 5 of [Level 2, Part A](../03-level-2-give-your-agent-eyes.mdx#part-a-lsp) list five checks and a prompt that lets Claude diagnose the setup without changing anything.
+
+Still stuck after two minutes? Continue with Part B of [Level 2](../03-level-2-give-your-agent-eyes.mdx#part-b-mcp).
 
 ## Usage limits {/* #usage-limits */}
 
