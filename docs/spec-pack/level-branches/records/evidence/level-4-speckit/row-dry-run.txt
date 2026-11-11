@@ -1,0 +1,179 @@
+# Byte copies of raw output (paths masked: $SBX $SBX2 $HOME $HOME2 $RAW $WT $SP $REALHOME), task T12, 2026-11-10.
+# Dry run of the setup, reset and judging commands of the draft rehearsal rows RR-S1 to RR-S4 in scratch clones (no Claude). The scratch repository $SP/s10-t12-impl-rows/src is a clone of sbx-2 with the branches start/level-4-speckit (sbx-2 HEAD) and solution/level-3 (sbx-2 HEAD~1), so that git clone --branch prints the real branch names. Stand-in files and commits are marked: they are not Claude results.
+== source repository: branches
+$ git -C $SP/s10-t12-impl-rows/src branch --list start/* solution/*
+  solution/level-3
+  start/level-4-speckit
+(exit 0)
+== step_branch of lib-steps.sh for the three tracks
+step_branch level-4-openspec -> start/level-4-openspec
+step_branch level-4-speckit -> start/level-4-speckit
+step_branch level-4-agentos -> start/level-4-agentos
+== RR-S1 setup: clone --branch start/level-4-speckit
+$ git clone --quiet --branch start/level-4-speckit $SP/s10-t12-impl-rows/src $SP/s10-t12-impl-rows/rr1
+(exit 0)
+start = b98d908e74a9f11caf832d472f83c6150a496cfb
+$ git status -sb
+## start/level-4-speckit...origin/start/level-4-speckit
+(exit 0)
+$ git status --short
+(exit 0)
+constitution as staged: e574f935323166bc1b89ec11e85e1b62c3258dbade901a1b9d613e2ecee279d6
+== RR-S1 restore the init state of the constitution (template), so that the skill starts from the template
+$ git status --short
+ M .specify/memory/constitution.md
+(exit 0)
+constitution.md == constitution-template.md (cmp)
+template sha256 ce7549540fa45543cca797a150201d868e64495fdff39dc38246fb17bd4024b3; recorded in .constitution-template.json: "sha256": "ce7549540fa45543cca797a150201d868e64495fdff39dc38246fb17bd4024b3"
+== RR-S1 judging commands, run on a stand-in file (NOT a Claude result): a changed constitution and one stray file
+$ git diff --name-only b98d908e74a9f11caf832d472f83c6150a496cfb
+.specify/memory/constitution.md
+(exit 0)
+$ git status --short
+ M .specify/memory/constitution.md
+?? stray.txt
+(exit 0)
+files other than the constitution that changed (tracked or untracked): 1
+== RR-S1 undo
+$ git reset --hard b98d908e74a9f11caf832d472f83c6150a496cfb
+HEAD is now at b98d908 Level 4 start: Spec Kit installed and initialised
+(exit 0)
+$ git clean -fdx
+Removing stray.txt
+(exit 0)
+$ git status --short
+(exit 0)
+constitution after undo: e574f935323166bc1b89ec11e85e1b62c3258dbade901a1b9d613e2ecee279d6
+== RR-S2 setup: new clone
+$ git clone --quiet --branch start/level-4-speckit $SP/s10-t12-impl-rows/src $SP/s10-t12-impl-rows/rr2
+(exit 0)
+skill folders in .claude/skills:
+new-use-case
+speckit-analyze
+speckit-checklist
+speckit-clarify
+speckit-constitution
+speckit-converge
+speckit-implement
+speckit-plan
+speckit-specify
+speckit-tasks
+skills with disable-model-invocation: true: 9 of 10 folders; the one without it:
+.claude/skills/new-use-case/SKILL.md
+== RR-S3 setup: new clone, verify green on the clone, judging commands on a stand-in commit
+$ git clone --quiet --branch start/level-4-speckit $SP/s10-t12-impl-rows/src $SP/s10-t12-impl-rows/rr3
+(exit 0)
+start = b98d908e74a9f11caf832d472f83c6150a496cfb
+$ ./mvnw clean verify   (budget 900 s; tail)
+(exit 0)
+[INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  30.090 s
+git status --short after the verify (git-ignored build output does not show): 0 lines; ignored build folders: 5
+== stand-in for /ship: a commit made by hand (NOT a Claude result), then the judging commands
+$ git log --oneline b98d908e74a9f11caf832d472f83c6150a496cfb..HEAD
+a4a22e5 docs: stand-in commit for the dry run
+(exit 0)
+$ git show --stat --format=%s HEAD
+docs: stand-in commit for the dry run
+
+ specs/001-rehearsal-stand-in/spec.md | 1 +
+ 1 file changed, 1 insertion(+)
+(exit 0)
+== reset between runs
+$ git reset --hard b98d908e74a9f11caf832d472f83c6150a496cfb
+HEAD is now at b98d908 Level 4 start: Spec Kit installed and initialised
+(exit 0)
+$ git clean -fdx
+Removing bookstore/target/
+Removing distributor/target/
+Removing frontend/dist/
+Removing frontend/node/
+Removing frontend/node_modules/
+(exit 0)
+$ git status --short
+(exit 0)
+build output left after the clean: 0 folders (must be 0)
+== RR-S4 setup: clone --branch solution/level-3, then the init under an isolated HOME
+$ git clone --quiet --branch solution/level-3 $SP/s10-t12-impl-rows/src $SP/s10-t12-impl-rows/rr4
+(exit 0)
+branch: solution/level-3; status: 0 lines
+init exit 0
+git status --short lines: 29 (all ?? lines: 29)
+git diff --stat lines: 0
+files that differ from the same path on start/level-4-speckit:
+  .specify/integrations/claude.manifest.json
+  .specify/integrations/speckit.manifest.json
+  .specify/memory/constitution.md
+  .specify/workflows/workflow-registry.json
+== RR-S4 undo
+$ git clean -fdx
+Removing .claude/skills/speckit-analyze/
+Removing .claude/skills/speckit-checklist/
+Removing .claude/skills/speckit-clarify/
+Removing .claude/skills/speckit-constitution/
+Removing .claude/skills/speckit-converge/
+Removing .claude/skills/speckit-implement/
+Removing .claude/skills/speckit-plan/
+Removing .claude/skills/speckit-specify/
+Removing .claude/skills/speckit-tasks/
+Removing .specify/
+(exit 0)
+$ git status --short
+(exit 0)
+# ---- appended in rework r1 (RA1): fresh RR-S4 dry run with both status commands ----
+== RR-S4 dry run r1: both status commands (the row prints exactly these; PATH holds a python3 and a claude STUB that only logs, no Claude run)
+$ git status --short   (before the init)
+(lines: 0)
+init exit 0
+$ git status --short
+?? .claude/skills/speckit-analyze/
+?? .claude/skills/speckit-checklist/
+?? .claude/skills/speckit-clarify/
+?? .claude/skills/speckit-constitution/
+?? .claude/skills/speckit-converge/
+?? .claude/skills/speckit-implement/
+?? .claude/skills/speckit-plan/
+?? .claude/skills/speckit-specify/
+?? .claude/skills/speckit-tasks/
+?? .specify/
+lines: 10  (of which ?? lines: 10)
+$ git status --short --untracked-files=all | wc -l
+29
+(?? lines: 29)
+$ git diff --stat   (lines: 0)
+plain status entries, one per line:
+?? .claude/skills/speckit-analyze/
+?? .claude/skills/speckit-checklist/
+?? .claude/skills/speckit-clarify/
+?? .claude/skills/speckit-constitution/
+?? .claude/skills/speckit-converge/
+?? .claude/skills/speckit-implement/
+?? .claude/skills/speckit-plan/
+?? .claude/skills/speckit-specify/
+?? .claude/skills/speckit-tasks/
+?? .specify/
+claude stub log: empty (the stub was not called, specify only looked the program up)
+correction: line 103 of this file counts the output of git status --short --untracked-files=all (29 lines); plain git status --short prints the folded form shown above
+after git clean -fdx: $ git status --short prints 0 lines
+# ---- appended in rework r1 (FF-T12-a): the judging commands of RR-S1 run exactly as the row prints them ----
+== RR-S1 judging commands exactly as the row prints them (rework r1, FF-T12-a); clone of branch start/level-4-speckit of the scratch repository
+$ git ls-tree -r --name-only start/level-4-speckit -- .specify .claude/skills | wc -l   (run as: git ls-tree -r --name-only HEAD -- .specify .claude/skills | wc -l)
+31
+$ grep -nE '\[[A-Z][A-Z0-9_]*\]' .specify/memory/constitution.md   (on the staged file)
+(exit 1; 1 = no match)
+same grep on the restored template (after the row's setup step), first 3 lines:
+1:# [PROJECT_NAME] Constitution
+6:### [PRINCIPLE_1_NAME]
+8:[PRINCIPLE_1_DESCRIPTION]
+(matches: 18)
+$ git diff b98d908e74a9f11caf832d472f83c6150a496cfb -- .specify/memory/constitution.md   (working file = template, against the staged file; first 6 lines)
+diff --git a/.specify/memory/constitution.md b/.specify/memory/constitution.md
+index ee6dcad..a4670ff 100644
+--- a/.specify/memory/constitution.md
++++ b/.specify/memory/constitution.md
+@@ -1,49 +1,50 @@
+-<!--
+$ git ls-files --others --exclude-standard   (prints nothing)
+(lines: 0)

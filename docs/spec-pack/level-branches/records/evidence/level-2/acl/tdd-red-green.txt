@@ -1,0 +1,43 @@
+# TDD of the multi-role contract test, in the level-2 sandbox $SBX-a (built with simulate-level-0.sh origin/factory + build-level.sh level-2; factory sha 5fa5d19a8a840a81a77b1925bb3cbd8c91172b77)
+# The sandbox runs set TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir to the scratchpad ($SP/t5/tmp).
+# Note on RED: the ACL already keeps only AUTHOR contributors, so no production line can be red here. The test is written first
+# and the contract file it names does not exist yet, so RED is the missing capture (as a real author of this test would hit it).
+# The behaviour part of RED is shown by the data mutant at the end (a relabelled contributor makes the same test fail on an assertion).
+
+## Test added (after keepsReversedAuthorsReversed), before the contract file existed
+    @Test
+    void keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator() {
+        stubTitle("9789900010395", "title-9789900010395.json");
+
+        DistributorTitleDTO title = distributor.findTitle("9789900010395").orElseThrow();
+
+        assertThat(title.title()).isEqualTo("The Divine Comedy: Inferno");
+        assertThat(title.authors()).containsExactly("Dante Alighieri");
+        assertThat(title.authors()).doesNotContain("Henry Wadsworth Longfellow", "Gustave Dore");
+    }
+
+## RED: ./mvnw -B -ntp -pl bookstore test -Dtest=DistributorAppServiceImplTest
+start 23:32:03Z
+[ERROR] Tests run: 131, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.409 s <<< FAILURE! -- in nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[ERROR]   DistributorAppServiceImplTest.keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator:276->stubTitle:927->contract:879 IllegalArgument No contract file title-9789900010395.json
+[ERROR] Tests run: 131, Failures: 0, Errors: 1, Skipped: 0
+[ERROR] BUILD FAILURE
+exit 1 at 23:32:08Z
+
+## contract file added (copy of the captured REST body, see capture-and-byte-identity.txt)
+
+## GREEN: same command
+start 23:32:16Z
+[INFO] Tests run: 131, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.410 s -- in nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[INFO] Tests run: 131, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+exit 0 at 23:32:18Z
+
+## Data mutant (test resource only): sed 's/"TRANSLATOR"/"AUTHOR"/' on the contract copy in $SBX-a, same command, then the file restored
+start 23:34:18Z
+[ERROR] Tests run: 131, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.406 s <<< FAILURE! -- in nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[ERROR]   DistributorAppServiceImplTest.keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator:281 
+[ERROR] Tests run: 131, Failures: 1, Errors: 0, Skipped: 0
+[ERROR] BUILD FAILURE
+exit 1 at 23:34:20Z
+restored: cmp of the sandbox contract with the captured REST body printed no difference (the mutant script printed: restored: contract == REST body)

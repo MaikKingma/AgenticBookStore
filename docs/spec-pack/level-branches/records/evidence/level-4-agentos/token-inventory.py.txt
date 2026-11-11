@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""token-inventory.py: every backticked token of the written Agent OS files resolves (C0-13b).
+
+Usage: python3 -I token-inventory.py <sandbox-root> <worktree-root> [--misspell]
+
+For each backticked token of agent-os/product/*.md and agent-os/standards/**/*.md (outside fenced blocks):
+  FOUND    the token occurs as a substring in a tracked text file of the sandbox or in the pack tech-stack or standard
+  PATTERN  the token holds a space, brace, star or double dot, so it is a phrase or template; the trace table covers it
+  MISSING  none of the above: reported, and the exit code is 1
+--misspell changes one found token in memory (PostgresTestConfig -> PostgresTestConfiq) to show that MISSING is reported.
+"""
+import os
+import re
+import subprocess
+import sys
+
+sbx, wt = sys.argv[1], sys.argv[2]
+MISSPELL = "--misspell" in sys.argv
+
+files = subprocess.run(["git", "-C", sbx, "ls-files"], capture_output=True, text=True, check=True).stdout.split("\n")
+EXT = (".java", ".xml", ".yml", ".yaml", ".sql", ".md", ".json", ".properties", ".st", ".sh", ".ts", ".tsx", ".mjs", ".cmd", ".tsv", ".factories")
+hay = []
+for f in files:
+    if f.endswith(EXT) and not f.startswith("docs/spec-pack/"):
+        try:
+            with open(os.path.join(sbx, f), encoding="utf-8") as fh:
+                hay.append(fh.read())
+        except (UnicodeDecodeError, FileNotFoundError):
+            pass
+for extra in ("docs/spec-pack/product/tech-stack.md", "docs/spec-pack/product/architecture-standard.md"):
+    with open(os.path.join(wt, extra), encoding="utf-8") as fh:
+        hay.append(fh.read())
+HAY = "\n".join(hay)
+# the sandbox also holds the written files themselves: a token must not resolve only through its own file
+own = []
+for base in ("agent-os/product", "agent-os/standards"):
+    for root, _d, fs in os.walk(os.path.join(sbx, base)):
+        for f in fs:
+            own.append(os.path.join(root, f))
+
+tokens = {}
+for path in sorted(own):
+    if path.endswith("index.yml"):
+        continue
+    in_fence = False
+    with open(path, encoding="utf-8") as fh:
+        for n, line in enumerate(fh.read().split("\n"), 1):
+            if line.startswith("```"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            for t in re.findall(r"`([^`\n]+)`", line):
+                tokens.setdefault(t, "%s:%d" % (os.path.relpath(path, sbx), n))
+
+hay_wo_own = HAY
+# subtract the written files' own text from the haystack (they are tracked only after the commit, so normally absent)
+for path in own:
+    with open(path, encoding="utf-8") as fh:
+        txt = fh.read()
+    hay_wo_own = hay_wo_own.replace(txt, "")
+
+counts = {"FOUND": 0, "PATTERN": 0, "MISSING": 0}
+missing = []
+first_found = True
+out = []
+for t, where in sorted(tokens.items()):
+    probe = t
+    if MISSPELL and t == "PostgresTestConfig":
+        probe = "PostgresTestConfiq"
+    m = re.match(r"^([A-Z]\w*)\.(\w+)(?:\((.*)\))?$", probe)
+    if probe in hay_wo_own:
+        status = "FOUND"
+    elif m:
+        # Class.member or Class.method(args): the class file exists and holds the member (and the argument types)
+        cls, mem, args = m.group(1), m.group(2), m.group(3)
+        src = [f for f in files if f.endswith("/" + cls + ".java")]
+        ok = False
+        for f in src:
+            with open(os.path.join(sbx, f), encoding="utf-8") as fh:
+                txt = fh.read()
+            if args and args != "...":
+                ok = ok or re.search(r"\b" + re.escape(mem) + r"\(\s*" + re.escape(args), txt) is not None
+            else:
+                ok = ok or re.search(r"\b" + re.escape(mem) + r"\b", txt) is not None
+        status = "FOUND" if ok else "MISSING"
+        if not ok:
+            missing.append((t, where))
+    elif re.search(r"[ {}*]|\.\.", probe):
+        status = "PATTERN"
+    else:
+        status = "MISSING"
+        missing.append((t, where))
+    counts[status] += 1
+    out.append("%-8s %-60s %s" % (status, t if probe == t else probe, where))
+print("\n".join(out))
+print("SUMMARY: tokens %d, FOUND %d, PATTERN %d, MISSING %d" % (len(tokens), counts["FOUND"], counts["PATTERN"], counts["MISSING"]))
+sys.exit(1 if missing else 0)

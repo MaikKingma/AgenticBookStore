@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""token-spelling.py: C0-13b and C0-13c for the Agent OS track.
+
+Usage: python3 -I token-spelling.py <worktree> <isolated-home> <sandbox> [--misspell]
+
+For every token that the pack scenario, the guide or the installed files name, print where it occurs (file:line, at most
+3 hits per source) in: pack spec 10 (P10), pack spec 11 (P11), pack sdd-framework-guide (SDD), pack workshop-plan (WP),
+pack feature briefs (BR), guide sources on origin/sdd/11-workshop-guide/spec (G11) and origin/factory (GF), the installed
+Agent OS files (INS), the built level-4 tree (TREE). A token with no hit in INS and TREE and no pack hit is MISSING.
+--misspell adds a token with one wrong letter, which must come out MISSING.
+"""
+import os
+import re
+import subprocess
+import sys
+
+wt, home, sbx = sys.argv[1], sys.argv[2], sys.argv[3]
+MISSPELL = "--misspell" in sys.argv
+
+
+def lines(text):
+    return text.split("\n")
+
+
+def git_show(ref, path):
+    r = subprocess.run(["git", "-C", wt, "show", "%s:%s" % (ref, path)], capture_output=True, text=True)
+    return r.stdout if r.returncode == 0 else ""
+
+
+def rd(path):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except (FileNotFoundError, UnicodeDecodeError):
+        return ""
+
+
+SOURCES = {}
+P = wt + "/docs/spec-pack/"
+SOURCES["P10"] = {"spec10": rd(P + "specs/10-harness-reference-solutions.md")}
+SOURCES["P11"] = {"spec11": rd(P + "specs/11-workshop-guide-site.md")}
+SOURCES["SDD"] = {"sdd-framework-guide": rd(P + "workshop/sdd-framework-guide.md")}
+SOURCES["WP"] = {"workshop-plan": rd(P + "workshop/workshop-plan.md")}
+SOURCES["BR"] = {"level-4-feature-briefs": rd(P + "workshop/level-4-feature-briefs.md")}
+GUIDE = ["guide/docs/05-level-4-spec-driven-development.mdx", "guide/docs/06-wrap-up.md", "guide/docs/reference/cheat-sheet.md", "guide/docs/reference/troubleshooting.md"]
+SOURCES["G11"] = {os.path.basename(g): git_show("origin/sdd/11-workshop-guide/spec", g) for g in GUIDE}
+SOURCES["GF"] = {os.path.basename(g): git_show("origin/factory", g) for g in GUIDE}
+ins = {}
+aos = home + "/agent-os"
+for root, _d, fs in os.walk(aos):
+    for f in fs:
+        if f.endswith((".md", ".sh", ".yml")) and "/.github" not in root and f not in ("CHANGELOG.md",):
+            ins[os.path.relpath(os.path.join(root, f), aos)] = rd(os.path.join(root, f))
+SOURCES["INS"] = ins
+tree = {}
+for base in ("agent-os", ".claude/commands/agent-os"):
+    for root, _d, fs in os.walk(os.path.join(sbx, base)):
+        for f in fs:
+            tree[os.path.relpath(os.path.join(root, f), sbx)] = rd(os.path.join(root, f))
+SOURCES["TREE"] = tree
+
+TOKENS = [
+    "start/level-4-agentos",
+    "git switch start/level-4-<track>",
+    "git stash -u && git switch start/level-4-<track>",
+    "git clone https://github.com/buildermethods/agent-os.git ~/agent-os && rm -rf ~/agent-os/.git",
+    "~/agent-os/scripts/project-install.sh",
+    "/plan-product",
+    "/discover-standards",
+    "/index-standards",
+    "/shape-spec",
+    "/inject-standards",
+    "/inject-standards testing",
+    "agent-os/product/",
+    "agent-os/product/mission.md",
+    "agent-os/product/roadmap.md",
+    "agent-os/product/tech-stack.md",
+    "agent-os/standards/",
+    "agent-os/standards/index.yml",
+    "agent-os/standards/architecture/clean-hexagonal-onion.md",
+    "agent-os/standards/global/tech-stack.md",
+    "agent-os/specs/",
+    ".claude/commands/agent-os",
+    "docs/architecture.md",
+    "product/mission.md",
+    "product/tech-stack.md",
+    "product/roadmap.md",
+    "product/architecture-standard.md",
+    "/agent-os:plan-product",
+    "AskUserQuestion",
+    "plan mode",
+    "Agent OS 3.0",
+]
+if MISSPELL:
+    TOKENS.append("/plan-produkt")
+print("%-62s %s" % ("token", "hits per source (file:line, up to 3)"))
+missing = 0
+for t in TOKENS:
+    parts = []
+    total = 0
+    for src, files in SOURCES.items():
+        hits = []
+        for name, text in sorted(files.items()):
+            for n, line in enumerate(lines(text), 1):
+                if t in line:
+                    hits.append("%s:%d" % (name, n))
+        total += len(hits)
+        if hits:
+            parts.append("%s[%d] %s" % (src, len(hits), ",".join(hits[:3])))
+        else:
+            parts.append("%s[0]" % src)
+    # path tokens: does the path exist on the built level-4 tree (or in the isolated home for ~/ paths)?
+    if " " not in t and not t.startswith("/") and "https" not in t:
+        base = home + "/" if t.startswith("~/") else sbx + "/"
+        rel = t[2:] if t.startswith("~/") else t
+        if os.path.exists(base + rel):
+            parts.append("PATH exists" + (" in the isolated home" if t.startswith("~/") else " on the built tree"))
+            total += 1
+    status = "MISSING" if total == 0 else "ok"
+    if total == 0:
+        missing += 1
+    print("%s %s" % (status, t))
+    print("    " + " | ".join(parts))
+print("SUMMARY: tokens %d, with no hit anywhere %d" % (len(TOKENS), missing))

@@ -1,0 +1,6 @@
+# op	group	staged	target	mode	base
+add	config	files/CLAUDE.staged.md	CLAUDE.md	644	-
+add	config	files/dot-claude/rules/domain.md	.claude/rules/domain.md	644	-
+add	config	files/dot-claude/rules/data-and-migrations.md	.claude/rules/data-and-migrations.md	644	-
+add	config	files/dot-claude/rules/testing.md	.claude/rules/testing.md	644	-
+add	config	files/CLAUDE.local.md.example	CLAUDE.local.md.example	644	-

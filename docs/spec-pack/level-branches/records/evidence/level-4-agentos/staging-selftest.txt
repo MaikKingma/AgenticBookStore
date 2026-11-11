@@ -1,0 +1,14 @@
+# bash S/tests/test-staging.sh on the worktree with the step folder in place (TMPDIR under $SP, HR1). Last 12 lines:
+exit code: 0
+ok 49 - temp folders: every one uses a template under ${TMPDIR:-/tmp} (scripts, test, README)
+ok 50 - temp folders: apply, simulate and cut leave nothing behind in TMPDIR
+ok 51 - README: the cut procedure names only local operations; pushes are a separate section
+ok 52 - cut: a failing last level-4 track step creates no branch
+ok 53 - apply: a write that fails after a patch row rolls back files, folders, the index and the backup
+ok 54 - apply: an add, a folder or a mode that cannot be written rolls back; a failed backup writes nothing
+ok 55 - apply: a restore step that fails is named, the rest of the rollback still runs
+ok 56 - cut: any internal git command that fails creates no branch
+ok 57 - cleanup: a removal that fails is reported; the rest of the cleanup still runs
+ok 58 - usage: apply, simulate and cut exit 2 on -h, unknown options, missing values and extra arguments
+1..58
+PASSED all 58 cases

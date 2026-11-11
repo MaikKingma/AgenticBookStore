@@ -1,0 +1,34 @@
+# Agent OS Standards Index
+
+architecture:
+  class-naming:
+    description: Required class name suffixes per package, enforced by ArchitectureTest
+  clean-hexagonal-onion:
+    description: The eight packages of the onion, who calls whom, and where each kind of class goes
+  dependency-rules:
+    description: ArchUnit dependency rules between layers and framework types, and the one process exception
+  domain-model:
+    description: Aggregates, value objects and domain events: factories, behaviour methods, invariants
+  flows-and-ports:
+    description: Flows, ports, DTOs and the four use-case exceptions in domaininteraction
+  inbound-adapters:
+    description: Command, query, process and assistant adapters, ProblemDetail errors, URL scheme
+  money-is-exact:
+    description: Money as BigDecimal with scale 2, never double or float, across domain, DTO, payload and column
+  outbound-acl:
+    description: The acl package: AppServiceImpl with RestClient, private nested payload records, port exceptions, base URL
+
+database:
+  flyway-migrations:
+    description: Schema changes only through new Flyway migrations, naming, ddl-auto validate, seed data
+  persistence-adapter:
+    description: The data package: DataServiceImpl, Repository, JPA entities and mappers
+
+testing:
+  database-in-tests:
+    description: PostgreSQL with Testcontainers, never an embedded database, shared container, test profile
+  layer-tests:
+    description: Which test type and tooling to use for each layer
+  test-conventions:
+    description: Test names, offline tests, verify as proof, ArchitectureTest stays green
+

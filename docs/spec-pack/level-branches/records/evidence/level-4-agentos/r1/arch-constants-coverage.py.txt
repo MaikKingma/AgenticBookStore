@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""arch-constants-coverage.py: every @ArchTest constant of ArchitectureTest is covered by a written standard.
+
+Usage: python3 -I arch-constants-coverage.py <sandbox-root> [--drop <CONSTANT>] [--invent]
+Each constant maps to a written standards file and a needle (the rule text) that must occur in that file.
+--drop removes one mapping in memory, --invent adds a constant name that the test file does not have; both must be reported.
+"""
+import re
+import sys
+
+sbx = sys.argv[1]
+std = "agent-os/standards/"
+DR = std + "architecture/dependency-rules.md"
+CN = std + "architecture/class-naming.md"
+MAP = {
+    "DOMAIN_IS_ONLY_ACCESSED_BY_DOMAININTERACTION": (DR, "1. `domain` may only be accessed by `domaininteraction`."),
+    "DOMAININTERACTION_IS_ONLY_ACCESSED_BY_ADAPTERS": (DR, "2. `domaininteraction` may only be accessed by"),
+    "COMMAND_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "QUERY_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "PROCESS_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "ASSISTANT_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "DATA_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "ACL_IS_NOT_ACCESSED_BY_OTHER_LAYERS": (DR, "3. No outer adapter"),
+    "DOMAIN_DEPENDS_ON_JAVA_ONLY": (DR, "4. `domain` depends on `java..` only."),
+    "PERSISTENCE_TYPES_ONLY_IN_DATA": (DR, "5. `jakarta.persistence..` and `org.springframework.data..` are only allowed in `data`."),
+    "REST_CLIENT_ONLY_IN_ACL": (DR, "6. `org.springframework.web.client..` (`RestClient`) is only allowed in `acl`."),
+    "SPRING_AI_ONLY_IN_ASSISTANT": (DR, "7. `org.springframework.ai..` is only allowed in `assistant`."),
+    "REST_CONTROLLERS_ONLY_IN_COMMAND_QUERY_ASSISTANT": (DR, "8. `@RestController` classes only live in `command`, `query` and `assistant`."),
+    "APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL": (DR, "`APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL`: the private payload records nested in an `*AppServiceImpl`"),
+    "NO_DOUBLE_OR_FLOAT_FOR_MONEY": (std + "architecture/money-is-exact.md", "`NO_DOUBLE_OR_FLOAT_FOR_MONEY` (ArchUnit)"),
+    "COMMAND_CLASS_NAMES": (CN, "| `command` | `Commands`, `Payload`, `CommandResult`, `ExceptionHandler` |"),
+    "QUERY_CLASS_NAMES": (CN, "| `query` | `Queries`, `View`, `ExceptionHandler` |"),
+    "PROCESS_CLASS_NAMES": (CN, "| `process` | `EventProcessor`, `Delegate` |"),
+    "ASSISTANT_CLASS_NAMES": (CN, "| `assistant` | `Commands`, `Tools`, `Config`, `Properties`, `Payload`, `View`, `ExceptionHandler`, `RateLimiter`, `ChatModel` |"),
+    "DATA_CLASS_NAMES": (CN, "| `data` | `DataServiceImpl`, `JPA`, `JPAMapper`, `Repository` |"),
+    "ACL_CLASS_NAMES": (CN, "| `acl` | `AppServiceImpl`, `Properties` |"),
+    "DOMAININTERACTION_CLASS_NAMES": (CN, "| `domaininteraction` | `Flow`, `DataService`, `AppService`, `DTO`, `DomainMapper`, `Exception` |"),
+}
+if "--drop" in sys.argv:
+    MAP.pop(sys.argv[sys.argv.index("--drop") + 1])
+src = open(sbx + "/bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java").read()
+consts = re.findall(r"@ArchTest\s+public static final ArchRule (\w+)", src)
+if "--invent" in sys.argv:
+    consts.append("INVENTED_RULE_ONLY_IN_ACL")
+print("@ArchTest constants in ArchitectureTest: %d" % len(consts))
+bad = 0
+for c in consts:
+    if c not in MAP:
+        print("UNCOVERED %s" % c)
+        bad += 1
+        continue
+    f, needle = MAP[c]
+    text = open(sbx + "/" + f).read()
+    ok = needle in text
+    line = next((i for i, l in enumerate(text.split("\n"), 1) if needle in l), 0)
+    print("%s %-52s %s:%d" % ("COVERED " if ok else "MISSING ", c, f.replace(std, ""), line))
+    bad += 0 if ok else 1
+extra = [c for c in MAP if c not in consts]
+for c in extra:
+    print("MAPPING WITHOUT CONSTANT %s" % c)
+    bad += 1
+print("SUMMARY: %s" % ("all %d constants covered" % len(consts) if not bad else "%d problem(s)" % bad))
+sys.exit(1 if bad else 0)

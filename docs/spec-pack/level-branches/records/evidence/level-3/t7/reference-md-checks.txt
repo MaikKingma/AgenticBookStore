@@ -1,0 +1,600 @@
+# T7 check: reference.md (staged at level-3/files/dot-claude/skills/new-use-case/reference.md)
+# Level 0 = the first commit of the sandbox built by simulate-level-0.sh from the pinned origin/factory sha.
+$ python3 -I ref-check.py <worktree> <sandbox>
+level-0 tree: ed7432f  (428 files); docs/architecture.md on it: True
+reference.md: 46 lines, 5762 bytes
+problems on the staged reference.md: []
+fact OrderFlow.java                   'placeOrder('                                                  ok
+fact Order.java                       'public static Order place('                                   ok
+fact Order.java                       'pullDomainEvents()'                                           ok
+fact OrderCommands.java               '@RestController'                                              ok
+fact BookstoreTools.java              'import org.springframework.ai.'                               ok
+fact DistributorAppServiceImpl.java   'import org.springframework.web.client.'                       ok
+fact OrderDataServiceImpl.java        'implements OrderDataService'                                  ok
+fact OrderDataServiceImpl.java        'private final OrderRepository repository'                     ok
+fact EventProcessor.java              'import nl.openvalue.bookstore.domain.'                        ok
+fact OrderIntegrationTest.java        'extends IntegrationTestBase'                                  ok
+fact migration folder                 ''                                                             ok
+test OrderTest                          no org.springframework import ok
+test OrderFlowTest                      Mockito                      ok
+test OrderCommandsTest                  @WebMvcTest                  ok
+test OrderQueriesTest                   @WebMvcTest                  ok
+test EventProcessorTest                 Mockito                      ok
+test AssistantCommandsTest              @WebMvcTest                  ok
+test BookstoreToolsTest                 Mockito                      ok
+test OrderDataServiceImplTest           @DataJpaTest                 ok
+test DistributorAppServiceImplTest      MockRestServiceServer        ok
+process exemplar imports from domain: ['import nl.openvalue.bookstore.domain.StockRunningLowEvent;'] (all end in Event: True)
+suffix lists equal in the standard table, docs/architecture.md section 3 and reference.md: True
+negative control path typo (OrderFlows.java)            -> detected: row domaininteraction: exemplar path not on level-0: bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlows.java
+negative control folder typo (domaininteractions)       -> detected: row domaininteraction: exemplar path not on level-0: bookstore/src/main/java/nl/openvalue/bookstore/domaininteractions/OrderFlow.java
+negative control 80 lines                               -> detected: reference.md has 86 lines (limit: under 80)
+negative control em dash                                -> detected: non-ASCII character
+negative control ASCII hyphen pair                      -> detected: em dash or dash pair
+negative control names docs/spec-pack                   -> detected: names docs/spec-pack
+negative control no pointer to docs/architecture.md     -> detected: does not point to docs/architecture.md
+negative control command suffix dropped                 -> detected: row command: suffixes ['Commands', 'Payload', 'ExceptionHandler'] differ from standard ['Commands', 'Payload', 'CommandResult', 'ExceptionHandler'] or docs/architecture.md ['Commands', 'Payload', 'CommandResult', 'ExceptionHandler']
+negative control layer row removed                      -> detected: layer row missing: acl
+negative control test class unknown                     -> detected: row command: test class not found: bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandzTest.java
+negative control assistant mark removed                 -> detected: assistant row lacks the re-check mark
+negative control chain entry removed                    -> detected: chain path missing: PlaceOrderPayload
+negative control r0 wording restored (every end to end test) -> detected: descriptive universal claim about end to end tests (r0 N1)
+negative control r0 wording restored, wrapped           -> detected: descriptive universal claim about end to end tests (r0 N1)
+negative control assistant chat exception removed       -> detected: the assistant chat exception to the command rule is not named (counterexample on level-0-start)
+negative control r1 flow sentence restored              -> detected: descriptive flow sentence (r1 F1)
+negative control read-method sentence removed           -> detected: read-method sentence missing (r1 F1)
+negative control r1 price sentence restored             -> detected: decimal string half of the price sentence missing (r1 F2)
+negative control decimal string half removed            -> detected: decimal string half of the price sentence missing (r1 F2)
+negative control Payload body condition removed         -> detected: Payload body condition missing (r1 F3)
+negative control r1 money sentence restored             -> detected: descriptive money sentence
+negative control r1 aggregate sentence restored         -> detected: descriptive aggregate sentence
+negative control wrong exemplar for data                -> detected: row data: unexpected exemplar bookstore/src/main/java/nl/openvalue/bookstore/data/OrderRepository.java
+
+Trace: every claim of reference.md -> architecture standard line(s) -> docs/architecture.md line on the level-0 tree
+(a claim fails the check when its text is not in reference.md, the cited standard line does not contain the quoted
+words, or the docs/architecture.md words are absent)
+ref line 9       | standard line 48       | docs/architecture.md line 53   | `java..` only: no Spring, Jakarta Persistence, Jackson or Spring AI
+ref line 9       | standard line 45       | docs/architecture.md line 50   | Only `domaininteraction` may use it
+ref line 9       | standard line 53       | docs/architecture.md line 154  | (`process` may use classes ending in `Event`)
+ref line 9       | standard line 65       | docs/architecture.md line 87   | no suffix rule: name after the business
+ref line 9       | standard line 151      | docs/architecture.md line 168  | Pure unit test, JUnit and AssertJ (`OrderTest`)
+ref line 10      | standard line 102      | docs/architecture.md line 112  | framework only `@Service`, `@Transactional`, `ApplicationEventPublishe
+ref line 10      | standard line 152      | docs/architecture.md line 169  | Unit test with mocked ports, JUnit and Mockito (`OrderFlowTest`)
+ref line 11      | standard line 45+47    | docs/architecture.md line 52   | `domaininteraction` only, never `domain`, never another adapter
+ref line 11      | standard line 153      | docs/architecture.md line 170  | Web slice test, `@WebMvcTest` with `@MockitoBean` flows (`OrderCommand
+ref line 13      | standard line 53       | docs/architecture.md line 151  | `domaininteraction`, plus `domain` classes ending in `Event` (the one
+ref line 13      | standard line 156      | docs/architecture.md line 174  | Unit test of processor and delegate, JUnit and Mockito (`EventProcesso
+ref line 14      | standard line 51       | docs/architecture.md line 56   | the only package that may use `org.springframework.ai..`
+ref line 14      | standard line 153      | docs/architecture.md line 171  | Web slice test with a mocked chat client, unit test of the tools with
+ref line 15      | standard line 49       | docs/architecture.md line 54   | `domaininteraction` (ports, DTOs); the only package that may use `jaka
+ref line 15      | standard line 154      | docs/architecture.md line 172  | JPA slice test, `@DataJpaTest` on PostgreSQL with Testcontainers (`Ord
+ref line 16      | standard line 50       | docs/architecture.md line 55   | the only package that may use `org.springframework.web.client..` (`Res
+ref line 16      | standard line 72       | docs/architecture.md line 62   | payload records are private nested records
+ref line 16      | standard line 155      | docs/architecture.md line 173  | HTTP contract test with `MockRestServiceServer` (`DistributorAppServic
+ref line 25      | standard line 157      | docs/architecture.md line 175  | full context, PostgreSQL
+ref line 26      | standard line 157      | docs/architecture.md line 175  | name a new end to end test `*IntegrationTest`   [rule: standard line 157; docs/architecture.md line 175 is an example only (CatalogueIntegrationTest)]
+ref line 3       | standard line 43       | docs/architecture.md line 5    | `ArchitectureTest` enforces the layers and the
+ref line 31      | standard line 78       | docs/architecture.md line 93   | Give an aggregate a private constructor, a static factory (`Order.plac
+ref line 31      | standard line 81       | docs/architecture.md line 96   | behaviour methods named after the business
+ref line 32      | standard line 83       | docs/architecture.md line 97   | Make an invariant throw an unchecked domain exception
+ref line 33      | standard line 84       | docs/architecture.md line 98   | release them through `pullDomainEvents()`
+ref line 34      | standard line 95       | docs/architecture.md line 107  | Write a use case that changes state in a flow as: load DTOs through a
+ref line 35      | standard line 98       | docs/architecture.md line 109  | publish the events pulled (when the aggregate raises any)
+ref line wrapped | standard line -        | docs/architecture.md line -    | A read method returns the port's DTO.   [code only: flows' find* and search* methods return the port DTO (sentences.py read-methods)]
+ref line 36      | standard line 106      | docs/architecture.md line 119  | `NotFoundException` (404), `ConflictException` (409),
+ref line 37      | standard line 107      | docs/architecture.md line 120  | each with a kebab-case `code`
+ref line 38      | standard line 115+115+116 | docs/architecture.md line 114  | Let a port speak DTOs and JDK types, never domain types or JPA entitie
+ref line wrapped | standard line 126+127  | docs/architecture.md line 127  | Write a command as `POST /{resource}/{id}/commands/{action}`
+ref line wrapped | standard line 127+128  | docs/architecture.md line 128  | that answers 202, with a `*Payload` body when it takes input   [standard 127 and 128; 'when it takes input' is code only (3 of 9 commands take no body, sentences.py command-shape)]
+ref line 41      | standard line 130      | docs/architecture.md line 129  | Write a query as a `GET` that returns a `*View`, never a DTO.
+ref line 42      | standard line 91       | docs/architecture.md line 64   | Hold money in an aggregate as `Money`, never as `double` or `float`
+ref line wrapped | standard line 121      | docs/architecture.md line 66   | Carry a price in a DTO and in the data layer as a `BigDecimal` plus a
+ref line 43      | standard line -        | docs/architecture.md line -    | and in a payload or view as a decimal string.   [code only: payload and view price components are String (sentences.py payload-view-price-types)]
+ref line 44      | standard line 141      | docs/architecture.md line 145  | Change the schema only through a new Flyway migration `V{n}__{descript
+ref line 45      | standard line 141      | docs/architecture.md line 145  | Never edit an existing one.
+ref line 46      | standard line 165+165  | docs/architecture.md line 183  | Give every requirement at least one test and name tests after behaviou
+ref line 46      | standard line 163+164  | docs/architecture.md line 179  | Use no in-memory database: Docker must run.
+claims traced: 41
+reference checks ok
+rc=0
+
+$ wc -l reference.md
+46
+$ env LC_ALL=C grep -c -E "[^ -~]" reference.md   (non-ASCII lines; 0 means clean)
+0
+$ grep -c spec-pack reference.md   (0 means it never names the pack folder)
+0
+
+$ python3 -I universal.py <worktree>   (T7 r1, FF-T7-b: counterexample search on the tag level-0-start)
+# T7 r1 (FF-T7-b): counterexample search for every universal claim in reference.md, on the tag level-0-start
+level-0-start = b668073eb44bfea453c291509a615f6de081e54a
+
+r0 N1 (the word "every" before end to end test): subclasses of IntegrationTestBase not named *IntegrationTest: 5
+       bookstore/src/test/java/nl/openvalue/bookstore/BookstoreApplicationTests.java:12:class BookstoreApplicationTests extends IntegrationTestBase {
+       bookstore/src/test/java/nl/openvalue/bookstore/ClockConfigTest.java:10:class ClockConfigTest extends IntegrationTestBase {
+       bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestBaseHooksTest.java:37:class IntegrationTestBaseHooksTest extends IntegrationTestBase {
+       bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestOfflineTest.java:26:class IntegrationTestOfflineTest extends IntegrationTestBase {
+       bookstore/src/test/java/nl/openvalue/bookstore/StorefrontConfigTest.java:20:class StorefrontConfigTest extends IntegrationTestBase {
+     of them with real HTTP through restTestClient: ['IntegrationTestBaseHooksTest.java', 'StorefrontConfigTest.java']
+     => the descriptive form is false; reference.md now says "name a new end to end test `*IntegrationTest`" (the rule of
+        architecture-standard.md line 157; docs/architecture.md line 175 is an example only)
+     any remaining "every end to end test" in reference.md: 0
+
+# claims about packages (line 9 to 16 of reference.md)
+ok   domain: java.. only
+     claim: `domain` depends on `java..` only (no Spring, Jakarta, Jackson, Spring AI)
+     git grep -n -E '^import ' level-0-start -- <P>domain
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 43
+ok   Only domaininteraction may use domain (command, query, data, acl, assistant)
+     claim: no class outside domaininteraction and process imports `domain`
+     git grep -n -E 'import nl\.openvalue\.bookstore\.domain\.' level-0-start -- <P>command <P>query <P>data <P>acl <P>assistant
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 56
+ok   process uses only domain classes ending in Event
+     claim: `process` may use `domain` classes ending in `Event`
+     git grep -n -E 'import nl\.openvalue\.bookstore\.domain\.' level-0-start -- <P>process
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 3
+ok   command and query: domaininteraction only, never another adapter
+     claim: no import of domain or another adapter package
+     git grep -n -E 'import nl\.openvalue\.bookstore\.(domain|command|query|process|data|acl|assistant)\.' level-0-start -- <P>command <P>query
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 25
+ok   data, acl, process, assistant never import another adapter or command or query
+     claim: adapters depend on domaininteraction only
+     git grep -n -E 'import nl\.openvalue\.bookstore\.(command|query|process|data|acl|assistant)\.' level-0-start -- <P>data <P>acl <P>process <P>assistant
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 34
+ok   domaininteraction imports no adapter package
+     claim: inner layers never import outer ones
+     git grep -n -E 'import nl\.openvalue\.bookstore\.(command|query|process|data|acl|assistant)\.' level-0-start -- <P>domaininteraction <P>domain
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 67
+ok   domaininteraction framework types: only Service, Transactional, ApplicationEventPublisher, SLF4J
+     claim: framework only `@Service`, `@Transactional`, `ApplicationEventPublisher`, SLF4J `Logger`
+     git grep -n -E '^import (org|jakarta|com|tools)\.' level-0-start -- <P>domaininteraction
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 24
+ok   org.springframework.ai only in assistant
+     claim: the only package that may use `org.springframework.ai..`
+     git grep -n -E '^import org\.springframework\.ai\.' level-0-start -- <P>domain <P>domaininteraction <P>command <P>query <P>process <P>data <P>acl
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 112
+ok   jakarta.persistence and org.springframework.data only in data
+     claim: the only package that may use them
+     git grep -n -E '^import (jakarta\.persistence|org\.springframework\.data)\.' level-0-start -- <P>domain <P>domaininteraction <P>command <P>query <P>process <P>acl <P>assistant
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 112
+ok   org.springframework.web.client only in acl
+     claim: the only package that may use `RestClient`
+     git grep -n -E '^import org\.springframework\.web\.client\.' level-0-start -- <P>domain <P>domaininteraction <P>command <P>query <P>process <P>data <P>assistant
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 123
+
+# rules (lines 29 to 41 of reference.md)
+ok   aggregate has no setters
+     claim: an aggregate has ... no setters
+     git grep -n -E 'void set[A-Z]' level-0-start -- <P>domain
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 43
+ok   aggregate Book: private constructor 1, static factories ['addToCatalogue', 'restore']
+ok   aggregate Order: private constructor 1, static factories ['place', 'restore']
+ok   aggregate StockItem: private constructor 1, static factories ['openFor', 'restore']
+ok   invariants throw unchecked domain exceptions: 22 *Exception files in domain, 22 extend RuntimeException
+note aggregates with pullDomainEvents(): ['Order.java', 'StockItem.java']; flows that publish: ['InventoryFlow.java', 'OrderFlow.java'] (CatalogueFlow does not: the sentence says "when the aggregate raises any")
+ok   Money: no double or float in main code
+     claim: Money is `Money` in the domain, never `double` or `float`
+     git grep -n -E '(^|[^A-Za-z0-9_])(double|float|Double|Float)([^A-Za-z0-9_]|$)' level-0-start -- <P>domain <P>domaininteraction <P>command <P>query <P>process <P>data <P>acl <P>assistant
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 143
+ok   no in-memory database dependency in the poms
+     claim: No in-memory database
+     git grep -n -E '<artifactId>[^<]*(h2|hsqldb|derby)[^<]*</artifactId>' level-0-start -- pom.xml bookstore/pom.xml
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 25
+ok   commands in package command: 9 @PostMapping, 9 with 202, 0 without "/commands/"
+note the counterexample to "a command is POST /{resource}/{id}/commands/{action} ... answers 202": ['bookstore/src/main/java/nl/openvalue/bookstore/assistant/AssistantCommands.java:51:    @PostMapping("/chat")']
+ok   the assistant chat endpoint is the one exception: returns AssistantReplyView, no @ResponseStatus (default 200)
+ok   queries: 6 @GetMapping, 6 return a *View (or List of a *View)
+ok   queries and commands return no DTO type
+     claim: A query ... returns a `*View`, never a DTO
+     git grep -n -E 'public (List<)?[A-Za-z0-9_]*DTO' level-0-start -- <P>query <P>command
+     counterexamples: 0; control hits on the same pathspec (proves the pathspec and the pattern shape reach the tree): 6
+ok   ports (4 *DataService/*AppService files) import no domain type and no JPA type: 0 hits; control, same pattern on the whole package (DTOs, mappers, flows): 66 hits
+note not machine-checkable on one tree (prescriptive project rules, quoted from the standard): migrations are new files only (standard line 141),
+     every requirement has a test and test names describe behaviour (standard line 165), Docker must run (standard line 164).
+note suffix lists per layer: enforced by ArchitectureTest (sandbox-verify.txt: 22 tests, 0 failures); equality with the standard and docs/architecture.md is the check above.
+
+universal claims checked, failures: 0
+rc=0
+
+$ python3 -I sentences.py <worktree> <universal output>   (T7 r2: every unit of reference.md classified and checked)
+# T7 r2: per-sentence check of reference.md on the tag level-0-start = b668073eb44bfea453c291509a615f6de081e54a
+# Verdicts: P = prescriptive form (an instruction, so no claim about the code to falsify; the facts it names are still checked),
+#           S = descriptive statement backed by counterexample searches (each with a control that must hit),
+#           H = heading, column label or pointer.
+# A unit is a heading, a table cell, a prose sentence or a bullet clause. Every unit must match exactly one table entry and
+# every table entry must match a unit; check ids with the prefix 'U:' are the universal.py searches, the others are in part 2.
+
+units of reference.md: 74; table entries: 44
+
+## Part 1: the table, one block per unit in file order
+unit | line | verdicts and checks
+  1 | line 1   | # Layer cheat sheet and naming rules
+       [H] title
+  2 | line 3   | Source of truth: `docs/architecture.md` (read it for the reasons).
+       [P] pointer: read docs/architecture.md  { arch-md -> ok }
+  3 | line 3   | `ArchitectureTest` enforces the layers and the suffixes: if it fails, fix the design, never the rule.
+       [S] ArchitectureTest enforces the layers and the suffixes  { archtest -> ok }
+       [P] if it fails, fix the design, never the rule
+  4 | line 3   | Put main code in `bookstore/src/main/java/nl/openvalue/bookstore/` and tests under `bookstore/src/test/java/nl/open...
+       [P] put main code and tests under the two roots, test in the class's package  { paths -> ok }
+  5 | line 7   | Package
+       [H] column label (the fourth one is worded as an instruction, 'Test to write', not as a description of the tests)
+  6 | line 7   | Allowed dependencies
+       [H] column label (the fourth one is worded as an instruction, 'Test to write', not as a description of the tests)
+  7 | line 7   | Class name suffixes
+       [H] column label (the fourth one is worded as an instruction, 'Test to write', not as a description of the tests)
+  8 | line 7   | Test to write (example)
+       [H] column label (the fourth one is worded as an instruction, 'Test to write', not as a description of the tests)
+  9 | line 7   | Exemplary class
+       [H] column label (the fourth one is worded as an instruction, 'Test to write', not as a description of the tests)
+ 10 | line 9   | `domain`
+       [H] row label: the package folder  { paths -> ok }
+ 11 | line 9   | `java..` only: no Spring, Jakarta Persistence, Jackson or Spring AI. Only `domaininteraction` may use it (`process`...
+       [S] domain imports java.* only (no Spring, Jakarta Persistence, Jackson, Spring AI)  { U:domain: java.. only -> ok }
+       [S] only domaininteraction may use domain: command, query, data, acl, assistant and the root package import none  { U:Only domaininteraction may use domain -> ok; root-no-domain -> ok }
+       [S] process may use domain classes ending in Event  { U:process uses only domain classes ending in Event -> ok }
+ 12 | line 9   | no suffix rule: name after the business
+       [S] ArchitectureTest has no suffix rule for domain  { archtest -> ok }
+       [P] name domain classes after the business
+ 13 | line 9   | Pure unit test, JUnit and AssertJ (`OrderTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 14 | line 9   | `bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 15 | line 10  | `domaininteraction`
+       [H] row label: the package folder  { paths -> ok }
+ 16 | line 10  | `domain` and JDK types; framework only `@Service`, `@Transactional`, `ApplicationEventPublisher`, SLF4J `Logger`
+       [S] domaininteraction imports domain, java.* and only Service, Transactional, ApplicationEventPublisher, SLF4J  { U:domaininteraction framework types -> ok; di-static-imports -> ok }
+       [S] domaininteraction imports no adapter package  { U:domaininteraction imports no adapter package -> ok }
+ 17 | line 10  | `Flow`, `DataService`, `AppService`, `DTO`, `DomainMapper`, `Exception`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-domaininteraction -> ok }
+ 18 | line 10  | Unit test with mocked ports, JUnit and Mockito (`OrderFlowTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 19 | line 10  | `bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 20 | line 11  | `command`
+       [H] row label: the package folder  { paths -> ok }
+ 21 | line 11  | `domaininteraction` only, never `domain`, never another adapter
+       [S] command and query import neither domain nor another adapter  { U:command and query: domaininteraction only -> ok; U:Only domaininteraction may use domain -> ok }
+ 22 | line 11  | `Commands`, `Payload`, `CommandResult`, `ExceptionHandler`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-command -> ok }
+ 23 | line 11  | Web slice test, `@WebMvcTest` with `@MockitoBean` flows (`OrderCommandsTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 24 | line 11  | `bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 25 | line 12  | `query`
+       [H] row label: the package folder  { paths -> ok }
+ 26 | line 12  | `domaininteraction` only, never `domain`, never another adapter
+       [S] command and query import neither domain nor another adapter  { U:command and query: domaininteraction only -> ok; U:Only domaininteraction may use domain -> ok }
+ 27 | line 12  | `Queries`, `View`, `ExceptionHandler`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-query -> ok }
+ 28 | line 12  | Web slice test, `@WebMvcTest` with `@MockitoBean` flows (`OrderQueriesTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 29 | line 12  | `bookstore/src/main/java/nl/openvalue/bookstore/query/OrderQueries.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 30 | line 13  | `process`
+       [H] row label: the package folder  { paths -> ok }
+ 31 | line 13  | `domaininteraction`, plus `domain` classes ending in `Event` (the one documented exception)
+       [S] process imports no adapter, only domain classes ending in Event  { U:data, acl, process, assistant never import -> ok; U:process uses only domain classes ending in Event -> ok }
+       [S] the one documented exception: no other package imports domain, and docs/architecture.md documents it  { U:Only domaininteraction may use domain -> ok; doc-process-exception -> ok }
+ 32 | line 13  | `EventProcessor`, `Delegate`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-process -> ok }
+ 33 | line 13  | Unit test of processor and delegate, JUnit and Mockito (`EventProcessorTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 34 | line 13  | `bookstore/src/main/java/nl/openvalue/bookstore/process/EventProcessor.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 35 | line 14  | `assistant` (re-check against `docs/architecture.md` at cut)
+       [H] row label: the package folder  { paths -> ok }
+       [P] instruction to re-check the row against docs/architecture.md  { arch-md -> ok }
+ 36 | line 14  | `domaininteraction` only; the only package that may use `org.springframework.ai..`
+       [S] assistant imports no domain and no other adapter  { U:Only domaininteraction may use domain -> ok; U:data, acl, process, assistant never import -> ok }
+       [S] org.springframework.ai is imported by no package but assistant  { U:org.springframework.ai only in assistant -> ok }
+ 37 | line 14  | `Commands`, `Tools`, `Config`, `Properties`, `Payload`, `View`, `ExceptionHandler`, `RateLimiter`, `ChatModel`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-assistant -> ok }
+ 38 | line 14  | Web slice test with a mocked chat client, unit test of the tools with mocked flows (`AssistantCommandsTest`, `Books...
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 39 | line 14  | `bookstore/src/main/java/nl/openvalue/bookstore/assistant/BookstoreTools.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 40 | line 15  | `data`
+       [H] row label: the package folder  { paths -> ok }
+ 41 | line 15  | `domaininteraction` (ports, DTOs); the only package that may use `jakarta.persistence..` and `org.springframework.d...
+       [S] data uses only ports (with their nested exceptions) and DTOs from domaininteraction  { data-di-imports -> ok }
+       [S] jakarta.persistence and org.springframework.data are imported by no package but data  { U:jakarta.persistence and org.springframework.data only in data -> ok }
+ 42 | line 15  | `DataServiceImpl`, `JPA`, `JPAMapper`, `Repository`
+       [S] every class file of the package ends with one of the listed suffixes  { suffix-data -> ok }
+ 43 | line 15  | JPA slice test, `@DataJpaTest` on PostgreSQL with Testcontainers (`OrderDataServiceImplTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 44 | line 15  | `bookstore/src/main/java/nl/openvalue/bookstore/data/OrderDataServiceImpl.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 45 | line 16  | `acl`
+       [H] row label: the package folder  { paths -> ok }
+ 46 | line 16  | `domaininteraction`; the only package that may use `org.springframework.web.client..` (`RestClient`)
+       [S] acl imports no domain and no other adapter  { U:Only domaininteraction may use domain -> ok; U:data, acl, process, assistant never import -> ok }
+       [S] org.springframework.web.client is imported by no package but acl  { U:org.springframework.web.client only in acl -> ok }
+ 47 | line 16  | `AppServiceImpl`, `Properties`; payload records are private nested records
+       [S] every class file of acl ends with one of the listed suffixes  { suffix-acl -> ok }
+       [S] acl payload records are private nested records  { acl-payloads -> ok }
+ 48 | line 16  | HTTP contract test with `MockRestServiceServer` (`DistributorAppServiceImplTest`)
+       [P] the test to write for the layer; the named example class carries that test type  { test-examples -> ok }
+ 49 | line 16  | `bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java`
+       [H] pointer to an exemplary class (path on level-0-start, right package, layer suffix: ref-check problems())  { paths -> ok }
+ 50 | line 18  | The place-order chain, one existing class per step (copy its shape for a new use case):
+       [S] one existing class per step of the chain  { chain -> ok; paths -> ok }
+       [P] copy its shape for a new use case
+ 51 | line 20  | Command: `bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java`, body `bookstore/src/main/java...
+       [S] OrderCommands is the place command and PlaceOrderPayload its body  { chain -> ok }
+ 52 | line 22  | Flow: `bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java` (`placeOrder`)
+       [S] OrderFlow has placeOrder  { chain -> ok; flow-exemplar -> ok }
+ 53 | line 23  | Aggregate: `bookstore/src/main/java/nl/openvalue/bookstore/domain/Order.java` (`Order.place`)
+       [S] Order has the static factory place  { chain -> ok }
+ 54 | line 24  | Data adapter: `bookstore/src/main/java/nl/openvalue/bookstore/data/OrderDataServiceImpl.java`
+       [S] OrderDataServiceImpl implements the port  { chain -> ok }
+ 55 | line 25  | End to end test: `bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java` (full context, PostgreS...
+       [S] OrderIntegrationTest is a full-context test with PostgreSQL in Docker and real HTTP  { chain -> ok }
+ 56 | line 25  | name a new end to end test `*IntegrationTest`)
+       [P] name a new end to end test *IntegrationTest (rule: standard line 157)  { e2e-name -> ok }
+ 57 | line 27  | Layer rules: `bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java`
+       [H] pointer to ArchitectureTest.java (path exists on level-0-start)  { archtest -> ok }
+ 58 | line 29  | Rules that apply to every use case:
+       [P] heading of the rules
+ 59 | line 31  | Give an aggregate a private constructor, a static factory (`Order.place`), behaviour methods named after the busine...
+       [P] give an aggregate a private constructor, a static factory, business-named behaviour methods and no setters
+       [S] the aggregates have private constructors and static factories; no setter in domain; Order.place exists  { U:aggregate Book -> ok; U:aggregate Order -> ok; U:aggregate StockItem -> ok; U:aggregate has no setters -> ok; chain -> ok }
+ 60 | line 31  | Make an invariant throw an unchecked domain exception.
+       [P] make an invariant throw an unchecked domain exception
+       [S] the domain exceptions are unchecked and domain throws only domain exceptions  { U:invariants throw unchecked domain exceptions -> ok; domain-throws -> ok }
+ 61 | line 31  | Let an aggregate that raises events (`Order`, `StockItem`) release them through `pullDomainEvents()`.
+       [P] let an aggregate that raises events release them through pullDomainEvents()
+       [S] the aggregates that raise events are Order and StockItem  { events-aggregates -> ok }
+ 62 | line 34  | Write a use case that changes state in a flow as: load DTOs through a port, map to the domain with a `*DomainMapper...
+       [P] write a state-changing use case as load, map, call, save, publish pulled events (when any)
+       [S] r1 counterexample search that made the descriptive form false; exemplar placeOrder follows the form  { flow-methods -> ok; flow-exemplar -> ok }
+ 63 | line 34  | A read method returns the port's DTO.
+       [P] a read method returns the port's DTO
+       [S] flow read methods (find*, search*) return the port DTO; engine control: a false claim is caught  { read-methods -> ok; read-methods-inverted -> ok }
+ 64 | line 34  | Translate domain exceptions in a flow into `NotFoundException` (404), `ConflictException` (409), `InvalidInputExcep...
+       [P] translate domain exceptions in a flow into the four use-case exceptions with a kebab-case code
+       [S] the four exist, are unchecked and map to 404, 409, 422, 503; literal codes are kebab-case  { usecase-exceptions -> ok; kebab-codes -> ok }
+ 65 | line 38  | Let a port speak DTOs and JDK types, never domain types or JPA entities.
+       [P] let a port speak DTOs and JDK types, never domain types or JPA entities
+       [S] the ports import java.* only  { ports-java-only -> ok; U:ports ( -> ok }
+ 66 | line 38  | Write a command as `POST /{resource}/{id}/commands/{action}` (or without `{id}`) that answers 202, with a `*Payload...
+       [P] write a command as POST .../commands/{action}, answers 202, *Payload body when it takes input
+       [S] the nine commands are POST under /commands/ with 202; the body is always a *Payload; no PUT, DELETE, PATCH exists  { U:commands in package command -> ok; command-shape -> ok; other-verbs -> ok }
+ 67 | line 38  | the one existing exception is the assistant chat endpoint `POST /assistant/chat`, which answers 200 with a `*View`.
+       [S] the only POST outside /commands/ is POST /assistant/chat, answering 200 with a View  { U:the assistant chat endpoint is the one exception -> ok }
+ 68 | line 38  | Write a query as a `GET` that returns a `*View`, never a DTO.
+       [P] write a query as a GET that returns a *View, never a DTO
+       [S] the six queries are GET and return a *View; none returns a DTO  { U:queries:  -> ok; U:queries and commands return no DTO type -> ok }
+ 69 | line 42  | Hold money in an aggregate as `Money`, never as `double` or `float`.
+       [P] hold money in an aggregate as Money, never as double or float
+       [S] no double or float in main code; the aggregates hold no BigDecimal or double  { U:Money: no double or float -> ok; aggregate-money -> ok }
+ 70 | line 42  | Carry a price in a DTO and in the data layer as a `BigDecimal` plus a currency, and in a payload or view as a decim...
+       [P] carry a price in a DTO and in the data layer as BigDecimal plus a currency, in a payload or view as a decimal string
+       [S] DTO and JPA price components are BigDecimal with a currency in the file; payload and view price components are Strings; engine controls: the false twins are caught  { dto-price-types -> ok; jpa-price-types -> ok; price-currency -> ok; payload-view-price-types -> ok; dto-price-types-inverted -> ok; payload-view-price-types-inverted -> ok }
+ 71 | line 44  | Change the schema only through a new Flyway migration `V{n}__{description}.sql` in `bookstore/src/main/resources/db...
+       [P] change the schema only through a new Flyway migration V{n}__{description}.sql in db/migration
+       [S] Hibernate never changes the schema; every migration file has the V{n}__ name  { ddl-auto -> ok; migration-names -> ok }
+ 72 | line 44  | Never edit an existing one.
+       [P] never edit an existing migration  { migration-names -> ok }
+ 73 | line 46  | Give every requirement at least one test and name tests after behaviour.
+       [P] give every requirement a test and name tests after behaviour (standard lines 163 to 165, not machine-checkable)
+ 74 | line 46  | Use no in-memory database: Docker must run.
+       [P] use no in-memory database: Docker must run
+       [S] no source or build file names an in-memory database; the tests start PostgreSQL through Testcontainers  { U:no in-memory database dependency -> ok; no-inmemory-code -> ok; test-examples -> ok }
+
+## Part 2: the checks behind the table (ids as used above)
+ok   arch-md
+     docs/architecture.md exists on level-0-start: True
+ok   archtest
+     claim: ArchitectureTest enforces the layers (layeredArchitecture) and the suffixes (one *_CLASS_NAMES rule per package but domain)
+     git grep: layeredArchitecture() 1, '*_CLASS_NAMES = classNames(' 7 (7 expected, domain has none), @Disabled 0, DOMAIN_CLASS_NAMES 0; control ArchRule 29
+ok   paths
+     claim: each of the 8 packages has a main folder and a test folder under the two named roots; packages missing one: []
+     main files 129, test files 69
+ok   root-no-domain
+     claim: classes in the root package import no domain type
+     git grep -n -P '^import nl\.openvalue\.bookstore\.domain\.' level-0-start -- :(glob)<P>*.java
+     counterexamples: 0; control hits on the same pathspec: 10 (control pattern '^import ')
+ok   di-static-imports
+     claim: domaininteraction has no static import of a framework type
+     git grep -n -P '^import static ' level-0-start -- <P>domaininteraction
+     counterexamples: 0; control hits on the same pathspec: 136 (control pattern '^import ')
+ok   data-di-imports
+     claim: data uses from domaininteraction only ports (*DataService, with their nested exceptions) and DTOs
+     git grep -n -P '^import nl\.openvalue\.bookstore\.domaininteraction\.' level-0-start -- <P>data
+     counterexamples: 0; control hits on the same pathspec: 15 (control pattern '^import nl\.openvalue\.bookstore\.domaininteraction\.')
+ok   acl-payloads
+     claim: acl payload records are private nested records
+     git grep -n -P 'record \w+Payload' level-0-start -- <P>acl: 5 records, 0 not private, top-level *Payload.java files: 0
+ok   doc-process-exception
+     docs/architecture.md has the section 'The documented process exception': 2 hit(s)
+ok   test-examples
+     claim: each example test class of the table carries the test type its cell names (and no heavier one)
+     OrderTest.java JUnit                              present   /^import (static )?org\.junit/ ok
+     OrderTest.java AssertJ                            present   /^import (static )?org\.assertj/ ok
+     OrderTest.java no Spring                          absent    /^import org\.springframework/ ok
+     OrderFlowTest.java JUnit                              present   /^import (static )?org\.junit/ ok
+     OrderFlowTest.java Mockito                            present   /^import (static )?org\.mockito/ ok
+     OrderFlowTest.java mocked ports                       present   /@Mock\b|\bmock\(/ ok
+     OrderFlowTest.java no Spring slice                    absent    /@SpringBootTest|@WebMvcTest|@DataJpaTest/ ok
+     OrderCommandsTest.java @WebMvcTest                        present   /@WebMvcTest/ ok
+     OrderCommandsTest.java @MockitoBean                       present   /@MockitoBean/ ok
+     OrderQueriesTest.java @WebMvcTest                        present   /@WebMvcTest/ ok
+     OrderQueriesTest.java @MockitoBean                       present   /@MockitoBean/ ok
+     EventProcessorTest.java JUnit                              present   /^import (static )?org\.junit/ ok
+     EventProcessorTest.java Mockito                            present   /^import (static )?org\.mockito/ ok
+     EventProcessorTest.java no Spring slice                    absent    /@SpringBootTest|@WebMvcTest|@DataJpaTest/ ok
+     AssistantCommandsTest.java @WebMvcTest                        present   /@WebMvcTest/ ok
+     AssistantCommandsTest.java mocked chat client                 present   /@MockitoBean\(types = \{ChatClient\.class/ ok
+     BookstoreToolsTest.java Mockito                            present   /^import org\.mockito\.Mock;/ ok
+     BookstoreToolsTest.java mocked flows                       present   /private (CatalogueFlow|InventoryFlow|OrderFlow) / ok
+     BookstoreToolsTest.java no Spring slice                    absent    /@SpringBootTest|@WebMvcTest/ ok
+     OrderDataServiceImplTest.java @DataJpaTest                       present   /@DataJpaTest/ ok
+     OrderDataServiceImplTest.java real database                      present   /Replace\.NONE/ ok
+     OrderDataServiceImplTest.java PostgreSQL config                  present   /PostgresTestConfig/ ok
+     PostgresTestConfig.java Testcontainers PostgreSQL          present   /org\.testcontainers\.postgresql\.PostgreSQLContain/ ok
+     DistributorAppServiceImplTest.java MockRestServiceServer              present   /MockRestServiceServer/ ok
+ok   chain
+     claim: the place-order chain: each named class does what its step says
+     OrderCommands.java place command                      present   /@PostMapping\("/commands/place"\)/ ok
+     OrderCommands.java PlaceOrderPayload                  present   /PlaceOrderPayload/ ok
+     OrderFlow.java placeOrder                         present   /public \w+ placeOrder\(/ ok
+     Order.java Order.place                        present   /public static Order place\(/ ok
+     OrderDataServiceImpl.java data adapter of the port           present   /implements OrderDataService/ ok
+     OrderIntegrationTest.java extends base                       present   /extends IntegrationTestBase/ ok
+     OrderIntegrationTest.java real HTTP                          present   /restTestClient\.post\(\)/ ok
+     IntegrationTestBase.java full context, real port            present   /@SpringBootTest\(webEnvironment = WebEnvironment\./ ok
+     IntegrationTestBase.java PostgreSQL in Docker               present   /PostgresTestConfig\.class/ ok
+ok   e2e-name
+     claim: a class named *IntegrationTest is a full-context test (extends IntegrationTestBase)
+     counterexamples: 0 []; control (files named *IntegrationTest.java in the test root): 11
+ok   domain-throws
+     claim: every `throw new X(` in domain throws one of the 22 domain exception classes
+     types thrown: 22; counterexamples (thrown type is not a domain exception): 0 []
+ok   events-aggregates
+     claim: the aggregates that raise events are Order and StockItem, Book raises none
+     domain files with pullDomainEvents(): ['Order.java', 'StockItem.java']; Book.java hits for 'Event': 0 (counterexample if > 0); control: Order.java hits 7
+ok   flow-methods
+     claim (the r1 descriptive sentence, now only a prescription): per public flow method, what it does
+     public flow methods: 16; with a DomainMapper call and a save in the body: 6 (of them 4 also publish); without any DomainMapper call: 10; returning a DTO: 6
+       CatalogueFlow.addBook(UUID): mapper=False save=True publish=False
+       CatalogueFlow.importFromDistributor(UUID): mapper=False save=True publish=False
+       CatalogueFlow.changePrice(void): mapper=True save=True publish=False
+       CatalogueFlow.discontinue(void): mapper=True save=True publish=False
+       CatalogueFlow.search(List<BookDTO>): mapper=False save=False publish=False
+       CatalogueFlow.findById(BookDTO): mapper=False save=False publish=False
+       InventoryFlow.receive(void): mapper=True save=True publish=True
+       InventoryFlow.correct(void): mapper=True save=True publish=True
+       InventoryFlow.requestRestock(void): mapper=False save=True publish=True
+       InventoryFlow.handleStockRunningLow(void): mapper=False save=True publish=True
+       InventoryFlow.findByBookId(StockItemDTO): mapper=False save=False publish=False
+       InventoryFlow.findLowStock(List<StockItemDTO>): mapper=False save=False publish=False
+       OrderFlow.placeOrder(UUID): mapper=True save=True publish=True
+       OrderFlow.ship(void): mapper=True save=True publish=True
+       OrderFlow.findById(OrderDTO): mapper=False save=False publish=False
+       OrderFlow.findByCustomer(List<OrderDTO>): mapper=False save=False publish=False
+     => the r1 form 'A flow loads, maps, calls, saves and publishes' is false for 10 of 16 methods (6 read methods return the port DTO; addBook, importFromDistributor, requestRestock, handleStockRunningLow call no DomainMapper); the sentence is now a prescription (and a read method is named)
+ok   flow-exemplar
+     claim: the exemplar flow method OrderFlow.placeOrder follows the prescription (DomainMapper call, save, pulled events published), judged on its own method body
+     placeOrder: mapper=True save=True publish=True
+ok   read-methods
+     claim: a flow read method (find*, search*) returns the port's DTO (or a list of it)
+     git grep -n -P '^    public .*\b(find|search)\w*\(' level-0-start -- <P>domaininteraction/CatalogueFlow.java <P>domaininteraction/InventoryFlow.java <P>domaininteraction/OrderFlow.java
+     counterexamples: 0; control hits on the same pathspec: 6 (control pattern '^    public (List<)?\w+DTO>? (find|search)\w*\(')
+ok   read-methods-inverted
+     claim: ENGINE CONTROL, deliberately false claim 'a flow read method returns a *View': the same search must find counterexamples
+     git grep -n -P '^    public .*\b(find|search)\w*\(' level-0-start -- <P>domaininteraction/CatalogueFlow.java <P>domaininteraction/InventoryFlow.java <P>domaininteraction/OrderFlow.java
+     counterexamples: 6; control hits on the same pathspec: 6 (control pattern '^    public (List<)?\w+DTO>? (find|search)\w*\(')
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlow.java:132:    public List<BookDTO> search(String q, String tit
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlow.java:142:    public BookDTO findById(UUID bookId) {
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/InventoryFlow.java:126:    public StockItemDTO findByBookId(UUID bookId) {
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/InventoryFlow.java:132:    public List<StockItemDTO> findLowStock() {
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java:132:    public OrderDTO findById(UUID orderId) {
+ok   usecase-exceptions
+     claim: the four use-case exceptions exist (unchecked) and both handlers map them to 404, 409, 422, 503
+     extend RuntimeException: ['NotFoundException', 'ConflictException', 'InvalidInputException', 'UnavailableException']; handler mappings: {'command': {'NotFoundException': 'NOT_FOUND', 'ConflictException': 'CONFLICT', 'InvalidInputException': 'UNPROCESSABLE_CONTENT', 'UnavailableException': 'SERVICE_UNAVAILABLE'}, 'query': {'NotFoundException': 'NOT_FOUND', 'ConflictException': 'CONFLICT', 'InvalidInputException': 'UNPROCESSABLE_CONTENT', 'UnavailableException': 'SERVICE_UNAVAILABLE'}}
+ok   kebab-codes
+     claim: every literal `code` passed to a use-case exception in domaininteraction is kebab-case
+     git grep -n -E '(invalidField|new XException|super)("..."' level-0-start -- <P>domaininteraction: 29 literals; counterexamples (not kebab-case): 0 []
+     engine control: 'Insufficient Stock' is rejected by the same regex
+ok   ports-java-only
+     claim: a port imports JDK types only (no domain, no JPA, no other library)
+     git grep -n -P '^import ' level-0-start -- <P>domaininteraction/BookDataService.java <P>domaininteraction/OrderDataService.java <P>domaininteraction/StockItemDataService.java <P>domaininteraction/DistributorAppService.java
+     counterexamples: 0; control hits on the same pathspec: 8 (control pattern '^import java\.')
+ok   other-verbs
+     claim: no controller maps PUT, DELETE or PATCH (a command is the only state change and it is a POST)
+     git grep -n -P '@(Put|Delete|Patch)Mapping' level-0-start -- <P>
+     counterexamples: 0; control hits on the same pathspec: 6 (control pattern '@GetMapping')
+ok   command-shape
+     claim: a command takes a *Payload body only when it takes input; some commands have no {id} and some have none body
+     commands: 9; with @RequestBody: 6 (types ['AddBookPayload', 'ChangePricePayload', 'CorrectStockPayload', 'ImportBookPayload', 'PlaceOrderPayload', 'ReceiveStockPayload']); counterexamples (body type not *Payload): 0; without a body: 3 ['/{id}/commands/discontinue', '/{bookId}/commands/request-restock', '/{id}/commands/ship']; without {id}: 3 ['/commands/add', '/commands/import-from-distributor', '/commands/place']
+ok   aggregate-money
+     claim: aggregates and their lines hold no BigDecimal, BigInteger, double or float (money is Money)
+     git grep -n -P '\b(BigDecimal|BigInteger|double|float|Double|Float)\b' level-0-start -- <P>domain/Book.java <P>domain/Order.java <P>domain/OrderLine.java <P>domain/StockItem.java
+     counterexamples: 0; control hits on the same pathspec: 14 (control pattern '\bMoney\b')
+ok   dto-price-types
+     claim: a DTO component or accessor named *price, *amount or *total is a BigDecimal
+     git grep -n -P '\b(String|double|float|Double|Float|int|long|Integer|Long)\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b' level-0-start -- :(glob)<P>domaininteraction/*DTO.java
+     counterexamples: 0; control hits on the same pathspec: 6 (control pattern '\bBigDecimal\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b')
+ok   jpa-price-types
+     claim: a JPA entity field named *price, *amount or *total is a BigDecimal
+     git grep -n -P '\b(String|double|float|Double|Float|int|long|Integer|Long)\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b' level-0-start -- :(glob)<P>data/*JPA.java
+     counterexamples: 0; control hits on the same pathspec: 6 (control pattern '\bBigDecimal\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b')
+ok   payload-view-price-types
+     claim: a payload or view component named *price, *amount or *total is a decimal String (never BigDecimal, double, float or int)
+     git grep -n -P '\b(BigDecimal|double|float|Double|Float|int|long|Integer|Long)\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b' level-0-start -- :(glob)<P>command/*Payload.java :(glob)<P>query/*View.java :(glob)<P>assistant/*View.java :(glob)<P>assistant/*Payload.java
+     counterexamples: 0; control hits on the same pathspec: 10 (control pattern '\bString\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b')
+ok   dto-price-types-inverted
+     claim: ENGINE CONTROL, deliberately false claim 'a DTO carries a price as a String': the search must find counterexamples
+     git grep -n -P '\bBigDecimal\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b' level-0-start -- :(glob)<P>domaininteraction/*DTO.java
+     counterexamples: 6; control hits on the same pathspec: 6 (control pattern '\bBigDecimal\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b')
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/BookDTO.java:14:        BigDecimal priceAmount, String priceCurrency, int p
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/DistributorTitleDTO.java:13:        BigDecimal recommendedPrice, String cur
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java:27:    public BigDecimal total() {
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java:28:        BigDecimal total = BigDecimal.ZERO.setScale(2, Rou
+       bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderLineDTO.java:12:public record OrderLineDTO(UUID bookId, String isbn, S
+ok   payload-view-price-types-inverted
+     claim: ENGINE CONTROL, deliberately false claim 'a payload or view carries a price as a BigDecimal': the search must find counterexamples
+     git grep -n -P '\bString\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b' level-0-start -- :(glob)<P>command/*Payload.java :(glob)<P>query/*View.java :(glob)<P>assistant/*View.java :(glob)<P>assistant/*Payload.java
+     counterexamples: 10; control hits on the same pathspec: 10 (control pattern '\bString\s+\w*([Pp]rice|[Aa]mount|[Tt]otal)\b')
+       bookstore/src/main/java/nl/openvalue/bookstore/assistant/BookDetailsView.java:12:public record BookDetailsView(UUID id, String title, List<S
+       bookstore/src/main/java/nl/openvalue/bookstore/assistant/BookSuggestionView.java:13:public record BookSuggestionView(UUID id, String title,
+       bookstore/src/main/java/nl/openvalue/bookstore/command/AddBookPayload.java:18:        @NotBlank @Pattern(regexp = "-?\\d+(\\.\\d+)?") String
+       bookstore/src/main/java/nl/openvalue/bookstore/command/ChangePricePayload.java:7:public record ChangePricePayload(@NotBlank @Pattern(regexp
+       bookstore/src/main/java/nl/openvalue/bookstore/command/ImportBookPayload.java:13:        @Pattern(regexp = "-?\\d+(\\.\\d+)?") String price)
+ok   price-currency
+     claim: a DTO or JPA entity that carries a BigDecimal price also carries a currency
+     files with a BigDecimal price: 6 ['BookDTO.java', 'DistributorTitleDTO.java', 'OrderDTO.java', 'OrderLineDTO.java', 'BookJPA.java', 'OrderLineJPA.java']; counterexamples (no currency in the file): 0 []
+ok   ddl-auto
+     claim: Hibernate never creates or updates the schema (ddl-auto is not create, update or create-drop)
+     git grep -n -P 'ddl-auto:\s*(create|update|create-drop)|generate-ddl:\s*true|hbm2ddl' level-0-start -- bookstore/src/main/resources bookstore/src/test/resources
+     counterexamples: 0; control hits on the same pathspec: 1 (control pattern 'ddl-auto:')
+ok   migration-names
+     claim: every file in db/migration is named V{n}__{description}.sql
+     files: 5 ['V0__baseline.sql', 'V1__create_catalogue.sql', 'V2__create_inventory.sql', 'V3__create_orders.sql', 'V4__add_pending_restock.sql']; counterexamples: 0 []
+ok   no-inmemory-code
+     claim: no source or build file names an in-memory database
+     git grep -n -P 'jdbc:(h2|hsqldb|derby)|EmbeddedDatabaseType|EmbeddedDatabaseBuilder|<artifactId>(h2|hsqldb|derby)</artifactId>' level-0-start -- bookstore/src pom.xml bookstore/pom.xml
+     counterexamples: 0; control hits on the same pathspec: 8 (control pattern 'jdbc:postgresql|PostgreSQLContainer')
+ok   suffix-domaininteraction
+     claim: every top-level class file in `domaininteraction` ends with one of ['Flow', 'DataService', 'AppService', 'DTO', 'DomainMapper', 'Exception']
+     git ls-tree -r --name-only level-0-start -- <P>domaininteraction/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 23
+ok   suffix-command
+     claim: every top-level class file in `command` ends with one of ['Commands', 'Payload', 'CommandResult', 'ExceptionHandler']
+     git ls-tree -r --name-only level-0-start -- <P>command/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 12
+ok   suffix-query
+     claim: every top-level class file in `query` ends with one of ['Queries', 'View', 'ExceptionHandler']
+     git ls-tree -r --name-only level-0-start -- <P>query/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 11
+ok   suffix-process
+     claim: every top-level class file in `process` ends with one of ['EventProcessor', 'Delegate']
+     git ls-tree -r --name-only level-0-start -- <P>process/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 2
+ok   suffix-assistant
+     claim: every top-level class file in `assistant` ends with one of ['Commands', 'Tools', 'Config', 'Properties', 'Payload', 'View', 'ExceptionHandler', 'RateLimiter', 'ChatModel']
+     git ls-tree -r --name-only level-0-start -- <P>assistant/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 13
+ok   suffix-data
+     claim: every top-level class file in `data` ends with one of ['DataServiceImpl', 'JPA', 'JPAMapper', 'Repository']
+     git ls-tree -r --name-only level-0-start -- <P>data/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 13
+ok   suffix-acl
+     claim: every top-level class file in `acl` ends with one of ['AppServiceImpl', 'Properties']
+     git ls-tree -r --name-only level-0-start -- <P>acl/ (excluding package-info.java)
+     counterexamples (files without a listed suffix): 0 []; control (files listed): 2
+
+## Part 3: negative controls on the table (each mutant of reference.md must be reported)
+mutant a new descriptive sentence is added                  -> reported: unit on line 44 matches 0 table entries (must be exactly 1): Every flow publishes events.
+mutant the read-method sentence is reworded                 -> reported: unit on line 34 matches 0 table entries (must be exactly 1): A read method returns a view.
+mutant the r1 price sentence is restored                    -> reported: unit on line 42 matches 0 table entries (must be exactly 1): Outside the domain a price is a `BigDecimal` plus
+mutant the r1 flow sentence is restored                     -> reported: unit on line 34 matches 0 table entries (must be exactly 1): A flow loads DTOs through a port, map to the doma
+mutant the View suffix is dropped from the query row        -> reported: check suffix-query failed (unit on line 12)
+mutant the Payload suffix is dropped from the command row   -> reported: check suffix-command failed (unit on line 11)
+mutant a table row is removed                               -> reported: table entry 'dep-acl' matches no unit of reference.md
+mutant the Payload sentence loses its body clause           -> reported: unit on line 38 matches 0 table entries (must be exactly 1): Write a command as `POST /{resource}/{id}/command
+engine controls (false twins of the new counter-searches find counterexamples): 3 of 3 caught
+
+per-sentence problems: 0
+rc=0

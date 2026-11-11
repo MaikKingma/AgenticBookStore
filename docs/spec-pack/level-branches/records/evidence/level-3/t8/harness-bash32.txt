@@ -1,0 +1,147 @@
+# T8 hook harness on macOS /bin/bash 3.2: env PATH=/bin:/usr/bin:/usr/sbin:/sbin /bin/bash docs/spec-pack/level-branches/tests/test-hooks.sh
+# date: 2026-11-10T12:27:12Z  bash: GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+# The hooks run through their shebang (#!/usr/bin/env bash) with this PATH, so they run on /bin/bash 3.2 as well.
+# tests-before-commit
+ok 1 - tbc-commit-green
+ok 2 - tbc-commit-green-long-output
+ok 3 - tbc-commit-red
+ok 4 - tbc-commit-red-long-output-tail-40
+ok 5 - tbc-commit-red-output-on-stderr
+ok 6 - tbc-commit-red-no-output
+ok 7 - tbc-commit-red-exit-3
+ok 8 - tbc-commit-red-trailing-empty-lines
+ok 9 - tbc-other-command
+ok 10 - tbc-escaped-quotes-after-commit
+ok 11 - tbc-escaped-quotes-before-commit
+ok 12 - tbc-spaces-in-json-and-command
+ok 13 - tbc-pretty-printed-json
+ok 14 - tbc-tab-after-command-colon
+ok 15 - tbc-tab-before-command-colon
+ok 16 - tbc-cr-after-command-colon
+ok 17 - tbc-cr-before-command-colon
+ok 18 - tbc-mixed-whitespace-runs-around-command-colon
+ok 19 - tbc-newline-before-command-colon
+ok 20 - tbc-key-and-value-on-two-lines
+ok 21 - tbc-raw-newline-in-command-string
+ok 22 - tbc-uppercase-command
+ok 23 - tbc-git-commit-only-in-description
+ok 24 - tbc-chained-git-add-and-git-commit
+ok 25 - tbc-gitcommit-inside-a-word
+ok 26 - tbc-empty-stdin
+ok 27 - tbc-project-dir-unset
+ok 28 - tbc-project-dir-empty
+ok 29 - tbc-could-not-cd
+ok 30 - tbc-could-not-start-mvnw-missing
+ok 31 - tbc-could-not-start-mvnw-not-executable
+ok 32 - tbc-could-not-make-temp-log
+# architecture-check-on-stop
+ok 33 - acs-java-change-green
+ok 34 - acs-java-change-red
+ok 35 - acs-java-change-red-long-output-tail-30
+ok 36 - acs-java-change-red-output-on-stderr
+ok 37 - acs-java-change-red-no-output
+ok 38 - acs-java-change-red-exit-3
+ok 39 - acs-java-change-red-trailing-empty-lines
+ok 40 - acs-no-java-change
+ok 41 - acs-clean-tree
+ok 42 - acs-untracked-java-file
+ok 43 - acs-ignored-java-file
+ok 44 - acs-staged-java-file
+ok 45 - acs-deleted-java-file
+ok 46 - acs-stop-hook-active-true
+ok 47 - acs-stop-hook-active-true-with-spaces
+ok 48 - acs-stop-hook-active-true-with-a-tab
+ok 49 - acs-stop-hook-active-true-tab-before-colon
+ok 50 - acs-stop-hook-active-true-cr-after-colon
+ok 51 - acs-stop-hook-active-true-cr-before-colon
+ok 52 - acs-stop-hook-active-true-mixed-whitespace-runs
+ok 53 - acs-stop-hook-active-newline-before-colon
+ok 54 - acs-stop-hook-active-string
+ok 55 - acs-stop-hook-active-uppercase-key
+ok 56 - acs-stop-hook-active-on-two-lines
+ok 57 - acs-empty-stdin
+ok 58 - acs-project-dir-unset
+ok 59 - acs-project-dir-empty
+ok 60 - acs-could-not-cd
+ok 61 - acs-git-diff-fails-not-a-repo
+ok 62 - acs-git-diff-fails-no-commit
+ok 63 - acs-could-not-start-git
+ok 64 - acs-git-ls-files-fails
+ok 65 - acs-could-not-start-mvnw-missing
+ok 66 - acs-could-not-start-mvnw-untracked-java-file
+# .githooks/pre-commit
+ok 67 - githook-green-commit-goes-through
+ok 68 - githook-red-commit-aborted
+ok 69 - githook-inactive-without-hooks-path
+ok 70 - githook-skipped-by-no-verify
+# result table (id, exit, mvnw argv, git calls, stderr line 1, tail lines, tail first, tail last, diag, tmp, stdout bytes)
+#   tbc-commit-green	0	[-q][verify]	-	-	0	-	-	no	clean	0
+#   tbc-commit-green-long-output	0	[-q][verify]	-	-	0	-	-	no	clean	0
+#   tbc-commit-red	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-commit-red-long-output-tail-40	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	40	stub-mvnw: red line 11 of 50	stub-mvnw: red line 50 of 50	no	clean	0
+#   tbc-commit-red-output-on-stderr	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	3	stub-mvnw: red line 1 of 3	stub-mvnw: red line 3 of 3	no	clean	0
+#   tbc-commit-red-no-output	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	0	-	-	no	clean	0
+#   tbc-commit-red-exit-3	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-commit-red-trailing-empty-lines	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	4	stub-mvnw: red line 1 of 2	(empty)	no	clean	0
+#   tbc-other-command	0	-	-	-	0	-	-	no	clean	0
+#   tbc-escaped-quotes-after-commit	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-escaped-quotes-before-commit	0	-	-	-	0	-	-	no	clean	0
+#   tbc-spaces-in-json-and-command	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-pretty-printed-json	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-tab-after-command-colon	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-tab-before-command-colon	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-cr-after-command-colon	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-cr-before-command-colon	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-mixed-whitespace-runs-around-command-colon	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-newline-before-command-colon	0	-	-	-	0	-	-	no	clean	0
+#   tbc-key-and-value-on-two-lines	0	-	-	-	0	-	-	no	clean	0
+#   tbc-raw-newline-in-command-string	0	-	-	-	0	-	-	no	clean	0
+#   tbc-uppercase-command	0	-	-	-	0	-	-	no	clean	0
+#   tbc-git-commit-only-in-description	0	-	-	-	0	-	-	no	clean	0
+#   tbc-chained-git-add-and-git-commit	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-gitcommit-inside-a-word	0	-	-	-	0	-	-	no	clean	0
+#   tbc-empty-stdin	0	-	-	-	0	-	-	no	clean	0
+#   tbc-project-dir-unset	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-project-dir-empty	2	[-q][verify]	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   tbc-could-not-cd	1	-	-	-	0	-	-	yes	clean	0
+#   tbc-could-not-start-mvnw-missing	2	-	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	0	-	-	yes	clean	0
+#   tbc-could-not-start-mvnw-not-executable	2	-	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	0	-	-	yes	clean	0
+#   tbc-could-not-make-temp-log	2	-	-	Commit blocked: ./mvnw verify failed. Fix the cause (do not weaken tests), then commit again.	0	-	-	yes	clean	0
+#   acs-java-change-green	0	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	-	0	-	-	no	clean	0
+#   acs-java-change-red	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-java-change-red-long-output-tail-30	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	30	stub-mvnw: red line 21 of 50	stub-mvnw: red line 50 of 50	no	clean	0
+#   acs-java-change-red-output-on-stderr	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	3	stub-mvnw: red line 1 of 3	stub-mvnw: red line 3 of 3	no	clean	0
+#   acs-java-change-red-no-output	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	1	(empty)	(empty)	no	clean	0
+#   acs-java-change-red-exit-3	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-java-change-red-trailing-empty-lines	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	2	stub-mvnw: red line 1 of 2	stub-mvnw: red line 2 of 2	no	clean	0
+#   acs-no-java-change	0	-	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	-	0	-	-	no	clean	0
+#   acs-clean-tree	0	-	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	-	0	-	-	no	clean	0
+#   acs-untracked-java-file	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-ignored-java-file	0	-	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	-	0	-	-	no	clean	0
+#   acs-staged-java-file	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-deleted-java-file	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-stop-hook-active-true	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-with-spaces	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-with-a-tab	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-tab-before-colon	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-cr-after-colon	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-cr-before-colon	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-true-mixed-whitespace-runs	0	-	-	-	0	-	-	no	clean	0
+#   acs-stop-hook-active-newline-before-colon	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-stop-hook-active-string	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-stop-hook-active-uppercase-key	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-stop-hook-active-on-two-lines	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-empty-stdin	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-project-dir-unset	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-project-dir-empty	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	no	clean	0
+#   acs-could-not-cd	1	-	-	-	0	-	-	yes	clean	0
+#   acs-git-diff-fails-not-a-repo	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	yes	clean	0
+#   acs-git-diff-fails-no-commit	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	yes	clean	0
+#   acs-could-not-start-git	2	[-q][-pl][bookstore][test][-Dtest=ArchitectureTest][-Dsurefire.failIfNoSpecifiedTests=false]	-	ArchitectureTest fails. Fix the layering before you finish:	5	stub-mvnw: red line 1 of 5	stub-mvnw: red line 5 of 5	yes	clean	0
+#   acs-git-ls-files-fails	0	-	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	-	0	-	-	yes	clean	0
+#   acs-could-not-start-mvnw-missing	2	-	[diff][--quiet][HEAD][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	0	-	-	yes	clean	0
+#   acs-could-not-start-mvnw-untracked-java-file	2	-	[diff][--quiet][HEAD][--][*.java] ; [ls-files][--others][--exclude-standard][--][*.java]	ArchitectureTest fails. Fix the layering before you finish:	0	-	-	yes	clean	0
+# bash: 3.2.57(1)-release
+1..70
+PASSED: 70 of 70
+# exit: 0  seconds: 12

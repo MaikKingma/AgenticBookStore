@@ -1,0 +1,16 @@
+# 13 negative controls of check-written-files.py (script: written-files-controls.sh.txt). Each control breaks one thing in a copy of the
+# written files (symlinked sandbox, copied agent-os/ folder); the named check must report FAIL, the unbroken and the restored copy ALL PASS.
+control N0-unbroken: ALL PASS as expected
+control N1-placeholder: placeholders reported FAIL as expected (FAIL placeholders: 1 problem(s))
+control N2-nonascii: ascii reported FAIL as expected (FAIL ascii: 1 problem(s))
+control N3-invented-constant: allcaps reported FAIL as expected (FAIL allcaps: 1 problem(s))
+control N4-lombok: forbidden reported FAIL as expected (FAIL forbidden: 1 problem(s))
+control N5-double-money: forbidden reported FAIL as expected (FAIL forbidden: 1 problem(s))
+control N6-embedded-db: forbidden reported FAIL as expected (FAIL forbidden: 1 problem(s))
+control N7-edited-migration: forbidden reported FAIL as expected (FAIL forbidden: 1 problem(s))
+control N8-uncovered-line: trace reported FAIL as expected (FAIL trace: 1 problem(s))
+control N9-mission-reworded: mission reported FAIL as expected (FAIL mission: 1 problem(s))
+control N10-version-changed: tech-stack reported FAIL as expected (FAIL tech-stack: 1 problem(s))
+control N11-index-entry-misspelled: index reported FAIL as expected (FAIL index: 1 problem(s))
+control N12-claim-changed-away-from-source: trace reported FAIL as expected (FAIL trace: 1 problem(s))
+control N13-restored: ALL PASS as expected

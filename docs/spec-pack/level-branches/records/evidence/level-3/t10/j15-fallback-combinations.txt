@@ -1,0 +1,46 @@
+# J15 / row R3-8: the companion edits of the plugin fallback, proven on copies of the staging tree (no Claude process)
+# started 2026-11-10T15:18:02Z. Each copy: simulate-level-0.sh --repo <worktree> level-0-start <sandbox>, then build-level.sh level-3 <sandbox>.
+# Edits applied to a copy: dropkeys = remove extraKnownMarketplaces and enabledPlugins from a settings file; flip = row 2 of level-3/manifest.tsv replace -> add.
+real staging tree, hashes before (first 16 characters, file):
+  8de1eb92167ced69  level-2/manifest.tsv
+  9c1d5143f0b6cfc5  level-3/manifest.tsv
+  8abda0221d01fea9  level-2/files/dot-claude/settings.json
+  ef25c79abf739ef9  level-3/files/dot-claude/settings.json
+
+[C] control: staging tree unmodified
+     level-2 manifest has a settings row: 1; level-2 settings file: present, keys: enabledPlugins extraKnownMarketplaces
+     level-3 settings file keys: enabledPlugins extraKnownMarketplaces hooks permissions; level-3 manifest row 2 op: replace
+     build-level.sh level-3: exit 0; last line: build-level: level-3 built in $R1_sbx-j15-C
+     .claude/settings.json in the built tree: keys enabledPlugins extraKnownMarketplaces hooks permissions; plugin keys present: 2
+
+[A1] case (a) without edit (4): level-2 settings row and file removed, level-3 keys dropped, row 2 stays replace
+     level-2 manifest has a settings row: 0; level-2 settings file: absent
+     level-3 settings file keys: hooks permissions; level-3 manifest row 2 op: replace
+     build-level.sh level-3: exit 1; last line: build-level: error: step level-3 failed
+     the failing step: apply-level: error: level-3/manifest.tsv line 2: replace: target does not exist: .claude/settings.json
+
+[A2] case (a) with edit (4): as A1, and row 2 flips to add
+     level-2 manifest has a settings row: 0; level-2 settings file: absent
+     level-3 settings file keys: hooks permissions; level-3 manifest row 2 op: add
+     build-level.sh level-3: exit 0; last line: build-level: level-3 built in $R1_sbx-j15-A2
+     .claude/settings.json in the built tree: keys hooks permissions; plugin keys present: 0
+
+[B1] case (b) without edit (4): level-2 row and file stay (keys dropped, an empty object), level-3 keys dropped, row 2 stays replace
+     level-2 manifest has a settings row: 1; level-2 settings file: present, keys: (none)
+     level-3 settings file keys: hooks permissions; level-3 manifest row 2 op: replace
+     build-level.sh level-3: exit 0; last line: build-level: level-3 built in $R1_sbx-j15-B1
+     .claude/settings.json in the built tree: keys hooks permissions; plugin keys present: 0
+
+[B2] case (b) with edit (4): as B1, and row 2 flips to add
+     level-2 manifest has a settings row: 1; level-2 settings file: present, keys: (none)
+     level-3 settings file keys: hooks permissions; level-3 manifest row 2 op: add
+     build-level.sh level-3: exit 1; last line: build-level: error: step level-3 failed
+     the failing step: apply-level: error: level-3/manifest.tsv line 2: add: target exists: .claude/settings.json
+
+summary: control 0, A1 1, A2 0, B1 0, B2 1   (exit codes of build-level.sh level-3; expected 0, 1, 0, 0, 1)
+real staging tree, hashes after (must equal the hashes before):
+  8de1eb92167ced69  level-2/manifest.tsv
+  9c1d5143f0b6cfc5  level-3/manifest.tsv
+  8abda0221d01fea9  level-2/files/dot-claude/settings.json
+  ef25c79abf739ef9  level-3/files/dot-claude/settings.json
+git status --short of the real level-2 and level-3 staging folders: []

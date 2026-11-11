@@ -1,0 +1,22 @@
+diff --git a/bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java b/bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+index 60d9d896ed4a9e5fb16e9c94a4547c01eca5c3a7..4923e01a674d8c7d214a94b3518a6eb80afa5a7d 100644
+--- a/bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
++++ b/bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+@@ -271,6 +271,17 @@ class DistributorAppServiceImplTest {
+         assertThat(title.authors()).containsExactly("Emeric Stroud-Halvorsen", "Dagny Vellacourt");
+     }
+ 
++    @Test
++    void keepsOnlyTheAuthorOfATitleWithATranslatorAndAnIllustrator() {
++        stubTitle("9789900010395", "title-9789900010395.json");
++
++        DistributorTitleDTO title = distributor.findTitle("9789900010395").orElseThrow();
++
++        assertThat(title.title()).isEqualTo("The Divine Comedy: Inferno");
++        assertThat(title.authors()).containsExactly("Dante Alighieri");
++        assertThat(title.authors()).doesNotContain("Henry Wadsworth Longfellow", "Gustave Dore");
++    }
++
+     @Test
+     void outOfPrintTitleIsNotOrderable() {
+         stubTitle("9789900010678", "title-9789900010678.json");

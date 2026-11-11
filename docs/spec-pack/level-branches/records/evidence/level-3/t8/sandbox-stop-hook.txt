@@ -1,0 +1,21 @@
+# T8: the staged Stop hook against the real build of the level-3 sandbox (sandbox-build.txt), one run.
+# date: 2026-11-10T11:40:16Z
+$ ls -l .claude/hooks/architecture-check-on-stop.sh
+-rwxr-xr-x@ $TMPDIR/sbx.TTsCw9/level-3/.claude/hooks/architecture-check-on-stop.sh
+Java file touched (a trailing comment line): bookstore/src/main/java/nl/openvalue/bookstore/BookstoreApplication.java
+$ git status --short
+ M bookstore/src/main/java/nl/openvalue/bookstore/BookstoreApplication.java
+$ rm -rf bookstore/target/surefire-reports   (so the reports below come from this run only)
+$ CLAUDE_PROJECT_DIR=<sandbox> .claude/hooks/architecture-check-on-stop.sh < tests/hooks-fixtures/stdin/stop-active-false.json
+exit code: 0  seconds: 5  stdout bytes: 0  stderr bytes: 0
+stderr (first 5 lines):
+$ ls bookstore/target/surefire-reports   (test classes this run executed)
+TEST-nl.openvalue.bookstore.ArchitectureTest.xml
+nl.openvalue.bookstore.ArchitectureTest.txt
+$ grep -h -o "<testsuite [^>]*" bookstore/target/surefire-reports/TEST-*.xml | grep -o -E "name=\"[^\"]*\"|tests=\"[0-9]+\"|failures=\"[0-9]+\"|errors=\"[0-9]+\""
+name="nl.openvalue.bookstore.ArchitectureTest"
+tests="22"
+errors="0"
+failures="0"
+$ git status --short   (after restoring the Java file)
+(end of status)

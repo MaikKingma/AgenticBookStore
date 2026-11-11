@@ -1,0 +1,202 @@
+# Pack and guide text that the record cites (read only). Pack files: working tree of the spec tip. Guide files: git show of origin/factory (c3d44d7).
+# Non-ASCII characters show as '?'. The pack's literal name of the optional Level 4 solution branch is written with [x] inserted after 'solution/' in this folder, so that the FF-T10-b grep over the track's files stays empty.
+# origin/factory moved during the task (711dd9d when the token inventory ran, c3d44d7 now). Files changed between them under guide/, docs/spec-pack/specs, workshop, product: 0
+# [P1] pack spec 10: the branch section and the scenario
+10-harness-reference-solutions.md:430 | ## Branches `start/level-4-*`: spec-driven development tracks
+10-harness-reference-solutions.md:431 | Each is `solution/level-3` plus one framework installed, initialised and committed, so participants skip installation.
+10-harness-reference-solutions.md:432 | Pin versions from `product/tech-stack.md`. Commit the generated files as they are; review them for anything that
+10-harness-reference-solutions.md:433 | contradicts `CLAUDE.md`.
+10-harness-reference-solutions.md:434 | 
+10-harness-reference-solutions.md:435 | ### `start/level-4-openspec`
+10-harness-reference-solutions.md:436 | 1. `openspec init --tools claude` (non-interactive).
+10-harness-reference-solutions.md:450 |    ```
+10-harness-reference-solutions.md:451 | 3. Seed one living spec so participants see the format: `openspec/specs/ordering/spec.md` describing the existing
+10-harness-reference-solutions.md:452 |    place and ship order behaviour (copy the requirements from spec 04 of this pack, `### Requirement:` and
+10-harness-reference-solutions.md:453 |    `#### Scenario:` headings with WHEN/THEN bullets). `openspec validate --strict` must pass.
+10-harness-reference-solutions.md:476 | 
+10-harness-reference-solutions.md:477 | ### Acceptance scenario (all three tracks)
+10-harness-reference-solutions.md:478 | #### Scenario: Rehearsed in time
+10-harness-reference-solutions.md:479 | - **GIVEN** a fresh clone on the track's start branch
+10-harness-reference-solutions.md:480 | - **WHEN** a facilitator who has not used the framework before ships Level 4 brief A following `workshop/sdd-framework-guide.md`
+10-harness-reference-solutions.md:481 | - **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
+10-harness-reference-solutions.md:501 | 5. Create the three `start/level-4-*` branches; rehearse each.
+10-harness-reference-solutions.md:502 | 6. Optionally create `solution/[x]level-4-<track>-<brief>` from the rehearsals.
+# [P2] tech-stack pin and the framework guide (Part 1, Part 2 Track A, install table)
+tech-stack.md:70 | | OpenSpec | 1.16.0 | `curl -fsSL https://openspec.dev/cli/install.sh \| sh` or `npm install -g @fission-ai/openspec@1.16.0` (Node 22.12+) |
+sdd-framework-guide.md:49 | curl -fsSL https://openspec.dev/cli/install.sh | sh      # or: npm install -g @fission-ai/openspec@1.16.0
+sdd-framework-guide.md:50 | openspec config set telemetry.enabled false              # optional, telemetry is on by default
+sdd-framework-guide.md:51 | openspec init --tools claude
+sdd-framework-guide.md:93 | Common start for every track:
+sdd-framework-guide.md:94 | ```bash
+sdd-framework-guide.md:95 | git stash -u                         # keep your own Level 3 work if you like
+sdd-framework-guide.md:96 | git switch start/level-4-<track>     # openspec | speckit | agentos
+sdd-framework-guide.md:97 | claude                               # new session; /model sonnet
+sdd-framework-guide.md:98 | ```
+sdd-framework-guide.md:99 | The start branches are built from `solution/level-3`: your Level 2 and Level 3 harness (`.mcp.json`, the `jdtls-lsp`
+sdd-framework-guide.md:100 | plugin declaration, hooks, permissions, skill, `/ship`) plus the framework, already installed and configured. Pick a
+sdd-framework-guide.md:101 | brief from `level-4-feature-briefs.md`. Write the brief into the first command in
+sdd-framework-guide.md:102 | your own words and add the answers to its questions: that is your contribution as the human.
+sdd-framework-guide.md:103 | 
+sdd-framework-guide.md:104 | ### Track A: OpenSpec (about 35 minutes)
+sdd-framework-guide.md:105 | 1. `/opsx:explore` "reviews and ratings" (or your brief): the agent reads the code you are about to change.
+sdd-framework-guide.md:106 | 2. `/opsx:propose add-book-reviews` with your brief and decisions.
+sdd-framework-guide.md:107 | 3. Terminal: `openspec validate add-book-reviews --strict`. Fix what it reports. Common error: a scenario heading
+sdd-framework-guide.md:108 |    with three `#` instead of four is silently ignored.
+sdd-framework-guide.md:109 | 4. Read `openspec/changes/add-book-reviews/specs/.../spec.md`. Change what is wrong with `/opsx:update`.
+sdd-framework-guide.md:110 | 5. `/clear`, then `/opsx:apply`. Watch the tasks tick off.
+sdd-framework-guide.md:111 | 6. `/ship add book reviews`. The test-gate hook runs.
+sdd-framework-guide.md:112 | 7. `/opsx:archive`. Your requirements are now part of the living spec in `openspec/specs/`.
+sdd-framework-guide.md:113 | 
+sdd-framework-guide.md:114 | Gotchas: `openspec ...` runs in the terminal, `/opsx:...` in Claude Code. If the commands do not show up, restart
+sdd-framework-guide.md:115 | Claude Code.
+sdd-framework-guide.md:138 | ### Level cleared when (all tracks)
+sdd-framework-guide.md:139 | - Spec artefacts committed next to the code.
+sdd-framework-guide.md:140 | - `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+sdd-framework-guide.md:141 | - Commit made through your `/ship` command and passed the test-gate hook.
+sdd-framework-guide.md:142 | - Every acceptance scenario in your spec maps to a test (ask the agent to list the mapping).
+workshop-plan.md:19 | | SDD in Level 4 | **Participant's choice: OpenSpec, Spec Kit or Agent OS** | Prepared start branches per framework remove the install and init time from the level. |
+workshop-plan.md:305 | | A: OpenSpec | `start/level-4-openspec` | Light | `/opsx:explore`, `/opsx:propose`, `openspec validate --strict`, `/opsx:update`, `/opsx:apply`, `/opsx:archive` |
+level-4-feature-briefs.md:6 | ## Brief A: Reviews and ratings (recommended for most people)
+level-4-feature-briefs.md:7 | > "Customers keep asking which books are actually good. Let them leave a rating from 1 to 5 stars and a short review
+level-4-feature-briefs.md:8 | > for books they bought. Show the average rating in the catalogue search."
+level-4-feature-briefs.md:9 | 
+level-4-feature-briefs.md:10 | Questions your spec should answer: who may review (only customers with a shipped order containing the book?), one
+level-4-feature-briefs.md:11 | review per customer per book or edits allowed, review length, how the average is rounded and shown when there are no
+level-4-feature-briefs.md:12 | reviews, whether discontinued books keep their reviews.
+level-4-feature-briefs.md:13 | 
+# [G1] guide page 05 (origin/factory): Track A steps, gotchas, Level cleared when
+guide/docs/05-level-4-spec-driven-development.mdx:16 | **Start branch:** `start/level-4-<track>`
+guide/docs/05-level-4-spec-driven-development.mdx:17 | 
+guide/docs/05-level-4-spec-driven-development.mdx:18 | **Catch-up:**
+guide/docs/05-level-4-spec-driven-development.mdx:19 | 
+guide/docs/05-level-4-spec-driven-development.mdx:20 | ```bash
+guide/docs/05-level-4-spec-driven-development.mdx:21 | git stash -u && git switch start/level-4-<track>
+guide/docs/05-level-4-spec-driven-development.mdx:22 | ```
+guide/docs/05-level-4-spec-driven-development.mdx:55 |   <TabItem value="openspec" label="Track A: OpenSpec">
+guide/docs/05-level-4-spec-driven-development.mdx:56 | 
+guide/docs/05-level-4-spec-driven-development.mdx:57 | About 35 minutes.
+guide/docs/05-level-4-spec-driven-development.mdx:58 | 
+guide/docs/05-level-4-spec-driven-development.mdx:59 | 1. Run the command below with "reviews and ratings" (or your brief) after it: the agent reads the code you are about to change.
+guide/docs/05-level-4-spec-driven-development.mdx:60 | 
+guide/docs/05-level-4-spec-driven-development.mdx:61 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:62 |    /opsx:explore
+guide/docs/05-level-4-spec-driven-development.mdx:63 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:64 | 
+guide/docs/05-level-4-spec-driven-development.mdx:65 | 2. Propose the change with your brief and decisions:
+guide/docs/05-level-4-spec-driven-development.mdx:66 | 
+guide/docs/05-level-4-spec-driven-development.mdx:67 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:68 |    /opsx:propose add-book-reviews
+guide/docs/05-level-4-spec-driven-development.mdx:69 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:70 | 
+guide/docs/05-level-4-spec-driven-development.mdx:71 | 3. In your terminal, validate it. Fix what it reports. Common error: a scenario heading with three `#` instead of four is silently ignored.
+guide/docs/05-level-4-spec-driven-development.mdx:72 | 
+guide/docs/05-level-4-spec-driven-development.mdx:73 |    ```bash
+guide/docs/05-level-4-spec-driven-development.mdx:74 |    openspec validate add-book-reviews --strict
+guide/docs/05-level-4-spec-driven-development.mdx:75 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:76 | 
+guide/docs/05-level-4-spec-driven-development.mdx:77 | 4. Read `openspec/changes/add-book-reviews/specs/.../spec.md`. Change what is wrong with this command:
+guide/docs/05-level-4-spec-driven-development.mdx:78 | 
+guide/docs/05-level-4-spec-driven-development.mdx:79 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:80 |    /opsx:update
+guide/docs/05-level-4-spec-driven-development.mdx:81 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:82 | 
+guide/docs/05-level-4-spec-driven-development.mdx:83 | 5. Clear the context first:
+guide/docs/05-level-4-spec-driven-development.mdx:84 | 
+guide/docs/05-level-4-spec-driven-development.mdx:85 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:86 |    /clear
+guide/docs/05-level-4-spec-driven-development.mdx:87 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:88 | 
+guide/docs/05-level-4-spec-driven-development.mdx:89 |    Then apply the change and watch the tasks tick off:
+guide/docs/05-level-4-spec-driven-development.mdx:90 | 
+guide/docs/05-level-4-spec-driven-development.mdx:91 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:92 |    /opsx:apply
+guide/docs/05-level-4-spec-driven-development.mdx:93 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:94 | 
+guide/docs/05-level-4-spec-driven-development.mdx:95 | 6. Commit through your `/ship` command. The test-gate hook runs.
+guide/docs/05-level-4-spec-driven-development.mdx:96 | 
+guide/docs/05-level-4-spec-driven-development.mdx:97 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:98 |    /ship add book reviews
+guide/docs/05-level-4-spec-driven-development.mdx:99 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:100 | 
+guide/docs/05-level-4-spec-driven-development.mdx:101 | 7. Archive the change. Your requirements are now part of the living spec in `openspec/specs/`.
+guide/docs/05-level-4-spec-driven-development.mdx:102 | 
+guide/docs/05-level-4-spec-driven-development.mdx:103 |    ```text
+guide/docs/05-level-4-spec-driven-development.mdx:104 |    /opsx:archive
+guide/docs/05-level-4-spec-driven-development.mdx:105 |    ```
+guide/docs/05-level-4-spec-driven-development.mdx:106 | 
+guide/docs/05-level-4-spec-driven-development.mdx:107 | Gotchas: `openspec ...` runs in the terminal, `/opsx:...` in Claude Code. If the commands do not show up, restart Claude Code.
+guide/docs/05-level-4-spec-driven-development.mdx:108 | 
+guide/docs/05-level-4-spec-driven-development.mdx:235 | ## Level cleared when
+guide/docs/05-level-4-spec-driven-development.mdx:236 | 
+guide/docs/05-level-4-spec-driven-development.mdx:237 | - [ ] Spec artefacts committed next to the code.
+guide/docs/05-level-4-spec-driven-development.mdx:238 | - [ ] `./mvnw verify` green, including `ArchitectureTest`, shown in the terminal (not claimed).
+guide/docs/05-level-4-spec-driven-development.mdx:239 | - [ ] Commit made through your `/ship` command and passed the test-gate hook.
+guide/docs/05-level-4-spec-driven-development.mdx:240 | - [ ] Every acceptance scenario in your spec maps to a test (ask the agent to list the mapping).
+# [G2] guide setup check (origin/factory): what participants arrive with, Node, and the OpenSpec mentions
+guide/docs/00-setup-check.md:13 | Arrive with this installed:
+guide/docs/00-setup-check.md:14 | 
+guide/docs/00-setup-check.md:15 | - Claude Code, logged in with a Pro/Max/Team/Enterprise account
+guide/docs/00-setup-check.md:16 | - Temurin 25 (Java 25)
+guide/docs/00-setup-check.md:17 | - git
+guide/docs/00-setup-check.md:18 | - Docker Desktop (or another Docker engine), installed and running
+guide/docs/00-setup-check.md:19 | - the Java language server `jdtls`, on the `PATH`
+guide/docs/00-setup-check.md:20 | 
+guide/docs/00-setup-check.md:21 | Node.js is not needed: the build installs its own copy.
+OpenSpec or npm or openspec install lines in guide/docs/00-setup-check.md: 0
+# [G3] guide wrap-up (origin/factory): the install after the workshop
+guide/docs/06-wrap-up.md:63 | ### OpenSpec
+guide/docs/06-wrap-up.md:64 | 
+guide/docs/06-wrap-up.md:65 | <Tabs groupId="os">
+guide/docs/06-wrap-up.md:66 |   <TabItem value="unix" label="macOS/Linux">
+guide/docs/06-wrap-up.md:67 | 
+guide/docs/06-wrap-up.md:68 | ```bash
+guide/docs/06-wrap-up.md:69 | curl -fsSL https://openspec.dev/cli/install.sh | sh
+guide/docs/06-wrap-up.md:70 | ```
+guide/docs/06-wrap-up.md:71 | 
+guide/docs/06-wrap-up.md:72 |   </TabItem>
+guide/docs/06-wrap-up.md:73 |   <TabItem value="windows" label="Windows PowerShell">
+guide/docs/06-wrap-up.md:74 | 
+guide/docs/06-wrap-up.md:75 | ```powershell
+guide/docs/06-wrap-up.md:76 | irm https://openspec.dev/cli/install.ps1 | iex
+guide/docs/06-wrap-up.md:77 | ```
+guide/docs/06-wrap-up.md:78 | 
+guide/docs/06-wrap-up.md:79 |   </TabItem>
+guide/docs/06-wrap-up.md:80 | </Tabs>
+guide/docs/06-wrap-up.md:81 | 
+guide/docs/06-wrap-up.md:82 | Or with npm (Node 22.12+):
+guide/docs/06-wrap-up.md:83 | 
+guide/docs/06-wrap-up.md:84 | ```bash
+guide/docs/06-wrap-up.md:85 | npm install -g @fission-ai/openspec@latest
+guide/docs/06-wrap-up.md:86 | ```
+guide/docs/06-wrap-up.md:87 | 
+guide/docs/06-wrap-up.md:88 | Then, in your repository:
+guide/docs/06-wrap-up.md:89 | 
+guide/docs/06-wrap-up.md:90 | ```bash
+guide/docs/06-wrap-up.md:91 | openspec init --tools claude
+guide/docs/06-wrap-up.md:92 | ```
+# [G4] guide cheat sheet and troubleshooting (origin/factory)
+guide/docs/reference/cheat-sheet.md:25 | | Track | Branch | Commands |
+guide/docs/reference/cheat-sheet.md:26 | |---|---|---|
+guide/docs/reference/cheat-sheet.md:27 | | A: OpenSpec | `start/level-4-openspec` | `/opsx:explore`, `/opsx:propose`, `openspec validate --strict`, `/opsx:update`, `/opsx:apply`, `/opsx:archive` |
+guide/docs/reference/cheat-sheet.md:28 | | B: Spec Kit | `start/level-4-speckit` | `/speckit-specify`, `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-implement`, `/speckit-converge` |
+guide/docs/reference/cheat-sheet.md:29 | | C: Agent OS | `start/level-4-agentos` | `/plan` then `/shape-spec`, `/inject-standards testing`, implement the plan |
+guide/docs/reference/cheat-sheet.md:30 | 
+guide/docs/reference/cheat-sheet.md:31 | `openspec ...` runs in the terminal, `/opsx:...` in Claude Code. In every track you commit through your `/ship` command.
+guide/docs/reference/troubleshooting.md:130 | ```
+guide/docs/reference/troubleshooting.md:131 | 
+guide/docs/reference/troubleshooting.md:132 | Level 4 (replace `<track>` with `openspec`, `speckit` or `agentos`):
+guide/docs/reference/troubleshooting.md:133 | 
+guide/docs/reference/troubleshooting.md:134 | ```bash
+guide/docs/reference/troubleshooting.md:135 | git stash -u && git switch start/level-4-<track>
+guide/docs/reference/troubleshooting.md:136 | ```
+# [G5] the same Track A lines on the spec 11 branch (origin/sdd/11-workshop-guide/spec) equal those of origin/factory:
+guide/docs/05-level-4-spec-driven-development.mdx factory=643726302e88c104 spec11=643726302e88c104 equal
+guide/docs/reference/cheat-sheet.md factory=d267a57d5c6c2beb spec11=d267a57d5c6c2beb equal
+guide/docs/00-setup-check.md factory=a70add3b5badbf9c spec11=0e7d1593198ea318 DIFFERENT
+guide/docs/00-setup-check.md differs elsewhere between the two refs; on the spec 11 branch it has 0 lines with openspec or npm and 1 line with 'Node.js is not needed'
+
+# Added in rework round 1 (QA r0 nit N1): the Track table of guide page 05 also uses the bare form 'openspec validate --strict'.
+guide/docs/05-level-4-spec-driven-development.mdx:34 | | Track | Branch | Weight | Commands you will use |
+guide/docs/05-level-4-spec-driven-development.mdx:35 | |---|---|---|---|
+guide/docs/05-level-4-spec-driven-development.mdx:36 | | A: OpenSpec | `start/level-4-openspec` | Light | `/opsx:explore`, `/opsx:propose`, `openspec validate --strict`, `/opsx:update`, `/opsx:apply`, `/opsx:archive` |
+origin/factory at this check: effc06f; page 05 sha256 first 16: 643726302e88c104 (the earlier check in this file shows the same 16 characters)

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Evidence part 4: word search over the installed upstream files (contradiction review against CLAUDE.md).
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+fin() { ascii | mask; }
+AOS=$HOMEISO/agent-os
+{
+  echo "# Contradiction review of the installed upstream files (criterion 4, pack: review for anything that contradicts CLAUDE.md)."
+  echo "# Words searched, case-insensitive, in the five command files, the two install scripts and the default profile file: lombok, mapstruct, double, float, --no-verify, git push, ddl-auto, h2, hsqldb, embedded, in-memory."
+  echo "# Files: $(ls "$AOS"/commands/agent-os/*.md "$AOS"/scripts/*.sh "$AOS"/profiles/default/global/tech-stack.md | wc -l | tr -d ' ')"
+  for w in lombok mapstruct double float -- '--no-verify' 'git push' ddl-auto hsqldb embedded in-memory '\bh2\b'; do
+    [ "$w" = "--" ] && continue
+    n=$(grep -c -i -E -- "$w" "$AOS"/commands/agent-os/*.md "$AOS"/scripts/*.sh "$AOS"/profiles/default/global/tech-stack.md | awk -F: '{s+=$2} END {print s+0}')
+    echo "hits for '$w': $n"
+  done
+  echo "# lines of any hit (file:line: text):"
+  grep -n -i -E -- 'lombok|mapstruct|double|float|--no-verify|git push|ddl-auto|hsqldb|embedded|in-memory|\bh2\b' "$AOS"/commands/agent-os/*.md "$AOS"/scripts/*.sh "$AOS"/profiles/default/global/tech-stack.md | sed "s|$AOS/||" | cut -c1-200
+  echo "# control: the same files do answer a search (AskUserQuestion occurs, the standards path occurs):"
+  echo "hits for 'AskUserQuestion': $(grep -c 'AskUserQuestion' "$AOS"/commands/agent-os/*.md | awk -F: '{s+=$2} END {print s+0}')   hits for 'agent-os/standards': $(grep -c 'agent-os/standards' "$AOS"/commands/agent-os/*.md | awk -F: '{s+=$2} END {print s+0}')"
+  echo "# the default profile file is the stack of an unrelated project (React 18, Tailwind, Express, PostgreSQL); the installer does not copy it (see PF-T13-3):"
+  cat "$AOS/profiles/default/global/tech-stack.md"
+} 2>&1 | fin > "$EV/installed-files-word-search.txt"
+sed -e "s|$COMMS_TMP|\$COMMS_TMP|g" -e "s|$SP|\$SP|g" -e "s|$REALHOME|\$REALHOME|g" "$COMMS_TMP/impl-t13-ev4.sh" > "$EV/evidence-part4.sh.txt"
+cat -n "$EV/installed-files-word-search.txt" | cut -c1-200

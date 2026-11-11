@@ -1,0 +1,25 @@
+# ./mvnw clean verify on the full level-3 sandbox (sbx-1 HEAD a20c4ad, tree 309786e0)
+# started 14:25:17Z UTC, exit code 0, wall clock 32 s. Raw output kept in $SP (s10-t10-impl-raw/verify-sbx1.txt).
+# JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$TMPDIR (HR1); shared ~/.m2 cache and Docker used (J10).
+total: [INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+total: [INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.048 s]
+[INFO] frontend ........................................... SUCCESS [  7.739 s]
+[INFO] bookstore .......................................... SUCCESS [ 18.604 s]
+[INFO] distributor ........................................ SUCCESS [  4.524 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  31.077 s
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.165 s -- in nl.openvalue.bookstore.ArchitectureTest
+# test classes of the cancel order exercise (Surefire lines of the run):
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.488 s -- in nl.openvalue.bookstore.OrderIntegrationTest
+Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in nl.openvalue.bookstore.domaininteraction.OrderDomainMapperTest
+Tests run: 48, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in nl.openvalue.bookstore.domaininteraction.OrderFlowTest
+Tests run: 61, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.212 s -- in nl.openvalue.bookstore.command.OrderCommandsTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.066 s -- in nl.openvalue.bookstore.query.OrderQueriesTest
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.309 s -- in nl.openvalue.bookstore.data.OrderDataServiceImplTest
+Tests run: 107, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in nl.openvalue.bookstore.domain.StockItemTest
+Tests run: 36, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in nl.openvalue.bookstore.domain.OrderTest
+# ArchitectureTest Surefire XML:
+testsuite name=nl.openvalue.bookstore.ArchitectureTest tests=22 failures=0 errors=0 skipped=0
+# cancel tests in the Surefire XML of the bookstore module (test method names containing 'ancel'):
+      41

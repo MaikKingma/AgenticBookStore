@@ -1,0 +1,27 @@
+# ./mvnw -B clean verify in the T8 level-3 sandbox (level-0-start plus level-1, level-2 and every level-3 row
+# staged so far: T7 config rows and the three T8 hook rows). JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch dir>, Docker running.
+# rc=0 seconds=32
+
+$ grep -E "Tests run:.*Skipped: [0-9]+$" verify-output   (module totals: the lines without a test class name)
+[INFO] Tests run: 1380, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+
+$ grep -c -E "Tests run:.*(Failures: [1-9]|Errors: [1-9])" verify-output   (0 means no failing or erroring class)
+0
+
+$ ArchitectureTest line
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.155 s -- in nl.openvalue.bookstore.ArchitectureTest
+
+$ tail of the reactor summary
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] 
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.050 s]
+[INFO] frontend ........................................... SUCCESS [  8.007 s]
+[INFO] bookstore .......................................... SUCCESS [ 18.823 s]
+[INFO] distributor ........................................ SUCCESS [  4.436 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  31.503 s
+[INFO] Finished at: 2026-11-10T12:40:02+01:00
+[INFO] ------------------------------------------------------------------------

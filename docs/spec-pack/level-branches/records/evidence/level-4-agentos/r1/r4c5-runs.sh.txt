@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Rework r1, RA2 and RA3: run the R4C-5 row and the R4C-3 zero-token equivalent verbatim, on clones of both branches.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+fin() { ascii | mask; }
+SBX5=$SP/s10-t13-impl-sbx-5
+SHIM=$SP/s10-t13-impl-shim
+REM=$SP/s10-t13-impl-remote-r1.git
+rm -rf "$REM" "$SP"/s10-t13-impl-r1-run-*
+git init --quiet --bare "$REM"
+git -C "$SBX5" push --quiet "$REM" HEAD:refs/heads/start/level-4-agentos
+git -C "$SBX5" push --quiet "$REM" HEAD~1:refs/heads/solution/level-3
+run_inst() { # run_inst <dir> <answer-or-empty> [installer args]: output and exit status of the installer
+  local d=$1 ans=$2; shift 2
+  if [ -n "$ans" ]; then (cd "$d" && printf '%s' "$ans" | PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" "$@" > "$RAW/r1-inst.txt" 2>&1); else (cd "$d" && PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" "$@" > "$RAW/r1-inst.txt" 2>&1 < /dev/null); fi
+  local rc=$?
+  ascii < "$RAW/r1-inst.txt"
+  echo "exit status: $rc"
+}
+snap() { (cd "$HOMEISO" && find . | LC_ALL=C sort) > "$RAW/r1-home-$1.txt"; (cd "$XDGROOT" && find . | LC_ALL=C sort) > "$RAW/r1-xdg-$1.txt"; (cd "$TMPD" && find . -name 'tmp.*' | LC_ALL=C sort) > "$RAW/r1-tmp-$1.txt"; }
+{
+  echo "# R4C-5 and R4C-3 run verbatim (rework round 1, RA2 and RA3). Remote: a local bare repository with the branches solution/level-3 and start/level-4-agentos built from the r1 level-4 commit."
+  echo "# Installer: \$HOME/agent-os/scripts/project-install.sh with HOME, XDG_* and TMPDIR under \$SP and a mktemp shim first on PATH (the shim only gives the script's bare mktemp a template under \$TMPDIR)."
+  echo "# ======== Run A: the row's folder, a clone of solution/level-3 (no agent-os/ folder yet)"
+  A=$SP/s10-t13-impl-r1-run-a
+  git clone --quiet --branch solution/level-3 "$REM" "$A"
+  echo "git rev-parse HEAD (START): $(git -C "$A" rev-parse HEAD)   branch $(git -C "$A" rev-parse --abbrev-ref HEAD)   agent-os folder present: $( [ -e "$A/agent-os" ] && echo yes || echo no )"
+  rm -f "$TMPD/mktemp-calls.log"; snap before
+  run_inst "$A" ""
+  snap after
+  echo "git status --porcelain:"; git -C "$A" status --porcelain | sed 's/^/  /'
+  echo "agent-os/standards after the run: $(ls -A "$A/agent-os/standards" | tr '\n' ' ')   index.yml bytes: $(wc -c < "$A/agent-os/standards/index.yml" | tr -d ' ')"
+  echo "mktemp calls of the script (shim log):"; sed 's/^/  /' "$TMPD/mktemp-calls.log"
+  echo "temp file left behind in \$TMPDIR: $(wc -l < "$RAW/r1-tmp-after.txt" | tr -d ' ') (the script removed it); HOME and XDG diff lines: $(diff "$RAW/r1-home-before.txt" "$RAW/r1-home-after.txt" | wc -l | tr -d ' ') $(diff "$RAW/r1-xdg-before.txt" "$RAW/r1-xdg-after.txt" | wc -l | tr -d ' ')"
+  echo
+  echo "# ======== Run B: a clone of start/level-4-agentos (agent-os/standards/ already exists), answer n"
+  B=$SP/s10-t13-impl-r1-run-b
+  git clone --quiet --branch start/level-4-agentos "$REM" "$B"
+  echo "START=$(git -C "$B" rev-parse HEAD)"
+  run_inst "$B" n
+  echo "git status --porcelain entries: $(git -C "$B" status --porcelain | wc -l | tr -d ' ')"
+  echo
+  echo "# ======== Run B2: the same clone, answer y"
+  run_inst "$B" y
+  echo "git status --porcelain:"; git -C "$B" status --porcelain | sed 's/^/  /'; echo "  (entries: $(git -C "$B" status --porcelain | wc -l | tr -d ' '))"
+  echo "agent-os/standards files after the run: $(find "$B/agent-os/standards" -type f | wc -l | tr -d ' ') (same as START: $(git -C "$B" ls-files agent-os/standards | wc -l | tr -d ' '))"
+  echo
+  echo "# ======== R4C-3 zero-token equivalent on the clone of the start branch: project-install.sh --commands-only"
+  C=$SP/s10-t13-impl-r1-run-c
+  git clone --quiet --branch start/level-4-agentos "$REM" "$C"
+  cp "$C/agent-os/standards/index.yml" "$RAW/r1-index-before.yml"
+  run_inst "$C" "" --commands-only | grep -E 'Updated index|Commands only|Skipping|Installed|exit status'
+  echo "git status --porcelain entries: $(git -C "$C" status --porcelain | wc -l | tr -d ' ')   git diff --stat entries: $(git -C "$C" diff --stat | wc -l | tr -d ' ')"
+  cmp -s "$RAW/r1-index-before.yml" "$C/agent-os/standards/index.yml" && echo "index.yml is byte-equal to the committed file"
+  echo "committed index.yml ends with: $(tail -c 2 "$C/agent-os/standards/index.yml" | od -An -c | tr -s ' ')  (a text line, then a blank line: the builder's own ending)"
+  echo "# control: the r0 index.yml (no trailing blank line, from the earlier build) is changed by the same builder:"
+  R0=$SP/s10-t13-impl-r1-run-r0
+  git -C "$SP/s10-t13-impl-sbx-2" log -1 --format='r0 build commit %h'
+  rm -rf "$R0"; git clone --quiet "$SP/s10-t13-impl-sbx-2" "$R0"
+  (cd "$R0" && PATH="$SHIM:$PATH" "$HOME/agent-os/scripts/project-install.sh" --commands-only >/dev/null 2>&1)
+  echo "r0 clone: git status --porcelain:"; git -C "$R0" status --porcelain | sed 's/^/  /'; git -C "$R0" diff --stat | sed 's/^/  /'
+} 2>&1 | fin > "$EV/r4c5-and-r4c3-runs.txt"
+cat -n "$EV/r4c5-and-r4c3-runs.txt" | cut -c1-200

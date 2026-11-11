@@ -4,9 +4,7 @@ description: Mutation-probe traps for Spring Data JPA adapters on Hibernate 7 (j
 metadata:
   type: feedback
 ---
-
 Rule: a "join instead of exists" probe is only killed by a test whose SQL row limit cuts into duplicated rows.
-
 **Why:** Hibernate 7 removes duplicate root entities from `select b ... join b.authors a` results in memory. An exact-list "each book once" test at limit 100 stays green. The bug is real all the same: `fetch first ? rows only` counts joined rows, so a limited search returns fewer books.
 **How to apply:**
 - Witness: one book with two matching child rows plus two more matching books, `limit 2`, assert the exact two titles. An unconditional `left join` multiplies rows for every search, so the free-text path dies on the same witness.
@@ -24,9 +22,7 @@ Rule: a "join instead of exists" probe is only killed by a test whose SQL row li
 - `ddl-auto: validate` (active in the bookstore `@DataJpaTest` slices too) checks column names and types but not varchar length: `@Column(length = 64)` -> `255` survives every slice, while a renamed column fails with `Schema validation: missing column`. Only the migration plus an `information_schema` test and a 65-non-space-char insert pin the length. Run the rename as a control to prove validate is on.
 - Update-only per-field loss when insert and update share `copyInto`: drop one setter from `copyInto` and re-add it in `toNewEntity` (insert still writes it, update keeps the old value). Needs an A -> B update test whose every field differs.
 - Hand-written corrupt rows (residual claims): a temporary `@DataJpaTest` class in the scratchpad, installed, run with `clean`, then `rm`'d by one script that ends with `ls` showing it gone, turns "throws NPE on read" into evidence.
-
 Rule: probe the listener phase, the delegate propagation and the catch placement end to end, and expect two IT-equivalent mutants that only an annotation pin in the unit test kills.
-
 **Why:** the flow carries a class-level `@Transactional`, so some delegate mutants behave exactly like the real code in every IT.
 **How to apply:**
 - One IT class plus the two unit classes with `clean` takes about 9 s per probe, so the generator-plus-runner pair from [[env-switch-mutant-runner]] fits (23 probes in about 7 minutes).

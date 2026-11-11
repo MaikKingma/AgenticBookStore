@@ -1,0 +1,73 @@
+# test-staging: bash 3.2.57(1)-release, git version 2.50.1 (Apple Git-155)
+not ok 1 - simulate: built-in strip list equals spec 09 step 2
+    # 12,13d11
+    # < guide/
+    # < .github/workflows/guide.yml
+    # ASSERTION FAILED: built-in list differs from spec 09
+not ok 2 - simulate: strips every listed path, keeps the rest, one tree
+    # ASSERTION FAILED: path should not exist: $SP/s10-t15-impl-tmp/test-staging.5ciDoq/work dir/case-2/out/guide
+ok 3 - simulate: single commit, reproducible, modes kept
+not ok 4 - simulate: uses --list-paths of the ref when it answers
+    # ASSERTION FAILED: path should not exist: $SP/s10-t15-impl-tmp/test-staging.5ciDoq/work dir/case-4/out/guide
+not ok 5 - simulate: falls back to the built-in list when --list-paths fails
+    # ASSERTION FAILED: path should not exist: $SP/s10-t15-impl-tmp/test-staging.5ciDoq/work dir/case-5/out/guide
+ok 6 - simulate: falls back to the built-in list when the publish script is absent
+ok 7 - simulate: refuses unsafe or empty --list-paths output
+ok 8 - simulate: refuses a non-empty out-dir
+ok 9 - simulate: fills an existing empty out-dir
+ok 10 - simulate: refuses a non-repo source, a file or link as out-dir, a missing parent and missing arguments
+ok 11 - simulate: refuses an out-dir inside the source repo
+ok 12 - simulate: refuses an unknown ref
+ok 13 - simulate: source repo refs, worktrees, tags and status unchanged
+ok 14 - apply: add decodes dot- and CLAUDE.staged.md, leaves changes uncommitted
+ok 15 - apply: replace overwrites an existing target
+ok 16 - apply: modes 644 and 755 come from the manifest
+ok 17 - apply: --group config and --group exercise filter rows
+ok 18 - apply: --group with no rows in the step applies nothing
+ok 19 - apply: add refuses an existing target
+ok 20 - apply: replace refuses a missing target
+ok 21 - apply: refuses staged paths that break the encoding rule
+ok 22 - apply: refuses absolute, '..', '.git' and empty-component targets
+ok 23 - apply: refuses a file as target folder, a folder or link as replace or patch target
+ok 24 - apply: refuses malformed manifest rows
+ok 25 - apply: refuses staged files no manifest row names
+ok 26 - apply: refuses to write through a symbolic link
+ok 27 - apply: refuses an unknown step, a non-root target and a missing manifest
+ok 28 - apply: patch on its base blob
+ok 29 - apply: patch merges 3-way when the target moved on
+ok 30 - apply: patch refuses when the target differs and the base blob is missing
+ok 31 - apply: patch refuses an unclean 3-way merge, target unchanged (atomic)
+ok 32 - apply: patch refuses a patch of another path
+ok 33 - apply: patch refuses a base sha that does not match the patch index line, target unchanged
+ok 34 - apply: patch refuses no index line, a patch that misses its own base and a non-patch
+ok 35 - build: chain of every step, one commit per step, fixed messages
+ok 36 - build: refuses a target with uncommitted changes
+ok 37 - build: refuses a step whose target is git-ignored
+ok 38 - build: stops at a failing step and names its manifest line
+ok 39 - build: refuses an unknown step and bad arguments
+ok 40 - build: refuses a repo without a commit, a plain folder and a subfolder
+ok 41 - cut: dry run by default, prints every command, changes nothing
+ok 42 - cut: --execute creates exactly the six local branches; no push, tags unchanged
+ok 43 - cut: refuses when any target branch exists (dry run and --execute)
+ok 44 - cut: a failing step creates no branch
+ok 45 - cut: refuses an unknown ref, unknown options and a missing step
+ok 46 - eol: S/.gitattributes gives LF for *.sh and dot-githooks/*, CRLF for *.ps1 (fresh clone, od -c)
+ok 47 - eol: a clone of a built level keeps LF, CRLF and mode 755
+ok 48 - scripts: mode 755, LF, bash shebang, strict mode
+ok 49 - temp folders: every one uses a template under ${TMPDIR:-/tmp} (scripts, test, README)
+ok 50 - temp folders: apply, simulate and cut leave nothing behind in TMPDIR
+ok 51 - README: the cut procedure names only local operations; pushes are a separate section
+ok 52 - cut: a failing last level-4 track step creates no branch
+ok 53 - apply: a write that fails after a patch row rolls back files, folders, the index and the backup
+ok 54 - apply: an add, a folder or a mode that cannot be written rolls back; a failed backup writes nothing
+ok 55 - apply: a restore step that fails is named, the rest of the rollback still runs
+ok 56 - cut: any internal git command that fails creates no branch
+ok 57 - cleanup: a removal that fails is reported; the rest of the cleanup still runs
+ok 58 - usage: apply, simulate and cut exit 2 on -h, unknown options, missing values and extra arguments
+1..58
+FAILED 4 of 58:
+  - simulate: built-in strip list equals spec 09 step 2
+  - simulate: strips every listed path, keeps the rest, one tree
+  - simulate: uses --list-paths of the ref when it answers
+  - simulate: falls back to the built-in list when --list-paths fails
+exit: 1

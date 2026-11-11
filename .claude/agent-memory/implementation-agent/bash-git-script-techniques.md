@@ -4,7 +4,6 @@ description: Techniques and traps for bash scripts that move git refs (publish s
 metadata:
   type: reference
 ---
-
 See also the senior researcher's note `.claude/agent-memory/senior-research-agent/shell-script-git-research-techniques.md`
 (three-shell matrix, hermetic env vars, forced identity failure).
 
@@ -22,12 +21,12 @@ See also the senior researcher's note `.claude/agent-memory/senior-research-agen
 - **Atomic witness:** an `update` hook in the bare remote that rejects the tag; **lease witness:** a PATH shim `git` that moves
   the remote main when it sees `push`, and logs the push argv for exact flag assertions.
 - **Precedence between two valid candidates needs a case where both exist and differ** (remote vs local baseline: a local
-  `commit-tree` of the same tree with another date), in BOTH date orders, with a sanity check that the dates really are in that
-  order, compared against the fixed expected id, not a live ref the mutant may have moved.
-- **Mutants on copies:** `perl -0pe` (same on BSD and GNU) into a scratch copy, run the test with its own TMPDIR. A mutant can
-  abort the test in setup (`set -e`); an EXIT trap printing "aborted" keeps that legible. A negative control must not abort
-  either: re-adding a file with identical content leaves nothing to commit, so give it different content.
-- **Look-alikes for a prefix mutant (`"$p*"` pathspec):** names that extend the whole listed path (`guide.yml.disabled`);
-  `guide.yaml` is not a prefix extension of `guide.yml` and survives.
-- **shellcheck SC2016** fires on `printf '%s' '[ "$1" = x ]'`; write hook files with a quoted heredoc. `ci.yml` already has an
-  SC2016 info on the pre-pull step: compare against the base file before claiming a new actionlint finding.
+  `commit-tree` of the same tree with another date), in BOTH date orders (a "the older/newer one wins" mutant passes whichever
+  order you picked), with a sanity check that the dates really are in that order, compared against the fixed expected id, not a
+  live ref the mutant may have moved.
+- **Mutants on copies:** `perl -0pe` (multi-line, same on BSD and GNU) into a scratch copy, run the test with its own TMPDIR. A
+  mutant can abort the test in setup (`set -e`); an EXIT trap printing "aborted" keeps that legible. A negative control must not
+  abort either: re-adding a file with identical content leaves nothing to commit, so give it different content.
+- **Look-alikes for a prefix mutant (`"$p*"` pathspec):** names extending the whole listed path (`guide.yml.disabled`);
+  `guide.yaml` is no prefix extension and survives. **shellcheck SC2016** fires on `printf '%s' '[ "$1" = x ]'`: write hook files
+  with a quoted heredoc; `ci.yml` already has an SC2016 info: compare against the base before claiming a new finding.

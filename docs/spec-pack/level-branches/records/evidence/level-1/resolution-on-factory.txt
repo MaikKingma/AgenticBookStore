@@ -1,0 +1,311 @@
+factory: ae2a5f26ef752f68a49d6d44ce2e860ffe6a57cc
+### ls-tree mvnw mvnw.cmd
+mvnw
+mvnw.cmd
+
+### factory README.md names the commands? (spec 09 writes the developer README)
+
+### factory CLAUDE.md names mvnw (factory-only file, stripped from main)
+CLAUDE.md:8:`./mvnw clean verify` from the repo root. It must be green before any spec is marked done. Budget: 60 seconds.
+
+### application.yml comment on spring-boot:run
+bookstore/src/main/resources/application.yml:6:      # spring-boot:run starts compose.yaml and derives the datasource from the running container.
+
+### distributor application.yml header
+distributor/src/main/resources/application.yml:17:  port: 8090
+
+### pom modules
+pom.xml:18:    <module>frontend</module>
+pom.xml:19:    <module>bookstore</module>
+pom.xml:20:    <module>distributor</module>
+
+### java version and parent
+pom.xml:7:    <artifactId>spring-boot-starter-parent</artifactId>
+pom.xml:8:    <version>4.1.2</version>
+pom.xml:24:    <java.version>25</java.version>
+
+### bookstore server.port
+bookstore/src/main/resources/application.yml:37:  port: 8080
+
+### distributor server.port
+distributor/src/main/resources/application.yml:17:  port: 8090
+
+### shop base path
+frontend/vite.config.ts:5:// The storefront is served by the bookstore under /shop/, so every built asset URL starts with that prefix.
+frontend/vite.config.ts:10:  base: '/shop/',
+
+### spring-boot-maven-plugin
+bookstore/pom.xml:134:        <artifactId>spring-boot-maven-plugin</artifactId>
+distributor/pom.xml:43:        <artifactId>spring-boot-maven-plugin</artifactId>
+
+### docker testcontainers
+bookstore/pom.xml:84:      <artifactId>spring-boot-testcontainers</artifactId>
+bookstore/pom.xml:88:      <groupId>org.testcontainers</groupId>
+bookstore/pom.xml:89:      <artifactId>testcontainers-postgresql</artifactId>
+
+### Money scale and rounding
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Money.java:8: * An exact amount of money in euro. The amount always has scale 2, rounded half even, so equal amounts are equal
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Money.java:27:        amount = amount.setScale(SCALE, RoundingMode.HALF_EVEN);
+
+### Money double or float
+
+### ArchitectureTest domain java.. rule
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:31:    // org.springframework.data.domain never match.
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:97:    // Rule 4: domain depends on java.. only.
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:101:            .should().onlyDependOnClassesThat().resideInAnyPackage("java..", DOMAIN)
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:108:            .should().dependOnClassesThat().resideInAnyPackage("jakarta.persistence..", "org.springframework.data..")
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:111:    // Rule 6: RestClient and the rest of org.springframework.web.client only in acl.
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:115:            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.web.client..")
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:129:            .should().dependOnClassesThat().resideInAnyPackage("org.springframework.ai..")
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:136:            .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:137:            .should().resideInAnyPackage(COMMAND, QUERY, ASSISTANT)
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:147:                    .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:153:                    .that().areDeclaredInClassesThat().resideInAnyPackage(DOMAIN, DOMAININTERACTION, COMMAND, QUERY)
+
+### ArchitectureTest rule names
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:51:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:60:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:67:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:72:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:77:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:82:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:87:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:92:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:98:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:105:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:112:    @ArchTest
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:119:    @ArchTest
+
+### lombok mapstruct in poms
+
+### lombok mapstruct in java
+
+### flyway locations and ddl-auto
+bookstore/src/main/resources/application.yml:12:      ddl-auto: validate
+bookstore/src/main/resources/application.yml:14:  flyway:
+
+### numeric(10,2)
+bookstore/src/main/resources/db/migration/V1__create_catalogue.sql:8:    price_amount     numeric(10,2) not null,
+bookstore/src/main/resources/db/migration/V3__create_orders.sql:21:    unit_price_amount   numeric(10,2) not null,
+
+### varchar(3)
+bookstore/src/main/resources/db/migration/V1__create_catalogue.sql:9:    price_currency   varchar(3)    not null,
+bookstore/src/main/resources/db/migration/V3__create_orders.sql:22:    unit_price_currency varchar(3)    not null,
+
+### migration files on factory (highest is V4, so the next one is V5)
+bookstore/src/main/resources/db/migration/V0__baseline.sql
+bookstore/src/main/resources/db/migration/V1__create_catalogue.sql
+bookstore/src/main/resources/db/migration/V2__create_inventory.sql
+bookstore/src/main/resources/db/migration/V3__create_orders.sql
+bookstore/src/main/resources/db/migration/V4__add_pending_restock.sql
+
+### seed folder and seed file on factory (FF-T2-a: arrives with spec 09), empty output = absent
+(end)
+
+### docs/architecture.md on factory (FF-T2-a: arrives with spec 09), empty output = absent
+(end)
+
+### architecture standard on factory (the pack source of docs/architecture.md)
+docs/spec-pack/product/architecture-standard.md
+
+### WebMvcTest
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/BookCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/InventoryCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/BookQueriesTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/InventoryQueriesTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java
+
+### MockitoBean
+bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestBase.java
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/BookCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/InventoryCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/command/OrderCommandsTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/BookQueriesTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/InventoryQueriesTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/query/OrderQueriesTest.java
+
+### DataJpaTest
+bookstore/src/test/java/nl/openvalue/bookstore/data/BookDataServiceImplTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/data/OrderDataServiceImplTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/data/StockItemDataServiceImplTest.java
+
+### Import PostgresTestConfig
+
+### MockRestServiceServer
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+bookstore/src/test/resources/contracts/distributor/README.md
+
+### ScriptedChatModel use
+bookstore/src/test/java/nl/openvalue/bookstore/AssistantIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantCommandsLengthTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/AssistantConfigTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/ScriptedChatModel.java
+bookstore/src/test/java/nl/openvalue/bookstore/assistant/ScriptedChatModelTest.java
+
+### IntegrationTest classes
+bookstore/src/test/java/nl/openvalue/bookstore/AssistantIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/AssistantModeIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/CatalogueIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/DatabaseCleanerIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/DistributorImportIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/HealthIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestBase.java
+bookstore/src/test/java/nl/openvalue/bookstore/IntegrationTestBaseHooksTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/InventoryIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/OrderIntegrationTest.java
+bookstore/src/test/java/nl/openvalue/bookstore/RestockProcessIntegrationTest.java
+
+### example test name
+
+### embedded database
+
+### DataServiceImpl classes
+bookstore/src/main/java/nl/openvalue/bookstore/data/BookDataServiceImpl.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/OrderDataServiceImpl.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/StockItemDataServiceImpl.java
+
+### JPA entities
+bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPA.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/OrderLineJPA.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/StockItemJPA.java
+
+### Entity annotation outside data
+bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPA.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPA.java
+bookstore/src/main/java/nl/openvalue/bookstore/data/StockItemJPA.java
+
+### DataService ports
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/BookDataService.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDataService.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/StockItemDataService.java
+
+### ArchitectureTest naming data
+bookstore/src/test/java/nl/openvalue/bookstore/ArchitectureTest.java:177:            "DataServiceImpl", "JPA", "JPAMapper", "Repository");
+
+### Book private constructor
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java:29:    private Book(BookId id, Isbn isbn, Title title, List<AuthorName> authors, Genre genre, Money price,
+
+### Book static factories
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java:45:    public static Book addToCatalogue(Isbn isbn, Title title, List<AuthorName> authors, Genre genre, Money price,
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java:52:    public static Book restore(BookId id, Isbn isbn, Title title, List<AuthorName> authors, Genre genre,
+
+### setters in domain
+
+### domain exceptions
+bookstore/src/main/java/nl/openvalue/bookstore/domain/AuthorCountOutOfRangeException.java:4:public class AuthorCountOutOfRangeException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/BookDiscontinuedException.java:4:public class BookDiscontinuedException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/DuplicateOrderLineException.java:4:public class DuplicateOrderLineException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientReservedStockException.java:4:public class InsufficientReservedStockException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InsufficientStockException.java:4:public class InsufficientStockException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidAuthorNameException.java:4:public class InvalidAuthorNameException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidEmailAddressException.java:4:public class InvalidEmailAddressException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidIsbnException.java:4:public class InvalidIsbnException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidMoneyException.java:4:public class InvalidMoneyException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidPendingRestockException.java:7:public class InvalidPendingRestockException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidQuantityException.java:4:public class InvalidQuantityException extends RuntimeException {
+bookstore/src/main/java/nl/openvalue/bookstore/domain/InvalidStocktakeReasonException.java:4:public class InvalidStocktakeReasonException extends RuntimeException {
+
+### value object records with compact constructor
+
+### DistributorAppService users
+bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/CatalogueFlow.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/DistributorAppService.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/InventoryFlow.java
+
+### restClient only in acl
+bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java
+
+### BookTest imports
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:3:import static org.assertj.core.api.Assertions.assertThat;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:4:import static org.assertj.core.api.Assertions.assertThatCode;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:5:import static org.assertj.core.api.Assertions.assertThatThrownBy;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:7:import java.time.Clock;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:8:import java.time.Instant;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:9:import java.time.ZoneOffset;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:10:import java.util.ArrayList;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:11:import java.util.List;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:12:import java.util.UUID;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:13:import java.util.stream.IntStream;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:14:import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java:15:import org.junit.jupiter.api.Test;
+
+### gitignore CLAUDE.local.md
+.gitignore:29:CLAUDE.local.md
+
+### conventional commit tokens
+
+### ls-tree docs
+docs
+
+### ls-tree docs/spec-pack/product
+docs/spec-pack/product
+
+### conventional commit prefixes in factory history (last 60 subjects, prefix counts)
+  31 docs
+   7 chore
+   5 feat
+   4 fix
+   2 test
+   1 Merge pull request #91 from MaikKingma/sdd/07-restock-process/spec
+   1 Merge pull request #66 from MaikKingma/sdd/12-storefront/spec
+   1 Merge pull request #131 from MaikKingma/sdd/fix-12-genre-labels-footer/spec
+   1 Merge pull request #111 from MaikKingma/sdd/08-bookstore-assistant/spec
+   1 Merge pull request #104 from MaikKingma/sdd/fix-12-storefront-review/spec
+   1 Merge origin/factory into sdd/fix-12-storefront-review/spec before qa-final
+   1 Merge origin/factory into sdd/fix-12-genre-labels-footer/spec
+   1 Merge origin/factory (spec 12 storefront) into sdd/07-restock-process/spec
+   1 Merge origin/factory (spec 07 merged) into sdd/08-bookstore-assistant/spec
+   1 Merge origin/factory (fix-12 storefront review) into sdd/07-restock-process/spec
+   1 Merge origin/factory (f5a0e17) into sdd/08-bookstore-assistant/spec before the final sweep
+
+### packages of the bookstore root
+bookstore/src/main/java/nl/openvalue/bookstore/acl
+bookstore/src/main/java/nl/openvalue/bookstore/assistant
+bookstore/src/main/java/nl/openvalue/bookstore/command
+bookstore/src/main/java/nl/openvalue/bookstore/data
+bookstore/src/main/java/nl/openvalue/bookstore/domain
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction
+bookstore/src/main/java/nl/openvalue/bookstore/process
+bookstore/src/main/java/nl/openvalue/bookstore/query
+
+### Added in rework round 1 (rows C24, C25 and the C19 and T2 extensions), same sha ae2a5f2
+### git grep -n -E "^  postgres:|image:" ae2a5f2 -- bookstore/compose.yaml
+ae2a5f2:bookstore/compose.yaml:2:  postgres:
+ae2a5f2:bookstore/compose.yaml:3:    image: 'postgres:18.6'
+
+### git grep -n -E "\"react(-dom)?\":" ae2a5f2 -- frontend/package.json
+ae2a5f2:frontend/package.json:13:    "react": "19.3.1",
+ae2a5f2:frontend/package.json:14:    "react-dom": "19.3.1"
+
+### git grep -n -E "react|createRoot" ae2a5f2 -- frontend/src/main.tsx
+ae2a5f2:frontend/src/main.tsx:1:import { StrictMode } from 'react'
+ae2a5f2:frontend/src/main.tsx:2:import { createRoot } from 'react-dom/client'
+ae2a5f2:frontend/src/main.tsx:8:createRoot(document.getElementById('root')!).render(
+
+### git grep -n -E "(class|record|interface) [A-Za-z]*Mapper|record (Book|Order|StockItem)DTO" ae2a5f2 -- bookstore/src/main/java
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPAMapper.java:6:final class BookJPAMapper {
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/data/OrderJPAMapper.java:11:final class OrderJPAMapper {
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/data/StockItemJPAMapper.java:10:final class StockItemJPAMapper {
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/BookDTO.java:13:public record BookDTO(UUID id, String isbn, String title, List<String> authors, String genre,
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/BookDomainMapper.java:14:public final class BookDomainMapper {
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDTO.java:14:public record OrderDTO(UUID id, String customerEmail, String status, Instant placedAt, Instant shippedAt,
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java:14:public final class OrderDomainMapper {
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/StockItemDTO.java:12:public record StockItemDTO(UUID bookId, int onHand, int reserved, int reorderLevel, int reorderQuantity,
+ae2a5f2:bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/StockItemDomainMapper.java:12:public final class StockItemDomainMapper {
+
+### Test next to the production class, same package (git ls-tree on ae2a5f2, names only)
+bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java
+bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java
+bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java
+bookstore/src/test/java/nl/openvalue/bookstore/domaininteraction/OrderFlowTest.java
+bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java
+bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+### A main class with no test of its own (the rule is a convention, not an exhaustive claim)
+bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorProperties.java
+(no DistributorPropertiesTest in bookstore/src/test/java)
+

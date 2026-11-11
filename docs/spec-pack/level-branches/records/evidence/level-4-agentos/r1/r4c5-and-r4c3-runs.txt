@@ -1,0 +1,117 @@
+# R4C-5 and R4C-3 run verbatim (rework round 1, RA2 and RA3). Remote: a local bare repository with the branches solution/level-3 and start/level-4-agentos built from the r1 level-4 commit.
+# Installer: $HOME/agent-os/scripts/project-install.sh with HOME, XDG_* and TMPDIR under $SP and a mktemp shim first on PATH (the shim only gives the script's bare mktemp a template under $TMPDIR).
+# ======== Run A: the row's folder, a clone of solution/level-3 (no agent-os/ folder yet)
+git rev-parse HEAD (START): a5b20ddd9c7441a344d26ed5986bae9db07e64f8   branch solution/level-3   agent-os folder present: no
+
+=== Agent OS Project Installation ===
+
+
+Configuration:
+  Profile: default
+  Commands only: false
+
+Creating project structure...
+? Created agent-os/ directory structure
+
+Installing standards...
+? No standards to install (profile is empty)
+
+Updating standards index...
+? Created index.yml (no standards to index)
+
+Installing commands...
+? Installed 5 commands to .claude/commands/agent-os/
+
+? Agent OS installed successfully!
+
+Next steps:
+  1. Run /discover-standards to extract patterns from your codebase
+  2. Run /inject-standards to inject standards into your context
+
+exit status: 0
+git status --porcelain:
+  ?? .claude/commands/agent-os/
+  ?? agent-os/
+agent-os/standards after the run: index.yml    index.yml bytes: 28
+mktemp calls of the script (shim log):
+  mktemp called with 0 argument(s): 
+  mktemp created $TMPDIR/tmp.4b8h6L
+temp file left behind in $TMPDIR: 0 (the script removed it); HOME and XDG diff lines: 0 0
+
+# ======== Run B: a clone of start/level-4-agentos (agent-os/standards/ already exists), answer n
+START=09230182a705a1fe105add4b83b47edc39af3d7d
+
+=== Agent OS Project Installation ===
+
+
+Configuration:
+  Profile: default
+  Commands only: false
+
+??  Existing standards folder detected at: $SP/s10-t13-impl-r1-run-b/agent-os/standards
+
+This will overwrite your existing standards with standards from the 'default' profile.
+
+
+
+Installation cancelled.
+
+To update only commands without touching standards, use:
+  $HOME/agent-os/scripts/project-install.sh --commands-only
+
+exit status: 0
+git status --porcelain entries: 0
+
+# ======== Run B2: the same clone, answer y
+
+=== Agent OS Project Installation ===
+
+
+Configuration:
+  Profile: default
+  Commands only: false
+
+??  Existing standards folder detected at: $SP/s10-t13-impl-r1-run-b/agent-os/standards
+
+This will overwrite your existing standards with standards from the 'default' profile.
+
+
+
+Creating project structure...
+? Created agent-os/ directory structure
+
+Installing standards...
+? No standards to install (profile is empty)
+
+Updating standards index...
+? Updated index.yml (13 entries)
+
+Installing commands...
+? Installed 5 commands to .claude/commands/agent-os/
+
+? Agent OS installed successfully!
+
+Next steps:
+  1. Run /discover-standards to extract patterns from your codebase
+  2. Run /inject-standards to inject standards into your context
+
+exit status: 0
+git status --porcelain:
+  (entries: 0)
+agent-os/standards files after the run: 14 (same as START: 14)
+
+# ======== R4C-3 zero-token equivalent on the clone of the start branch: project-install.sh --commands-only
+  Commands only: true
+Skipping standards (--commands-only)
+? Updated index.yml (13 entries)
+? Installed 5 commands to .claude/commands/agent-os/
+exit status: 0
+git status --porcelain entries: 0   git diff --stat entries: 0
+index.yml is byte-equal to the committed file
+committed index.yml ends with:  \n \n   (a text line, then a blank line: the builder's own ending)
+# control: the r0 index.yml (no trailing blank line, from the earlier build) is changed by the same builder:
+r0 build commit 23308c6
+r0 clone: git status --porcelain:
+   M agent-os/standards/index.yml
+   agent-os/standards/index.yml | 1 +
+   1 file changed, 1 insertion(+)

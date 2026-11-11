@@ -1,0 +1,108 @@
+# Dry run of the rehearsal row setup, the terminal-side Track A commands, the undo and the judging commands, outside Claude, in a fresh clone made as Maik makes it:
+# git clone --branch start/level-4-openspec <repo> <new folder>; <repo> = a local copy ($SBX3-origin) of sandbox 2 that holds a branch with exactly that name; the clone is $SBX3.
+# The 'openspec' on PATH is the global install of run C in user-level-paths.txt (isolated). Scratch data of the add-book-reviews change is never staged.
+== setup: a repository that holds the branch under its exact name, then the clone recipe of the row
+branch: start/level-4-openspec
+<start> = b44e5dbfb04679d5f9715e89508f5c1a0c1443d6
+git status --short (expect empty): []
+git ls-tree -r --name-only HEAD -- openspec .claude/commands/opsx .claude/skills | wc -l: 18 (16 added by the step + 2 level-3 skill files = 18)
+ls .claude/commands .claude/commands/opsx:
+.claude/commands:
+opsx
+ship.md
+
+.claude/commands/opsx:
+apply.md
+archive.md
+explore.md
+propose.md
+sync.md
+update.md
+ls .claude/skills:
+new-use-case
+openspec-apply-change
+openspec-archive-change
+openspec-explore
+openspec-propose
+openspec-sync-specs
+openspec-update-change
+openspec --version: 1.16.0
+
+== participant-side checks (terminal)
+? spec/ordering
+Totals: 1 passed, 0 failed (1 items)
+exit code: 0
+Specs:
+  ordering     requirements 2
+
+== terminal side of guide Track A steps 3 and 7 on scratch data (the slash commands themselves need Claude: not run)
+-- a) openspec new change add-book-reviews
+- Creating change 'add-book-reviews' with schema 'spec-driven'...
+Created change 'add-book-reviews' at openspec/changes/add-book-reviews/
+Schema: spec-driven
+Next: openspec status --change add-book-reviews
+-- b) openspec validate add-book-reviews --strict on the empty change
+Change 'add-book-reviews' has issues
+? [ERROR] file: Change must have at least one delta. No deltas found. Ensure your change has a specs/ directory with capability folders (e.g. specs/http-server/spec.md) containing .md files that use delta headers (## ADDED/MODIFIED/REMOVED/RENAMED Requirements) and that each requirement includes at least one "#### Scenario:" block. If this change intentionally modifies no specs (pure refactor, tooling, docs), set "skip_specs: true" in the change's .openspec.yaml instead. Tip: run "openspec change show <change-id> --json --deltas-only" to inspect parsed deltas.
+Next steps:
+  - Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements
+  - Each requirement MUST include at least one #### Scenario: block
+  - Debug parsed deltas: openspec show add-book-reviews --json --deltas-only
+exit code: 1
+-- c) openspec validate add-book-reviews --strict with a proposal and a delta spec (scratch data)
+Change 'add-book-reviews' is valid
+exit code: 0
+git status --short:
+?? openspec/changes/add-book-reviews/
+-- d) openspec archive add-book-reviews --yes (the CLI command; the skill does the same with mkdir and mv)
+Task status: No tasks
+
+Specs to update:
+  reviews: create
+Applying changes to openspec/specs/reviews/spec.md:
+  + 1 added
+Totals: + 1, ~ 0, - 0, ? 0
+Specs updated successfully.
+Change 'add-book-reviews' archived as '2026-11-10-add-book-reviews'.
+exit code: 0
+git status --short after the archive (what a /ship before the archive leaves uncommitted):
+?? openspec/changes/archive/2026-11-10-add-book-reviews/
+?? openspec/specs/reviews/
+-- e) openspec validate --all --strict --no-interactive after the archive
+? spec/ordering
+? spec/reviews
+  ? [WARNING] overview: Purpose section is still a placeholder rather than a Purpose anyone wrote (the sentence `openspec archive` writes for a new capability, or a `TBD`/`TODO` marker left in its place). Replace it with what this capability is for, editing the main spec directly: a `## Purpose` in a delta is read only when the capability is created, so it cannot replace this one.
+Totals: 1 passed, 1 failed (2 items)
+Details: openspec validate reviews --type spec
+exit code: 1
+-- f) undo: git reset --hard <start> && git clean -fdx
+git status --short (expect empty): []
+ls openspec/specs openspec/changes: .gitkeep ordering  | archive 
+HEAD equals <start>: yes
+
+== FF-T3-a witness: a commit made by a run is seen by the judging commands and undone by the reset
+git log --oneline <start>..HEAD: 076729e feat: stand-in for a /ship commit
+git diff --stat <start> (empty commit, expect empty): []
+after reset: git log --oneline <start>..HEAD: []
+HEAD equals <start>: yes
+== judging command: ./mvnw clean verify in the clone (cold; budget 900 s)
+mvnw exit: 0
+[INFO]  Test Files  23 passed (23)
+[INFO]       Tests  689 passed | 2 expected fail (691)
+[INFO] Tests run: 1428, Failures: 0, Errors: 0, Skipped: 0
+2026-11-10T17:19:47.737+01:00  INFO 48873 --- [distributor] [           main] n.o.d.DistributorApplicationTests        :
+2026-11-10T17:19:47.737+01:00  INFO 48873 --- [distributor] [           main] n.o.d.DistributorApplicationTests        :
+2026-11-10T17:19:48.413+01:00  INFO 48873 --- [distributor] [           main] n.o.d.DistributorApplicationTests        :
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+grep Tests run in the ArchitectureTest report: Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.170 s -- in nl.openvalue.bookstore.ArchitectureTest
+git status --short after verify (target/ is git-ignored, expect empty): []
+git status --short --ignored (the ignored build output is what a plain git restore leaves behind):
+!! bookstore/target/
+!! distributor/target/
+!! frontend/dist/
+!! frontend/node/
+!! frontend/node_modules/
+after git reset --hard <start> && git clean -fdx:
+  bookstore/target present: no
+  git status --short --ignored: []

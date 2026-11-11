@@ -1,0 +1,221 @@
+#!/usr/bin/env python3 -I
+"""Static matching of the Level 3 escape-hatch and secrets commands against the staged permission rules.
+
+Implements ONLY what the Claude Code permissions page (https://code.claude.com/docs/en/permissions.md, fetched
+2026-11-10) states, so the result is consistency evidence, not proof of what Claude Code does:
+  - a Bash rule matches the whole command text, `*` stands for any text including spaces (wildcard section);
+  - a trailing ` *` (space star) as the rule's only wildcard also matches the bare command;
+  - compound commands are split at && || ; | |& & and newline; a deny rule applies when ANY subcommand matches;
+  - wrappers (timeout, time, nice, nohup, stdbuf, command, builtin, noglob) are stripped before matching, and a deny
+    rule matches past any leading VAR=value assignment;
+  - rules are evaluated deny first, then ask, then allow;
+  - Read deny rules also apply to file commands Claude Code recognizes in Bash (cat, head, tail, sed, tee) and to
+    the target of < redirections (warning box in "Read and Edit").
+Usage: impl-t10-deny-match.py <settings.json> [--drop RULE ...]   (--drop removes a rule: negative control)
+"""
+import json
+import re
+import sys
+import fnmatch
+
+settings_path = sys.argv[1]
+drop = []
+args = sys.argv[2:]
+while args:
+    if args[0] == "--drop":
+        drop.append(args[1])
+        args = args[2:]
+    else:
+        raise SystemExit("unknown argument " + args[0])
+
+with open(settings_path, encoding="utf-8") as fh:
+    perms = json.load(fh)["permissions"]
+allow = [r for r in perms["allow"] if r not in drop]
+deny = [r for r in perms["deny"] if r not in drop]
+
+
+def rule_body(rule, tool):
+    m = re.fullmatch(re.escape(tool) + r"\((.*)\)", rule)
+    return m.group(1) if m else None
+
+
+def bash_regex(pattern):
+    if "*" not in pattern:
+        return re.compile("^" + re.escape(pattern) + "$", re.S)
+    if pattern.endswith(" *") and pattern.count("*") == 1:
+        return re.compile("^" + re.escape(pattern[:-2]) + "(?: .*)?$", re.S)
+    return re.compile("^" + ".*".join(re.escape(p) for p in pattern.split("*")) + "$", re.S)
+
+
+def split_compound(cmd):
+    parts, cur, q, i = [], "", None, 0
+    while i < len(cmd):
+        c = cmd[i]
+        if q:
+            cur += c
+            if c == q:
+                q = None
+            elif c == "\\" and q == '"' and i + 1 < len(cmd):
+                i += 1
+                cur += cmd[i]
+        elif c in "'\"":
+            q = c
+            cur += c
+        elif cmd.startswith("&&", i) or cmd.startswith("||", i) or cmd.startswith("|&", i):
+            parts.append(cur)
+            cur = ""
+            i += 1
+        elif c in ";|&\n":
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += c
+        i += 1
+    parts.append(cur)
+    return [p.strip() for p in parts if p.strip()]
+
+
+WRAP = re.compile(r"^(?:timeout\s+\S+\s+|time\s+|nice\s+|nohup\s+|stdbuf\s+(?:-\S+\s+)*|command\s+|builtin\s+|noglob\s+)")
+ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=\S*\s+")
+
+
+def normalise(sub):
+    changed = True
+    while changed:
+        changed = False
+        for rx in (WRAP, ASSIGN):
+            m = rx.match(sub)
+            if m:
+                sub = sub[m.end():]
+                changed = True
+    return sub
+
+
+def bash_rule_hits(rules, command):
+    hits = []
+    for rule in rules:
+        body = rule_body(rule, "Bash")
+        if body is None:
+            continue
+        rx = bash_regex(body)
+        for sub in split_compound(command):
+            if rx.match(normalise(sub)):
+                hits.append(rule)
+                break
+    return hits
+
+
+READ_RULES = [rule_body(r, "Read") for r in deny if rule_body(r, "Read") is not None]
+
+
+def read_rule_hits(path):
+    """Read deny rules of the form ./name or ./name.* anchored at the current directory (gitignore syntax)."""
+    p = path[2:] if path.startswith("./") else path
+    hits = []
+    for body in READ_RULES:
+        b = body[2:] if body.startswith("./") else body
+        if "/" not in p and fnmatch.fnmatchcase(p, b):
+            hits.append("Read(" + body + ")")
+    return hits
+
+
+FILE_CMDS = ("cat", "head", "tail", "sed", "tee")
+READ_ONLY = {"ls", "cat", "echo", "pwd", "head", "tail", "grep", "find", "wc", "which", "diff", "stat", "du", "cd"}
+
+
+def file_command_read_hits(command):
+    hits = []
+    for sub in split_compound(command):
+        words = normalise(sub).split()
+        if words and words[0] in FILE_CMDS:
+            for w in words[1:]:
+                if not w.startswith("-"):
+                    hits += read_rule_hits(w.strip("'\""))
+        for m in re.finditer(r"<\s*(\S+)", sub):
+            hits += read_rule_hits(m.group(1).strip("'\""))
+    return hits
+
+
+def decide(command):
+    d = bash_rule_hits(deny, command)
+    d += file_command_read_hits(command)
+    if d:
+        return "DENY", d
+    subs = split_compound(command)
+    ok = []
+    for sub in subs:
+        s = normalise(sub)
+        m = [r for r in allow if rule_body(r, "Bash") is not None and bash_regex(rule_body(r, "Bash")).match(s)]
+        if not m and s.split() and s.split()[0] in READ_ONLY:
+            m = ["(built-in read-only set)"]
+        ok.append(m)
+    if subs and all(ok):
+        return "ALLOW", sorted({r for m in ok for r in m})
+    return "NO RULE (prompt or classifier)", []
+
+
+# (id, command, expected by the documented semantics, why)
+CASES = [
+    ("E1", 'git commit --no-verify -m "x"', "DENY", "pack scenario; `* --no-verify*` leading wildcard"),
+    ("E2", 'git commit -n -m "x"', "DENY", "pack scenario; `git commit -n *`"),
+    ("E3", "git push", "DENY", "pack scenario; exact rule and bare-command match of `git push *`"),
+    ("E4", "git push origin HEAD:refs/heads/rehearsal", "DENY", "`git push *`"),
+    ("V1", 'git commit -m "x" -n', "ALLOW", "variant: -n after the message; `git commit -n *` is prefix-anchored, `git commit *` allows it"),
+    ("V2", 'git commit -nm "x"', "ALLOW", "variant: -n bundled with -m; no space after -n"),
+    ("V3", 'git commit -m "x" --no-verify', "DENY", "variant: --no-verify last; `* --no-verify*`"),
+    ("V4", 'git commit --no-verify', "DENY", "variant: no message; `* --no-verify*` (star may be empty after the flag)"),
+    ("V5", "git -C . push", "NO RULE (prompt or classifier)", "variant: docs table, `git -C . push origin main` is not stopped by `git push *`"),
+    ("V6", "git -C . push origin HEAD:refs/heads/rehearsal", "NO RULE (prompt or classifier)", "variant: same, with arguments"),
+    ("V7", "git -c push.default=current push", "NO RULE (prompt or classifier)", "variant: docs table row `git -c push.default=current push`"),
+    ("V8", "/usr/bin/git push", "NO RULE (prompt or classifier)", "variant: program by path (docs table shows /usr/bin/curl)"),
+    ("V9", "sh -c 'git push'", "NO RULE (prompt or classifier)", "variant: inside sh -c (docs table shows sh -c 'curl ...')"),
+    ("V10", "git add -A && git push", "DENY", "compound: a deny rule applies when any subcommand matches"),
+    ("V11", "FOO=bar git push", "DENY", "deny matches past a leading assignment"),
+    ("V12", "timeout 30 git push", "DENY", "wrapper stripped before matching"),
+    ("V13", 'cd "/some folder" && git commit --no-verify -m "x"', "DENY", "compound with a quoted path; second subcommand matches"),
+    ("V14", 'git -C . commit -m "test"', "NO RULE (prompt or classifier)", "variant: -C between git and commit; neither the allow rule `git commit *` nor the deny rules match it"),
+    ("A1", "git status", "ALLOW", "allow rule"),
+    ("A2", "git status --short", "ALLOW", "command of ship.md (`!` line)"),
+    ("A3", "git diff --stat HEAD", "ALLOW", "command of ship.md (`!` line)"),
+    ("A4", "./mvnw verify", "ALLOW", "ship.md step 1, skill step 7"),
+    ("A5", "./mvnw -q verify", "ALLOW", "hook command"),
+    ("A6", 'git commit -m "feat: x"', "ALLOW", "ship.md step 3"),
+    ("A7", "git add -A", "ALLOW", "ship.md step 3"),
+    ("A8", 'git add -A && git commit -m "feat: x"', "ALLOW", "chained commit: both subcommands allowed"),
+    ("S1", "cat .env", "DENY", "docs warning box: Read deny applies to file commands recognized in Bash, such as cat"),
+    ("S2", "head .env", "DENY", "same, head"),
+    ("S3", "cat ./.env", "DENY", "same, ./ form"),
+    ("S4", "cat .env.local", "DENY", "`Read(./.env.*)` matches a name in the folder"),
+    ("S5", "tail -n 5 .env", "DENY", "same, tail with a flag"),
+    ("S6", "cat < .env", "DENY", "input redirect target is checked against Read deny rules"),
+    ("S7", "grep -r DUMMY .", "ALLOW", "docs: a command that reads files without naming them is not covered by Read deny rules; grep is in the read-only set, so it runs without a prompt"),
+    ("S8", "python3 -c \"print(open('.env').read())\"", "NO RULE (prompt or classifier)", "docs: arbitrary subprocesses that read files indirectly are not covered"),
+]
+
+READ_CASES = [
+    ("R1", ".env", "DENY", "pack scenario: Read tool on the .env file in the repository root"),
+    ("R2", "./.env", "DENY", "same file, ./ form"),
+    ("R3", ".env.local", "DENY", "`Read(./.env.*)`"),
+    ("R4", ".env.example", "DENY", "`Read(./.env.*)` also covers .env.example (no file of that name is tracked on level-0-start)"),
+    ("R5", "README.md", "NO RULE (prompt or classifier)", "a file the rules do not name"),
+]
+
+bad = 0
+print("rules used: allow %d, deny %d" % (len(allow), len(deny)))
+if drop:
+    print("DROPPED (negative control): " + ", ".join(drop))
+for cid, cmd, expect, why in CASES:
+    got, by = decide(cmd)
+    flag = "ok" if got == expect else "MISMATCH(expected %s)" % expect
+    if got != expect:
+        bad += 1
+    print("%-4s %-8s %s  <- %s  [%s]" % (cid, {"DENY": "DENY", "ALLOW": "ALLOW"}.get(got, "NO-RULE"), cmd, ",".join(by) if by else "-", flag))
+for cid, path, expect, why in READ_CASES:
+    hits = read_rule_hits(path)
+    got = "DENY" if hits else "NO RULE (prompt or classifier)"
+    flag = "ok" if got == expect else "MISMATCH(expected %s)" % expect
+    if got != expect:
+        bad += 1
+    print("%-4s %-8s Read tool: %s  <- %s  [%s]" % (cid, {"DENY": "DENY", "ALLOW": "ALLOW"}.get(got, "NO-RULE"), path, ",".join(hits) if hits else "-", flag))
+print("mismatches against the documented semantics: %d" % bad)
+sys.exit(0 if bad == 0 else 3)

@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+echo "pre-commit: ./mvnw -q verify"
+./mvnw -q verify || { echo "pre-commit: build failed, commit aborted" >&2; exit 1; }

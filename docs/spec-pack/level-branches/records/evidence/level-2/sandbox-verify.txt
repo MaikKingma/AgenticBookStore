@@ -1,0 +1,14 @@
+# ./mvnw clean verify on the level-2 sandbox, HEAD 0c4b31c, started 00:32:03Z ended 00:32:33Z (UTC), exit code 0
+# environment: TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir point into the scratchpad; shared ~/.m2 cache and Docker used (J10); no claude process
+[INFO] Tests run: 1349, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 190, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for agenticbookstore-parent 0.0.1-SNAPSHOT:
+[INFO] agenticbookstore-parent ............................ SUCCESS [  0.041 s]
+[INFO] frontend ........................................... SUCCESS [  8.007 s]
+[INFO] bookstore .......................................... SUCCESS [ 16.013 s]
+[INFO] distributor ........................................ SUCCESS [  4.572 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  28.785 s
+--- per-class lines of interest
+[INFO] Tests run: 131, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.109 s -- in nl.openvalue.bookstore.acl.DistributorAppServiceImplTest
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.146 s -- in nl.openvalue.bookstore.ArchitectureTest

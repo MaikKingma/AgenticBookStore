@@ -1,0 +1,31 @@
+# Level 4 section of rehearsal-checklist.md (CR-3). Script: checklist-literals.py.txt.
+# 1. every pointer heading resolves by grep -F in its record (one line each; 12 rows):
+R4A-1  level-4-openspec.md  grep -F count 1  | R4A-1 The pinned `openspec` program is on the PATH (added he
+R4A-2  level-4-openspec.md  grep -F count 1  | R4A-2 The `/opsx:` commands and the OpenSpec skills are load
+R4A-3  level-4-openspec.md  grep -F count 1  | R4A-3 Rehearsed in time (pack scenario, OpenSpec part)
+RR-S1  level-4-speckit.md   grep -F count 1  | RR-S1 `/speckit-constitution` with the pack input, compared 
+RR-S2  level-4-speckit.md   grep -F count 1  | RR-S2 The skills are invoked explicitly (pack step 1 note, a
+RR-S3  level-4-speckit.md   grep -F count 1  | RR-S3 "Rehearsed in time" for Spec Kit (pack acceptance scen
+RR-S4  level-4-speckit.md   grep -F count 1  | RR-S4 Regenerate the init (optional zero-token check, added 
+R4C-1  level-4-agentos.md   grep -F count 1  | R4C-1 Command names and `/plan-product`
+R4C-2  level-4-agentos.md   grep -F count 1  | R4C-2 `/discover-standards` for architecture, testing and pe
+R4C-3  level-4-agentos.md   grep -F count 1  | R4C-3 `/index-standards`
+R4C-4  level-4-agentos.md   grep -F count 1  | R4C-4 Rehearsed in time (Agent OS), the pack scenario
+R4C-5  level-4-agentos.md   grep -F count 1  | R4C-5 Optional: the pack's install step on a facilitator mac
+pointer rows: 12
+# 2. every backticked literal of the section is found on one line of its record (per-track rows: that track's record):
+literals and headings checked: 181, not found: 0
+# control: one literal broken in memory (git status --short becomes git status --shortX) must be reported
+NOT FOUND in ### R4-B Rehearsed in time, Sp: `git status --short`
+NOT FOUND in ### R4-C Rehearsed in time, Ag: `git status --short`
+literals and headings checked: 181, not found: 5
+# 3. branch names in the section:  3 start/level-4-agentos; 3 start/level-4-openspec; 3 start/level-4-speckit;  step_branch prints: start/level-4-openspec start/level-4-speckit start/level-4-agentos 
+# 4. pack words (spec 10 lines 478 to 481) in the three rows: GIVEN / WHEN / THEN quotes present in each: 4, 3; the pack lines:
+#### Scenario: Rehearsed in time
+- **GIVEN** a fresh clone on the track's start branch
+- **WHEN** a facilitator who has not used the framework before ships Level 4 brief A following `workshop/sdd-framework-guide.md`
+- **THEN** the feature is committed through `/ship` with verify green within 35 minutes (record the time per track)
+# the quoted pack words are substrings of the pack text (whitespace joined): 
+in the pack: True, in the section 4 times: a fresh clone on the track's start branch
+in the pack: True, in the section 3 times: a facilitator who has not used the framework befor
+in the pack: True, in the section 3 times: the feature is committed through `/ship` with veri

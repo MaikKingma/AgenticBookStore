@@ -1,0 +1,70 @@
+tree: 421 tracked files in the level-1 sandbox, HEAD fcff79f
+
+== .claude/rules/domain.md
+paths: ['bookstore/src/main/java/**/domain/**']
+intended: files in the package folder bookstore/src/main/java/nl/openvalue/bookstore/domain/ (43 files)
+matched: 43 files; outside the intended folder: 0; intended but not matched: 0
+  match      bookstore/src/main/java/nl/openvalue/bookstore/domain/AuthorCountOutOfRangeException.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/domain/AuthorName.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/domain/Book.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/domain/UnknownGenreException.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/domain/package-info.java
+
+== .claude/rules/data-and-migrations.md
+paths: ['bookstore/src/main/java/**/data/**', 'bookstore/src/main/resources/db/**']
+intended: files in the data package folder and in bookstore/src/main/resources/db/ (19 files)
+matched: 19 files; outside the intended folder: 0; intended but not matched: 0
+  match      bookstore/src/main/java/nl/openvalue/bookstore/data/BookDataServiceImpl.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPA.java
+  match      bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPAMapper.java
+  match      bookstore/src/main/resources/db/migration/V3__create_orders.sql
+  match      bookstore/src/main/resources/db/migration/V4__add_pending_restock.sql
+
+== .claude/rules/testing.md
+paths: ['**/src/test/**']
+intended: files below any src/test folder (152 files)
+matched: 152 files; outside the intended folder: 0; intended but not matched: 0
+  match      bookstore/src/test/java/nl/openvalue/archfixtures/RootLevelConfig.java
+  match      bookstore/src/test/java/nl/openvalue/archfixtures/acl/DistributorClient.java
+  match      bookstore/src/test/java/nl/openvalue/archfixtures/acl/LeakyAppServiceImpl.java
+  match      distributor/src/test/java/nl/openvalue/distributor/mcp/McpStdioModeTest.java
+  match      frontend/src/test/fetchMock.ts
+
+== disjointness (an edit in one folder loads only that folder's rule)
+  .claude/rules/domain.md and .claude/rules/data-and-migrations.md: 0 common files
+  .claude/rules/domain.md and .claude/rules/testing.md: 0 common files
+  .claude/rules/data-and-migrations.md and .claude/rules/testing.md: 0 common files
+
+== named non-matches (which rules, if any, a path loads)
+  CLAUDE.md: no rule
+  pom.xml: no rule
+  bookstore/pom.xml: no rule
+  bookstore/src/main/resources/application.yml: no rule
+  bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderFlow.java: no rule
+  bookstore/src/main/java/nl/openvalue/bookstore/command/OrderCommands.java: no rule
+  bookstore/src/main/java/nl/openvalue/bookstore/query/BookQueries.java: no rule
+  bookstore/src/main/java/nl/openvalue/bookstore/acl/DistributorAppServiceImpl.java: no rule
+  frontend/src/main.tsx: no rule
+  distributor/src/main/java/nl/openvalue/distributor/DistributorApplication.java: no rule
+  bookstore/src/test/java/nl/openvalue/archfixtures/domain/BookEntity.java: ['testing.md']
+  bookstore/src/test/java/nl/openvalue/archfixtures/data/BookDataServiceImpl.java: ['testing.md']
+  bookstore/src/main/java/nl/openvalue/bookstore/domain/Money.java: ['domain.md']
+  bookstore/src/main/java/nl/openvalue/bookstore/data/BookJPA.java: ['data-and-migrations.md']
+  bookstore/src/main/resources/db/migration/V4__add_pending_restock.sql: ['data-and-migrations.md']
+  bookstore/src/test/java/nl/openvalue/bookstore/domain/BookTest.java: ['testing.md']
+  distributor/src/test/java/nl/openvalue/distributor/api/TitlesApiTest.java: ['testing.md']
+  frontend/src/test/fetchMock.ts: ['testing.md']
+
+== negative controls (each must FAIL the check for its rule)
+  domain.md | widened: whole main tree | bookstore/src/main/java/** -> extra 86, missing 0: check FAILS as it must
+  domain.md | widened: segment prefix domain* | bookstore/src/main/java/**/domain*/** -> extra 24, missing 0: check FAILS as it must
+  domain.md | widened: no main anchor | **/domain/** -> extra 18, missing 0: check FAILS as it must
+  domain.md | narrowed: only Book* | bookstore/src/main/java/nl/openvalue/bookstore/domain/Book* -> extra 0, missing 39: check FAILS as it must
+  data-and-migrations.md | widened: whole main tree | bookstore/src/main/** -> extra 118, missing 0: check FAILS as it must
+  data-and-migrations.md | widened: no main anchor | **/data/** -> extra 5, missing 5: check FAILS as it must
+  data-and-migrations.md | narrowed: db/migration only for one file | bookstore/src/main/resources/db/migration/V1* -> extra 0, missing 18: check FAILS as it must
+  testing.md | widened: any src folder | **/src/** -> extra 237, missing 0: check FAILS as it must
+  testing.md | widened: everything | ** -> extra 269, missing 0: check FAILS as it must
+  testing.md | narrowed: bookstore only | bookstore/src/test/** -> extra 0, missing 18: check FAILS as it must
+
+RESULT: PASS (3 rules matched only their intended folders; all controls failed as expected; A, B and C agree)

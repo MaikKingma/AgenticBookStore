@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Evidence part 2: the checks of the written files, with controls; the scripts themselves as .txt copies with paths masked.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+fin() { ascii | mask; }
+CT=$COMMS_TMP
+# 1. trace table (rebuilt by the generator, so the evidence file is what the checker read)
+python3 -I "$CT/impl-t13-mk-trace.py" "$CT/impl-t13-trace.txt" > /dev/null
+cp "$CT/impl-t13-trace.txt" "$EV/written-files-trace.txt"
+
+# 2. the check, RED (empty trace), GREEN, misspelled-needle control, then the 13 negative controls
+{
+  echo "# check-written-files.py over the files written from the pack (criterion 4). Script: check-written-files.py.txt in this folder."
+  echo "# command: python3 -I check-written-files.py <sandbox-1> <worktree> <trace-file> [--misspell]"
+  echo "# ---- RED (re-run now with an empty trace file, as it first failed before the trace existed): only the summary lines and the first 6 problems are kept."
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$CT/impl-t13-trace-empty.txt" 2>&1 | grep -E '^(PASS|FAIL|trace rows|SUMMARY|allcaps|forbidden)'
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$CT/impl-t13-trace-empty.txt" 2>&1 | grep 'is in no trace row' | head -6
+  echo "# ---- GREEN: the 184-row trace (written-files-trace.txt)."
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$CT/impl-t13-trace.txt" 2>&1
+  echo "# ---- control: the first needle of the first trace row is misspelled in memory; the trace check must fail and name it."
+  python3 -I "$CT/impl-t13-check.py" "$SBX1" "$WT" "$CT/impl-t13-trace.txt" --misspell 2>&1 | grep -E 'needle|SUMMARY'
+} 2>&1 | fin > "$EV/written-files-check.txt"
+{
+  echo "# 13 negative controls of check-written-files.py (script: written-files-controls.sh.txt). Each control breaks one thing in a copy of the"
+  echo "# written files (symlinked sandbox, copied agent-os/ folder); the named check must report FAIL, the unbroken and the restored copy ALL PASS."
+  bash "$CT/impl-t13-controls.sh" 2>&1
+} | fin > "$EV/written-files-controls.txt"
+
+# 3. counterexample searches, token inventory, class naming table, index rebuild
+bash "$CT/impl-t13-claims.sh" 2>&1 | fin > "$EV/claim-searches.txt"
+{
+  echo "# token-inventory.py: every backticked token of the written files resolves in a tracked text file of the sandbox or in the pack tech-stack and standard (C0-13b)."
+  python3 -I "$CT/impl-t13-tokens.py" "$SBX1" "$WT" 2>&1
+  echo "# ---- control: PostgresTestConfig misspelled in memory as PostgresTestConfiq (only the summary and the MISSING line)"
+  python3 -I "$CT/impl-t13-tokens.py" "$SBX1" "$WT" --misspell 2>&1 | grep -E 'MISSING|SUMMARY'
+} | fin > "$EV/token-inventory.txt"
+{
+  echo "# class-naming-table.py: the suffix table of standards/architecture/class-naming.md equals the suffix lists in ArchitectureTest and the table of docs/architecture.md section 3."
+  python3 -I "$CT/impl-t13-naming.py" "$SBX1" 2>&1
+  echo "# ---- control: one suffix dropped from the written table in memory"
+  python3 -I "$CT/impl-t13-naming.py" "$SBX1" --misspell 2>&1 | grep -E 'FAIL|docs=|SUMMARY'
+} | fin > "$EV/class-naming-table.txt"
+{
+  echo "# The written index.yml against the installed index builder (create_index of project-install.sh, run with --commands-only in a scratch copy)."
+  echo "# The scratch copy of the project is a folder with agent-os/ and .claude/commands/agent-os/ only; output lines of the script follow the commands."
+  bash "$CT/impl-t13-index-check.sh" 2>&1
+} | fin > "$EV/index-rebuild.txt"
+
+# 4. the scripts as .txt copies, paths masked
+for pair in "check-written-files.py:impl-t13-check.py" "written-files-trace-generator.py:impl-t13-mk-trace.py" "token-inventory.py:impl-t13-tokens.py" "class-naming-table.py:impl-t13-naming.py" \
+            "claim-searches.sh:impl-t13-claims.sh" "written-files-controls.sh:impl-t13-controls.sh" "index-rebuild-check.sh:impl-t13-index-check.sh" "path-mask-lib.sh:impl-t13-lib.sh" \
+            "install-run.sh:impl-t13-install.sh" "agent-os-clone.sh:impl-t13-clone.sh" "stage-and-commit.sh:impl-t13-stage.sh" "rebuild-and-compare.sh:impl-t13-rebuild.sh" \
+            "verify-run.sh:impl-t13-verify.sh" "evidence-part1.sh:impl-t13-ev1.sh" "evidence-part2.sh:impl-t13-ev2.sh"; do
+  out=${pair%%:*}
+  src=${pair##*:}
+  sed -e "s|$COMMS_TMP|\$COMMS_TMP|g" -e "s|$SP|\$SP|g" -e "s|$REALHOME|\$REALHOME|g" "$CT/$src" | LC_ALL=C perl -CS -pe 's/[^\x00-\x7F]/?/g' > "$EV/$out.txt"
+done
+echo "evidence part 2 written:"
+ls -l "$EV" | awk 'NR>1 {print $5, $NF}'

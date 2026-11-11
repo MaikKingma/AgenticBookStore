@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Evidence part 3: sandbox build, verify, staging, self-test, spelling, docs quotes, rehearsal dry run.
+set -u
+. "$COMMS_TMP/impl-t13-lib.sh"
+iso_env
+fin() { ascii | mask; }
+CT=$COMMS_TMP
+SBX2=$SP/s10-t13-impl-sbx-2
+SBX3=$SP/s10-t13-impl-sbx-3
+
+# ---------------------------------------------------------------- sandbox-build.txt (fresh build in sandbox 3, compared with sandbox 1)
+{
+  echo "# Sandbox build (criteria 2, 3, 6). Sandbox 1 = the hand run (level-3 build, install, written files, commit); sandbox 3 = a fresh build from the staged step."
+  echo "# sandbox 1 was built with: simulate-level-0.sh --repo \$WT level-0-start \$SBX ; build-level.sh level-3 \$SBX (script sbx1 is not kept; its result is below)"
+  echo "sandbox 1 commits:"; git -C "$SBX1" log --format='  %h %s'
+  echo "sandbox 1 level-3 tree (HEAD~1): $(git -C "$SBX1" rev-parse 'HEAD~1^{tree}')   (expected 309786e0, the tree T9 and T10 recorded)"
+  echo "sandbox 1 level-4 tree (HEAD):   $(git -C "$SBX1" rev-parse 'HEAD^{tree}')"
+  echo "# criterion 3: sandbox 1 starts from level-0-start, no factory carry-over. ls of agent-os/ in the LEVEL-3 tree (before the install), by git:"
+  echo "git ls-tree HEAD~1 -- agent-os specs : $(git -C "$SBX1" ls-tree HEAD~1 -- agent-os specs | wc -l | tr -d ' ') entries"
+  echo "git ls-tree HEAD~1 -- agent-os/standards/agent-memory.md : $(git -C "$SBX1" ls-tree -r HEAD~1 --name-only -- agent-os/standards/agent-memory.md | wc -l | tr -d ' ') entries"
+  echo "git ls-tree -r HEAD~1 --name-only | grep -c '^agent-os/' : $(git -C "$SBX1" ls-tree -r HEAD~1 --name-only | grep -c '^agent-os/' || true)"
+  echo "ls -A of the sandbox 1 root before the install (from git, level-3 tree): $(git -C "$SBX1" ls-tree --name-only HEAD~1 | tr '\n' ' ')"
+  echo "# control: the factory worktree does hold factory agent-os content (the search can find it): agent-os/specs exists: $( [ -d "$WT/agent-os/specs" ] && echo yes || echo no ), agent-os/standards/architecture.md exists: $( [ -e "$WT/agent-os/standards/architecture.md" ] && echo yes || echo no )"
+  echo "# (agent-os/standards/agent-memory.md, named in the task text as a factory standard, is not present in this worktree at the spec tip: $( [ -e "$WT/agent-os/standards/agent-memory.md" ] && echo present || echo absent ); the check above covers any file under agent-os/ of the level-3 tree.)"
+  echo "# ---- fresh build, sandbox 3:"
+  bash "$CT/impl-t13-rebuild.sh" "$SBX3" 2>&1 | grep -v '^list:'
+} 2>&1 | fin > "$EV/sandbox-build.txt"
+
+# ---------------------------------------------------------------- sandbox-verify.txt (verify ran in sandbox 2, built the same way)
+{
+  echo "# ./mvnw clean verify on the fresh level-4 build (sandbox 2, HEAD tree $(git -C "$SBX2" rev-parse 'HEAD^{tree}'), equal to sandbox 1)."
+  echo "# started $(cut -d' ' -f1 "$RAW/verify-sbx2.rc") UTC, exit code $(cut -d' ' -f2 "$RAW/verify-sbx2.rc"). Raw output kept in \$SP (s10-t13-impl-raw/verify-sbx2.txt)."
+  echo "# command: bash ~/.claude/scripts/with-budget.sh 900 ./mvnw clean verify, with TMPDIR and JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=\$TMPDIR (HR1); shared ~/.m2 cache and Docker used (J10)."
+  grep -E 'Tests run:.*Skipped: [0-9]+$' "$RAW/verify-sbx2.txt" | grep -v 'Time elapsed' | sed 's/^/total: /'
+  grep -E 'Reactor Summary|SUCCESS|BUILD|Total time' "$RAW/verify-sbx2.txt"
+  grep -E 'ArchitectureTest' "$RAW/verify-sbx2.txt" | grep 'Tests run' | head -2
+  echo "# ArchitectureTest Surefire XML (bookstore/target/surefire-reports):"
+  grep -o 'testsuite [^>]*' "$SBX2/bookstore/target/surefire-reports/TEST-nl.openvalue.bookstore.ArchitectureTest.xml" | head -1 | sed 's/xmlns:xsi="[^"]*" xsi:noNamespaceSchemaLocation="[^"]*" //' | sed 's/^/  /'
+  echo "# control: a build that fails would show BUILD FAILURE; this log holds $(grep -c 'BUILD FAILURE' "$RAW/verify-sbx2.txt") such lines and $(grep -c 'ERROR' "$RAW/verify-sbx2.txt") ERROR lines."
+} 2>&1 | fin > "$EV/sandbox-verify.txt"
+
+# ---------------------------------------------------------------- staging.txt
+STEP=$S/level-4-agentos
+{
+  echo "# Staging of the track (criterion 6). Step folder: S/level-4-agentos (manifest.tsv plus files/)."
+  echo "# manifest.tsv (tabs shown as TAB):"
+  sed 's/\t/ TAB /g' "$STEP/manifest.tsv"
+  echo "# every file under files/ is named by exactly one row and every row's staged path exists (comm both ways, empty means equal):"
+  (cd "$STEP" && find files -type f | LC_ALL=C sort) > "$RAW/stage-files.txt"
+  awk -F '\t' '/^#/ {next} NF {print $3}' "$STEP/manifest.tsv" | LC_ALL=C sort > "$RAW/stage-rows.txt"
+  echo "files not named by a row: $(comm -23 "$RAW/stage-files.txt" "$RAW/stage-rows.txt" | wc -l | tr -d ' ')   rows without a file: $(comm -13 "$RAW/stage-files.txt" "$RAW/stage-rows.txt" | wc -l | tr -d ' ')   rows: $(wc -l < "$RAW/stage-rows.txt" | tr -d ' ')"
+  echo "ops: $(awk -F '\t' '/^#/ {next} NF {print $1}' "$STEP/manifest.tsv" | sort | uniq -c | tr -s ' ' | tr '\n' ';')  groups: $(awk -F '\t' '/^#/ {next} NF {print $2}' "$STEP/manifest.tsv" | sort | uniq -c | tr -s ' ' | tr '\n' ';')  modes: $(awk -F '\t' '/^#/ {next} NF {print $5}' "$STEP/manifest.tsv" | sort | uniq -c | tr -s ' ' | tr '\n' ';')  base column: $(awk -F '\t' '/^#/ {next} NF {print $6}' "$STEP/manifest.tsv" | sort -u | tr '\n' ';')"
+  echo "# path encoding rule: no staged path component starts with a dot or is named CLAUDE.md, CLAUDE.local.md or AGENTS.md:"
+  echo "components starting with a dot: $(find "$STEP" -mindepth 1 -name '.*' | wc -l | tr -d ' ')   components named CLAUDE.md, CLAUDE.local.md or AGENTS.md: $(find "$STEP" \( -name CLAUDE.md -o -name CLAUDE.local.md -o -name AGENTS.md \) | wc -l | tr -d ' ')"
+  echo "# control: the encoded form of the five command files, decoded by apply-level.sh into targets starting with a dot:"
+  awk -F '\t' '/dot-claude/ {print $3 " -> " $4}' "$STEP/manifest.tsv"
+  echo "# staged files are byte copies of the sandbox 1 files (cmp over all rows):"
+  bad=0
+  while IFS=$'\t' read -r op grp staged target mode base; do
+    case $op in \#*|'') continue ;; esac
+    cmp -s "$STEP/$staged" "$SBX1/$target" || { echo "DIFFERENT $target"; bad=$((bad+1)); }
+  done < "$STEP/manifest.tsv"
+  echo "rows whose staged file differs from the sandbox 1 file: $bad"
+  echo "# upstream Agent OS files among the staged rows (installed by project-install.sh, copied byte for byte; exempt from the ASCII and dash rules):"
+  for f in discover-standards index-standards inject-standards plan-product shape-spec; do
+    printf '%s  %s  non-ASCII lines: %s\n' "$(shasum -a 256 "$STEP/files/dot-claude/commands/agent-os/$f.md" | cut -c1-16)" "$f.md" "$(LC_ALL=C perl -ne '$c++ if /[^\x00-\x7F]/; END {print $c+0}' "$STEP/files/dot-claude/commands/agent-os/$f.md")"
+    cmp -s "$STEP/files/dot-claude/commands/agent-os/$f.md" "$HOMEISO/agent-os/commands/agent-os/$f.md" && echo "    equal to the clone's commands/agent-os/$f.md"
+  done
+  echo "# git: nothing under S is ignored (the scope check of the whole worktree is in hygiene.txt):"
+  echo "ignored entries under S: $(git -C "$WT" status --porcelain --ignored -- docs/spec-pack/level-branches | grep -c '^!!' || true)"
+} 2>&1 | fin > "$EV/staging.txt"
+{
+  echo "# bash S/tests/test-staging.sh on the worktree with the step folder in place (TMPDIR under \$SP, HR1). Last 12 lines:"
+  bash "$S/tests/test-staging.sh" > "$RAW/test-staging.txt" 2>&1
+  echo "exit code: $?"
+  tail -12 "$RAW/test-staging.txt"
+} 2>&1 | fin > "$EV/staging-selftest.txt"
+
+# ---------------------------------------------------------------- spelling inventory and docs quotes
+{
+  echo "# C0-13b and C0-13c: where each token of the Agent OS scenario, the guide and the installed files occurs (script: token-spelling.py.txt)."
+  echo "# Sources: P10 pack spec 10, P11 pack spec 11, SDD pack sdd-framework-guide, WP workshop-plan, BR feature briefs, G11 guide pages on origin/sdd/11-workshop-guide/spec,"
+  echo "# GF the same pages on origin/factory, INS installed Agent OS files (clone), TREE the built level-4 tree. origin/factory $(git -C "$WT" rev-parse --short=12 origin/factory), origin/sdd/11-workshop-guide/spec $(git -C "$WT" rev-parse --short=12 origin/sdd/11-workshop-guide/spec)."
+  python3 -I "$CT/impl-t13-spelling.py" "$WT" "$HOMEISO" "$SBX2" --misspell
+  echo "# Agent OS lines (lines matching agent.os, agentos, shape-spec or inject-standards) of the guide pages on the two refs, compared with diff:"
+  for g in guide/docs/05-level-4-spec-driven-development.mdx guide/docs/06-wrap-up.md guide/docs/reference/cheat-sheet.md guide/docs/reference/troubleshooting.md; do
+    git -C "$WT" show "origin/sdd/11-workshop-guide/spec:$g" | grep -i 'agent.os\|agentos\|shape-spec\|inject-standards' > "$RAW/g11.txt"
+    git -C "$WT" show "origin/factory:$g" | grep -i 'agent.os\|agentos\|shape-spec\|inject-standards' > "$RAW/gf.txt"
+    if cmp -s "$RAW/g11.txt" "$RAW/gf.txt"; then echo "$g: identical ($(wc -l < "$RAW/g11.txt" | tr -d ' ') lines)"; else echo "$g: DIFFERENT, diff sdd/11 against factory:"; diff "$RAW/g11.txt" "$RAW/gf.txt" | cut -c1-160; fi
+  done
+} 2>&1 | fin > "$EV/token-spelling.txt"
+DOCS=$SP/s10-t13-impl-docs/skills.md
+{
+  echo "# Claude Code docs, page skills (https://code.claude.com/docs/en/skills.md), read with curl on 2026-11-10 (UTC), markdown form, no Claude process, no login."
+  echo "# sha256 $(shasum -a 256 "$DOCS" | cut -d' ' -f1)  bytes $(wc -c < "$DOCS" | tr -d ' ')  (the same hash as the skills page of the Level 3 evidence, claude-docs-quotes.txt)."
+  echo "# Line numbers are lines of the fetched .md file. Non-ASCII characters show as '?'. Lines are cut at 600 characters."
+  for n in 17 172 192 318 320 449; do printf 'skills.md:%s | %s\n' "$n" "$(sed -n "${n}p" "$DOCS" | cut -c1-600)"; done
+  echo "# how the quotes are used: line 449 gives the command name of a file in a subdirectory of .claude/commands/; the installed Agent OS files sit in .claude/commands/agent-os/,"
+  echo "# so the name Claude Code lists is agent-os:plan-product (typed /agent-os:plan-product); the guide and the pack write /plan-product. Lines 318 and 320 are about .claude/skills/ only;"
+  echo "# line 192 says commands of an added directory are not watched (restart after a change). No line says that .claude/commands/ of the project is watched, so the rehearsal rows start a new session."
+} 2>&1 | fin > "$EV/docs-quotes.txt"
+
+# ---------------------------------------------------------------- rehearsal dry run (FF-T3-a, FF-T3-b, FF-T6-a)
+REM=$SP/s10-t13-impl-remote.git
+CL=$SP/s10-t13-impl-clone-1
+rm -rf "$REM" "$CL"
+git init --quiet --bare "$REM"
+git -C "$SBX2" push --quiet "$REM" HEAD:refs/heads/start/level-4-agentos
+{
+  echo "# Dry run of the rehearsal setup, reset and judging commands against a local bare repository that holds the built level-4 commit as branch start/level-4-agentos."
+  echo "# (The real branch does not exist until task T14 cuts it; this run proves the commands, not the real branch.) Zero tokens, no Claude Code."
+  echo "# step 1: git clone --branch start/level-4-agentos <remote> <new folder>"
+  git clone --quiet --branch start/level-4-agentos "$REM" "$CL" 2>&1
+  echo "# step 2: record the start commit: git rev-parse HEAD"
+  START=$(git -C "$CL" rev-parse HEAD)
+  echo "START=$START   tree $(git -C "$CL" rev-parse 'HEAD^{tree}')   branch $(git -C "$CL" rev-parse --abbrev-ref HEAD)"
+  echo "tracked files $(git -C "$CL" ls-files | wc -l | tr -d ' '), agent-os files $(git -C "$CL" ls-files agent-os | wc -l | tr -d ' '), command files $(git -C "$CL" ls-files .claude/commands/agent-os | wc -l | tr -d ' ')"
+  echo "# step 3: simulate a run: a stale git-ignored build output, an edit, a new file, and a commit made by the run (the FF-T3-a witnesses)"
+  mkdir -p "$CL/bookstore/target/classes/db/migration"
+  echo "stale" > "$CL/bookstore/target/classes/db/migration/V9__stale.sql"
+  printf '\n- extra line written by a run\n' >> "$CL/agent-os/standards/testing/test-conventions.md"
+  mkdir -p "$CL/agent-os/specs/2026-11-10-1200-add-book-reviews"
+  echo "shaped" > "$CL/agent-os/specs/2026-11-10-1200-add-book-reviews/plan.md"
+  git -C "$CL" add agent-os
+  git -C "$CL" -c user.name=T13 -c user.email=t13@localhost commit --quiet -m "feat: a commit made by the run"
+  echo "edit after the commit" >> "$CL/agent-os/product/mission.md"
+  echo "# step 4: judge against START including commits (not against the working tree alone):"
+  echo "git diff --stat START (working tree against START):"; git -C "$CL" diff --stat "$START" | sed 's/^/  /'
+  echo "git log --oneline START..HEAD (commits made by the run):"; git -C "$CL" log --format='  %h %s' "$START"..HEAD
+  echo "git status --porcelain (ignored output is not listed; -uall):"; git -C "$CL" status --porcelain -uall | sed 's/^/  /'
+  echo "ignored stale file present: $( [ -e "$CL/bookstore/target/classes/db/migration/V9__stale.sql" ] && echo yes || echo no )"
+  echo "# step 5: reset between repeated runs: git reset --hard START && git clean -fdx"
+  git -C "$CL" reset --hard --quiet "$START"
+  git -C "$CL" clean -fdxq
+  echo "HEAD after reset equals START: $( [ "$(git -C "$CL" rev-parse HEAD)" = "$START" ] && echo yes || echo no )"
+  echo "git status --porcelain after reset: $(git -C "$CL" status --porcelain -uall | wc -l | tr -d ' ') entries"
+  echo "ignored stale file after clean -fdx: $( [ -e "$CL/bookstore/target/classes/db/migration/V9__stale.sql" ] && echo present || echo gone )"
+  echo "agent-os/specs after the reset: $( [ -e "$CL/agent-os/specs" ] && echo present || echo gone )"
+  echo "tree after the reset equals the start tree: $( [ "$(git -C "$CL" rev-parse 'HEAD^{tree}')" = "$(git -C "$SBX2" rev-parse 'HEAD^{tree}')" ] && echo yes || echo no )"
+  echo "# control: without clean -fdx the stale ignored file would stay (git reset --hard alone):"
+  mkdir -p "$CL/bookstore/target/classes/db/migration"; echo stale > "$CL/bookstore/target/classes/db/migration/V9__stale.sql"
+  git -C "$CL" reset --hard --quiet "$START"
+  echo "after reset --hard only: stale file $( [ -e "$CL/bookstore/target/classes/db/migration/V9__stale.sql" ] && echo STILL PRESENT || echo gone )"
+  git -C "$CL" clean -fdxq
+  echo "# auto memory (FF-T3-b): Claude Code's auto memory is keyed by the clone path and lives outside the repository; a reset does not touch it."
+  echo "# The rows therefore use a new clone folder per run (the default) or a /memory check before each run. Not testable here (no Claude run)."
+} 2>&1 | fin > "$EV/rehearsal-setup-dry-run.txt"
+echo "evidence part 3 written"
+ls -l "$EV" | awk 'NR>1 {print $5, $NF}' | tail -12
+# scripts of this part as .txt copies, paths masked
+for pair in "token-spelling.py:impl-t13-spelling.py" "evidence-part3.sh:impl-t13-ev3.sh" "rebuild-and-compare.sh:impl-t13-rebuild.sh"; do
+  out=${pair%%:*}
+  src=${pair##*:}
+  sed -e "s|$COMMS_TMP|\$COMMS_TMP|g" -e "s|$SP|\$SP|g" -e "s|$REALHOME|\$REALHOME|g" "$CT/$src" | LC_ALL=C perl -CS -pe 's/[^\x00-\x7F]/?/g' > "$EV/$out.txt"
+done

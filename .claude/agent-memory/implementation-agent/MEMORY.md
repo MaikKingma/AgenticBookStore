@@ -14,8 +14,11 @@
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, Vitest cleanup, css ?raw, QA grep traps
 - [View controller test traps](view-controller-test-traps.md) — equivalent-mutant probe, no redirects, ${basedir} resources
 - [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, date-varied idempotency, shims
+- [Bash script traps](bash-script-traps.md) — errexit in `f || die`, bash 3.2 runs, IFS tabs, mktemp template, EXIT traps
 - [RestClient acl traps](restclient-acl-traps.md) — @Autowired constructors, %2F paths, error-body parse, timeouts
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files, status grammar, seeded state
 - [Docs task techniques](docs-task-techniques.md) — README census scripts, reset claim, anonymous volume, rg
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested @WebMvcTest, ProblemDetail keys, ChatClient mocks
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callbacks without context, ListAppender, stub model
+- [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, token controls, installer isolation
+- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace tables, two-tree counterexamples, installer traps

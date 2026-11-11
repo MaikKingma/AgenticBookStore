@@ -1,0 +1,45 @@
+# Sandbox build (criteria 2, 3, 6). Sandbox 1 = the hand run (level-3 build, install, written files, commit); sandbox 3 = a fresh build from the staged step.
+# sandbox 1 was built with: simulate-level-0.sh --repo $WT level-0-start $SBX ; build-level.sh level-3 $SBX (script sbx1 is not kept; its result is below)
+sandbox 1 commits:
+  cefb83a Level 4 start: Agent OS installed and initialised
+  43cfc04 Level 3 solution: behavioral control
+  675d8c8 Level 2 solution: give your agent eyes (LSP + MCP)
+  e188a35 Level 1 solution: context engineering
+  391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+sandbox 1 level-3 tree (HEAD~1): 309786e063b813e0f9248714f404b927d277d879   (expected 309786e0, the tree T9 and T10 recorded)
+sandbox 1 level-4 tree (HEAD):   0a55b23f20d4288ba9301d44fc70de7e9a3d868e
+# criterion 3: sandbox 1 starts from level-0-start, no factory carry-over. ls of agent-os/ in the LEVEL-3 tree (before the install), by git:
+git ls-tree HEAD~1 -- agent-os specs : 0 entries
+git ls-tree HEAD~1 -- agent-os/standards/agent-memory.md : 0 entries
+git ls-tree -r HEAD~1 --name-only | grep -c '^agent-os/' : 0
+ls -A of the sandbox 1 root before the install (from git, level-3 tree): .claude .editorconfig .gitattributes .githooks .github .gitignore .mcp.json .mvn CLAUDE.local.md.example CLAUDE.md README.md bookstore distributor docs frontend http mvnw mvnw.cmd pom.xml scripts 
+# control: the factory worktree does hold factory agent-os content (the search can find it): agent-os/specs exists: yes, agent-os/standards/architecture.md exists: yes
+# (agent-os/standards/agent-memory.md, named in the task text as a factory standard, is not present in this worktree at the spec tip: absent; the check above covers any file under agent-os/ of the level-3 tree.)
+# ---- fresh build, sandbox 3:
+== simulate-level-0.sh level-0-start
+simulated level-0: $SP/s10-t13-impl-sbx-6 at 391d5f74d69591a8e7a4b3cf718a07fe9dbae03c (from level-0-start b668073eb44bfea453c291509a615f6de081e54a)
+== build-level.sh level-4-agentos
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SP/s10-t13-impl-sbx-6
+build-level: committed level-1 as d742f64: Level 1 solution: context engineering
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SP/s10-t13-impl-sbx-6
+build-level: committed level-2 as 12cfe45: Level 2 solution: give your agent eyes (LSP + MCP)
+apply-level: level-3: 31 rows applied (group: all); changes left uncommitted in $SP/s10-t13-impl-sbx-6
+build-level: committed level-3 as 5d8e02c: Level 3 solution: behavioral control
+apply-level: level-4-agentos: 22 rows applied (group: all); changes left uncommitted in $SP/s10-t13-impl-sbx-6
+build-level: committed level-4-agentos as d1ff1fa: Level 4 start: Agent OS installed and initialised
+build-level: level-4-agentos built in $SP/s10-t13-impl-sbx-6
+== commits
+d1ff1fa Level 4 start: Agent OS installed and initialised
+5d8e02c Level 3 solution: behavioral control
+12cfe45 Level 2 solution: give your agent eyes (LSP + MCP)
+d742f64 Level 1 solution: context engineering
+391d5f7 Agentic Bookstore: workshop baseline (simulated from b668073eb44bfea453c291509a615f6de081e54a)
+== trees
+fresh build HEAD tree: 0a55b23f20d4288ba9301d44fc70de7e9a3d868e
+sandbox 1 (hand run)    HEAD tree: 0a55b23f20d4288ba9301d44fc70de7e9a3d868e
+level-3 tree inside the fresh build (HEAD~1): 309786e063b813e0f9248714f404b927d277d879
+RESULT trees equal
+== diff HEAD~1 HEAD of the fresh build against the manifest targets
+RESULT commit changes exactly the 22 manifest targets
+== working tree status of the fresh build
+dirty entries:        0

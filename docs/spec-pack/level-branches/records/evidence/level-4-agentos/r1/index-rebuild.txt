@@ -1,0 +1,38 @@
+# The written index.yml against the installed index builder (create_index of project-install.sh, run with --commands-only in a scratch copy).
+# The scratch copy of the project is a folder with agent-os/ and .claude/commands/agent-os/ only; output lines of the script follow the commands.
+
+=== Agent OS Project Installation ===
+
+
+Configuration:
+  Profile: default
+  Commands only: true
+
+Creating project structure...
+? Created agent-os/ directory structure
+Skipping standards (--commands-only)
+
+Updating standards index...
+? Updated index.yml (13 entries)
+
+Installing commands...
+? Installed 5 commands to .claude/commands/agent-os/
+
+? Agent OS installed successfully!
+
+Next steps:
+  1. Run /discover-standards to extract patterns from your codebase
+  2. Run /inject-standards to inject standards into your context
+
+RESULT index.yml unchanged by the index builder (equal modulo trailing blank lines)
+== control: remove the entry architecture/class-naming from a copy and rebuild
+entries named class-naming before the rebuild: 0
+Updating standards index...
+? Updated index.yml (13 entries, 1 new)
+4:  class-naming:
+5-    description: Needs description - run /index-standards
+== control: a standards file without an entry (copy of a file) is added with the placeholder text
+Updating standards index...
+? Updated index.yml (14 entries, 1 new)
+30:  extra-probe:
+31-    description: Needs description - run /index-standards

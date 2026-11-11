@@ -1,0 +1,5 @@
+# the printf one-liner of row R3-1 against the heredoc used in the dry run (row-setup-dry-run.txt) and in the real hook runs
+bytes: printf 248 heredoc 248
+cmp: identical
+control: one character different -> reported as different
+the same printf on bash 3.2: identical

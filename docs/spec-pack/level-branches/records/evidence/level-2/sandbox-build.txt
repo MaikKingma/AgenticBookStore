@@ -1,0 +1,57 @@
+factory sha:  2ab37a71cf423ac3af30c21cf09c77aff4ec5a68   (origin/factory)
+spec tip sha: ca194f463a55c0a107c9b5f2c51fab01986d9697   (scripts and staged files)
+guide sha:    fb958b3e59e325e2fe27cae12b18a22750fdf90e   (origin/sdd/11-workshop-guide/spec)
+
+$ bash docs/spec-pack/level-branches/scripts/simulate-level-0.sh origin/factory $SBX
+simulate-level-0: no scripts/publish-workshop-main.sh in origin/factory; using the built-in list
+list: built-in
+strip-path: CLAUDE.md
+removed: CLAUDE.md
+strip-path: CLAUDE.local.md
+strip-path: AGENTS.md
+strip-path: .claude/
+removed: .claude/
+strip-path: .mcp.json
+strip-path: openspec/
+strip-path: .specify/
+strip-path: specs/
+strip-path: agent-os/
+removed: agent-os/
+strip-path: .githooks/
+strip-path: docs/spec-pack/
+removed: docs/spec-pack/
+simulated level-0: $SP/t6/tmp/sbx.y9Ncq8/level-2 at 63390c2aacddf4f7aec15bd4c13020e22dc2bf1c (from origin/factory 2ab37a71cf423ac3af30c21cf09c77aff4ec5a68)
+rc=0
+
+$ bash docs/spec-pack/level-branches/scripts/build-level.sh level-2 $SBX
+apply-level: level-1 line 2: add CLAUDE.md (644, config)
+apply-level: level-1 line 3: add .claude/rules/domain.md (644, config)
+apply-level: level-1 line 4: add .claude/rules/data-and-migrations.md (644, config)
+apply-level: level-1 line 5: add .claude/rules/testing.md (644, config)
+apply-level: level-1 line 6: add CLAUDE.local.md.example (644, config)
+apply-level: level-1: 5 rows applied (group: all); changes left uncommitted in $SP/t6/tmp/sbx.y9Ncq8/level-2
+build-level: committed level-1 as ef7a42f: Level 1 solution: context engineering
+apply-level: level-2 line 2: add .mcp.json (644, config)
+apply-level: level-2 line 3: add .claude/settings.json (644, config)
+apply-level: level-2 line 4: add docs/lsp-setup.md (644, config)
+apply-level: level-2 line 5: patch bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java (644, exercise)
+apply-level: level-2 line 6: add bookstore/src/test/resources/contracts/distributor/title-9789900010395.json (644, exercise)
+apply-level: level-2 line 7: patch bookstore/src/test/resources/contracts/distributor/README.md (644, exercise)
+apply-level: level-2: 6 rows applied (group: all); changes left uncommitted in $SP/t6/tmp/sbx.y9Ncq8/level-2
+build-level: committed level-2 as 0c4b31c: Level 2 solution: give your agent eyes (LSP + MCP)
+build-level: level-2 built in $SP/t6/tmp/sbx.y9Ncq8/level-2
+rc=0
+
+$ git log --format=%h %s
+0c4b31c Level 2 solution: give your agent eyes (LSP + MCP)
+ef7a42f Level 1 solution: context engineering
+63390c2 Agentic Bookstore: workshop baseline (simulated from 2ab37a71cf423ac3af30c21cf09c77aff4ec5a68)
+
+$ git diff --name-status HEAD~1 HEAD   (level-2 commit)
+A	.claude/settings.json
+A	.mcp.json
+M	bookstore/src/test/java/nl/openvalue/bookstore/acl/DistributorAppServiceImplTest.java
+M	bookstore/src/test/resources/contracts/distributor/README.md
+A	bookstore/src/test/resources/contracts/distributor/title-9789900010395.json
+A	docs/lsp-setup.md
+

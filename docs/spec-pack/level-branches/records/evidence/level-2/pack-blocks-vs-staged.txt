@@ -1,0 +1,16 @@
+$ sed -n 130,137p <spec 10> | cmp - level-2/files/dot-mcp.json      (the .mcp.json block, lines 130 to 137)
+identical
+$ sed -n 142,151p <spec 10> | cmp - level-2/files/dot-claude/settings.json      (the plugin declaration block, lines 142 to 151)
+identical
+$ sed -n 142,150p <spec 10> | cmp - level-2/files/dot-claude/settings.json      (negative control: one line short)
+cmp: EOF on stdin
+control exit: differs as it must
+$ sed -n 131,137p <spec 10> | cmp - level-2/files/dot-mcp.json      (negative control: one line short)
+stdin $WT/docs/spec-pack/level-branches/level-2/files/dot-mcp.json differ: char 1, line 1
+control exit: differs as it must
+
+$ sed -n "129p;138p;141p;152p" <spec 10>: the fence lines that bound the two blocks
+```json
+```
+```json
+```

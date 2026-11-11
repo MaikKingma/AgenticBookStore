@@ -1,0 +1,32 @@
+# Files of the staged step that differ between the round 0 level-4 commit and the round 1 commit (git diff --name-status), with the Required Action each serves.
+M	agent-os/standards/architecture/class-naming.md
+M	agent-os/standards/architecture/dependency-rules.md
+M	agent-os/standards/architecture/domain-model.md
+M	agent-os/standards/architecture/flows-and-ports.md
+A	agent-os/standards/architecture/outbound-acl.md
+M	agent-os/standards/index.yml
+# trees: round 0 b533a9a10f37e0308304401befb266e7b78d0234  round 1 0a55b23f20d4288ba9301d44fc70de7e9a3d868e
+# diff of each changed written file (round 0 to round 1):
+diff --git a/agent-os/standards/architecture/class-naming.md b/agent-os/standards/architecture/class-naming.md
++- Private nested payload records inside an `*AppServiceImpl` are the exception: they describe the distributor's JSON and never leave `acl` (`APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL`).
+diff --git a/agent-os/standards/architecture/dependency-rules.md b/agent-os/standards/architecture/dependency-rules.md
++- `APP_SERVICE_IMPL_NESTED_CLASSES_ONLY_IN_ACL`: the private payload records nested in an `*AppServiceImpl` describe the distributor's JSON and never leave `acl`.
+diff --git a/agent-os/standards/architecture/domain-model.md b/agent-os/standards/architecture/domain-model.md
+-- Collect domain events in a list inside the aggregate. `pullDomainEvents()` returns them and clears the list.
++- An aggregate that raises domain events (`Order`, `StockItem`) collects them in a list inside the aggregate. `pullDomainEvents()` returns them and clears the list.
+diff --git a/agent-os/standards/architecture/flows-and-ports.md b/agent-os/standards/architecture/flows-and-ports.md
+-- A record named `*DTO` with JDK-typed components. It has a convenience constructor from its aggregate; the way back is a `*DomainMapper`.
++- A record named `*DTO` with JDK-typed components. A DTO that mirrors an aggregate has a convenience constructor from it (`new BookDTO(book)`); the way back is a `*DomainMapper`.
+diff --git a/agent-os/standards/architecture/outbound-acl.md b/agent-os/standards/architecture/outbound-acl.md
++# Anti-Corruption Layer
++
++Outbound anti-corruption layer towards the distributor: the `acl` package.
++
++- An `*AppServiceImpl` implements the port with Spring `RestClient`.
++- External payloads are private nested records. They describe the distributor's JSON and never leave `acl`.
++- Every external failure becomes a port exception.
++- The base URL comes from `distributor.base-url`.
+diff --git a/agent-os/standards/index.yml b/agent-os/standards/index.yml
++  outbound-acl:
++    description: The acl package: AppServiceImpl with RestClient, private nested payload records, port exceptions, base URL
++

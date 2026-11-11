@@ -1,0 +1,14 @@
+diff --git a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
+index 291cc56d9ad79e585ada592e6848bff850145b33..0ffc5328bc7b8c2a41c82f47c7f1700670f5ffee 100644
+--- a/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
++++ b/bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/OrderDomainMapper.java
+@@ -32,7 +32,8 @@ public final class OrderDomainMapper {
+                 lines,
+                 OrderStatus.valueOf(dto.status()),
+                 dto.placedAt(),
+-                dto.shippedAt());
++                dto.shippedAt(),
++                dto.cancelledAt());
+     }
+ 
+     /** Snapshots the isbn, title and current price of the book; the quantity is the one asked for. */

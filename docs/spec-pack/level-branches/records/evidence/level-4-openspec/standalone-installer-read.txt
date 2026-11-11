@@ -1,0 +1,32 @@
+# The standalone installer https://openspec.dev/cli/install.sh was downloaded and READ, never run (it is the other way to get the CLI, named in docs/spec-pack/product/tech-stack.md line 70).
+# sha256 fa5e08b9cec6815e69cd5fc250fc57aa720609927da38587f872e2e74f9ec09b, 185 lines, fetched 2026-11-10. Line numbers are lines of the downloaded script.
+install.sh:2 | # Installs the standalone `openspec` binary (no Node.js needed) on Linux or macOS.
+install.sh:4 | #   curl -fsSL https://openspec.dev/cli/install.sh | sh
+install.sh:6 | # OPENSPEC_VERSION      release to install (default: the newest complete one), e.g. v1.15.0
+install.sh:7 | # OPENSPEC_INSTALL_DIR  where to put it (default: ~/.local/bin)
+install.sh:8 | # OPENSPEC_INSTALL_NAME file name to install as (default: openspec)
+install.sh:9 | # OPENSPEC_RELEASES_URL releases page to install from (default: GitHub's; mirrors, testing)
+install.sh:68 |   version="${OPENSPEC_VERSION:-latest}"
+install.sh:69 |   case "$version" in latest | v*) ;; *) version="v$version" ;; esac
+install.sh:76 |   if [ -n "${OPENSPEC_INSTALL_DIR:-}" ]; then
+install.sh:77 |     dir="$OPENSPEC_INSTALL_DIR"
+install.sh:78 |   elif [ -n "${HOME:-}" ]; then
+install.sh:79 |     dir="$HOME/.local/bin"
+install.sh:86 |   mkdir -p "$dir" || fail "cannot create $dir"
+install.sh:90 |   tmp=$(mktemp -d "$dir/.openspec-install.XXXXXX") || fail "cannot write to $dir"
+install.sh:177 |   echo "Installed openspec $installed to $dir/$name"
+install.sh:179 |   case ":$PATH:" in
+install.sh:181 |     *) echo "Add $dir to your PATH to run it, e.g.: export PATH=\"$dir:\$PATH\"" ;;
+lines of the script that mention a shell start-up file (bashrc, zshrc, profile, fish): 0
+lines that write outside $dir (default ~/.local/bin) or $tmp (a folder inside $dir): see lines 86 and 90 (mkdir and mktemp in $dir); no other mkdir, cp, mv or ln line:
+86:  mkdir -p "$dir" || fail "cannot create $dir"
+164:    mkdir "$tmp/unpacked"
+166:    mv "$tmp/unpacked/openspec" "$tmp/$asset"
+168:  chmod 755 "$tmp/$asset"
+176:  mv -f "$tmp/$asset" "$dir/$name"
+
+# Added in rework round 1 (QA r0 F1): does the script use the OS temp folder? Search of the downloaded script (FF-T7-b counterexample search):
+lines that mention /tmp, TMPDIR or TMP: 1
+install.sh:84:  # Staged inside the install dir, not /tmp: /tmp is often mounted noexec, and
+lines with mktemp: 1 (line 90 above: the staging folder is made inside $dir, not in the temp folder)
+Control: the same search finds the word mktemp, so the pattern works; the script was read, not run, so no temp-folder file list exists for it.

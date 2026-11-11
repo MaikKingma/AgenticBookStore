@@ -1,0 +1,37 @@
+# TDD of the two check scripts (config and spec checks). RED first: the checks run against the pristine init output; then the files were written; then GREEN; then negative controls.
+# RED (pristine generated config copy, missing spec path):
+pack block: 10 lines (pack file lines 440 to 449, dedented)
+FAIL: the dedented pack block does not appear verbatim and contiguous in $RAW/config.yaml.generated
+exit code: 1
+FAIL: cannot read nonexistent-red-run.md: No such file or directory
+exit code: 1
+
+# GREEN (staged files): see config-yaml.txt part 3 and ordering-spec.txt part 2, both exit code 0.
+
+# Negative controls of the checks (scratch copies with one change each; every N row must exit 1, every P row 0):
+== positive controls (staged files)
+P config: staged config.yaml                                   exit 0 (expected 0) OK
+    PASS: block found at config lines 3 to 12
+P spec: staged ordering spec                                   exit 0 (expected 0) OK
+    PASS: every line traced, every requirement has scenarios, every scenario has WHEN and THEN
+== negative controls (scratch copies, one change each)
+N1 config: 'Java 25' changed to 'Java 26' in the block         exit 1 (expected 1) OK
+    FAIL: the dedented pack block does not appear verbatim and contiguous in $NEG/c1.yaml
+N2 config: blank line inserted inside the block (not contiguous) exit 1 (expected 1) OK
+    FAIL: the dedented pack block does not appear verbatim and contiguous in $NEG/c2.yaml
+N3 config: key 'tasks:' misspelled 'taskz:'                    exit 1 (expected 1) OK
+    FAIL: the dedented pack block does not appear verbatim and contiguous in $NEG/c3.yaml
+N4 spec: one WHEN text altered (2 x A to 3 x A)                exit 1 (expected 1) OK
+    FAIL: line 13 is neither a spec 04 line of the two requirements nor an allowed added line: '- **WHEN** a customer places an order for 3 x A and 1 x B'
+N5 spec: requirement 'Ship an order' without any scenario      exit 1 (expected 1) OK
+    FAIL: requirement and scenario headings differ from spec 04: expected 10, got 8
+    FAIL: requirement without a scenario: ### Requirement: Ship an order
+N6 spec: scenario 'Shipping twice' without its THEN bullet     exit 1 (expected 1) OK
+    FAIL: scenario without WHEN and THEN: #### Scenario: Shipping twice (bullets ['GIVEN', 'WHEN'])
+N7 spec: requirement heading renamed                           exit 1 (expected 1) OK
+    FAIL: line 40 is neither a spec 04 line of the two requirements nor an allowed added line: '### Requirement: Ship orders'
+    FAIL: requirement and scenario headings differ from spec 04: expected 10, got 10
+N8 spec: a third requirement appended that is not copied verbatim exit 1 (expected 1) OK
+    FAIL: line 53 is neither a spec 04 line of the two requirements nor an allowed added line: '### Requirement: Order history per customer'
+    FAIL: line 54 is neither a spec 04 line of the two requirements nor an allowed added line: "The system SHALL list a customer's orders, newest first."
+    FAIL: requirement and scenario headings differ from spec 04: expected 10, got 11
