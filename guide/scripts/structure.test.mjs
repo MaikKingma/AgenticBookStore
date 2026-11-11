@@ -241,17 +241,80 @@ test('structure: a body H1 fails, a comment line inside a fenced block does not'
 // Admonitions
 
 test('structure: space-form admonitions fail on every page', () => {
-  const level = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::info Sync moment\nbody\n:::`);
+  const level = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::info Heads up\nbody\n:::`);
   assertErrors(run({[L(1)]: level}).errors, [/space form/]);
   const wrapUp = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::tip Checkpoint\nbody\n:::\n';
   assertErrors(run({'docs/06-wrap-up.md': wrapUp}).errors, [/space form/]);
 });
 
-test('structure: a sync moment must say "Look up, Maik demos this now"', () => {
-  const sync = (body) => replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::info[Sync moment]\n${body}\n:::`);
-  assert.deepEqual(run({[L(1)]: sync('Look up, Maik demos this now.')}).errors, []);
-  assertErrors(run({[L(1)]: sync('Look up, Maik demos this soon.')}).errors, [/Sync moment/]);
-  assertErrors(run({[L(1)]: sync('Look up Maik demos this now')}).errors, [/Sync moment/]);
+// Spec 15 (decision D19): the workshop has no sync moments. The old rule demanded exactly one on a finished
+// level page; it is now a ban on any admonition whose title contains "sync moment", on every page.
+const WRAP_UP_HEAD = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n';
+const INDEX_HEAD = '---\ntitle: Welcome\nslug: /\nsidebar_position: 1\n---\n\n';
+const SYNC_BAN = /an admonition titled ".*" is a sync moment, the workshop has none/;
+
+// The page text with an admonition added: level pages after the marker (or the finished page's body), others at the end.
+function withBox(file, opener, body = 'Look up, Maik demos this now.', {skeleton = true} = {}) {
+  const box = `${opener}\n${body}\n:::`;
+  if (file === 'docs/06-wrap-up.md') return `${WRAP_UP_HEAD}${box}\n`;
+  if (file === 'docs/index.md') return `${INDEX_HEAD}${box}\n`;
+  const n = FIXTURE_LEVELS.findIndex((level) => level.file === file);
+  const text = page(n, {skeleton});
+  return skeleton ? replaceOnce(text, SKELETON_MARKER, `${SKELETON_MARKER}\n\n${box}`) : replaceOnce(text, '## Level cleared when', `${box}\n\n## Level cleared when`);
+}
+
+test('structure: a sync moment admonition is banned on every page, skeleton or finished', () => {
+  const targets = [
+    ['a skeleton level page', L(1), {}],
+    ['a finished level page', L(1), {skeleton: false}],
+    ['the wrap-up page', 'docs/06-wrap-up.md', {}],
+    ['the welcome page', 'docs/index.md', {}],
+  ];
+  for (const [name, file, options] of targets) {
+    for (const body of ['Look up, Maik demos this now.', 'Something else entirely.']) {
+      const errors = run({[file]: withBox(file, ':::info[Sync moment]', body, options)}).errors;
+      assert.equal(errors.length, 1, `${name}, body "${body}": ${errors.join('\n')}`);
+      assert.match(errors[0], SYNC_BAN, name);
+      assert.match(errors[0], /^structure: .*: line \d+: /, name);
+    }
+  }
+});
+
+test('structure: the sync moment ban holds for any admonition type, case, spacing and title suffix', () => {
+  const titles = [
+    ':::note[Sync moment]',
+    ':::tip[sync moment]',
+    ':::warning[SYNC MOMENT]',
+    ':::info[Sync  Moment]',
+    ':::info[Sync\tmoment]',
+    ':::info[Syncmoment]',
+    ':::info[Sync moment: hooks]',
+    ':::info[The Sync moment]',
+    ':::danger[Sync moment (3 minutes)]',
+  ];
+  for (const opener of titles) {
+    const errors = run({[L(1)]: withBox(L(1), opener)}).errors;
+    assert.equal(errors.length, 1, `${opener}: ${errors.join('\n')}`);
+    assert.match(errors[0], SYNC_BAN, opener);
+  }
+});
+
+test('structure: a sync moment nested in another admonition, or never closed, is still banned', () => {
+  const nested = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n::::tip[Outer]\n:::info[Sync moment]\nbody\n:::\n::::`);
+  assertErrors(run({[L(1)]: nested}).errors, [/is a sync moment/]);
+  const unclosed = `${WRAP_UP_HEAD}:::info[Sync moment]\nLook up, Maik demos this now.\n`;
+  assertErrors(run({'docs/06-wrap-up.md': unclosed}).errors, [/is a sync moment/, /the info admonition is never closed/]);
+});
+
+test('structure: titles without "sync moment" pass, also near misses and the words in the body', () => {
+  for (const opener of [':::info[Heads up]', ':::tip[Make it yours]', ':::note[In sync]', ':::info[A moment]', ':::info[Sync]', ':::info']) {
+    assert.deepEqual(run({[L(1)]: withBox(L(1), opener)}).errors, [], opener);
+  }
+  // The ban reads titles only: the deny-list in the content rules handles prose.
+  assert.deepEqual(run({[L(1)]: withBox(L(1), ':::info[Heads up]', 'Maik demos this in a sync moment.')}).errors, []);
+  // Fenced text is not an admonition.
+  const fenced = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n\`\`\`text\n:::info[Sync moment]\n:::\n\`\`\``);
+  assert.deepEqual(run({[L(1)]: fenced}).errors, []);
 });
 
 test('structure: a checkpoint needs a fenced block and a line starting with Expected', () => {
@@ -262,12 +325,12 @@ test('structure: a checkpoint needs a fenced block and a line starting with Expe
   assertErrors(run({[L(1)]: tip('Run:\n\n```bash\n./mvnw verify\n```\n\nThe Expected output is BUILD SUCCESS.')}).errors, [/Checkpoint.*Expected/]);
 });
 
-test('structure: a finished level page has exactly one sync moment, a skeleton is exempt', () => {
-  const finished = (n) => page(1, {skeleton: false}).replace(':::info[Sync moment]\nLook up, Maik demos this now.\n:::\n', n);
-  assertErrors(run({[L(1)]: finished('')}).errors, [/0 sync moments/]);
-  const two = ':::info[Sync moment]\nLook up, Maik demos this now.\n:::\n\n:::info[Sync moment]\nLook up, Maik demos this now.\n:::\n';
-  assertErrors(run({[L(1)]: finished(two)}).errors, [/2 sync moments/]);
-  assert.deepEqual(run({[L(1)]: page(1)}).errors, []);
+test('structure: a finished level page holds no sync moment and needs none, two of them give one error each', () => {
+  assert.deepEqual(run({[L(1)]: page(1, {skeleton: false})}).errors, []);
+  assert.ok(!/Sync moment/i.test(page(1, {skeleton: false})), 'the finished fixture page must not carry a sync moment');
+  const box = ':::info[Sync moment]\nbody\n:::\n';
+  const two = replaceOnce(page(1, {skeleton: false}), '## Level cleared when', `${box}\n${box}\n## Level cleared when`);
+  assertErrors(run({[L(1)]: two}).errors, [/is a sync moment/, /is a sync moment/]);
 });
 
 // Anchors
@@ -458,7 +521,7 @@ test('structure: an admonition that is never closed fails and names its line', (
   const text = replaceOnce(page(1), SKELETON_MARKER, `${SKELETON_MARKER}\n\n:::tip[Later]\nbody without a closing line`);
   const {errors} = run({[L(1)]: text});
   assertErrors(errors, [/line \d+: the tip admonition is never closed/]);
-  const wrapUp = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::info[Sync moment]\nLook up, Maik demos this now.\n';
+  const wrapUp = '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::info[Heads up]\nSome text.\n';
   assertErrors(run({'docs/06-wrap-up.md': wrapUp}).errors, [/the info admonition is never closed/]);
 });
 

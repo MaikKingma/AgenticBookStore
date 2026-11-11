@@ -18,23 +18,15 @@ Techniques that held for consistency-check tasks with no Claude runs:
   Never `cat "$RAW"` into a file that is also `$RAW` (filled 300 GB). `grep` has no `-P`: print context with `python3 -I`.
   `mask` BEFORE any `cut`; evidence must not match its own greps (split-string patterns). `git status --short` folds untracked
   folders: use `--untracked-files=all`.
-- **MCP server proof without Claude**: built jar on `--server.port=<free>`, curl `initialize` (read `Mcp-Session-Id`),
-  `notifications/initialized`, then `tools/list` with the header; answers are JSON or `data:` SSE lines. Stop only the recorded pid.
 - **Completeness and quote fidelity are separate checks**: a token inventory of every staged file (backtick spans, JSON keys and
   values, URLs, identifiers) diffed against the record, and a quote pass (strings of 12+ characters) against pack, plan, guide
   and fetched pages, with mutated-quote controls. A misspelling control must land in the staged copy AND the in-memory copy of
   the built tree, else the generic "staged differs from tree" row reports it and a missing token-specific check hides; assert
   each control by its own finding text. Spelling search tolerates hard-wrapped prose (needle spaces become `\s+`); anchor
   loose-variant regexes (they flag headings).
-- **Insertion-only proof** for long one-line rows: old tokens are a greedy subsequence of the new tokens (difflib says "replace").
-  **Universal claims**: `git grep` a counterexample on the recorded tag plus a control that must hit.
 - **Hooks without Claude**: run the staged PreToolUse hook as settings name it, from another folder, with only
   `CLAUDE_PROJECT_DIR` set and a one-line JSON payload on stdin. Plant the red test as an untracked file so `git reset --hard &&
   git clean -fdx` removes it. "Hook cannot start": `chmod -x` the hook, `sh -c` of the settings command exits 126.
-- **Rehearsal-row dry-runs**: clone with the row's own recipe from a repo that really has the branch name (`git clone --branch
-  solution/level-3`; a stand-in on `main` gives a false literal). Run the row to the NEXT step: `git reset --hard <ready>` drops a
-  staged change (use `--soft`), undo a control commit before the next variant, restore the clone's `origin` url after
-  `reset --hard && clean -fdx`.
 - **Generator or installer under isolation** (`npx`, `uvx`): HOME, every `XDG_*`, `npm_config_cache`, `UV_CACHE_DIR`,
   `UV_TOOL_DIR` in the scratch folder; `env -i HOME=<h> PATH=<python 3.11+ dir>:/opt/homebrew/bin:/usr/bin:/bin ...` keeps
   tokens out (without Python on PATH uv downloads one). List files before and after; a second plain run (HOME and XDG only)

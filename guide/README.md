@@ -199,7 +199,7 @@ that holds both its name and its sha256 (the ok line states the number of images
 
 ## Writing pages
 
-- Admonitions use the bracket form: `:::info[Sync moment]` and `:::tip[Checkpoint]`. The space form renders as plain text.
+- Admonitions use the bracket form: `:::note[At a glance]` and `:::tip[Checkpoint]`. The space form renders as plain text.
 - Put placeholders such as `<branch>` or `{name}` in inline code. Raw ones break the build.
 - Use Markdown image syntax only, never a raw `<img>` tag.
 - Quote a YAML title that contains a colon.

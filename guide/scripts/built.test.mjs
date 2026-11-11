@@ -9,7 +9,7 @@ import {builtErrors} from './rules/built.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), 'check-built.mjs');
 const GOOD_PAGE = '<html><body><h1>Welcome</h1><p>Hello.</p></body></html>\n';
-const SPACE_FORM = '<html><body><p>:::info Sync moment</p><p>Look up.</p><p>:::</p></body></html>\n';
+const SPACE_FORM = '<html><body><p>:::info Heads up</p><p>Look up.</p><p>:::</p></body></html>\n';
 
 function withBuild(files, fn) {
   const root = mkdtempSync(join(tmpdir(), 'guide-built-test-'));

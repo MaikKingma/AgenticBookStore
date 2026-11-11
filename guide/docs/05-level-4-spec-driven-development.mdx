@@ -222,11 +222,7 @@ Two routes, and your spec must pick one explicitly:
 1. **Within the architecture (recommended):** add a `searchTitles` method to the `DistributorAppService` port, implement it over REST in `acl`, expose it to the model through a new tool that calls a flow. Tests: scripted chat model plus a mocked port.
 2. **Via MCP:** use Spring AI's MCP client against our distributor MCP server. This breaks two rules on purpose (outbound integration only through `acl`; `CLAUDE.md` says the distributor is reached only through the port), so your spec must include an architecture change: update `docs/architecture.md`, `CLAUDE.md` and the ArchUnit rule with a documented exception. That is a legitimate outcome of a spec, as long as it is explicit.
 
-:::info[Sync moment]
-
-Look up, Maik demos this now. Maik shows one spec artefact per framework side by side (OpenSpec delta spec, Spec Kit spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes. (5 minutes)
-
-:::
+Once your spec artefact is committed, ask someone on another track to show theirs: an OpenSpec delta spec, a Spec Kit spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 ## Before you move on
 

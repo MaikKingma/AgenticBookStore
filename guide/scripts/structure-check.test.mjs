@@ -54,6 +54,7 @@ test('runChecks with structure: each rule family reaches the whole checker', () 
     [{[l[0].file]: `${levelPage(0)}\nA trailing paragraph.\n`}, /follows the checklist/],
     [{'docs/extra.md': '---\ntitle: X\n---\n'}, /unexpected file docs\/extra\.md/],
     [{'docs/06-wrap-up.md': '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::tip Checkpoint\nx\n:::\n'}, /space form/],
+    [{'docs/06-wrap-up.md': '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::info[Sync moment]\nx\n:::\n'}, /is a sync moment/],
     [{'docs/reference/_category_.json': '{"label": "Reference", "position": 3}'}, /position/],
   ];
   for (const [files, pattern] of cases) {
