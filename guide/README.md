@@ -73,6 +73,12 @@ Rules in place:
   font package anywhere in `guide/`.
 - Logo provenance (rule `logo`): every file under `static/img/` has a README line with its name and sha256 (see Logo and
   provenance below).
+- Routes (rule `routes`, in `npm run check:built`, default build dir only): the `<loc>` values of `build/sitemap.xml` are
+  exactly the frozen list of live pages in `scripts/rules/routes-built.mjs` (each once, compared as written), every
+  route has its build file (`index.html`, `<route>.html`, `reference/<name>.html`), and the pagination nav of each page
+  links to the page before and the page after it in the chain Welcome, Setup check, Level 0 to Level 4, Wrap-up, Cheat
+  sheet, Architecture, Troubleshooting (the first page has no previous link, the last has no next link). A page
+  addition must extend that list, the chain and the count in the same change, with a reason in the rule's header comment.
 
 The checker builds its forbidden characters from code points (`String.fromCodePoint(0x2014)`) because the editor tools
 decode a typed backslash-u escape into the literal character.
