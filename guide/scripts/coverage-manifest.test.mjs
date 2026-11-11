@@ -76,11 +76,33 @@ test('manifest: every entry is anchored in its pack section, and the count is th
 });
 
 test('manifest: each page has at least its pinned number of entries, so entries cannot be dropped quietly', () => {
-  const floor = {SU: 21, L0: 23, L1: 33, L2: 28, L3: 34, L4: 65, WU: 22, IX: 10, CS: 52, TS: 16};
+  // IX rose from 10 to 16 in spec 15 (the five Format cells and the walk-around sentence); the other floors equal the
+  // live counts, the five retargeted sync moment entries (L0-01, L1-01, L2-01, L3-01, L4-05) keep their ids and rows.
+  const floor = {SU: 21, L0: 23, L1: 33, L2: 28, L3: 34, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
   }
+});
+
+// Spec 15 (decision D19): the sync minutes went to solo time. IX-11 to IX-15 pin the five Format cells and IX-16 the
+// sentence that Maik and Tom walk around; the old "Sync N, solo N" cell or a missing sentence on the welcome page fails.
+test('manifest: the Format cells and the walk-around sentence of the welcome page are pinned (IX-11 to IX-16)', () => {
+  const ix = ENTRIES.filter((e) => ['IX-11', 'IX-12', 'IX-13', 'IX-14', 'IX-15', 'IX-16'].includes(e.id));
+  assert.equal(ix.length, 6);
+  // The live welcome page (the snapshot pages are skeletons, where rule (b) is silent).
+  const live = readPages(join(GUIDE, 'docs'));
+  const welcome = live[PAGE_FILES.IX];
+  assert.deepEqual(run(ix, {pages: live}).errors, []);
+  const cells = ['Solo 22, debrief 3', 'Solo 32, debrief 3', 'Solo 18 (LSP 10, MCP 8), debrief 2', 'Solo 28 (permissions 4, hooks 14, skill and command 10), debrief 2', 'Solo 42, debrief 3'];
+  cells.forEach((cell, index) => {
+    const id = `IX-${11 + index}`;
+    assert.ok(welcome.includes(cell), `the welcome page carries "${cell}"`);
+    const old = run(ix.filter((e) => e.id === id), {pages: {...live, [PAGE_FILES.IX]: welcome.replace(cell, 'Sync 3, solo 19, debrief 3')}});
+    assert.match(old.errors.join('\n'), new RegExp(`^coverage: ${id}: docs/index\\.md: the text "`));
+  });
+  const without = run(ix.filter((e) => e.id === 'IX-16'), {pages: {...live, [PAGE_FILES.IX]: welcome.replace('During the levels Maik and Tom walk around and help.', '')}});
+  assert.match(without.errors.join('\n'), /^coverage: IX-16: docs\/index\.md: the text "During the levels Maik and Tom walk around and help\." is not on the page/);
 });
 
 test('manifest: the sources and the pages are the five pack files and the eleven pages, and they exist', () => {
@@ -225,39 +247,35 @@ const SWEEPS = [
 // sweep is in the manifest. A literal that another section or page covers (CS-08 and L1-27 hold
 // "/clear") is no reason: that is the case the sweep exists to catch.
 const SWEEP_EXCLUDED = {
-  'plan:46 PATH': 'a word of the prerequisites sentence: SU-06 and SU-07 carry the jdtls binary check, SU-19 to SU-21 the other prerequisites',
-  'plan:65 PATH': 'the wrapper-script half of the Other Linux row, which SU-12 carries; the word PATH alone says nothing to check',
-  'plan:68 jdtls-lsp': 'the plugin is installed in Level 2 Part A, which SU-15 carries and L2-04 shows as a command; the plugin id is the sentence subject here',
-  'plan:89 main': 'Start branch line of the Level 0 box, checked by the structure rule',
-  'plan:89 level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
-  'plan:89 CLAUDE.md': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
-  'plan:89 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
-  'plan:108 double': 'a hint inside the money question, which L0-11 (for money) carries',
-  'plan:132 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
-  'plan:132 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
-  'plan:132 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
+  'plan:48 PATH': 'a word of the prerequisites sentence: SU-06 and SU-07 carry the jdtls binary check, SU-19 to SU-21 the other prerequisites',
+  'plan:67 PATH': 'the wrapper-script half of the Other Linux row, which SU-12 carries; the word PATH alone says nothing to check',
+  'plan:70 jdtls-lsp': 'the plugin is installed in Level 2 Part A, which SU-15 carries and L2-04 shows as a command; the plugin id is the sentence subject here',
+  'plan:91 main': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:91 level-0-start': 'Start branch line of the Level 0 box, checked by the structure rule',
+  'plan:91 CLAUDE.md': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:91 .claude/': 'the Level 0 premise that the repo has none, nothing to do; the structure rule checks the Start line of the box',
+  'plan:110 double': 'a hint inside the money question, which L0-11 (for money) carries',
+  'plan:134 solution/level-1': 'Catch-up and Compare line of the Level 1 box, checked by the structure rule',
+  'plan:134 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
+  'plan:134 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:143 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
   'plan:180 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
   'plan:180 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
-  'plan:182 which jdtls': 'the facilitator demo sentence, where the participant steps carry it: L2-02 (Part A) and SU-06',
-  'plan:182 /plugin install jdtls-lsp@claude-plugins-official': 'the facilitator demo sentence, where the participant steps carry it: L2-04 (Part A)',
-  'plan:183 /plugin': 'the facilitator demo sentence about the Installed tab, which L2-09 carries',
-  'plan:183 claude mcp add': 'the facilitator demo sentence, where the participant steps carry it: L2-20 (Part B)',
-  'plan:193 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
-  'plan:198 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
-  'plan:230 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
-  'plan:230 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
-  'plan:237 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:237 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:250 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
-  'plan:260 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
-  'plan:267 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
-  'plan:267 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
-  'plan:285 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
-  'plan:300 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
-  'plan:307 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
-  'plan:309 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'plan:311 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:191 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
+  'plan:196 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
+  'plan:228 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
+  'plan:228 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
+  'plan:232 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:232 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:246 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
+  'plan:256 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
+  'plan:263 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
+  'plan:263 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
+  'plan:281 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
+  'plan:296 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  'plan:303 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
+  'plan:305 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:307 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
   'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
@@ -301,9 +319,9 @@ test('manifest: the sweep counts coverage per section and per page, a snippet of
   // "/clear" is also in L1-27 (Level 1 section, page L1) and CS-08 (cheat sheet), "./mvnw verify"
   // in SU-09, L0-06 and L1-03 (three sections of the plan, three pages).
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-64')).includes('sdd:110 /clear'), 'the Track A step is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:56 ./mvnw verify'), 'the setup check command is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:58 ./mvnw verify'), 'the setup check command is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-65')).includes('sdd:97 claude'), 'the common start line is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:276 name'), 'the skill frontmatter field is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:272 name'), 'the skill frontmatter field is covered by its own entry only');
   // The right snippet on the wrong page, and on the right page but attributed to another section.
   const wrongPage = ENTRIES.map((e) => (e.id === 'L4-11' ? {...e, page: 'WU'} : e));
   assert.ok(sweep(wrongPage).includes('sdd:105 /opsx:explore'));

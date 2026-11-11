@@ -9,7 +9,7 @@
 - [Mapper test witnesses](mapper-test-witnesses.md) — data that makes mapper and translator mutations observable
 - [Boot logging in a shared fork](boot-logging-shared-fork.md) — logback init once per JVM, logging sysprops
 - [Distributor API slice traps](distributor-api-slice-traps.md) — Javadoc greps, slices skip MCP scanner, JSON via Map
-- [Docusaurus guide traps](docusaurus-guide-traps.md) — MDX scanner, checker wiring, built-HTML rules, A4 fit, pipe truncation, axe vs chevron crumbs
+- [Docusaurus guide traps](docusaurus-guide-traps.md) — MDX scanner, checker wiring, built-HTML rules, A4 fit, axe
 - [Spring environment tests](spring-environment-tests.md) — yml/EPP tests, Binder placeholders, Boot 4.1.2 EPP key
 - [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, Vitest cleanup, css ?raw, QA grep traps
 - [View controller test traps](view-controller-test-traps.md) — equivalent-mutant probe, no redirects, ${basedir} resources

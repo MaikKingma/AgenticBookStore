@@ -24,9 +24,6 @@ metadata:
   changes (reserved, reorder level) are set by `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check. For
   app-generated ids seed `book`, `book_author`, `stock_item` by SQL with fixed ids (first hex digit 0 to 7) so ids can be
   non-monotone; set instants with `OffsetDateTime.ofInstant(i, ZoneOffset.UTC)` to compare literal ISO strings.
-- Root-order claims over a fetch-joined query (orders with lines): QA sorts by each child column asc and desc over the flat rows
-  (root keeps first appearance). Give each root its own books and put the smallest and largest child value of every column in
-  the middle root; tabulate with a script first.
 - The full context is cached across `IntegrationTestBase` subclasses (no new Started line); `@MockitoSpyBean` on a port and a
   plain class in the base `@Import` keep it so. A forked context (own `@TestPropertySource`, `@Import`, `@MockitoSpyBean` on a
   transactional flow) costs one extra Started line. Drive the Spring AI tool loop from `ScriptedChatModel` and read the tool
@@ -48,5 +45,3 @@ metadata:
   "Row unchanged after a rejected command": `queryForMap("select * ...")` before and after. Run every "unchanged" claim from each
   start of the flag it could flip (`@ValueSource(booleans = {true, false})`), else a reset-with-rollback-suppressed mutant
   survives (QA rule C0-17).
-- "Never two threads inside" witness for a synchronized method: a test `Clock` whose `instant()` bumps an `AtomicInteger`,
-  records the max, then waits on a latch nobody opens (`await(50, ms)`); release two threads from one start latch.

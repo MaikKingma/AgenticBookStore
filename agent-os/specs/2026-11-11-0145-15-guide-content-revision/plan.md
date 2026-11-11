@@ -19,7 +19,7 @@ owner's merge.
 
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | | | | |
+| T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | #171 | sdd/15-guide-content-revision/T1 | PASS r1 | ENDORSE |
 | T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock, Level 1 creativity tip (A1) | elevated | sonnet | | | | |
 | T3 | guide | [T1] | 2 | Level 2 step 5 debugging section in `<details>`, demo text removed, Level 2 creativity tip (A1) | elevated | sonnet | | | | |
 | T4 | guide | [T1] | 2 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence, Level 4 creativity tip (A1) | elevated | sonnet | | | | |
@@ -235,7 +235,26 @@ meta-review compensates on the critical tasks.
 
 ## QA feed-forward
 
-(none yet)
+From the T1 meta-review (qa-lead ENDORSE r1; full text in the QA ledger section "QA feed-forward"):
+
+- FF-T1-1 (T6, under A2): (a) a ban witness on a finished Level 2 fixture page with contractual anchors (kills M2c);
+  (b) one witness asserting the exact `line N:` of the ban message (kills M1f); (c) the title regex becomes
+  `/sync[\s_-]*moment/i`: `Sync-moment`, `sync_moment`, `Sync - moment` fail; `In sync`, `A moment`, `Sync` pass. The
+  verifier shows each new witness survives against the T1-gate files and dies against the new ones.
+- FF-T1-2 (T3, inside its `content.mjs` / `content.test.mjs` scope): (a) the near miss `Maik demonstrates` must pass
+  (kills M12d); (b) the `sync moment` deny row becomes `/sync[\s_-]*moment/gi`: `Sync-moment`, `sync_moment`,
+  `Syncmoment` fail; `in sync`, `a moment`, `sync the moment`, `asynchronous` pass.
+- FF-T1-3 (T4): the Level 4 page's "About 35 minutes" (three times) and "A fits every track in 35 minutes" mirror
+  `sdd-framework-guide.md:104,117,129` and `level-4-feature-briefs.md:41`, which this spec may not edit: keep the 35
+  and add one sentence (mirrored in the plan, pinned by a coverage entry) saying what the rest of the 42-minute solo
+  block is for, or report it as an owner residual. Check that the L4-05 sentence does not read as part of Brief C.
+- FF-T1-4 (every later task, from A1): C0-18 ports and rig folders per task (verifiers 31N0-31N9, implementers
+  32N0-32N9, qa-final 3190-3199, rig in `SP/s15-t<N>-qa-rig/`); C0-19 "previous gate" means the spec tip the task was
+  cut from or last merged; C0-20 after merging the spec tip, re-prove the gates, the pin audit against the merged plan
+  and manifest, the plan diff, the built grep, the rendered check, and that files the task does not own equal the spec
+  tip; C0-21 the A4 axe hit counts as pre-existing only while T5 is not in the task's base, after that the bar is 0.
+- FF-T1-5 (qa-final): IX-11 to IX-15 match a Format cell anywhere in the agenda, not per row; qa-final re-runs the
+  per-row arithmetic census from a final-prefixed copy of `s15-t1-qa-timetable.mjs`.
 
 ## Amendments
 
@@ -256,6 +275,9 @@ meta-review compensates on the critical tasks.
     branch then merges the spec tip (merge commit, never rebase); conflicts in `workshop-plan.md`, `coverage.mjs` and
     `coverage-manifest.test.mjs` are resolved by that task's implementer (floors equal live counts, `SWEEP_EXCLUDED`
     keys recomputed against the merged plan), and the task's gates and a delta verification run again before its merge.
+- A2 (2026-11-11, orchestrator, from the T1 meta-review; gate re-run self-accepted, test-only plus one regex line).
+  T6's fileScope gains `guide/scripts/structure.test.mjs` (insertion-only) and `guide/scripts/rules/structure.mjs`
+  limited to the `SYNC_MOMENT_TITLE` line, for FF-T1-1. T3 carries FF-T1-2 inside its existing scope; T4 carries FF-T1-3.
 
 ## Residuals for the owner (expected)
 

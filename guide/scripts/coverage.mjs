@@ -159,7 +159,7 @@ export const ENTRIES = [
   setup('SU-21', 'WP:45-47', 'text', 'Node.js is not needed'),
 
   // Level 0 (WP section 4)
-  level0('L0-01', 'WP:92-93', 'text', 'onion diagram'),
+  level0('L0-01', 'WP:92-93', 'text', 'look at the onion diagram'),
   level0('L0-02', 'WP:95-98', 'text', 'Add discounts to the bookstore. A book can get a discount percentage. Show the discounted price when people search the catalogue.'),
   level0('L0-03', 'WP:101', 'command', 'claude'),
   level0('L0-04', 'WP:101', 'text', 'permission mode'),
@@ -184,7 +184,7 @@ export const ENTRIES = [
   level0('L0-23', 'WP:92-93', 'text', 'ArchitectureTest'),
 
   // Level 1 (WP section 5, spec 10 scenario)
-  level1('L1-01', 'WP:134-135', 'text', 'cross out everything'),
+  level1('L1-01', 'WP:134-135', 'text', 'cross out everything Claude could have read from the code itself'),
   level1('L1-02', 'WP:138-139', 'text', '/init'),
   level1('L1-03', 'WP:140-147', 'command', './mvnw verify'),
   level1('L1-04', 'WP:140-147', 'command', './mvnw -pl bookstore test -Dtest=BookTest'),
@@ -219,7 +219,7 @@ export const ENTRIES = [
   entries('spec10', 'Scenario: Rules load on demand', 'L1')('L1-32', 'S10:113-115', 'text', 'the rule is loaded'),
 
   // Level 2 (WP section 7)
-  level2('L2-01', 'WP:182-184', 'text', 'LSP install check'),
+  level2('L2-01', 'WP:182-184', 'text', 'Part A starts with the LSP install check'),
   partA('L2-02', 'WP:190', 'command', 'which jdtls'),
   partA('L2-03', 'WP:190', 'text', 'Windows: inside WSL'),
   partA('L2-04', 'WP:191-194', 'command', '/plugin install jdtls-lsp@claude-plugins-official'),
@@ -260,7 +260,7 @@ export const ENTRIES = [
   entries('spec10', 'Scenario: MCP is available', 'L2')('L2-28', 'S10:209', 'text', 'connected with 4 tools'),
 
   // Level 3 (WP section 8, spec 10)
-  level3('L3-01', 'WP:232-233', 'text', 'exit code 2'),
+  level3('L3-01', 'WP:232-233', 'text', 'the agent reads the stderr and fixes the test'),
   permissions('L3-02', 'WP:236-245', 'command', PERMISSIONS_JSON),
   permissions('L3-32', 'WP:236-245', 'text', '.claude/settings.json'),
   permissions('L3-03', 'WP:246-247', 'text', 'deny, then ask, then allow'),
@@ -300,7 +300,7 @@ export const ENTRIES = [
   level4('L4-02', 'WP:303-307', 'text', 'start/level-4-speckit'),
   level4('L4-03', 'WP:303-307', 'text', 'start/level-4-agentos'),
   level4('L4-04', 'WP:311-312', 'text', 'feature brief'),
-  level4('L4-05', 'WP:314-315', 'text', 'side by side'),
+  level4('L4-05', 'WP:314-315', 'text', 'hold the same idea in three shapes'),
   common('L4-06', 'SDD:93-97', 'command', 'git stash -u'),
   common('L4-07', 'SDD:93-97', 'command', 'git switch start/level-4-<track>'),
   common('L4-08', 'SDD:93-97', 'text', '/model sonnet'),
@@ -437,6 +437,13 @@ export const ENTRIES = [
   agenda('IX-08', 'WP:25-35', 'text', 'Give your agent eyes (LSP + MCP)'),
   agenda('IX-09', 'WP:25-35', 'text', 'Behavioral control'),
   agenda('IX-10', 'WP:25-35', 'text', 'Spec-driven development'),
+  // The Format column: sync minutes went to solo time (spec 15), the level totals did not change.
+  agenda('IX-11', 'WP:25-35', 'text', 'Solo 22, debrief 3'),
+  agenda('IX-12', 'WP:25-35', 'text', 'Solo 32, debrief 3'),
+  agenda('IX-13', 'WP:25-35', 'text', 'Solo 18 (LSP 10, MCP 8), debrief 2'),
+  agenda('IX-14', 'WP:25-35', 'text', 'Solo 28 (permissions 4, hooks 14, skill and command 10), debrief 2'),
+  agenda('IX-15', 'WP:25-35', 'text', 'Solo 42, debrief 3'),
+  agenda('IX-16', 'WP:25-35', 'text', 'During the levels Maik and Tom walk around and help.'),
 
   // Troubleshooting (WP section 11 and the Level 2 part A, the S11:38 topics)
   risks('TS-01', 'S11:38', 'command', 'docker info'),

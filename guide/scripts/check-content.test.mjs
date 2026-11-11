@@ -115,6 +115,9 @@ test('runChecks with content: the content probes of the card each fail through t
     ['the token on Level 2', LEVEL2, 'Never set `ANTHROPIC_API_KEY`.', /may only be named on the setup and troubleshooting pages/],
     ['feature-briefs.md on a page', LEVEL4, 'See feature-briefs.md.', /"feature-briefs" must not appear/],
     ['spec 10 on a page', LEVEL2, 'As in spec 10.', /"spec NN" must not appear/],
+    ['a sync moment in the prose of a page', LEVEL2, 'Sync moments are the live demos.', /"sync moment" must not appear/],
+    ['the old sync moment sentence on a page', LEVEL4, 'Look up, Maik demos this now.', /"maik demos" must not appear/],
+    ['a live demo in the prose of a page', LEVEL2, 'Each level opens with a short live demo.', /"live demo" must not appear/],
   ];
   for (const [name, file, extra, pattern] of cases) {
     const {lines, errors} = check(page(file, extra));

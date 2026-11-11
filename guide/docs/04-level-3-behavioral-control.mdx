@@ -27,12 +27,6 @@ git stash -u && git switch solution/level-2
 
 Start from your Level 2 result, or from `solution/level-2`. In this level you add permissions, a hook that blocks red commits, a skill and a command.
 
-:::info[Sync moment]
-
-Look up, Maik demos this now. Maik shows one hook blocking a commit: red tests, exit code 2, and the agent reads the stderr and fixes the test. (4 minutes)
-
-:::
-
 ## Part A: Permissions {/* #part-a-permissions */}
 
 About 4 minutes.
@@ -82,7 +76,7 @@ Expected: the read is denied.
 
 ## Part B: Hooks {/* #part-b-hooks */}
 
-About 11 minutes. The goal: no green tests, no commit.
+About 14 minutes. The goal: no green tests, no commit. Watch for the moment the hook blocks a red commit with exit code 2 and the agent reads the stderr and fixes the test.
 
 ### 1. Add the hook to the settings
 
@@ -177,7 +171,7 @@ The `solution/level-3` branch has one, `.claude/hooks/architecture-check-on-stop
 
 ## Part C: Skill and command {/* #part-c-skill-and-command */}
 
-About 9 minutes.
+About 10 minutes.
 
 ### 1. Create the skill
 

@@ -4,13 +4,10 @@ description: Non-obvious traps for the frontend module (Maven-installed Node, Vi
 metadata:
   type: feedback
 ---
-- **Scaffold**: `./mvnw -f frontend/pom.xml -Dskip.npm=true generate-resources` installs `frontend/node` only. Run `npm create
-  vite@<pin> app -- --template react-ts --no-interactive` in the scratchpad, never the repo (add `strict`; drop favicon, `public/`).
 - **Vitest cleanup**: `globals: false` has no RTL auto cleanup: call `cleanup()` in `afterEach` from setupTests. Order in one
   `afterEach`: cleanup, read console spy calls, `restoreAllMocks`, `expect` last (a failing assertion cannot skip the resets).
   Keep spies out of module-level `let` (QA greps `^(export )?(let|var) `): use `vi.mocked(console.error)` guarded by
   `vi.isMockFunction`. QA asks a guard test per afterEach statement (`setupTests.test.ts`: dirty test, then clean-state test).
-- **Vite dev server** may bind IPv6 only: `curl 127.0.0.1:5173` fails until `server.host: '127.0.0.1'`.
 - **Shell**: no `rg` or Grep tool (grep via Bash, no `-P`); the worktree guard refuses `cd <dir> && ...` and inline `for` loops
   (script in `.claude/comms/tmp`). ASCII check: `env LC_ALL=C grep -rnI $'[\x80-\xff]' <paths>`; the Write tool stores U+2003 as a
   plain space, so use a committed non-ASCII file as positive control.
@@ -50,9 +47,3 @@ metadata:
   in the send path (`crypto.randomUUID` is absent on plain-http non-localhost) needs try/catch inside an `async` send
   (`await chat({ id: helper(), ... })`), so a throw becomes the generic alert, not a stuck pending state. `findByText`
   normalises whitespace: await the author label, compare `li.textContent` byte-exact.
-- **Live checks after a rebuild**: the jar serves `index.html` with `Last-Modified` 1980, so a REUSED Playwright session keeps
-  the old build: open a new session per build.
-- **"Existing test file unmodified, 0 deletions"**: add imports as NEW lines (never widen an `import { a }` line) and append to
-  the last `describe` by replacing its closing lines with themselves plus the new block. Shared in-flight state (a request
-  outliving its page) belongs in the root provider with a `useRef` guard; only a same-tick hook test
-  (`act(() => { place(); place() })`) kills a state-only guard.
