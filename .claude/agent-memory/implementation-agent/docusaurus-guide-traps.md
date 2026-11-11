@@ -61,6 +61,9 @@ No stack skill exists for Node/Docusaurus; follow the spec folder's strategy.md 
   constant) needs a test on the partial-failure return value. Call helper scripts by absolute path, never `~`, `$VAR` or `$?`.
 - "Survives the old gate, dies against the new": one runner, two variants (new tests vs the prior gate's test file from
   `git show <sha>:path` saved by a script; the worktree guard refuses `git show ... > file` inline).
+- The zero-test guard blanks slash-star block comments before counting `test(`: a test string holding an unclosed MDX comment
+  opener hides every test up to the next closer. Build such literals from parts (`'{/' + '*'`) and compare guard vs plain
+  count per edited test file (`countTestCases` in `rules/zero-tests.mjs`). Section bound for plan rules: next `##` outside fences.
 - Loading `docusaurus.config.ts` from node:test prints MODULE_TYPELESS (breaks the 0-warning baseline): pin config on source text.
 - `coverage-manifest.test.mjs` reads the SKELETON snapshot pages: a test pinning live page text must read
   `readPages(join(GUIDE, 'docs'))`. `SWEEP_EXCLUDED` keys and `plan:<n>` witnesses move on ANY plan edit above them: remap

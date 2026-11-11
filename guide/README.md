@@ -21,7 +21,7 @@ Run all of them in `guide/`.
 | `npm run typecheck` | `tsc` over the config files and components. |
 | `npm run check` | The node:test self-tests of the checker, then the source rules (hygiene, colours, contrast, brand, fonts, zero-test guard). Needs no build. |
 | `npm run build` | The Pages build into `build/`. This is the gate: it renders every page and fails on a broken link or anchor. |
-| `npm run check:built` | Scans `build/**/*.html` for a literal `:::` (an admonition that was not parsed). Fails when `build/` is missing or holds no html file. |
+| `npm run check:built` | Scans `build/**/*.html`: a literal `:::` (an admonition that was not parsed), and for the default build dir the routes and sitemap, the navbar, the level bar, the table regions and the PowerShell panels (see Rules in place). Fails when `build/` is missing or holds no html file. |
 | `npm run build:offline` | The offline build into `build-offline/` (see below). Run it only after `npm run build` passed. |
 
 The order in CI is `npm ci`, `check`, `typecheck`, `build`, `check:built`, `build:offline`.
@@ -88,6 +88,25 @@ Rules in place:
   an import line, another admonition or a comment that shares its line with text before the box fails, and so does a
   Wrap-up link that sits only outside the box. The skeleton snapshot for the self-tests
   (`scripts/fixtures/skeleton-docs/`) holds the bonus page too, as the only file added after commit 05e58a2.
+- No workflow script code (rule `content`, in `npm run check`, every page): `export const meta` anywhere in a page, and a
+  call of `agent(`, `pipeline(`, `parallel(` or `phase(` inside an inline code span, a fenced line or a raw `<code>` or
+  `<pre>` element, fail with "no workflow script code in the guide". The name is a whole lower-case word, a space or line
+  break before the parenthesis does not help, and the same words in English prose ("the agents (two of them)") pass. The
+  guide explains the fields and the questions of an agent flow and never writes the script.
+- Bonus page guards (`scripts/bonus-page.test.mjs`, in `npm run check`): the functions are in `scripts/rules/content.mjs`
+  and use the scanner of the checker. Pack membership: every inline code span and every trimmed fenced line of the bonus
+  page equals, as a whole, a span or a fenced line of the plan section `## Bonus level: orchestrate your own team
+  (optional)` (up to the next `##` heading), so no command lives only on the page; a plan without that heading is an
+  error. Fragment: at most one fenced block holds subagent frontmatter key lines (`name`, `description`, `tools`,
+  `model` and the other fields of the sub-agents docs), every key line has one angle-bracket placeholder as its value
+  (`tools: <tools>`), and the block holds nothing but `---` and key lines; an inline span `tools: Read, Grep` with a real
+  value fails too, `tools: <tools>` and `tools` pass. No time slot: a number with minutes or hours (`10 min`,
+  `30-minute`, `an hour`, `ten minutes`) fails on the bonus page and in the plan's bonus section, a version number does
+  not. A raw `<code>` element counts as an inline span and a raw `<pre>` element as a fenced block for the membership
+  and the fragment guards (the checker reads them as code too). A new literal on the page needs the same literal in the plan section first.
+- Test files and block comments: the zero-test guard blanks a slash-star block comment before it counts `test(` calls, so
+  a test string with a slash-star opener and no closer silently hides the tests below it. Build such strings from parts
+  (`'{/' + '*'`) so the count of the guard equals the plain count of `test(` lines in every test file.
 
 The checker builds its forbidden characters from code points (`String.fromCodePoint(0x2014)`) because the editor tools
 decode a typed backslash-u escape into the literal character.

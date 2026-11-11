@@ -26,7 +26,7 @@ lead's opus meta-review compensates on the critical tier.
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
 | T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | #179 | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
-| T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | | | | |
+| T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | #180 | sdd/16-bonus-level-orchestration/T3 | FAIL r0 test-only, PASS r1 | ENDORSE r1 |
 | T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | | | | |
 
 ## Common to every task (C)
@@ -263,7 +263,20 @@ Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaD
 - FF-T2-3 (T4 verifier and qa-final): the rendered Wrap-up link in the marker box: text `Wrap-up`, href
   `/AgenticBookStore/wrap-up` (Pages) or the hash route (offline), visible at 390 px, both builds (residual R4: the
   source check is a substring test).
-- Optional (T3 owns README edits): `guide/README.md:24` still describes `check:built` as a `:::` scan only (predates
+- FF-T3-1 (T4 verifier): hash-equal to the T3 merge: `guide/scripts/rules/content.mjs`, `content.test.mjs`,
+  `structure.test.mjs`, `rules/structure.mjs`, `lib/mdscan.mjs`; `bonus-page.test.mjs` insertion-only against the T3
+  gated copy (scratchpad `s16-t3-qa-r1-guide__scripts__bonus-page.test.mjs.orig`); every T3 test title
+  (`membership:`, `fragment:`, `time slot:`) still present (sorted title lists, `comm -23` empty); `ok tests (N test
+  cases)` with N = 787 plus T4's added cases; guard count equals plain count for `bonus-page.test.mjs`.
+- FF-T3-2 (T4 implementer and verifier): no raw HTML code element on the bonus page or in the plan's `Bonus level`
+  section: `git grep -n -i -E '<(code|pre|kbd|samp)\b|<CodeBlock'` over both prints nothing; literals only in Markdown
+  spans and fences.
+- FF-T3-3 (T4 verifier): the bonus guards run only inside `npm run check`; quote their `membership:`, `fragment:` and
+  `time slot:` test names from its node:test output, never `node scripts/check.mjs` alone.
+- FF-T3-4 (T4 verifier, docs drift): the fragment rule pins the 19 frontmatter fields of sub-agents.md as read on
+  2026-11-11; the T4 claims re-fetch also counts the field table (19 rows, same names as `DOC_KEYS`); a mismatch is
+  reported to the orchestrator.
+- Optional (T3 owns README edits, done in T3): `guide/README.md:24` still describes `check:built` as a `:::` scan only (predates
   spec 16); T3 may correct it while adding its rule bullets.
 
 ## Amendments

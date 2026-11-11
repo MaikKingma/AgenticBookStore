@@ -1,5 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readdirSync, readFileSync} from 'node:fs';
+import {dirname, join, relative, sep} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {scanMarkdown} from './lib/mdscan.mjs';
 import {
   LEVEL0_PAGE,
@@ -12,6 +15,7 @@ import {
   observationCardErrors,
   packCommandLines,
   powershellErrors,
+  scriptCodeErrors,
   tabErrors,
 } from './rules/content.mjs';
 import {SKELETON_MARKER} from './rules/structure.mjs';
@@ -550,7 +554,10 @@ test('powershell: a closing tag MDX renders as text, escaped or in a string lite
 });
 
 test('powershell and tabs: a comment opener MDX renders as text, escaped or in a string of an expression, hides no Windows line', () => {
-  for (const intro of ['Type \\{/* to start a comment.', "Type {'{/*'} to start a comment.", 'Type {"{/*"} to start a comment.']) {
+  // The opener is built from parts: an unclosed literal one here would be read as a block comment by the zero-test
+  // guard and would swallow the tests below it (spec 16, FF-T2-1).
+  const open = '{/' + '*';
+  for (const intro of [`Type \\${open} to start a comment.`, `Type {'${open}'} to start a comment.`, `Type {"${open}"} to start a comment.`]) {
     onlyInventedAt(pageErrors(`${intro}\n\n${osTab(INVENTED)}`), 14);
   }
 });
@@ -613,4 +620,125 @@ test('img: a real <img> between two lone backticks across a heading, a list item
   passes(imgErrors(OTHER, `Write \`${img}\`.\n\n\`\`\`html\n${img}\n\`\`\`\n\n{/* ${img} */}`));
   // An escaped tag or one in a string of an expression is still reported: a literal tag belongs in inline code.
   exactly(imgErrors(OTHER, `Write \\${img} and {'${img}'} as text.`), 2, /line 1: a raw <img> tag/);
+});
+
+// Spec 16 task T3 (decision D-S4): no workflow script code anywhere in the guide. A call of agent, pipeline, parallel or
+// phase in an inline code span or a fenced line fails, and so does "export const meta" in any form, wherever it stands.
+// The MDX comment markers are built from parts: a literal one here would confuse the zero-test guard (FF-T2-1).
+const NO_SCRIPT = 'no workflow script code in the guide';
+const BONUS_PAGE = 'docs/06-bonus-level-orchestration.mdx';
+const WRAP_UP_PAGE = 'docs/06-wrap-up.md';
+const COMMENT_OPEN = '{/' + '*';
+const COMMENT_CLOSE = '*' + '/}';
+const GUIDE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const callPattern = (name, line) => new RegExp(`^content: .*: line ${line}: "${name}\\(" in code: ${NO_SCRIPT}`);
+const metaPattern = (line) => new RegExp(`^content: .*: line ${line}: "export const meta" in the page text: ${NO_SCRIPT}`);
+
+test('script code: agent(, pipeline(, parallel( and phase( fail in an inline span, and name the file, the line and the rule', () => {
+  for (const name of ['agent', 'pipeline', 'parallel', 'phase']) {
+    exactly(pageErrors(`first line\nRun \`${name}(x)\` now.\n`), 1, new RegExp(`^content: ${OTHER}: line 2: "${name}\\(" in code: ${NO_SCRIPT}`));
+  }
+});
+
+test('script code: agent(, pipeline(, parallel( and phase( fail in a fenced line, in any fence form, and name the line', () => {
+  for (const name of ['agent', 'pipeline', 'parallel', 'phase']) {
+    for (const lang of ['js', '', 'text']) {
+      exactly(pageErrors(`first line\n\`\`\`${lang}\nconst a = await ${name}('x');\n\`\`\`\n`), 1, new RegExp(`^content: ${OTHER}: line 3: "${name}\\(" in code: ${NO_SCRIPT}`));
+    }
+    exactly(pageErrors(`first line\n~~~\n${name}(x)\n~~~\n`), 1, callPattern(name, 3));
+    exactly(pageErrors(`first line\n> \`\`\`js\n> ${name}(x)\n> \`\`\`\n`), 1, callPattern(name, 3));
+    exactly(pageErrors(`first line\n- \`\`\`js\n  ${name}(x)\n  \`\`\`\n`), 1, callPattern(name, 3));
+  }
+});
+
+test('script code: a space, a tab or a line break between the name and the parenthesis is still a call (a dropped \\s* would pass them)', () => {
+  exactly(pageErrors('Run `agent (x)` now.\n'), 1, callPattern('agent', 1));
+  exactly(pageErrors('Run `parallel\t(x)` now.\n'), 1, callPattern('parallel', 1));
+  exactly(pageErrors('```js\nphase  (x)\n```\n'), 1, callPattern('phase', 2));
+  exactly(pageErrors('```js\npipeline\n(x)\n```\n'), 1, callPattern('pipeline', 2));
+  exactly(pageErrors('Run `agent\n(x)` now.\n'), 1, callPattern('agent', 1));
+});
+
+test('script code: two calls are two errors, one per match, each with its own line', () => {
+  const errors = pageErrors('Run `agent(a)` and `phase(b)`.\n\n```js\nparallel([x]);\n```\n');
+  assert.equal(errors.length, 3, errors.join('\n'));
+  assert.match(errors[0], callPattern('agent', 1));
+  assert.match(errors[1], callPattern('phase', 1));
+  assert.match(errors[2], callPattern('parallel', 4));
+});
+
+test('script code: export const meta fails in prose, an inline span, a fenced line, a top-level ESM line and a comment, also with other whitespace', () => {
+  for (const text of [
+    'We write export const meta = {} here.',
+    'Run `export const meta = {}` now.',
+    'export const meta = {name: "x"};',
+    '```js\nexport const meta = {name: "x"};\n```',
+    '```js\n  export  const\tmeta = 1\n```',
+    `${COMMENT_OPEN} export const meta = {} ${COMMENT_CLOSE}`,
+    'Then export  const  meta now.',
+    'Then export\nconst meta now.',
+  ]) {
+    const errors = pageErrors(`first line\n${text}\n`);
+    assert.ok(errors.length >= 1, text);
+    assert.match(errors[0], new RegExp(`^content: ${OTHER}: line [2-3]: "export const meta" in the page text: ${NO_SCRIPT}`), text);
+  }
+  // The pattern starts at a word boundary and has none at the end: another word before it is no export, a longer name is.
+  passes(pageErrors('first line\nThe reexport const meta word.\n'));
+  exactly(pageErrors('first line\nexport const metadata = {};\n'), 1, metaPattern(2));
+  exactly(pageErrors('first line\nWe write export const meta = {} here.\n'), 1, metaPattern(2));
+  exactly(pageErrors('first line\nsecond\nexport const meta = {};\n'), 1, metaPattern(3));
+});
+
+test('script code: the ban applies to every page, the bonus page, the wrap-up page and a skeleton page included', () => {
+  for (const file of [BONUS_PAGE, WRAP_UP_PAGE, OTHER, INDEX, SETUP, TROUBLE]) {
+    exactly(pageErrors('Run `agent(x)` now.\n', file), 1, new RegExp(`^content: ${file}: line 1: "agent\\(" in code: ${NO_SCRIPT}`));
+    exactly(pageErrors('export const meta = {};\n', file), 1, new RegExp(`^content: ${file}: line 1: "export const meta" in the page text: ${NO_SCRIPT}`));
+  }
+  const skeleton = `---\ntitle: Level 1\n---\n\n${SKELETON_MARKER}\n\nRun \`agent(x)\` now.\n`;
+  exactly(pageErrors(skeleton), 1, callPattern('agent', 7));
+});
+
+test('script code: calls in prose, headings and table cells are English, not code, and pass (the agents (two of them))', () => {
+  for (const text of [
+    'the agents (two of them) work in turn.',
+    'an agent (the researcher) reads first.',
+    'Run each phase (read, plan, review) in order.',
+    'The pipeline (spec to merge) has one human gate.',
+    'Work in parallel (two agents) when you can.',
+    '## Phase (one)',
+    '| Part | What it does |\n| --- | --- |\n| agent (role) | does a step |\n',
+    '- agent (one of two)',
+    'agent (x)',
+  ]) {
+    passes(pageErrors(`${text}\n`));
+  }
+});
+
+test('script code: a span that only names a word, or follows it with prose, is no call and passes', () => {
+  for (const text of ['Name the `agent` (the role) first.', 'Name the `phase` (one of four).', 'The `parallel` word.', 'Write `agents (plural)` in prose.', 'Use `parallelism` and `pipelines` and `phases`.']) {
+    passes(pageErrors(`${text}\n`));
+  }
+});
+
+test('script code: a longer word, another letter case or a longer name does not match (a dropped \\b would flag them)', () => {
+  for (const text of ['`subagent(x)`', '`Agent(agent_type)`', '`myphase(x)`', '`Pipeline(x)`', '`reparallel(x)`', '`agent_x(y)`', '`phases(x)`']) {
+    passes(pageErrors(`Run ${text} now.\n`));
+    passes(pageErrors(`\`\`\`js\n${text.replaceAll('`', '')}\n\`\`\`\n`));
+  }
+});
+
+test('script code: scriptCodeErrors on its own reports the same lines, and a clean page has none', () => {
+  assert.deepEqual(scriptCodeErrors(OTHER, 'Plain prose (with a call-like word).\n'), []);
+  const [error] = scriptCodeErrors(OTHER, 'one\nRun `agent(x)` now.\n');
+  assert.match(error, new RegExp(`^${OTHER}: line 2: "agent\\(" in code: ${NO_SCRIPT}`));
+});
+
+test('script code: the 12 live pages (the 11 finished ones and the bonus stub) have no hit', () => {
+  const docs = join(GUIDE_ROOT, 'docs');
+  const files = readdirSync(docs, {recursive: true, withFileTypes: true}).filter((entry) => entry.isFile() && /\.mdx?$/.test(entry.name));
+  assert.equal(files.length, 12);
+  for (const entry of files) {
+    const path = join(entry.parentPath, entry.name);
+    assert.deepEqual(scriptCodeErrors(relative(GUIDE_ROOT, path).split(sep).join('/'), readFileSync(path, 'utf8')), [], path);
+  }
 });

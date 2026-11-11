@@ -459,15 +459,27 @@ test('structure: blank lines and whole-line MDX comments may come before the bon
 
 test('structure: a paragraph, a heading, an import line or another admonition before the bonus box fails (each once)', () => {
   const imports = "import Foo from '@site/src/components/Foo';";
-  for (const before of [['A paragraph first.'], ['## A heading'], [imports], [':::tip[Hint]', '', 'Read me.', '', ':::'], ['- a list item'], ['<Foo />']]) {
+  for (const before of [['A paragraph first.'], ['## A heading'], [imports], [':::tip[Hint]', '', 'Read me.', '', ':::'], [':::tip[Hint]', ':::'], ['- a list item'], ['<Foo />']]) {
     assertErrors(bonus(bonusPage({before})), [NOT_FIRST]);
   }
   const [error] = bonus(bonusPage({before: ['A paragraph first.']}));
   assert.match(error, /^structure: docs\/06-bonus-level-orchestration\.mdx: line 6: .*found "A paragraph first\." before it/);
 });
 
+test('structure: a paragraph or a heading on the line right above the bonus box, with no blank line between, fails', () => {
+  const opener = ':::info[Optional bonus level]';
+  for (const line of ['A paragraph first.', '## A heading']) {
+    assertErrors(bonus(replaceOnce(bonusPage(), opener, `${line}\n${opener}`)), [NOT_FIRST]);
+  }
+});
+
 test('structure: a comment that spans lines, shares its line with text or is not a comment before the bonus box fails', () => {
-  for (const before of [['{/* line one', 'line two */}'], ['{/* a */} text'], ['text {/* a */}'], ['<!-- html comment -->'], ['{/* a */}{/* unclosed']]) {
+  // The comment openers and closers are built from parts: a literal slash-star pair in this file would be read as a
+  // block comment by the zero-test guard, which would swallow the tests that follow an unclosed one.
+  const open = '{/' + '*';
+  const close = '*' + '/}';
+  const cases = [[`${open} line one`, `line two ${close}`], [`${open} a ${close} text`], [`text ${open} a ${close}`], ['<!-- html comment -->'], [`${open} a ${close}${open} unclosed`]];
+  for (const before of cases) {
     assertErrors(bonus(bonusPage({before})), [NOT_FIRST]);
   }
 });

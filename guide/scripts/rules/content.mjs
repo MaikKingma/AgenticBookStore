@@ -1,8 +1,9 @@
 // The content rules of the guide pages: the deny-list of internal paths and words (d), the
 // ANTHROPIC_API_KEY forms (e), raw <img> (f), the tab group and label sets (g), the
-// PowerShell lines (c) and the Level 0 observation card (h). Pure functions on text; the
-// file reads are in lib/content.mjs. The rules (c) to (h) read every page, a skeleton
-// included, except (h), which waits for the Level 0 page to lose its marker.
+// PowerShell lines (c), the Level 0 observation card (h) and the ban on workflow script code
+// (i). Pure functions on text; the file reads are in lib/content.mjs. The rules (c) to (i)
+// read every page, a skeleton included, except (h), which waits for the Level 0 page to lose
+// its marker.
 import {HTML_CODE, codeOf, collapse, markupOf, proseOf, scanMarkdown, tabGroups} from '../lib/mdscan.mjs';
 import {isSkeleton} from './coverage.mjs';
 
@@ -247,6 +248,205 @@ export function observationCardErrors(file, scan) {
   return errors;
 }
 
+// (i) No workflow script code in the guide (spec 16, decision D-S4). The guide explains the fields and the questions of an
+// agent flow and never writes the script. Two forms fail on every page: the line `export const meta` of a workflow
+// script, anywhere in the page text (prose, code, a comment), and a call of agent, pipeline, parallel or phase inside
+// code: an inline code span, a fenced line or a raw <code> or <pre> element (codeOf). The words in English prose, with
+// a parenthesis after them ("the agents (two of them)"), are not code and pass. A call may have white space (a line
+// break too) between the name and the parenthesis. The name is a whole word and lower case: `subagent(x)` and
+// `Agent(agent_type)` are no calls.
+const SCRIPT_META = /\bexport\s+const\s+meta/g;
+const SCRIPT_CALL = /\b(agent|pipeline|parallel|phase)\s*\(/g;
+const NO_SCRIPT_CODE = 'no workflow script code in the guide, describe the flow in words';
+
+export function scriptCodeErrors(file, text) {
+  const errors = [];
+  const page = text.replace(/\r\n/g, '\n');
+  const code = codeOf(scanMarkdown(page));
+  const found = [
+    ...[...page.matchAll(SCRIPT_META)].map((m) => ({line: lineOf(page, m.index), message: `"export const meta" in the page text: ${NO_SCRIPT_CODE}`})),
+    ...[...code.matchAll(SCRIPT_CALL)].map((m) => ({line: lineOf(code, m.index), message: `"${m[1]}(" in code: ${NO_SCRIPT_CODE}`})),
+  ];
+  for (const {line, message} of found.sort((a, b) => a.line - b.line)) errors.push(`${file}: line ${line}: ${message}`);
+  return errors;
+}
+
+// The guards of the optional bonus level page (spec 16, decisions D-S4 and D-S6). They compare one page with one plan
+// section, so they are not part of contentErrors: bonus-page.test.mjs runs them on the live page and the live plan and
+// on fixture strings, and `npm run check` runs that test. Every function reads text with the scanner of the checker
+// (scanMarkdown), never a second one.
+
+// The heading of the plan section that holds the bonus level, and the frontmatter keys of a subagent file as the field
+// table of the sub-agents page of the Claude Code docs lists them (read 2026-11-11).
+export const BONUS_PLAN_HEADING = 'Bonus level: orchestrate your own team (optional)';
+export const SUBAGENT_KEYS = [
+  'name',
+  'description',
+  'tools',
+  'disallowedTools',
+  'model',
+  'permissionMode',
+  'maxTurns',
+  'autoCompactWindow',
+  'skills',
+  'mcpServers',
+  'hooks',
+  'memory',
+  'background',
+  'omitClaudeMd',
+  'effort',
+  'isolation',
+  'color',
+  'initialPrompt',
+  'experimental',
+];
+const KEY_LINE = new RegExp(`^(${SUBAGENT_KEYS.join('|')})\\s*:(.*)$`, 'i');
+const PLACEHOLDER = /^<[^>]+>$/;
+
+// The inline code spans and the trimmed, non-empty fenced lines of a text, each with its 1-based line. A span is read
+// like packCommandLines reads it: the table escape \| undone, white space collapsed. A raw <code> element of the markup
+// (never one in a span, a fence or a comment) is a span, a raw <pre> element is a fenced block: its lines count as fenced
+// lines, like codeOf reads both (HTML_CODE); a line break right after the opening tag and the line of the closing tag are
+// no content. `blocks` holds every fenced block and every <pre> element as its trimmed lines, blank ones included, each
+// with its 1-based line (the fragment rule reads them). range {from, to} keeps the 0-based lines from <= line < to (a
+// section of the plan).
+export function codeLiterals(text, range) {
+  const scan = scanMarkdown(text);
+  const prose = proseOf(scan);
+  const starts = [];
+  let at = 0;
+  for (const line of scan.lines) {
+    starts.push(at);
+    at += (line.fence === null ? line.text.length : 0) + 1;
+  }
+  const within = (index) => range === undefined || (index >= range.from && index < range.to);
+  const spans = [];
+  for (const [start, end] of scan.spans) {
+    const index = starts.findLastIndex((value) => value <= start);
+    const span = collapse(prose.slice(start, end).replace(/\\\|/g, '|'));
+    if (within(index) && span !== '') spans.push({text: span, line: index + 1});
+  }
+  const lines = [];
+  const blocks = [];
+  for (const block of scan.blocks) {
+    if (!within(block.open)) continue;
+    blocks.push(block.body.map((raw, i) => ({text: raw.trim(), line: block.open + i + 2})));
+  }
+  const markup = markupOf(scan);
+  for (const m of markup.matchAll(HTML_CODE)) {
+    const start = m.index + m[0].indexOf('>') + 1;
+    const first = starts.findLastIndex((value) => value <= start);
+    if (!within(first)) continue;
+    const content = prose.slice(start, start + m[2].length);
+    if (m[1].toLowerCase() === 'code') {
+      const span = collapse(content.replace(/\\\|/g, '|'));
+      if (span !== '') spans.push({text: span, line: first + 1});
+      continue;
+    }
+    const rows = content.split('\n');
+    let line = first + 1;
+    if (rows.length > 1 && rows[0].trim() === '') {
+      rows.shift();
+      line++;
+    }
+    if (rows.length > 1 && rows[rows.length - 1].trim() === '') rows.pop();
+    blocks.push(rows.map((raw, i) => ({text: raw.trim(), line: line + i})));
+  }
+  for (const block of blocks) for (const entry of block) if (entry.text !== '') lines.push(entry);
+  return {spans, lines, blocks};
+}
+
+// The section of the plan that holds the bonus level: from its `## ` heading (outside any fenced block) to the next
+// heading of level 1 or 2. Returns {heading, from, to, text} (0-based lines; from the line after the heading up to, but
+// not including, to; text is the heading and the section as written) or {error}. No heading is an error, never an empty
+// pass.
+export function bonusPlanSection(planText) {
+  const scan = scanMarkdown(planText);
+  const heads = [];
+  scan.lines.forEach((line, index) => {
+    const match = line.fence === null ? /^(#{1,6})\s+(.*?)\s*$/.exec(line.text) : null;
+    if (match) heads.push({index, level: match[1].length, title: match[2]});
+  });
+  const found = heads.filter((head) => head.level === 2 && head.title === BONUS_PLAN_HEADING);
+  if (found.length !== 1) {
+    return {error: found.length === 0 ? `the plan has no "## ${BONUS_PLAN_HEADING}" heading` : `the plan has ${found.length} "## ${BONUS_PLAN_HEADING}" headings, expected 1`};
+  }
+  const [{index}] = found;
+  const next = heads.find((head) => head.index > index && head.level <= 2);
+  const to = next ? next.index : scan.lines.length;
+  return {heading: index, from: index + 1, to, text: planText.replace(/\r\n/g, '\n').split('\n').slice(index, to).join('\n')};
+}
+
+// Pack membership (D-S6): every inline code span and every trimmed fenced line of the page equals, as a whole, a span or a
+// fenced line of the "Bonus level" section of the plan (not of another section, not a substring, not with a comment added
+// or taken away). Returns error lines.
+export function bonusMembershipErrors(pageText, planText) {
+  const section = bonusPlanSection(planText);
+  if (section.error) return [`bonus page: pack membership: ${section.error}`];
+  const plan = codeLiterals(planText, {from: section.from, to: section.to});
+  const allowed = new Set([...plan.spans, ...plan.lines].map((literal) => literal.text));
+  const page = codeLiterals(pageText);
+  const where = 'is not a whole inline code span or fenced line of the "Bonus level" section of the plan';
+  return [
+    ...page.spans.filter((literal) => !allowed.has(literal.text)).map((literal) => ({line: literal.line, message: `the inline code span \`${literal.text}\` ${where}`})),
+    ...page.lines.filter((literal) => !allowed.has(literal.text)).map((literal) => ({line: literal.line, message: `the fenced line "${literal.text}" ${where}`})),
+  ]
+    .sort((a, b) => a.line - b.line)
+    .map(({line, message}) => `bonus page: line ${line}: ${message}`);
+}
+
+// The frontmatter fragment (D-S4): at most one fenced block holds subagent frontmatter key lines; every key line of it has
+// one angle-bracket placeholder as its value, and the block holds no other line than `---` and key lines (a blank line is
+// another line). And an inline code span of the form `key: value` with a subagent key has a placeholder value too
+// (`tools: <tools>` and the key alone, `tools`, pass). Keys are read in any letter case. Returns error lines.
+export function bonusFragmentErrors(pageText) {
+  const {spans, blocks} = codeLiterals(pageText);
+  const errors = [];
+  let fragments = 0;
+  for (const body of blocks) {
+    if (!body.some(({text}) => KEY_LINE.test(text))) continue;
+    fragments++;
+    for (const {text, line} of body) {
+      const key = KEY_LINE.exec(text);
+      if (key) {
+        if (!PLACEHOLDER.test(key[2].trim())) {
+          errors.push(`bonus page: line ${line}: the value of "${key[1]}" in the frontmatter fragment must be one placeholder in angle brackets such as <tools>, found "${key[2].trim()}"`);
+        }
+      } else if (text !== '---') {
+        errors.push(`bonus page: line ${line}: the frontmatter fragment holds ${text === '' ? 'an empty line' : `"${text}"`}, it may hold only --- and key lines with placeholder values`);
+      }
+    }
+  }
+  if (fragments > 1) errors.push(`bonus page: ${fragments} fenced blocks hold subagent frontmatter key lines, at most 1 fragment is allowed`);
+  for (const {text, line} of spans) {
+    const key = KEY_LINE.exec(text);
+    if (key && !PLACEHOLDER.test(key[2].trim())) {
+      errors.push(`bonus page: line ${line}: the inline code span \`${text}\` gives "${key[1]}" a real value, it must be one placeholder in angle brackets such as <tools>`);
+    }
+  }
+  return errors;
+}
+
+// No time slot (G-4): the bonus level has no fixed time. A number with a unit of time ("10 min", "10min", "30-minute") and
+// a number word or an article with one ("an hour", "ten minutes", "half an hour") fail. A version number or a flag does not.
+export const TIME_SLOT_PATTERNS = [
+  /\b\d+\s*-?\s*(min|mins|minute|minutes|hour|hours)\b/gi,
+  /\b(an?|half an?|one|two|three|ten|fifteen|twenty|thirty|forty|forty-five|sixty|ninety)\s*-?\s*(minute|minutes|hour|hours)\b/gi,
+];
+
+// label names the text in the message; firstLine is the 1-based line of its first line. Returns error lines.
+export function timeSlotErrors(label, text, firstLine = 1) {
+  const errors = [];
+  text.replace(/\r\n/g, '\n').split('\n').forEach((line, index) => {
+    for (const pattern of TIME_SLOT_PATTERNS) {
+      for (const match of line.matchAll(pattern)) {
+        errors.push(`${label}: line ${firstLine + index}: "${match[0]}" is a time slot, the bonus level has no fixed time`);
+      }
+    }
+  });
+  return errors;
+}
+
 // pages: docs path -> text of every .md and .mdx page. packTexts: the pack files for rule
 // (c). Returns {errors, summary}; errors are "content: ..." lines.
 export function contentErrors({pages, packTexts}) {
@@ -260,11 +460,12 @@ export function contentErrors({pages, packTexts}) {
       ...denyListErrors(file, text),
       ...apiKeyErrors(file, text),
       ...imgErrors(file, text),
+      ...scriptCodeErrors(file, text),
       ...tabErrors(file, scan),
       ...powershellErrors(file, scan, allowed),
       ...(file === LEVEL0_PAGE && !isSkeleton(text) ? observationCardErrors(file, scan) : []),
     ];
     errors.push(...found.map((message) => `content: ${message}`));
   }
-  return {errors, summary: `${files.length} pages, deny-list, API key forms, img, tab sets, PowerShell lines, observation card`};
+  return {errors, summary: `${files.length} pages, deny-list, API key forms, img, tab sets, PowerShell lines, observation card, script code ban`};
 }
