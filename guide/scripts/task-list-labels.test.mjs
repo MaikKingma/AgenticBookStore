@@ -151,8 +151,18 @@ test('task list labels: the site config registers the plugin in the docs options
   assert.match(main, /^import rehypeTaskListLabels from '\.\/src\/plugins\/rehype-task-list-labels\.mjs';$/m);
   const docs = main.match(/docs: \{([^}]*)\}/);
   assert.ok(docs, 'the docs options block is found');
-  assert.match(docs[1], /^\s*rehypePlugins: \[rehypeTaskListLabels\],$/m);
+  // spec 15, T5: the list holds the table regions plugin as well; the old pin was `[rehypeTaskListLabels],`.
+  // The whole list is pinned, so dropping either plugin fails here.
+  assert.match(docs[1], /^\s*rehypePlugins: \[rehypeTaskListLabels, rehypeTableRegions\],$/m);
   const offline = readFileSync(new URL('../docusaurus.offline.config.ts', import.meta.url), 'utf8');
   assert.match(offline, /^\s*\.\.\.config,$/m);
   assert.doesNotMatch(offline, /presets|rehypePlugins/);
+});
+
+// spec 15, T5: the second plugin of the list. Its import line is pinned here; the list line is pinned above.
+test('table regions: the site config imports the table regions plugin, and the plugin file exists', () => {
+  const main = readFileSync(new URL('../docusaurus.config.ts', import.meta.url), 'utf8');
+  assert.match(main, /^import rehypeTableRegions from '\.\/src\/plugins\/rehype-table-regions\.mjs';$/m);
+  assert.match(main, /^import rehypeTaskListLabels from '\.\/src\/plugins\/rehype-task-list-labels\.mjs';$/m);
+  assert.match(readFileSync(new URL('../src/plugins/rehype-table-regions.mjs', import.meta.url), 'utf8'), /export default function rehypeTableRegions\(/);
 });

@@ -333,6 +333,44 @@ test('structure: a finished level page holds no sync moment and needs none, two 
   assertErrors(run({[L(1)]: two}).errors, [/is a sync moment/, /is a sync moment/]);
 });
 
+// Spec 15 task T6 (FF-T1-1): witnesses that the ban does not depend on the page having no contractual anchors, that its
+// message names the exact line, and that the title match tolerates a hyphen, an underscore and spaced separators.
+test('structure: the sync moment ban holds on a finished level page that has contractual anchors (Levels 2, 3 and 4)', () => {
+  for (const n of [2, 3, 4]) {
+    assert.ok(FIXTURE_LEVELS[n].anchors.length > 0, `Level ${n} has contractual anchors`);
+    for (const skeleton of [true, false]) {
+      const errors = run({[L(n)]: withBox(L(n), ':::info[Sync moment]', 'Look up, Maik demos this now.', {skeleton})}).errors;
+      assert.equal(errors.length, 1, `Level ${n}, skeleton ${skeleton}: ${errors.join('\n')}`);
+      assert.match(errors[0], SYNC_BAN, `Level ${n}, skeleton ${skeleton}`);
+    }
+  }
+});
+
+test('structure: the sync moment ban message names the exact line of the opener', () => {
+  // A wrap-up page: the frontmatter takes lines 1 to 4, line 5 is blank, the opener is line 6.
+  const wrapUp = run({'docs/06-wrap-up.md': withBox('docs/06-wrap-up.md', ':::info[Sync moment]')}).errors;
+  assert.equal(wrapUp.length, 1, wrapUp.join('\n'));
+  assert.match(wrapUp[0], /^structure: docs\/06-wrap-up\.md: line 6: an admonition titled "Sync moment" is a sync moment/);
+  // A finished level page: the line of the opener in the whole file, frontmatter and import included.
+  const text = withBox(L(1), ':::info[Sync moment]', 'body', {skeleton: false});
+  const opener = text.split('\n').findIndex((line) => line === ':::info[Sync moment]') + 1;
+  assert.ok(opener > 5, 'the opener is below the frontmatter');
+  const errors = run({[L(1)]: text}).errors;
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], new RegExp(`^structure: ${L(1).replace(/\./g, '\\.')}: line ${opener}: an admonition titled "Sync moment" is a sync moment`));
+});
+
+test('structure: the sync moment ban tolerates a hyphen, an underscore and spaced separators, and spares near misses', () => {
+  for (const opener of [':::info[Sync-moment]', ':::info[sync_moment]', ':::info[Sync - moment]', ':::info[Sync -- moment]', ':::tip[SYNC_ - _MOMENT]']) {
+    const errors = run({[L(1)]: withBox(L(1), opener)}).errors;
+    assert.equal(errors.length, 1, `${opener}: ${errors.join('\n')}`);
+    assert.match(errors[0], SYNC_BAN, opener);
+  }
+  for (const opener of [':::info[In sync]', ':::info[A moment]', ':::info[Sync]', ':::info[Sync up in a moment]', ':::tip[Moment of sync]']) {
+    assert.deepEqual(run({[L(1)]: withBox(L(1), opener)}).errors, [], opener);
+  }
+});
+
 // Anchors
 
 test('structure: every contractual anchor must sit on an H2 of its page', () => {

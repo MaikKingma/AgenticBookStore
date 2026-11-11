@@ -150,7 +150,7 @@ const HOLDS_AGENTOS =
   'The start branch holds Agent OS product docs in `agent-os/product/` and standards written for this repo and indexed in `agent-os/standards/index.yml`, plus the commands in `.claude/commands/agent-os/`.';
 // The documented first steps of each framework for a project of your own (D-S6), as the numbered list of the note.
 const NOTE_OPENSPEC = `1. \`openspec init\` in your repository.
-2. Fill in \`context:\` in \`openspec/config.yaml\` with your stack and conventions.
+2. Optionally fill in \`context:\` in \`openspec/config.yaml\` with your stack and conventions.
 3. Then the same flow as in this track: \`/opsx:explore\`, \`/opsx:propose\`, \`/opsx:apply\` and \`/opsx:archive\`.`;
 const NOTE_SPECKIT = `1. \`specify init --here --force --integration claude\` in your repository.
 2. \`/speckit-constitution\` with the rules your project already follows.
@@ -161,6 +161,33 @@ const NOTE_AGENTOS = `1. \`/discover-standards\` to extract the patterns your co
 4. \`/shape-spec\` in plan mode, for each change.`;
 const LEVEL4_TIP =
   "Spec-driven does not mean someone else's rules. Invent one of your own that every future spec must follow, and see whether the agent keeps to it: a rule in `openspec/config.yaml`, a principle in `.specify/memory/constitution.md` or a standard in `agent-os/standards/`. The best harness has a creative engineer tweaking it all the time.";
+
+// Level 1 (spec 15): the rule file of step 3, byte-equal to the level-1 solution branch (level-1-rule.test.mjs compares
+// the page with the staged file), and the illustrative /context mock of step 5.
+const LEVEL1_DOMAIN_RULE = `---
+paths:
+  - "bookstore/src/main/java/**/domain/**"
+---
+# Domain layer
+- Aggregates: private constructor, an intention-revealing static factory for creation, \`restore(...)\` for rehydration.
+- Change state through behaviour methods named after the business action. No setters.
+- Check invariants inside the aggregate and throw an unchecked exception from the \`domain\` package.
+- Register domain events in the aggregate; flows publish them after saving via \`pullDomainEvents()\`.
+- Value objects are records that validate in the compact constructor.
+- Domain tests are plain JUnit and AssertJ, without a Spring context.`;
+
+const LEVEL1_CONTEXT_MOCK = `Context usage: 100k of 200k tokens (50%)
+
+S S S S S S S C K M      S  System prompt                  14k   (7%)
+M M M M M M M M M M      C  CLAUDE.md and auto memory       2k   (1%)
+M M M M M M M M M M      K  Skill descriptions              2k   (1%)
+M M M M M M M M M M      M  Messages and tool results      82k  (41%)
+M M M M M M M M M M      .  Free space                    100k  (50%)
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .`;
 
 export const ENTRIES = [
   // Setup check (WP section 3)
@@ -233,7 +260,8 @@ export const ENTRIES = [
   level1('L1-12', 'WP:140-147', 'text', 'Read docs/architecture.md before adding or moving classes.'),
   level1('L1-13', 'WP:140-147', 'text', '@docs/architecture.md'),
   level1('L1-14', 'WP:148-151', 'text', '.claude/rules/'),
-  level1('L1-15', 'WP:148-151', 'text', 'paths: ["bookstore/src/main/java/**/domain/**"]'),
+  // Spec 15: the domain rule header is shown as the YAML it is in the file (a list), not as an inline array.
+  level1('L1-15', 'WP:148-151', 'text', 'paths:\n  - "bookstore/src/main/java/**/domain/**"'),
   level1('L1-16', 'WP:148-151', 'text', 'paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]'),
   level1('L1-17', 'WP:148-151', 'text', 'paths: ["**/src/test/**"]'),
   level1('L1-18', 'WP:148-151', 'text', 'domain.md'),
@@ -252,6 +280,16 @@ export const ENTRIES = [
   level1('L1-31', 'WP:160', 'text', 'Level 0 task in a fresh session'),
   level1('L1-33', 'WP:140-147', 'text', 'ArchitectureTest'),
   entries('spec10', 'Scenario: Rules load on demand', 'L1')('L1-32', 'S10:113-115', 'text', 'the rule is loaded'),
+  // Spec 15 (decision D19), Level 1: the whole rule file, the header sentence, the /context mock with its annotations and
+  // the "Make it yours" tip. The two blocks are pinned whole, so that every line of them is covered by the literal sweep.
+  level1('L1-34', 'WP:148-151', 'command', LEVEL1_DOMAIN_RULE),
+  level1('L1-35', 'WP:148-151', 'text', 'The header between the two `---` lines is YAML frontmatter: `paths` lists globs relative to the project root, and the rule loads only when Claude reads or edits a file that matches one, not at session start.'),
+  level1('L1-41', 'WP:148-151', 'text', 'Create `.claude/rules/domain.md` with this exact content:'),
+  level1('L1-36', 'WP:156-159', 'text', 'The grid below is an illustration, not a screenshot: your symbols, names and numbers differ.'),
+  level1('L1-37', 'WP:156-159', 'command', LEVEL1_CONTEXT_MOCK),
+  level1('L1-38', 'WP:156-159', 'text', 'M grows with every prompt, answer, file read and tool result. It is the part you control.'),
+  level1('L1-39', 'WP:156-159', 'text', 'Free space shrinks as M grows. Long before it reaches zero, answers drift: that is context rot.'),
+  level1('L1-40', 'WP:160', 'text', 'The best harness has a creative engineer who keeps tweaking it. Pick one thing Claude got wrong in Level 0 and write a rule of your own for it, for example `.claude/rules/acl.md` for the distributor client. Skills, hooks and commands of your own can follow in later levels. This is optional.'),
 
   // Level 2 (WP section 7)
   level2('L2-01', 'WP:182-184', 'text', 'Part A starts with the LSP install check'),
@@ -270,7 +308,8 @@ export const ENTRIES = [
   partA('L2-14', 'WP:200-202', 'text', 'Errors'),
   partA('L2-15', 'WP:200-202', 'command', 'claude --debug'),
   partA('L2-16', 'WP:200-202', 'text', 'Executable not found in $PATH: "jdtls"'),
-  partA('L2-17', 'WP:200-202', 'text', 'two minutes'),
+  // Spec 15 task T3: L2-17 guarded "two minutes"; it now pins the whole Part B fallback sentence (the demo is gone).
+  partA('L2-17', 'WP:200-202', 'text', 'Still stuck after two minutes: continue with Part B.'),
   partB('L2-18', 'WP:205', 'command', './mvnw -pl distributor spring-boot:run'),
   partB('L2-19', 'WP:205', 'text', 'java -jar distributor.jar'),
   partB('L2-20', 'WP:207-208', 'command', 'claude mcp add --transport http --scope project distributor http://localhost:8090/mcp'),
@@ -293,6 +332,29 @@ export const ENTRIES = [
   ),
   partB('L2-27', 'WP:216', 'text', 'list_new_releases(days)'),
   entries('spec10', 'Scenario: MCP is available', 'L2')('L2-28', 'S10:209', 'text', 'connected with 4 tools'),
+  // Spec 15 task T3: the debugging section of Part A step 5 (a collapsed details block on the page) and the Level 2 tip.
+  partA(
+    'L2-29',
+    'WP:200-202',
+    'command',
+    'The jdtls language server plugin shows no diagnostics. Check without changing anything: run which jdtls and java -version and tell me the results, read .claude/settings.json and ~/.claude/settings.json and tell me whether jdtls-lsp@claude-plugins-official is enabled, and tell me what else I should check on the Errors tab of /plugin. Then name the most likely cause and the one fix to try first. Do not edit, install or delete anything.',
+  ),
+  partA('L2-30', 'WP:200-202', 'text', 'run `java -version`. The language server needs Java 21 or later.'),
+  partA('L2-31', 'WP:200-202', 'text', 'start a new session from a shell where `which jdtls` prints a path'),
+  partA('L2-32', 'WP:200-202', 'text', 'the language server starts the first time Claude edits a `.java` file'),
+  // Spec 15 amendment A4: `claude --debug` writes a log file and prints nothing extra in the terminal (official plugins troubleshooting).
+  partA(
+    'L2-34',
+    'WP:200-202',
+    'text',
+    'The debug output goes to a log file under `~/.claude/debug/` and prints nothing extra in the terminal. Look in that file for a line with `LSP server` and `failed to start`.',
+  ),
+  partB(
+    'L2-33',
+    'WP:214',
+    'text',
+    'The best harness has a creative engineer tweaking it all the time. Think of a fifth tool that Claude would use on the bookstore, and write down its name, its inputs and what it returns. Or add one rule to `CLAUDE.md` that tells Claude to ask the language server before it searches the text.',
+  ),
 
   // Level 3 (WP section 8, spec 10)
   level3('L3-01', 'WP:232-233', 'text', 'the agent reads the stderr and fixes the test'),
@@ -329,6 +391,8 @@ export const ENTRIES = [
   skill('L3-27', 'WP:284-285', 'text', 'tools: Read, Glob, Grep, Bash'),
   entries('spec10', 'Scenario: Red build blocks the commit', 'L3')('L3-28', 'S10:402-404', 'command', 'git commit -m "test"'),
   entries('spec10', 'Scenario: Escape hatch is closed', 'L3')('L3-29', 'S10:407-408', 'command', 'git commit --no-verify -m "x"'),
+  // Spec 15 (D-S10, task T6): the optional "Make it yours" tip, an invitation and never a step.
+  level3('L3-35', 'WP:283-285', 'text', 'invent one more guardrail of your own'),
 
   // Level 4 (WP section 9, SDD part 2, the feature briefs)
   level4('L4-01', 'WP:303-307', 'text', 'start/level-4-openspec'),
@@ -355,6 +419,8 @@ export const ENTRIES = [
   plan(SETUP, 'L4')('L4-76', 'WP:45-47', 'command', OPENSPEC_POWERSHELL),
   plan(SETUP, 'L4')('L4-77', 'WP:45-47', 'command', OPENSPEC_NPM),
   plan(SETUP, 'L4')('L4-78', 'WP:45-47', 'command', OPENSPEC_CHECK),
+  // The Track C row of the table (R2 of the T4 QA round): its `/plan` literal was an excluded sweep literal; this entry pins it.
+  level4('L4-79', 'WP:303-307', 'text', 'Light, standards-centric | `/plan` then `/shape-spec`, `/inject-standards`, implement the plan'),
   common('L4-09', 'SDD:99-102', 'text', 'your own words'),
   common('L4-10', 'SDD:99-102', 'text', 'your contribution as the human'),
   common('L4-63', 'SDD:99-102', 'text', 'built from `solution/level-3`'),

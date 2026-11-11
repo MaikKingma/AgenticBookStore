@@ -30,7 +30,7 @@ const fails = (errors, pattern) => {
 // (d) the deny-list
 
 test('deny-list: each term fails on a page, in any letter case, and the message names the term and the line', () => {
-  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms', 'sync moment', 'maik demos', 'live demo']) {
+  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms', 'sync moment', 'maik demos', 'live demo', 'watch the demo']) {
     for (const variant of [term, term.toUpperCase(), `${term[0].toUpperCase()}${term.slice(1)}`]) {
       fails(denyListErrors(OTHER, `first line\nsee ${variant} here\n`), new RegExp(`${OTHER}: line 2: "${term.replace(/[.\-/]/g, '\\$&')}" must not appear`));
     }
@@ -48,6 +48,41 @@ test('deny-list: the demo terms fail across a line break, a double space and a t
   fails(denyListErrors(OTHER, 'Look up, Maik demos this now.'), /"maik demos"/);
   fails(denyListErrors(OTHER, 'Each level opens with a short live demo and closes with a debrief.'), /"live demo"/);
   fails(denyListErrors(OTHER, 'Sync moments are the live demos.'), /"sync moment"[\s\S]*"live demo"/);
+});
+
+// Spec 15 task T3: the Level 2 "watch the demo" instruction is gone. The term allows any run of whitespace between its
+// words, and the two sentences that carried it (the Level 2 page and the troubleshooting page) fail when put back.
+test('deny-list T3: "watch the demo" fails across a line break, a double space and a tab, and names the term and the line', () => {
+  for (const gap of [' ', '  ', '\n', ' \n', '\t']) {
+    fails(denyListErrors(OTHER, `first line\nwatch${gap}the${gap}demo here\n`), new RegExp(`${OTHER}: line 2: "watch the demo" must not appear`));
+  }
+  // FF-T3-1: the plural and the long form are demo instructions too (a trailing word boundary or a demonstration
+  // look-ahead would let them through).
+  for (const text of ['Watch the demos and continue with Part B.', 'watch the demonstration', 'Please watch the demonstration first.']) {
+    fails(denyListErrors(OTHER, `first line\n${text}\n`), new RegExp(`${OTHER}: line 2: "watch the demo" must not appear`));
+  }
+  fails(denyListErrors(OTHER, 'Still stuck after two minutes: watch the demo and continue with Part B.'), /"watch the demo"/);
+  fails(denyListErrors(TROUBLE, 'Still stuck after two minutes? Watch the demo and continue with Part B of [Level 2](../03-level-2-give-your-agent-eyes.mdx#part-b-mcp).'), /"watch the demo"/);
+});
+
+test('deny-list T3: the replacement sentences and the near misses of "watch the demo" pass', () => {
+  for (const text of ['Still stuck after two minutes: continue with Part B.', 'watch the clock', 'watch the diagnostics', 'the demo data', 'watch the build', 'Maik demonstrates']) {
+    passes(denyListErrors(OTHER, text));
+  }
+});
+
+// FF-T1-2: the "sync moment" row also catches a hyphen, an underscore or no gap between the words, and still passes
+// the ordinary words around it.
+test('deny-list FF-T1-2: "sync moment" fails with a hyphen, an underscore or no gap, and names the term and the line', () => {
+  for (const text of ['Sync-moment', 'sync_moment', 'Syncmoment', 'sync - moment', 'SYNC__MOMENT', 'sync moment', 'Sync\nmoment']) {
+    fails(denyListErrors(OTHER, `first line\n${text} here\n`), new RegExp(`${OTHER}: line 2: "sync moment" must not appear`));
+  }
+});
+
+test('deny-list FF-T1-2: near misses of "sync moment" and "maik demos" pass', () => {
+  for (const text of ['in sync', 'a moment', 'sync the moment', 'asynchronous', 'Maik demonstrates', 'Maik demonstrates the build', 'in sync, one moment later']) {
+    passes(denyListErrors(OTHER, text));
+  }
 });
 
 test('deny-list: "spec NN" is the word spec and a number, in any case', () => {

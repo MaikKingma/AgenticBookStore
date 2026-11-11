@@ -59,7 +59,7 @@ git clone https://github.com/MaikKingma/AgenticBookStore.git && cd AgenticBookSt
 ./mvnw verify               # green, under a minute (dependencies and the PostgreSQL image were downloaded at home)
 ```
 
-Installing `jdtls` (the plugin does not ship the binary; it needs JDK 17 or later, participants have 25):
+Installing `jdtls` (the plugin does not ship the binary; it needs JDK 21 or later, participants have 25):
 
 | OS | Install |
 |---|---|
@@ -172,23 +172,68 @@ prices, no migration (app fails at startup with `ddl-auto=validate`), ArchUnit v
    - A path instead of an essay: "Read docs/architecture.md before adding or moving classes." Compare with the
      import syntax `@docs/architecture.md`: an import loads the whole file at session start and costs context on
      every task; a plain path lets Claude read it only when needed. Try both and look at `/context`.
-3. Add path-scoped rules in `.claude/rules/` (they load only when Claude touches matching files):
-   - `domain.md` with `paths: ["bookstore/src/main/java/**/domain/**"]`
+3. Add path-scoped rules. A path-scoped rule is a markdown file in `.claude/rules/` whose header names the files it
+   is about. Create `.claude/rules/domain.md` with this exact content:
+
+   ```markdown
+   ---
+   paths:
+     - "bookstore/src/main/java/**/domain/**"
+   ---
+   # Domain layer
+   - Aggregates: private constructor, an intention-revealing static factory for creation, `restore(...)` for rehydration.
+   - Change state through behaviour methods named after the business action. No setters.
+   - Check invariants inside the aggregate and throw an unchecked exception from the `domain` package.
+   - Register domain events in the aggregate; flows publish them after saving via `pullDomainEvents()`.
+   - Value objects are records that validate in the compact constructor.
+   - Domain tests are plain JUnit and AssertJ, without a Spring context.
+   ```
+
+   The header between the two `---` lines is YAML frontmatter: `paths` lists globs relative to the project root, and
+   the rule loads only when Claude reads or edits a file that matches one, not at session start. Add two more rules
+   the same way:
    - `data-and-migrations.md` with `paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]`
    - `testing.md` with `paths: ["**/src/test/**"]`
 4. Explore the hierarchy. Add a conflicting line to your user file `~/.claude/CLAUDE.md` (for example
    "Always use Lombok") and a personal `CLAUDE.local.md` (for example your preferred commit style). Start a new
    session and run `/memory` and `/context`. Observe: files are **concatenated, not overridden**. When instructions
    conflict, the agent has to choose. Remove the Lombok line afterwards.
-5. Context rot: run `/context` and read the grid. Learn the three moves: `/clear` between unrelated tasks,
-   `/compact focus on <topic>` when a long task drifts, and delegate big reads to a subagent ("use a subagent to
-   find every place that formats money") so only the summary lands in your context. A 1M-token window is not an
-   attention guarantee.
+5. Context rot: run `/context` and read the grid. The grid below is an illustration, not a screenshot: your symbols,
+   names and numbers differ. Each symbol stands for 2k tokens of a 200k window.
+
+   ```text
+   Context usage: 100k of 200k tokens (50%)
+
+   S S S S S S S C K M      S  System prompt                  14k   (7%)
+   M M M M M M M M M M      C  CLAUDE.md and auto memory       2k   (1%)
+   M M M M M M M M M M      K  Skill descriptions              2k   (1%)
+   M M M M M M M M M M      M  Messages and tool results      82k  (41%)
+   M M M M M M M M M M      .  Free space                    100k  (50%)
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   ```
+
+   What to watch for:
+   - S, C and K load before you type anything. Every line of your `CLAUDE.md` costs attention on every task.
+   - M grows with every prompt, answer, file read and tool result. It is the part you control.
+   - Free space shrinks as M grows. Long before it reaches zero, answers drift: that is context rot.
+   - Same task but drifting: `/compact focus on <topic>`. Unrelated next task: `/clear`.
+
+   Learn the three moves: `/clear` between unrelated tasks, `/compact focus on <topic>` when a long task drifts, and
+   delegate big reads to a subagent ("use a subagent to find every place that formats money") so only the summary
+   lands in your context. A 1M-token window is not an attention guarantee.
 6. Redo the Level 0 task in a fresh session (`/clear`). Compare with your observation card.
+
+**Make it yours:** The best harness has a creative engineer who keeps tweaking it. Pick one thing Claude got wrong in
+Level 0 and write a rule of your own for it, for example `.claude/rules/acl.md` for the distributor client. Skills,
+hooks and commands of your own can follow in later levels. This is optional.
 
 **Level cleared when**
 - `CLAUDE.md` has at most 60 lines.
-- `/context` shows the path-scoped rules loading only for matching files.
+- Asked to change a class in `domain`, Claude follows `.claude/rules/domain.md`: a behaviour method named after the business action, no setters.
 - In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no ArchUnit
   violation.
 
@@ -222,9 +267,28 @@ Claude Code reports diagnostics automatically after every edit.
 4. Make one deliberate type error: "In `Book.java`, make `price()` return `String` instead of `Money`. Do not touch
    the callers yet." Claude Code prints `Found N new diagnostic issues ...` under the edit. Then: "Fix the new
    diagnostics." Watch the agent read them and repair the code.
-5. Nothing appears? Check `/plugin` (tab **Errors**) and start `claude --debug`. The error
-   `Executable not found in $PATH: "jdtls"` means the binary is missing. Still stuck after two minutes: watch the
-   facilitator demo and continue with Part B.
+5. Nothing appears? Check `/plugin` (tab **Errors**) and start `claude --debug`. The debug output goes to a log file
+   under `~/.claude/debug/` and prints nothing extra in the terminal. Look in that file for a line with `LSP server` and
+   `failed to start`. The error
+   `Executable not found in $PATH: "jdtls"` means the binary is missing. The guide keeps the debugging options in one
+   collapsed section, five checks to try in order until the diagnostics appear, and a diagnosis prompt:
+   1. The binary: run `which jdtls` in the same terminal that you start `claude` from. It must print a path (Windows:
+      inside WSL). If it prints nothing, install it as in the setup check, open a new terminal and start `claude` again.
+   2. Java: run `java -version`. The language server needs Java 21 or later.
+   3. The plugin: open `/plugin`. `jdtls-lsp` must be on the **Installed** tab and enabled, and the **Errors** tab must
+      not list it.
+   4. A new session: if you installed `jdtls` or the plugin after Claude Code started, or put `jdtls` on the `PATH` in
+      another terminal, start a new session from a shell where `which jdtls` prints a path.
+   5. The first Java edit: the language server starts the first time Claude edits a `.java` file. Repeat the deliberate
+      type error (Part A, step 4) before you decide that it is broken.
+
+   Or paste this prompt and let Claude check what it can. It only reads and changes nothing:
+   ```text
+   The jdtls language server plugin shows no diagnostics. Check without changing anything: run which jdtls and java -version and tell me the results, read .claude/settings.json and ~/.claude/settings.json and tell me whether jdtls-lsp@claude-plugins-official is enabled, and tell me what else I should check on the Errors tab of /plugin. Then name the most likely cause and the one fix to try first. Do not edit, install or delete anything.
+   ```
+   Claude may not see exactly the shell that you start it from, so trust your own `which jdtls` over its answer.
+
+   Still stuck after two minutes: continue with Part B.
 
 ### Part B: MCP (8 min)
 1. Start the distributor: `./mvnw -pl distributor spring-boot:run` (or `java -jar distributor.jar`).
@@ -237,6 +301,10 @@ Claude Code reports diagnostics automatically after every edit.
    among its contributors. Write an ACL contract test for `DistributorAppServiceImpl` with that exact payload shape
    and prove that only authors end up in our catalogue." (The existing tests deliberately do not cover this case.)
 5. An MCP tool is little code: see `distributor/src/main/java/.../mcp/CatalogMcpTools.java`.
+
+**Make it yours:** The best harness has a creative engineer tweaking it all the time. Think of a fifth tool that Claude
+would use on the bookstore, and write down its name, its inputs and what it returns. Or add one rule to `CLAUDE.md` that
+tells Claude to ask the language server before it searches the text.
 
 Stretch: add an MCP tool `list_new_releases(days)` to the distributor and use it from Claude Code.
 
@@ -307,6 +375,10 @@ Optional: a Stop hook that runs only the fast `ArchitectureTest` when Java files
 Stretch: a review subagent `.claude/agents/architecture-reviewer.md` (`tools: Read, Glob, Grep, Bash`, instructed to use
 Bash only for `git diff` and `git status`) that reviews the diff against the layer rules before `/ship`.
 
+Make it yours (optional, never a step): the best harness has a creative engineer tweaking it all the time. Once your
+hook and skill work, invent one more guardrail of your own: a deny rule for a command you never want Claude to run, a
+hook that blocks a risky edit, or a second command next to `/ship`. Keep it only if it helps.
+
 **Level cleared when**
 - A deliberately red commit is blocked by the hook (exit 2) and then fixed by the agent.
 - `git commit --no-verify` is denied.
@@ -346,7 +418,7 @@ A track takes about 35 minutes; the rest of the 42 solo minutes is for choosing 
 **Track A:**
 
 1. `openspec init` in your repository.
-2. Fill in `context:` in `openspec/config.yaml` with your stack and conventions.
+2. Optionally fill in `context:` in `openspec/config.yaml` with your stack and conventions.
 3. Then the same flow as in this track: `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`.
 
 **Track B:**
@@ -396,7 +468,7 @@ spec.md and an Agent OS shape.md hold the same idea in three shapes.
 | Pro usage limit reached | `/model sonnet` from the setup check. `/usage` to check. Pair up if someone hits the limit. Facilitator has a spare Max account for demos. |
 | `ANTHROPIC_API_KEY` exported by a participant | Claude Code would switch to that key. We only ever use `BOOKSTORE_AI_API_KEY`. The setup check confirms `/status` shows the subscription. |
 | Workshop key abuse | Console spend limit, key scoped to a workshop workspace, revoked after the session. |
-| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`which jdtls`). The plugin is installed only in Level 2 Part A, so Levels 0 and 1 run without it. On the day, the facilitator demo is the fallback; continue with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
+| jdtls fails to start, indexes slowly, or misreads the Maven multi-module build | Participants check the binary at home in the setup check (`which jdtls`). The plugin is installed only in Level 2 Part A, so Levels 0 and 1 run without it. On the day, a participant whose jdtls still does not start after the debugging options of Level 2 Part A continues with Part B. Native Windows, multi-module behaviour and first-index time are rehearsed in spec 10. |
 | Windows participants | Claude Code runs natively; hooks are bash scripts, so recommend Git for Windows (Git Bash) or WSL2. Provide `.ps1` variants of the hook scripts in `solution/level-3`. Agent OS needs bash (WSL or Git Bash). jdtls via WSL. |
 | MCP protocol version mismatch (MCP spec 2026-07-28 vs Spring AI 2.0.2 SDK) | Smoke test in spec 05 on the build machine and a second laptop. Fallback: STDIO transport (`./mvnw -pl distributor package`, then `claude mcp add distributor -- java -jar <absolute path>/distributor/target/distributor.jar --spring.profiles.active=stdio`). |
 | Corporate laptops block installs | Email asks for admin rights or a personal laptop. Pairing as fallback. |

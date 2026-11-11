@@ -78,9 +78,13 @@ test('manifest: every entry is anchored in its pack section, and the count is th
 test('manifest: each page has at least its pinned number of entries, so entries cannot be dropped quietly', () => {
   // IX rose from 10 to 16 in spec 15 (the five Format cells and the walk-around sentence); the other floors equal the
   // live counts, the five retargeted sync moment entries (L0-01, L1-01, L2-01, L3-01, L4-05) keep their ids and rows.
-  // SU rose from 21 to 26 and L4 from 65 to 78 in spec 15 task T4 (Node.js qualification and the pinned OpenSpec install
+  // L1 rose from 33 to 41 in task T2 (L1-34 to L1-41: the rule file, its header sentence, the /context mock, two annotations, the tip).
+  // L2 rose from 28 to 34 in spec 15 task T3 (L2-29 to L2-34: the diagnosis prompt, the Java 21 check, the new session
+  // check, the first Java edit, the Level 2 tip and the debug log sentence of amendment A4); L2-17 was retargeted in place.
+  // L3 rose from 34 to 35 in task T6 (L3-35, the Level 3 "Make it yours" tip).
+  // SU rose from 21 to 26 and L4 from 65 to 79 in spec 15 task T4 (Node.js qualification and the pinned OpenSpec install
   // on the setup page, the start-branch sentences, the brownfield notes, the 42-minute sentence, the Level 4 tip).
-  const floor = {SU: 26, L0: 23, L1: 33, L2: 28, L3: 34, L4: 78, WU: 22, IX: 16, CS: 52, TS: 16};
+  const floor = {SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -105,6 +109,106 @@ test('manifest: the Format cells and the walk-around sentence of the welcome pag
   });
   const without = run(ix.filter((e) => e.id === 'IX-16'), {pages: {...live, [PAGE_FILES.IX]: welcome.replace('During the levels Maik and Tom walk around and help.', '')}});
   assert.match(without.errors.join('\n'), /^coverage: IX-16: docs\/index\.md: the text "During the levels Maik and Tom walk around and help\." is not on the page/);
+});
+
+// Spec 15 task T3: Part A step 5 of Level 2 holds the debugging options in exactly one details block that is closed by
+// default, with the five checks and the diagnosis prompt inside, and the Part B fallback outside it (A9). No other rule
+// reads the details element, so this test is its pin.
+test('manifest: the Level 2 debugging options are one closed details block in Part A step 5 and the Part B fallback stays outside it (T3)', () => {
+  const page = readPages(join(GUIDE, 'docs'))[PAGE_FILES.L2];
+  const lines = page.split('\n');
+  const at = (pattern) => lines.flatMap((line, index) => (pattern.test(line) ? [index] : []));
+  const [partA, step5, partB] = [at(/^## Part A: LSP/), at(/^### 5\. Nothing appears\?$/), at(/^## Part B: MCP/)].map((found) => found[0]);
+  const [open, close] = [at(/<details\b/i), at(/<\/details>/i)];
+  assert.equal(open.length, 1, 'exactly one details block on the page');
+  assert.equal(close.length, 1);
+  assert.equal(lines[open[0]], '<details>', 'closed by default: the tag has no open attribute');
+  assert.match(lines[open[0] + 1], /^<summary>[^<]+<\/summary>$/, 'the block has a summary title');
+  assert.equal(at(/<summary/i).length, 1);
+  assert.ok(partA < step5 && step5 < open[0] && open[0] < close[0] && close[0] < partB, 'the block sits in step 5 of Part A, before Part B');
+  // The fallback is visible while the block is closed: it follows the closing tag and sits before Part B.
+  const fallback = at(/^Still stuck after two minutes: continue with Part B\.$/);
+  assert.equal(fallback.length, 1);
+  assert.ok(close[0] < fallback[0] && fallback[0] < partB, 'the Part B fallback is outside the details block');
+  const body = lines.slice(open[0], close[0] + 1).join('\n');
+  // The five checks, each inside the block.
+  for (const text of [
+    'run `which jdtls` in the same terminal that you start `claude` from',
+    'Java 21 or later',
+    '`jdtls-lsp` must be on the **Installed** tab and enabled, and the **Errors** tab must not list it',
+    'start a new session from a shell where `which jdtls` prints a path',
+    'the language server starts the first time Claude edits a `.java` file',
+  ]) {
+    assert.ok(body.includes(text), `the details block holds: ${text}`);
+  }
+  // The diagnosis prompt: one fenced block inside the block, plain ASCII, no placeholder to edit, read-only, names the checks.
+  assert.equal((body.match(/^```/gm) ?? []).length, 2, 'one fenced block inside the details block');
+  const [prompt] = /^```text\n(.+)\n```$/m.exec(body)?.slice(1) ?? [];
+  assert.ok(prompt, 'the fenced block is a text block with the prompt on one line');
+  assert.doesNotMatch(prompt, /[^\x20-\x7E]/, 'the prompt is plain ASCII');
+  assert.doesNotMatch(prompt, /[<>{}[\]]/, 'the prompt has no placeholder to edit');
+  for (const text of ['without changing anything', 'Do not edit, install or delete anything', 'which jdtls', 'java -version', '.claude/settings.json', '~/.claude/settings.json', 'jdtls-lsp@claude-plugins-official', 'Errors tab', 'most likely cause']) {
+    assert.ok(prompt.includes(text), `the prompt says: ${text}`);
+  }
+  // The prompt is the L2-29 entry of the manifest, word for word.
+  assert.equal(ENTRIES.find((e) => e.id === 'L2-29').snippet, prompt);
+});
+
+test('manifest: the Level 2 tip is one "Make it yours" tip of at most 60 words outside the box, the steps and the checklist (T3, U12)', () => {
+  const page = readPages(join(GUIDE, 'docs'))[PAGE_FILES.L2];
+  const tips = [...page.matchAll(/^:::tip\[Make it yours\]\n\n([^\n]+)\n\n:::$/gm)];
+  assert.equal(tips.length, 1, 'exactly one tip titled Make it yours');
+  assert.ok(tips[0][1].split(/\s+/).length <= 60, 'at most 60 words');
+  assert.equal(ENTRIES.find((e) => e.id === 'L2-33').snippet, tips[0][1], 'L2-33 pins the tip word for word');
+  const boxEnd = page.indexOf('\n:::\n', page.indexOf(':::note[At a glance]'));
+  assert.ok(boxEnd !== -1 && tips[0].index > boxEnd, 'not in the at a glance box');
+  assert.ok(tips[0].index < page.indexOf('## Level cleared when'), 'before the checklist');
+  const checklist = page.slice(page.indexOf('## Level cleared when'));
+  assert.doesNotMatch(checklist, /Make it yours|fifth tool/, 'the checklist does not refer to the tip');
+  assert.doesNotMatch(page.replace(tips[0][0], ''), /Make it yours|fifth tool/, 'no step or checkpoint refers to the tip');
+});
+
+// Spec 15 task T3 (decision D-S5): the language server needs Java 21 or later, in the plan and on every page, and the
+// plan holds no demo step for it any more.
+test('manifest: no page and no plan line names Java 10 to 19 for jdtls, and the plan has no demo step (T3)', () => {
+  const plan = readFileSync(join(PACK, SOURCE_FILES.plan), 'utf8');
+  assert.ok(plan.includes('it needs JDK 21 or later, participants have 25'), 'the plan says JDK 21 for jdtls');
+  for (const [name, text] of [...Object.entries(readPages(join(GUIDE, 'docs'))), [SOURCE_FILES.plan, plan]]) {
+    assert.doesNotMatch(text, /\b(?:JDK|Java) 1\d\b/, `${name} names no JDK 10 to 19`);
+    assert.doesNotMatch(text, /watch\s+the\s+(?:facilitator\s+)?demo|facilitator\s+demo/i, `${name} has no demo step`);
+  }
+});
+
+// Spec 15 task T6: L3-35 pins the Level 3 "Make it yours" tip on the live page and in the Level 3 section of the plan.
+test('manifest: L3-35 pins the Level 3 tip, a page or a plan section without its sentence fails', () => {
+  const entry = ENTRIES.filter((e) => e.id === 'L3-35');
+  assert.equal(entry.length, 1);
+  const sentence = 'invent one more guardrail of your own';
+  const live = readPages(join(GUIDE, 'docs'));
+  const page = live[PAGE_FILES.L3];
+  assert.equal(page.split(sentence).length - 1, 1, 'the sentence is on the live page exactly once');
+  assert.deepEqual(run(entry, {pages: live}).errors, []);
+  const noPage = run(entry, {pages: {...live, [PAGE_FILES.L3]: page.replace(sentence, 'do something else')}});
+  assert.match(noPage.errors.join('\n'), new RegExp(`^coverage: L3-35: docs/04-level-3-behavioral-control\\.mdx: the text "${sentence}" is not on the page`));
+  const pack = readPack();
+  assert.equal(pack.plan.replace(/\s+/g, ' ').split(sentence).length - 1, 1, 'the sentence is in the plan exactly once');
+  const noPlan = run(entry, {pages: live, pack: {...pack, plan: pack.plan.replace('invent one more guardrail of your own', 'do something else')}});
+  assert.match(noPlan.errors.join('\n'), new RegExp(`^coverage: L3-35: the snippet "${sentence}" is not in workshop/workshop-plan\\.md, section "8\\. Level 3"`));
+});
+
+test('manifest: the Level 3 page holds one "Make it yours" tip of at most 60 words, outside the at a glance box and the checklist', () => {
+  const page = readPages(join(GUIDE, 'docs'))[PAGE_FILES.L3];
+  const tips = [...page.matchAll(/^:::tip\[Make it yours\]\n([\s\S]*?)\n:::$/gm)];
+  assert.equal(tips.length, 1, 'one tip titled "Make it yours"');
+  const [tip] = tips;
+  const words = tip[1].trim().split(/\s+/).length;
+  assert.ok(words >= 20 && words <= 60, `the tip has ${words} words, 20 to 60 are allowed`);
+  const glance = page.indexOf(':::note[At a glance]');
+  const afterGlance = page.indexOf('\n:::\n', glance) + 1;
+  assert.ok(glance !== -1 && tip.index > afterGlance, 'the tip is after the at a glance box');
+  assert.ok(tip.index < page.indexOf('\n## Level cleared when'), 'the tip is before the "Level cleared when" checklist');
+  assert.match(tip[1], /\b(rule|skill|hook|guardrail|command)\b/, 'the tip names a rule, skill, hook, guardrail or command');
+  assert.match(tip[1], /\b(permission|deny|hook|skill|command)\b/, 'the tip ties to the Level 3 content (permissions, hooks, skill, command)');
 });
 
 test('manifest: the sources and the pages are the five pack files and the eleven pages, and they exist', () => {
@@ -254,6 +358,10 @@ test('manifest: each track says what its start branch holds, the page and the pl
     assert.ok(fold(t4Tab(level4, value)).includes(fold(sentence)), `the ${value} tab says what its branch holds`);
     assert.ok(fold(pack.plan).includes(fold(sentence)), `the plan says what the ${value} branch holds`);
   }
+  // The "SDD in Level 4" row of the plan (line 19, A7 and G-4): no longer says that the install is removed from the level.
+  const [row] = pack.plan.split('\n').filter((line) => line.startsWith('| SDD in Level 4 |'));
+  assert.ok(row?.includes('Only Track A needs one install, the OpenSpec program'), 'the SDD row names the one install of Track A');
+  assert.ok(!row.includes('remove the install'), 'the SDD row does not claim the install is removed');
   for (const [name, text] of [['Level 4 page', level4], ['workshop plan', pack.plan]]) {
     assert.doesNotMatch(text, /discovered/i, `${name}: nothing was discovered, the standards were written for this repo`);
     assert.doesNotMatch(fold(text), /framework installed|already installed and configured/i, `${name}: no framework is installed on a start branch`);
@@ -431,25 +539,26 @@ const SWEEP_EXCLUDED = {
   'plan:161 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:161 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:170 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
-  'plan:207 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
-  'plan:207 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
-  'plan:218 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
-  'plan:223 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
-  'plan:255 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
-  'plan:255 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
-  'plan:259 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:259 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:273 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
-  'plan:283 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
-  'plan:290 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
-  'plan:290 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
-  'plan:308 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
-  'plan:323 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
-  // Spec 15 task T4: the key `plan:330 /plan` (the Track C row of the table) is gone: the literal `/plan` is now a substring of the
-  // snippet of L4-72 (the Agent OS brownfield note names `/plan-product`, which the plan states in section 9), so the sweep covers it
-  // and the "still uncovered" test would fail for the stale key. The step itself stays pinned by L4-37 (`/plan`, SDD Part 2).
-  'plan:332 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'plan:365 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:252 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
+  'plan:252 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
+  'plan:263 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
+  'plan:268 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
+  'plan:323 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
+  'plan:323 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
+  'plan:327 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:327 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:341 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
+  'plan:351 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
+  'plan:358 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
+  'plan:358 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
+  'plan:376 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
+  'plan:395 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  // Spec 15 task T4: the key `plan:375 /plan` (the Track C row of the table) is gone. The literal `/plan` is now covered by L4-79,
+  // whose snippet is the whole Track C cell of that row on the page and in the plan (R2 of the T4 QA round; deleting the cell
+  // from the plan or the page fails L4-79), and by substring in L4-72 (the Agent OS brownfield note names `/plan-product`).
+  // The step itself stays pinned by L4-37 (`/plan`, SDD Part 2).
+  'plan:404 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:437 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
   'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
@@ -495,7 +604,7 @@ test('manifest: the sweep counts coverage per section and per page, a snippet of
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-64')).includes('sdd:110 /clear'), 'the Track A step is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:59 ./mvnw verify'), 'the setup check command is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-65')).includes('sdd:97 claude'), 'the common start line is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:299 name'), 'the skill frontmatter field is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:367 name'), 'the skill frontmatter field is covered by its own entry only');
   // The right snippet on the wrong page, and on the right page but attributed to another section.
   const wrongPage = ENTRIES.map((e) => (e.id === 'L4-11' ? {...e, page: 'WU'} : e));
   assert.ok(sweep(wrongPage).includes('sdd:105 /opsx:explore'));
