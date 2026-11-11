@@ -13,7 +13,7 @@
 - [MCP tool and STDIO probes](mcp-tool-probes.md) — @McpTool mutants, output caps, swapped-stream STDIO tests
 - [README, live-jar and capture probes](readme-and-live-jar-probes.md) — README fact checks, jar start runs, STDIO driver, contract capture replay
 - [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions tasks, gated-deploy traps
-- [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe runner, wiring mutants, MDX variants, tab reader, scratch-copy mutants, rendered rigs, page-registration and zero-test-guard count
+- [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe runner, wiring mutants, MDX variants, tab reader, scratch-copy mutants, rendered rigs, page-registration and zero-test-guard count, content-page literal oracle
 - [Site pass and Linux-flaky CLI tests](docusaurus-marker-ban-and-site-pass.md) — rendered pass, CI zip, print count, process.exit pipe truncation
 - [Frontend Vitest probes](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap gap
 - [Live UI walk](live-ui-walk-verification.md) — re-walking a browser walk, playwright-cli listeners, dev-mode console
