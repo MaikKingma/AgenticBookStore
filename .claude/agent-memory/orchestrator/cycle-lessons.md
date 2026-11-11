@@ -86,4 +86,13 @@ metadata:
   and name each check change in the plan. Blast radius must grep ALL of `docs/spec-pack/` (product, specs, workshop)
   for the old wording up front; qa-final failed once on an unrecorded `specs/11` line. A pack edit adds literals the
   sweep flags: allow `SWEEP_EXCLUDED` keys in the task scope from the start. Lite path, sonnet impl/verifier, one round each.
+- **Guide branding (spec 14):** a brand hex below AA (deck blue 4.18:1) collides with pinned 4.5 text pairs; a new
+  "large" contrast kind relaxes a pinned check, so put it to the owner as one question with two options and keep T1
+  running meanwhile (answer: AA shade for text, exact hex for non-text only). A sweep at a new width surfaced a
+  pre-existing axe hit: prove it on the base build (both builds), exclude it by amendment, log a residual. The QA
+  lead's routing of test-only gaps (next task under an insertion-only scope amendment; last task -> owner residual)
+  saved every rework round: sonnet impl and verifier held in round 1 for all three guide tasks.
+- **Stopped or rate-limited children:** resume the same agent with SendMessage to its agent id (context kept); its
+  outbox can be stale, so ask it to rewrite the outbox first. SubagentHandback works once per resume of me; between
+  resumes just end the turn.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.

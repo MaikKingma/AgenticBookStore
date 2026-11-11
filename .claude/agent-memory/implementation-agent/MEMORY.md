@@ -1,24 +1,24 @@
-- [ArchUnit traps](archunit-traps.md) — mutable LayeredArchitecture, multi-line descriptions, array dependencies, additions-only Map edits
-- [Maven build traps](maven-build-traps.md) — non-obvious Maven wrapper, zsh, ArchUnit and compiler-plugin traps in this repo, plus the stack skills that exist
-- [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, aborted tx after constraint failure, JPQL escape in text blocks, element-collection version bumps
-- [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs and lenient precedence stubs, exact translated messages, one clock witness per call site
-- [Integration test techniques](integration-test-techniques.md) — RestTestClient type coercion, Map bodies for view shapes, AssertJ factories, probe-killing data, PER_CLASS hooks, OutputCapture accumulates per class
-- [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict per-node reads naming the key, one guard per rule so removal probes fail, CRLF-neutral line checks
-- [MCP test client traps](mcp-test-client-traps.md) — deprecated CallToolRequest ctor (javac warning), Boolean isError, "Registered tools" scanner check, pin required params via inputSchema Map, exact-cap padding
-- [Bean validation traps](bean-validation-traps.md) — trimmed-length rule needs a nested custom constraint (regex counts code points), JSON control-char test data, U+2003 is not padding
-- [Mapper test witnesses](mapper-test-witnesses.md) — test data that makes mapper, factory and flow-translator mutations observable (rejected values, second literals, threshold twins, U+2003 blank)
-- [Boot logging in a shared fork](boot-logging-shared-fork.md) — in-process second app: logback init once per JVM, only-if-absent logging sysprops, empty-pattern ERROR on stderr, .main() for Started line
-- [Distributor API slice traps](distributor-api-slice-traps.md) — C0-5d greps Javadoc too, slices skip the MCP scanner, exact JSON asserts via Map, unhandled exception shows as ServletException
-- [Docusaurus guide traps](docusaurus-guide-traps.md) — pinned Node scripts, MDX scanner model, checker wiring, built-HTML rules, probe builds, NBSP/Edit traps, A4 print fit, Linux pipe truncation (spawnSync via files)
-- [Spring environment tests](spring-environment-tests.md) — yml/EPP tests without system sources, YamlPropertySourceLoader, Binder placeholders, Boot 4.1.2 old EPP key fails startup, applicationInfo source after EPPs
-- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, create-vite scaffold, Vitest cleanup order, Vite binds IPv6 localhost, rg missing in Bash, Vitest empties css ?raw (use node:fs), QA grep traps in test sources
-- [View controller test traps](view-controller-test-traps.md) — view controllers sit behind controllers (equivalent-mutant probe), RestTestClient no redirects, parent pom uses ${basedir} resources form
-- [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, pin config-overriding flags, date-varied idempotency, absent-sha lease, hook and shim witnesses, perl mutants, guard refuses bash -c
-- [Bash script traps](bash-script-traps.md) — errexit lost in `f || die`, bash 3.2 proof run, IFS-tab traps, git apply --3way, eol anchoring, macOS mktemp ignores TMPDIR without template, EXIT traps need set +e, PATH shims, cmp -n false EOF
-- [RestClient acl traps](restclient-acl-traps.md) — two constructors need @Autowired, %2F path variables, guarded error-body parse, float-to-int cents, null list elements, OutputCapture, loopback timeout test
-- [http replay techniques](http-replay-techniques.md) — live-proving .http files: driver with node handler shim, Expected status grammar, run-mode runs, seeded-state traps
-- [Docs task techniques](docs-task-techniques.md) — README census: two-way scripts with negative control, fake older DB for reset claim, jar has no compose, anonymous volume trap, rg only in Bash tool
-- [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested own @WebMvcTest: type-level @MockitoBean plus @Autowired fields, ProblemDetail JSON keys, ErrorResponseException advice, ChatClient chain mocks
-- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callback tests without a context, stackless tool exception, ListAppender, ChatClient mocks
-- [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, token inventory controls, hooks without Claude, installer isolation (npx/uvx), Spec Kit init traps, staging a generated tree, evidence greps
-- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace table with needles in both texts, counterexample searches on two trees, installer traps (no standards copied, bare mktemp), namespaced command names
+- [ArchUnit traps](archunit-traps.md) — mutable LayeredArchitecture, array dependencies, Map edits
+- [Maven build traps](maven-build-traps.md) — Maven wrapper, zsh, compiler-plugin traps, existing stack skills
+- [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, tiebreak probes
+- [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs, exact messages, clock witnesses, order tests
+- [Integration test techniques](integration-test-techniques.md) — RestTestClient coercion, probe-killing data, OutputCapture
+- [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict reads, one guard per rule, CRLF-neutral checks
+- [MCP test client traps](mcp-test-client-traps.md) — CallToolRequest ctor warning, scanner check, inputSchema pins
+- [Bean validation traps](bean-validation-traps.md) — trimmed-length constraint, control-char JSON, U+2003
+- [Mapper test witnesses](mapper-test-witnesses.md) — data that makes mapper and translator mutations observable
+- [Boot logging in a shared fork](boot-logging-shared-fork.md) — logback init once per JVM, logging sysprops
+- [Distributor API slice traps](distributor-api-slice-traps.md) — Javadoc greps, slices skip MCP scanner, JSON via Map
+- [Docusaurus guide traps](docusaurus-guide-traps.md) — MDX scanner, checker wiring, built-HTML rules, A4 fit, pipe truncation, axe vs chevron crumbs
+- [Spring environment tests](spring-environment-tests.md) — yml/EPP tests, Binder placeholders, Boot 4.1.2 EPP key
+- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, Vitest cleanup, css ?raw, QA grep traps
+- [View controller test traps](view-controller-test-traps.md) — equivalent-mutant probe, no redirects, ${basedir} resources
+- [Bash git script techniques](bash-git-script-techniques.md) — "$BASH" not PATH bash, date-varied idempotency, shims
+- [Bash script traps](bash-script-traps.md) — errexit in `f || die`, bash 3.2 runs, IFS tabs, mktemp template, EXIT traps
+- [RestClient acl traps](restclient-acl-traps.md) — @Autowired constructors, %2F paths, error-body parse, timeouts
+- [http replay techniques](http-replay-techniques.md) — live-proving .http files, status grammar, seeded state
+- [Docs task techniques](docs-task-techniques.md) — README census scripts, reset claim, anonymous volume, rg
+- [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested @WebMvcTest, ProblemDetail keys, ChatClient mocks
+- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callbacks without context, ListAppender, stub model
+- [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, token controls, installer isolation
+- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace tables, two-tree counterexamples, installer traps

@@ -1,15 +1,17 @@
 // The file reads behind the brand, contrast and font rules. The rules themselves are
 // pure functions in scripts/rules/; this module finds the files and hands them over.
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
-import {join} from 'node:path';
+import {join, relative, sep} from 'node:path';
 import {CONTRAST_PAIRS} from '../rules/contrast-pairs.mjs';
 import {colorModeErrors, evaluatePairs} from '../rules/contrast.mjs';
 import {brandErrors, restrictedTextErrors} from '../rules/brand.mjs';
 import {bannedFontSourceErrors, fontErrors} from '../rules/fonts.mjs';
+import {logoErrors} from '../rules/logo.mjs';
 
 const CSS = 'src/css/custom.css';
 const CONFIG = 'docusaurus.config.ts';
 const FONT_DIR = 'src/css/fonts';
+const IMAGE_DIR = 'static/img';
 
 function readText(root, rel) {
   const path = join(root, rel);
@@ -27,7 +29,21 @@ function readFonts(root) {
   );
 }
 
-// Runs the contrast, brand and font rules. files: the text files of guide/ as
+// Every file under static/img/, in any folder and with any extension, as {name, bytes}: name is
+// the path below static/img/ with forward slashes. Sorted, so the report is stable.
+function readImages(root) {
+  const dir = join(root, IMAGE_DIR);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, {recursive: true, withFileTypes: true})
+    .filter((entry) => entry.isFile())
+    .map((entry) => {
+      const path = join(entry.parentPath, entry.name);
+      return {name: relative(dir, path).split(sep).join('/'), bytes: readFileSync(path)};
+    })
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+}
+
+// Runs the contrast, brand, font and image provenance rules. files: the text files of guide/ as
 // {file, text}. Returns, per rule, the error lines, plus the printed contrast pairs
 // and a one-line summary per rule.
 export function siteRules(root, files) {
@@ -74,5 +90,11 @@ export function siteRules(root, files) {
     lines: [],
     summary: `${Object.keys(readFonts(root)).length} font files, provenance, licence`,
   };
-  return {contrast, brand, fonts};
+  const images = readImages(root);
+  const logo = {
+    errors: logoErrors({images, readme: readText(root, 'README.md')}),
+    lines: [],
+    summary: `${images.length} images, each with its name and sha256 on one README line`,
+  };
+  return {contrast, brand, fonts, logo};
 }

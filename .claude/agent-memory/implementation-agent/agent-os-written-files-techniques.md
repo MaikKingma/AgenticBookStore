@@ -4,7 +4,6 @@ description: Proving hand-written framework output (Agent OS product docs and st
 metadata:
   type: reference
 ---
-
 - **Trace table with needles in both texts**: one TSV row per range of a written file (written lines, source and source
   lines, needles). The checker fails when a needle is missing from the written lines OR the cited source lines, or when a
   content line is in no row. A `LINE` needle (every written line is a substring of the source range) fits verbatim tables.
@@ -17,6 +16,6 @@ metadata:
   `.claude/commands/agent-os/*.md` and `agent-os/standards/index.yml` only; bare `mktemp` ignores TMPDIR on macOS, so run it
   with a `mktemp` shim on PATH. `--commands-only` rebuilds `index.yml` from the files (a zero-token check of a hand-written
   index; stage it with the trailing blank line the builder writes). A clone of the start branch prompts "Existing standards
-  folder detected" (answer n or y both leave it unchanged); use a `solution/level-3` clone for the no-prompt run.
+  folder detected" (either answer leaves it unchanged); a `solution/level-3` clone avoids the prompt.
 - **Command names**: a file in a subdirectory of `.claude/commands/` is `/<subdir>:<name>`, so the installed files are
   `/agent-os:plan-product`; the pack and guide write the short form.

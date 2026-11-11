@@ -4,12 +4,10 @@ description: Non-obvious ArchUnit 1.5.1 behaviours met while extending Architect
 metadata:
   type: reference
 ---
-
 - `LayeredArchitecture` is mutable: a shared instance collects every `whereLayer(...)` clause (eight rules on one
   instance give eight `where layer '` clauses each). That is why `ArchitectureTest.layers()` builds a fresh one;
   `ArchitectureSelfTest.everyLayeredRuleStatesExactlyOneLayerConstraint` pins it.
-- "Additions only" diffs on `Map.ofEntries(...)` or `Stream.of(...)`: appending after the last entry rewrites its `)));`
-  line. Insert a new entry before the last one instead.
+- "Additions only" diffs on `Map.ofEntries(...)`: appending after the last entry rewrites its `)));` line: insert before it.
 - `haveRawParameterTypes(Class...)` matches the exact parameter list; for "any parameter is X" use a
   `DescribedPredicate<List<JavaClass>>` with `anyMatch` (see `ArchitectureTest.includeDoubleOrFloat`).
 - A `CompositeArchRule` prints each half's package list separately (`... and no code units ...`). A set of the
@@ -25,5 +23,3 @@ metadata:
 - A walk predicate (enclosing-class chain, name suffix) needs a witness with the match on EACH walk position: direct
   only, middle only, top-level only, plus an exact-name witness and a letter-case control. Putting the suffix only on
   the top-level class lets "top-only" and "direct-or-top" walks survive, and QA probes both.
-
-Related: [[maven-build-traps]].

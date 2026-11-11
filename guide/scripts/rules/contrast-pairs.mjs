@@ -7,6 +7,11 @@
 // caution to warning (an alias with its own label), so the caution pairs name the
 // warning variables on purpose. The note border is decorative (title and icon carry
 // the type), so it has no pair.
+//
+// Deck palette (spec 14, D18): the primary is the AA shade of the deck blue in each mode, so every element Infima
+// paints in bare primary is a text pair here. The exact deck blue (--ov-blue) is only ever a non-text pair. Buttons
+// are the filled primary with the inverse text colour (white in light mode, slate in dark mode); the checklist
+// items sit on the page and the observation card of Level 0 is a code block, so they get a pair by name too.
 
 const text = (name, fg, bg) => ({name, fg, bg, kind: 'text'});
 const nontext = (name, fg, bg) => ({name, fg, bg, kind: 'nontext'});
@@ -45,6 +50,11 @@ export const CONTRAST_PAIRS = [
   text('links', '--ifm-link-color', '--ifm-background-color'),
   text('link hover', '--ifm-link-hover-color', '--ifm-background-color'),
   text('primary', '--ifm-color-primary', '--ifm-background-color'),
+  text('button text', '--ifm-font-color-base-inverse', '--ifm-color-primary'),
+  text('button hover text', '--ifm-font-color-base-inverse', '--ifm-color-primary-dark'),
+  text('primary on table stripe', '--ifm-color-primary', '--ifm-table-stripe-background'),
+  text('checklist text', '--ifm-font-color-base', '--ifm-background-color'),
+  text('observation card text', '--prism-color', '--prism-background-color'),
   text('inline code', '--ifm-font-color-base', '--ifm-code-background'),
   text('inline code in a heading', '--ifm-heading-color', '--ifm-code-background'),
   text('inline code in a link', '--ifm-link-color', '--ifm-code-background'),
@@ -70,10 +80,17 @@ export const CONTRAST_PAIRS = [
   text('block quote', '--ifm-blockquote-color', '--ifm-background-color'),
   text('keyboard key', '--ifm-color-emphasis-800', '--ifm-color-emphasis-0'),
   ...admonitionPairs,
+  text('level progress done label', '--guide-level-done-fg', '--guide-level-done-bg'),
   text('level progress current label', '--guide-level-current-fg', '--guide-level-current-bg'),
   text('level progress inactive label', '--guide-level-inactive-fg', '--guide-level-inactive-bg'),
   nontext('navbar accent line', '--guide-navbar-accent', '--ifm-navbar-background-color'),
   nontext('navbar toggle on hover', '--ifm-navbar-link-color', '--guide-navbar-hover-bg'),
+  nontext('navbar logo', '--guide-navbar-logo', '--ifm-navbar-background-color'),
   nontext('level progress current fill', '--guide-level-current-bg', '--ifm-background-color'),
   nontext('level progress current outline', '--guide-level-current-border', '--ifm-background-color'),
+  nontext('level progress done fill', '--guide-level-done-bg', '--ifm-background-color'),
+  nontext('level progress done outline', '--guide-level-done-border', '--ifm-background-color'),
+  nontext('level progress done check mark', '--guide-level-done-check', '--guide-level-done-bg'),
+  nontext('level progress inactive outline', '--guide-level-inactive-border', '--ifm-background-color'),
+  nontext('level progress focus ring', '--guide-level-focus', '--ifm-background-color'),
 ];

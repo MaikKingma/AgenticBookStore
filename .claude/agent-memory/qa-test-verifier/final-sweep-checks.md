@@ -26,6 +26,8 @@ Rule (bugfix-cycle qa-final): run the per-task negative control in throwaway wor
 Rule (re-running earlier verifiers' scratch scripts on a final head): copy each to a new name, edit, `diff` old vs new, and compare the new tail with the old log (same kill table, same counts).
 **Why:** three silent traps. A copy keeps its CLI guard `if (process.argv[1].endsWith('<old name>'))`, so the renamed copy runs nothing and exits 0. A script whose BASE is `origin/<spec branch>` compares the head with itself after the merges: pin the task PR base sha (`git rev-parse <task merge>^1`). A script that reads files and runs `git -C R` breaks on a `git archive` tree: add `GW = process.env.QA_GIT_ROOT ?? R` for git.
 **How to apply:** grep every copy for `argv[1].endsWith`, `origin/`, `HEAD:`, ports, `slice(` and line-number literals before running. When a pin is re-pointed after a deletion, scope each new negative token to the section the deletion touched (a page-wide `not verified yet` hit an unrelated sentence). Keep each pass's log under its own name.
+- Mutant ids are per verifier, not per cycle: two task verifiers once used the same id (MC11) for different mutants, and the ledger then called the earlier one "now pinned". Re-run a routed survivor with the ORIGINAL round's mutant text and report both texts when ids collide.
+- A control copy holding an older test file can be red at baseline (later tasks changed shared fixtures). Judge kills by the failing-title set against the copy's own baseline, or pick the latest gate file that has the fixture edits but not the insert under test.
 
 ## Coverage from the CLI and impl heartbeat stamps
 Rule: measure coverage from the command line; never add JaCoCo to a POM (plans forbid POM changes).

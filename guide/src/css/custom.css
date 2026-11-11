@@ -1,5 +1,5 @@
 /**
- * OpenValue 2026 brand for the workshop guide (decision D7).
+ * Deck palette for the workshop guide (decision D18, which replaced the guide's D7 teal for the guide only).
  *
  * This file is the only place in guide/ that holds a colour value. Every other
  * stylesheet and component uses var(--...), inherit, currentColor or transparent;
@@ -8,8 +8,12 @@
  * scripts/rules/contrast-pairs.mjs, in light mode and in dark mode.
  *
  * Rules that keep the pairs honest:
- * - Blue is only a non-text accent (4.2:1 on white). Never use it for small text.
+ * - The exact deck blue (--ov-blue) is only a non-text accent (4.18:1 on white, 3.74:1 on slate): borders,
+ *   bars and outlines. Text and the filled controls use the AA shade of it, which is --ifm-color-primary:
+ *   #3371B8 in light mode, #79A7DA in dark mode.
  * - Sage is decorative only (2.8:1 on white). Never use it for text.
+ * - Dark mode: the page, navbar and sidebar are the deck slate (--ov-slate); every other dark surface is a
+ *   named --ov-slate-<step> token. The tokens and their values are listed in guide/README.md.
  * - A variable used in a contrast pair is declared here with a hex value or a
  *   single var() reference, so the check can resolve it.
  */
@@ -47,194 +51,244 @@
 
 /* Light mode, also the base of dark mode. */
 :root {
-  /* The seven brand values. */
-  --ov-navy: #1D252D;
-  --ov-blue: #3D7DC9;
-  --ov-teal: #014046;
+  /* The deck colours (decision D18) and the D7 neutrals kept. Deck blue: non-text accents only. */
+  --ov-blue: #3C7EC9;
+  --ov-slate: #1D242C;
   --ov-sage: #809FA2;
-  --ov-mist: #CBD9DA;
   --ov-snow: #F1F5F6;
   --ov-white: #FFFFFF;
+
+  /* The slate scale, from light tints (light mode borders and hovers) to dark surfaces (dark mode). The
+     scale is slate #1D242C mixed with white (100 to 500) and with black (900); 700 and 800 are the raised
+     dark surfaces. Every step is listed in guide/README.md. */
+  --ov-slate-100: #E6EBF0;
+  --ov-slate-200: #CFD7DF;
+  --ov-slate-500: #4B5966;
+  --ov-slate-700: #323E49;
+  --ov-slate-800: #2A333C;
+  --ov-slate-900: #171C22;
 
   /* Typography: Montserrat, code keeps the default monospace stack. */
   --ifm-font-family-base: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --ifm-code-font-size: 95%;
 
-  /* Primary: teal and its six generated shades. */
-  --ifm-color-primary: #014046;
-  --ifm-color-primary-dark: #013A3F;
-  --ifm-color-primary-darker: #01363C;
-  --ifm-color-primary-darkest: #012D31;
-  --ifm-color-primary-light: #01464D;
-  --ifm-color-primary-lighter: #014A51;
-  --ifm-color-primary-lightest: #01535B;
+  /* Primary: #3371B8, the AA shade of the deck blue (5.01:1 on white), and its six shades (Docusaurus
+     ratios of #3371B8). Infima paints bare primary as text in places no pair names (the table of
+     contents entry), so primary itself has to be readable. */
+  --ifm-color-primary: #3371B8;
+  --ifm-color-primary-dark: #2E66A6;
+  --ifm-color-primary-darker: #2B609C;
+  --ifm-color-primary-darkest: #244F81;
+  --ifm-color-primary-light: #3A7CC8;
+  --ifm-color-primary-lighter: #4383CB;
+  --ifm-color-primary-lightest: #5F95D3;
 
   /* Text, headings, background and links. */
-  --ifm-font-color-base: var(--ov-navy);
+  --ifm-font-color-base: var(--ov-slate);
   --ifm-font-color-base-inverse: var(--ov-white);
-  --ifm-font-color-secondary: var(--ov-navy);
-  --ifm-color-content: var(--ov-navy);
+  --ifm-font-color-secondary: var(--ov-slate);
+  --ifm-color-content: var(--ov-slate);
   --ifm-color-content-inverse: var(--ov-white);
-  --ifm-color-content-secondary: var(--ov-navy);
+  --ifm-color-content-secondary: var(--ov-slate);
   --ifm-background-color: var(--ov-white);
   --ifm-background-surface-color: var(--ov-white);
-  --ifm-heading-color: var(--ov-navy);
+  --ifm-heading-color: var(--ov-slate);
   --ifm-link-color: var(--ifm-color-primary);
   --ifm-link-hover-color: var(--ifm-color-primary-dark);
 
-  /* Infima greys, remapped onto the brand (used for borders, hovers, kbd, quotes). */
+  /* Infima greys, remapped onto the palette (used for borders, hovers, kbd, quotes). */
   --ifm-color-emphasis-0: var(--ov-white);
   --ifm-color-emphasis-100: var(--ov-snow);
-  --ifm-color-emphasis-200: var(--ov-mist);
-  --ifm-color-emphasis-300: var(--ov-mist);
+  --ifm-color-emphasis-200: var(--ov-slate-100);
+  --ifm-color-emphasis-300: var(--ov-slate-200);
   --ifm-color-emphasis-400: var(--ov-sage);
   --ifm-color-emphasis-500: var(--ov-sage);
-  --ifm-color-emphasis-600: var(--ov-teal);
-  --ifm-color-emphasis-700: var(--ov-teal);
-  --ifm-color-emphasis-800: var(--ov-navy);
-  --ifm-color-emphasis-900: var(--ov-navy);
-  --ifm-color-emphasis-1000: var(--ov-navy);
-  --ifm-hover-overlay: var(--ov-mist);
+  --ifm-color-emphasis-600: var(--ov-slate-500);
+  --ifm-color-emphasis-700: var(--ov-slate-500);
+  --ifm-color-emphasis-800: var(--ov-slate);
+  --ifm-color-emphasis-900: var(--ov-slate);
+  --ifm-color-emphasis-1000: var(--ov-slate);
+  --ifm-hover-overlay: var(--ov-slate-100);
   --ifm-blockquote-color: var(--ifm-color-emphasis-800);
   --ifm-table-stripe-background: var(--ov-snow);
   --ifm-scrollbar-track-background-color: var(--ov-snow);
   --ifm-scrollbar-thumb-background-color: var(--ov-sage);
-  --ifm-scrollbar-thumb-hover-background-color: var(--ov-teal);
+  --ifm-scrollbar-thumb-hover-background-color: var(--ov-slate-500);
 
-  /* Code: inline code on mist, code blocks on snow, no syntax colours outside the brand. */
-  --ifm-code-background: var(--ov-mist);
-  --prism-color: var(--ov-navy);
+  /* Code: inline code and code blocks on snow (the primary stays 4.5:1 on it), no syntax colours outside the
+     palette. A code block is also the observation card of Level 0. */
+  --ifm-code-background: var(--ov-snow);
+  --prism-color: var(--ov-slate);
   --prism-background-color: var(--ov-snow);
-  --docusaurus-highlighted-code-line-bg: var(--ov-mist);
-  --guide-code-accent: var(--ov-teal);
-  --guide-code-border: var(--ov-mist);
+  --docusaurus-highlighted-code-line-bg: var(--ov-slate-100);
+  --guide-code-accent: var(--ifm-color-primary-darker);
+  --guide-code-border: var(--ov-slate-200);
 
-  /* Navbar: navy with white text, a blue accent line. */
-  --ifm-navbar-background-color: var(--ov-navy);
-  --ifm-navbar-link-color: var(--ov-white);
-  --ifm-navbar-link-hover-color: var(--ov-mist);
-  --ifm-navbar-link-active-color: var(--ov-mist);
+  /* Navbar, light mode: a light bar with slate text and a deck blue accent line, so the slate logo
+     file shows. The logo variable names the colour of the logo file shown in this mode. */
+  --ifm-navbar-background-color: var(--ov-white);
+  --ifm-navbar-link-color: var(--ov-slate);
+  --ifm-navbar-link-hover-color: var(--ifm-color-primary);
+  --ifm-navbar-link-active-color: var(--ifm-color-primary);
   --guide-navbar-accent: var(--ov-blue);
-  --guide-navbar-hover-bg: var(--ov-teal);
-  --guide-navbar-menu-color: var(--ov-white);
-  --guide-navbar-menu-active: var(--ov-mist);
-  --guide-navbar-menu-bg: var(--ov-teal);
+  --guide-navbar-hover-bg: var(--ov-slate-100);
+  --guide-navbar-menu-color: var(--ov-slate);
+  --guide-navbar-menu-active: var(--ov-slate);
+  --guide-navbar-menu-bg: var(--ov-slate-100);
+  --guide-navbar-logo: var(--ov-slate);
 
-  /* Sidebar menu, breadcrumbs, tabs, table of contents. */
-  --ifm-menu-color: var(--ov-navy);
-  --ifm-menu-color-active: var(--ifm-color-primary);
+  /* Sidebar menu, breadcrumbs, tabs, table of contents. The active entry of the menu, the breadcrumbs and
+     the tabs sits on the hover tint, so it uses the darker shade of the primary (4.9:1 on the tint). */
+  --ifm-menu-color: var(--ov-slate);
+  --ifm-menu-color-active: var(--ifm-color-primary-dark);
   --ifm-menu-color-background-active: var(--ifm-hover-overlay);
   --ifm-menu-color-background-hover: var(--ifm-hover-overlay);
-  --ifm-breadcrumb-color-active: var(--ifm-color-primary);
+  --ifm-breadcrumb-color-active: var(--ifm-color-primary-dark);
   --ifm-breadcrumb-item-background-active: var(--ifm-hover-overlay);
-  --ifm-tabs-color: var(--ov-navy);
-  --ifm-tabs-color-active: var(--ifm-color-primary);
-  --ifm-toc-link-color: var(--ov-navy);
+  --ifm-tabs-color: var(--ov-slate);
+  --ifm-tabs-color-active: var(--ifm-color-primary-dark);
+  --ifm-toc-link-color: var(--ov-slate);
 
-  /* Admonitions. Infima types: secondary is note, success is tip, caution is warning. */
+  /* Admonitions. Infima types: secondary is note, success is tip, caution is warning. The border of
+     each type (the -dark variable) is the exact deck blue, one of the shades of the primary, or a named
+     neutral; guide/README.md lists them. */
   --ifm-color-secondary-contrast-background: var(--ov-snow);
-  --ifm-color-secondary-contrast-foreground: var(--ov-navy);
+  --ifm-color-secondary-contrast-foreground: var(--ov-slate);
   --ifm-color-secondary-dark: var(--ov-sage);
   --ifm-color-success-contrast-background: var(--ov-snow);
-  --ifm-color-success-contrast-foreground: var(--ov-navy);
-  --ifm-color-success-dark: var(--ov-teal);
+  --ifm-color-success-contrast-foreground: var(--ov-slate);
+  --ifm-color-success-dark: var(--ifm-color-primary-darkest);
   --ifm-color-info-contrast-background: var(--ov-snow);
-  --ifm-color-info-contrast-foreground: var(--ov-navy);
+  --ifm-color-info-contrast-foreground: var(--ov-slate);
   --ifm-color-info-dark: var(--ov-blue);
-  --ifm-color-warning-contrast-background: var(--ov-mist);
-  --ifm-color-warning-contrast-foreground: var(--ov-navy);
-  --ifm-color-warning-dark: var(--ov-navy);
-  --ifm-color-danger-contrast-background: var(--ov-navy);
+  --ifm-color-warning-contrast-background: var(--ov-slate-100);
+  --ifm-color-warning-contrast-foreground: var(--ov-slate);
+  --ifm-color-warning-dark: var(--ov-slate);
+  --ifm-color-danger-contrast-background: var(--ov-slate);
   --ifm-color-danger-contrast-foreground: var(--ov-white);
   --ifm-color-danger-dark: var(--ov-blue);
-  --guide-alert-note-code: var(--ov-mist);
-  --guide-alert-tip-code: var(--ov-mist);
-  --guide-alert-info-code: var(--ov-mist);
+  --guide-alert-note-code: var(--ov-slate-100);
+  --guide-alert-tip-code: var(--ov-slate-100);
+  --guide-alert-info-code: var(--ov-slate-100);
   --guide-alert-warning-code: var(--ov-snow);
-  --guide-alert-danger-code: var(--ov-teal);
+  --guide-alert-danger-code: var(--ov-slate-700);
 
-  /* LevelProgress: current level filled teal with a white label, others on snow outlined in sage. */
-  --guide-level-current-bg: var(--ov-teal);
+  /* LevelProgress (spec 14): chevron crumbs. Done is a green fill with a white label and check mark,
+     the current level is the deck blue's AA shade #3371B8 (white label, 5.01:1) with a bold label,
+     upcoming levels are a muted fill with a muted label and an outline. The outlines (3:1 on the
+     page) and the focus ring are non-text pairs, every label a text pair (see contrast-pairs.mjs).
+     The exact deck blue #3C7EC9 is 4.18:1 with white, so it stays out of text pairs. */
+  --guide-level-done-bg: #1E6B3E;
+  --guide-level-done-fg: var(--ov-white);
+  --guide-level-done-border: var(--guide-level-done-bg);
+  --guide-level-done-check: var(--guide-level-done-fg);
+  --guide-level-current-bg: #3371B8;
   --guide-level-current-fg: var(--ov-white);
-  --guide-level-current-border: var(--ov-navy);
+  --guide-level-current-border: #28588F;
   --guide-level-inactive-bg: var(--ov-snow);
-  --guide-level-inactive-fg: var(--ov-navy);
-  --guide-level-inactive-border: var(--ov-sage);
+  --guide-level-inactive-fg: #52616B;
+  --guide-level-inactive-border: #7A8A94;
+  --guide-level-focus: var(--ov-slate);
 }
 
-/* Dark mode: navy background, mist primary, white text. */
+/* Dark mode: deck slate background, light blue primary, white text. */
 html[data-theme='dark'] {
-  --ifm-color-primary: #CBD9DA;
-  --ifm-color-primary-dark: #B7C3C4;
-  --ifm-color-primary-darker: #ADB8B9;
-  --ifm-color-primary-darkest: #8E9899;
-  --ifm-color-primary-light: #DFEFF0;
-  --ifm-color-primary-lighter: #E9FAFB;
-  --ifm-color-primary-lightest: #FFFFFF;
+  /* Primary: #79A7DA, a lighter shade of the deck blue (6.23:1 on slate, 5.1:1 on the raised surfaces), and
+     its six shades (Docusaurus ratios of #79A7DA). */
+  --ifm-color-primary: #79A7DA;
+  --ifm-color-primary-dark: #5E96D3;
+  --ifm-color-primary-darker: #518DCF;
+  --ifm-color-primary-darkest: #3373BA;
+  --ifm-color-primary-light: #94B8E1;
+  --ifm-color-primary-lighter: #A1C1E5;
+  --ifm-color-primary-lightest: #C9DBF0;
 
   --ifm-font-color-base: var(--ov-white);
-  --ifm-font-color-base-inverse: var(--ov-navy);
+  --ifm-font-color-base-inverse: var(--ov-slate);
   --ifm-font-color-secondary: var(--ov-white);
   --ifm-color-content: var(--ov-white);
-  --ifm-color-content-inverse: var(--ov-navy);
+  --ifm-color-content-inverse: var(--ov-slate);
   --ifm-color-content-secondary: var(--ov-white);
-  --ifm-background-color: var(--ov-navy);
-  --ifm-background-surface-color: var(--ov-navy);
+  --ifm-background-color: var(--ov-slate);
+  --ifm-background-surface-color: var(--ov-slate);
   --ifm-heading-color: var(--ov-white);
   --ifm-link-color: var(--ifm-color-primary);
-  --ifm-link-hover-color: var(--ov-white);
+  --ifm-link-hover-color: var(--ifm-color-primary-lighter);
 
-  --ifm-color-emphasis-0: var(--ov-navy);
-  --ifm-color-emphasis-100: var(--ov-teal);
-  --ifm-color-emphasis-200: var(--ov-teal);
+  --ifm-color-emphasis-0: var(--ov-slate);
+  --ifm-color-emphasis-100: var(--ov-slate-800);
+  --ifm-color-emphasis-200: var(--ov-slate-700);
   --ifm-color-emphasis-300: var(--ov-sage);
   --ifm-color-emphasis-400: var(--ov-sage);
   --ifm-color-emphasis-500: var(--ov-sage);
-  --ifm-color-emphasis-600: var(--ov-mist);
-  --ifm-color-emphasis-700: var(--ov-mist);
+  --ifm-color-emphasis-600: var(--ov-slate-200);
+  --ifm-color-emphasis-700: var(--ov-slate-200);
   --ifm-color-emphasis-800: var(--ov-white);
   --ifm-color-emphasis-900: var(--ov-white);
   --ifm-color-emphasis-1000: var(--ov-white);
-  --ifm-hover-overlay: var(--ov-teal);
-  --ifm-table-stripe-background: var(--ov-teal);
-  --ifm-scrollbar-track-background-color: var(--ov-navy);
+  --ifm-hover-overlay: var(--ov-slate-800);
+  --ifm-table-stripe-background: var(--ov-slate-800);
+  --ifm-scrollbar-track-background-color: var(--ov-slate);
   --ifm-scrollbar-thumb-background-color: var(--ov-sage);
-  --ifm-scrollbar-thumb-hover-background-color: var(--ov-mist);
+  --ifm-scrollbar-thumb-hover-background-color: var(--ov-slate-200);
 
-  --ifm-code-background: var(--ov-teal);
+  --ifm-code-background: var(--ov-slate-800);
   --prism-color: var(--ov-white);
-  --prism-background-color: var(--ov-teal);
-  --docusaurus-highlighted-code-line-bg: var(--ov-navy);
-  --guide-code-accent: var(--ov-mist);
+  --prism-background-color: var(--ov-slate-900);
+  --docusaurus-highlighted-code-line-bg: var(--ov-slate-700);
+  --guide-code-accent: var(--ifm-color-primary-light);
   --guide-code-border: var(--ov-sage);
 
+  /* Navbar, dark mode: a slate bar with light text, so the white logo file shows. */
+  --ifm-navbar-background-color: var(--ov-slate);
+  --ifm-navbar-link-color: var(--ov-white);
+  --ifm-navbar-link-hover-color: var(--ifm-color-primary);
+  --ifm-navbar-link-active-color: var(--ifm-color-primary);
+  --guide-navbar-hover-bg: var(--ov-slate-700);
+  --guide-navbar-menu-color: var(--ov-white);
+  --guide-navbar-menu-active: var(--ifm-color-primary-light);
+  --guide-navbar-menu-bg: var(--ov-slate-700);
+  --guide-navbar-logo: var(--ov-white);
+
   --ifm-menu-color: var(--ov-white);
+  --ifm-menu-color-active: var(--ifm-color-primary);
+  --ifm-breadcrumb-color-active: var(--ifm-color-primary);
   --ifm-tabs-color: var(--ov-white);
+  --ifm-tabs-color-active: var(--ifm-color-primary);
   --ifm-toc-link-color: var(--ov-white);
 
-  --ifm-color-secondary-contrast-background: var(--ov-teal);
+  --ifm-color-secondary-contrast-background: var(--ov-slate-800);
   --ifm-color-secondary-contrast-foreground: var(--ov-white);
-  --ifm-color-success-contrast-background: var(--ov-teal);
+  --ifm-color-success-contrast-background: var(--ov-slate-800);
   --ifm-color-success-contrast-foreground: var(--ov-white);
-  --ifm-color-success-dark: var(--ov-mist);
-  --ifm-color-info-contrast-background: var(--ov-teal);
+  --ifm-color-success-dark: var(--ifm-color-primary-lighter);
+  --ifm-color-info-contrast-background: var(--ov-slate-800);
   --ifm-color-info-contrast-foreground: var(--ov-white);
-  --ifm-color-info-dark: var(--ov-white);
-  --ifm-color-danger-contrast-background: var(--ov-white);
-  --ifm-color-danger-contrast-foreground: var(--ov-navy);
-  --guide-alert-note-code: var(--ov-navy);
-  --guide-alert-tip-code: var(--ov-navy);
-  --guide-alert-info-code: var(--ov-navy);
-  --guide-alert-warning-code: var(--ov-snow);
-  --guide-alert-danger-code: var(--ov-mist);
+  --ifm-color-info-dark: var(--ifm-color-primary);
+  --ifm-color-warning-contrast-background: var(--ov-slate-800);
+  --ifm-color-warning-contrast-foreground: var(--ov-white);
+  --ifm-color-warning-dark: var(--ov-white);
+  --ifm-color-danger-contrast-background: var(--ov-slate-900);
+  --ifm-color-danger-contrast-foreground: var(--ov-white);
+  --ifm-color-danger-dark: var(--ifm-color-primary-light);
+  --guide-alert-note-code: var(--ov-slate-900);
+  --guide-alert-tip-code: var(--ov-slate-900);
+  --guide-alert-info-code: var(--ov-slate-900);
+  --guide-alert-warning-code: var(--ov-slate-900);
+  --guide-alert-danger-code: var(--ov-slate-800);
 
-  --guide-level-current-bg: var(--ov-mist);
-  --guide-level-current-fg: var(--ov-navy);
-  --guide-level-current-border: var(--ov-white);
+  /* LevelProgress, dark mode: the white labels and the current fill carry over from light mode. */
+  --guide-level-done-bg: #2A8050;
+  --guide-level-current-border: #79A7DA;
+  --guide-level-inactive-bg: var(--ov-slate-800);
+  --guide-level-inactive-fg: #B5C0C7;
+  --guide-level-inactive-border: #6F7F8A;
+  --guide-level-focus: var(--ov-white);
 }
 
-/* Navbar: white text on navy in both modes. The mobile menu lives inside the navbar, so the
-   menu colours are scoped here too (Infima would otherwise use the page colours on navy). */
+/* Navbar: slate text on a light bar in light mode, light text on slate in dark mode. The mobile
+   menu lives inside the navbar, so the menu colours are scoped here too (Infima would otherwise
+   use the page colours on the navbar). */
 .navbar {
   border-bottom: 3px solid var(--guide-navbar-accent);
   color: var(--ifm-navbar-link-color);
@@ -245,7 +299,29 @@ html[data-theme='dark'] {
   --ifm-color-emphasis-200: var(--guide-navbar-hover-bg);
 }
 
-/* Links in page text are underlined, so colour is not the only cue (teal is close to navy). */
+/* The hover and active colours of a navbar link are close to its normal colour in light mode,
+   so an underline carries the state too. */
+.navbar__link:hover,
+.navbar__link--active {
+  text-decoration: underline;
+}
+
+/* The logo link in front of the title (src/theme/Navbar/Logo): 32 px high, never squeezed. */
+.guide-navbar-logo {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-right: 0.75rem;
+}
+
+/* No display value here: the theme hides the image of the other colour mode with its own display
+   rule, and a display set on the image would show both files before the page is hydrated. */
+.guide-navbar-logo img {
+  height: 32px;
+  width: auto;
+}
+
+/* Links in page text are underlined, so colour is not the only cue (blue is close to the slate text). */
 .markdown a:not(.hash-link) {
   text-decoration: underline;
 }

@@ -4,7 +4,6 @@ description: Non-obvious traps when running the Maven wrapper and shell checks i
 metadata:
   type: reference
 ---
-
 - Run Maven as `bash ~/.claude/scripts/with-budget.sh <s> ./mvnw -B -ntp <goals> -l <scratch>/x.log`, then grep the log.
   Without `-B -ntp` the download progress floods the tool output and the result lines get truncated.
 - The Bash tool runs zsh: quote find parentheses (`\(` `\)`), `-path` patterns and `--include=*.java` globs, or zsh
@@ -16,16 +15,15 @@ metadata:
 - maven-compiler-plugin 3.15.0 (Boot 4.1.2 managed) defaults `createMissingPackageInfoClass=true`: a Javadoc-only
   `package-info.java` still yields an empty `package-info.class` under target/classes. Only the property
   `maven.compiler.createMissingPackageInfoClass=false` stops it; javac's own behaviour is not the cause.
-- Edit (probes and normal edits): a trailing space at the end of old/new string can be lost (an anchor `X = ` once produced
-  `X =new`). Make edits whole-line, never end an anchor with a space, and prove every probe restore with `shasum -a 256`
-  against a baseline (in-place probes restored by `cp -p` from a scratchpad `.orig` work). Edit cannot match a literal
-  non-ASCII char (e.g. U+2003) in `old_string`: replace that line by number with an ASCII-only `perl -i -pe 'if ($. == N)
-  {...}'`, verify with `git diff -U0`, and report the Write/Edit-only deviation in the outbox.
+- Edit: a trailing space at the end of old/new string can be lost (an anchor `X = ` once produced `X =new`): make edits
+  whole-line and prove every probe restore with `shasum -a 256` against a baseline (`cp -p` from a scratchpad `.orig`). Edit
+  cannot match a literal non-ASCII char (e.g. U+2003): replace that line by number with an ASCII-only `perl -i -pe 'if ($. == N)
+  {...}'`, verify with `git diff -U0`, and report the deviation in the outbox.
 - `cp -p` (probe install, restore, a withdrawn change for a red) keeps the OLD mtime, so incremental compile reuses the
   stale class and the run proves nothing (a "red" IT once came out green): run such runs with `clean`.
 - A probe resource under `src/test/resources` (e.g. a temporary migration) is copied to `target/test-classes` and stays
   there after the source is removed (no clean): move `target/test-classes/<dir>` aside too before the no-probe run.
-- Surefire `-Dtest=A+B` matches nothing ("No tests matching pattern"); several classes are `-Dtest=A,B`.
+- Surefire `-Dtest=A+B` matches nothing; several classes are `-Dtest=A,B`.
 
 Stack skills: project-level `clean-hexagonal-onion`, `hexagonal-slice`, `layer-testing`, `ddd-building-blocks`
 (under `.claude/skills/`); user-level `tdd`, `agent-comms`.

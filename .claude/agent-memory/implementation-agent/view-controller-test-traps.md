@@ -4,7 +4,6 @@ description: Spring MVC view controller (WebMvcConfigurer) traps for tests and p
 metadata:
   type: reference
 ---
-
 - `ViewControllerRegistry` handler mapping has order 1; `RequestMappingHandlerMapping` (controllers) is 0 and the
   actuator mapping is earlier still. An extra `addRedirectViewController("/books", ...)` is therefore never reached:
   an equivalent mutant, no test can kill it. The observable variant needs `registry.setOrder(-1000)` (then
