@@ -34,11 +34,11 @@ test('runChecks: every contrast pair is printed with its ratio, light and dark',
   withSiteTree({}, (root) => {
     const {lines} = runChecks(root);
     assert.ok(
-      lines.includes('ok   contrast light body text: --ifm-font-color-base on --ifm-background-color 15.50 (min 4.5)'),
+      lines.includes('ok   contrast light body text: --ifm-font-color-base on --ifm-background-color 15.66 (min 4.5)'),
       lines.join('\n'),
     );
     assert.ok(
-      lines.includes('ok   contrast dark body text: --ifm-font-color-base on --ifm-background-color 15.50 (min 4.5)'),
+      lines.includes('ok   contrast dark body text: --ifm-font-color-base on --ifm-background-color 15.66 (min 4.5)'),
       lines.join('\n'),
     );
     assert.equal(startingWith(lines, 'ok   contrast light ').length, CONTRAST_PAIRS.length);
@@ -48,7 +48,7 @@ test('runChecks: every contrast pair is printed with its ratio, light and dark',
 });
 
 test('runChecks: a dark body text colour that fails the contrast is an error and a FAIL line', () => {
-  const css = replaceOnce(CSS, '--ifm-font-color-base: var(--ov-white);', '--ifm-font-color-base: var(--ov-navy);');
+  const css = replaceOnce(CSS, '--ifm-font-color-base: var(--ov-white);', '--ifm-font-color-base: var(--ov-slate);');
   withSiteTree({'src/css/custom.css': css}, (root) => {
     const {lines, errors} = runChecks(root);
     assert.deepEqual(startingWith(errors, 'contrast: dark body text:'), [
@@ -63,7 +63,7 @@ test('runChecks: a blue link colour fails the brand rule, which names every pair
   const css = replaceOnce(CSS, '--ifm-link-color: var(--ifm-color-primary);', '--ifm-link-color: var(--ov-blue);');
   withSiteTree({'src/css/custom.css': css}, (root) => {
     const {lines, errors} = runChecks(root);
-    const tail = 'uses blue #3D7DC9 as text, which is only for large or bold text and non-text accents';
+    const tail = 'uses blue #3C7EC9 as text, which is only for non-text accents';
     assert.deepEqual(startingWith(errors, 'brand:'), [
       `brand: light links: text pair --ifm-link-color on --ifm-background-color ${tail}`,
       `brand: light inline code in a link: text pair --ifm-link-color on --ifm-code-background ${tail}`,
@@ -73,10 +73,10 @@ test('runChecks: a blue link colour fails the brand rule, which names every pair
 });
 
 test('runChecks: a wrong dark primary colour fails the brand rule while dark mode is on', () => {
-  const css = replaceOnce(CSS, '--ifm-color-primary: #CBD9DA;', '--ifm-color-primary: #25c2a0;');
+  const css = replaceOnce(CSS, '--ifm-color-primary: #79A7DA;', '--ifm-color-primary: #25c2a0;');
   withSiteTree({'src/css/custom.css': css}, (root) => {
     assert.deepEqual(startingWith(runChecks(root).errors, 'brand:'), [
-      'brand: dark --ifm-color-primary must be #CBD9DA (mist), found #25c2a0',
+      'brand: dark --ifm-color-primary must be #79A7DA (the lighter AA shade of the deck blue), found #25c2a0',
     ]);
   });
 });
@@ -157,7 +157,7 @@ test('runChecks: with the switch off and no dark block only the light pairs are 
 
 test('runChecks: with the switch off a wrong dark primary colour is not checked', () => {
   const config = replaceOnce(CONFIG, SWITCH_ON, SWITCH_OFF);
-  const css = replaceOnce(replaceOnce(CSS, DARK_SELECTOR, 'html.no-dark-theme'), '--ifm-color-primary: #CBD9DA;', '--ifm-color-primary: #25c2a0;');
+  const css = replaceOnce(replaceOnce(CSS, DARK_SELECTOR, 'html.no-dark-theme'), '--ifm-color-primary: #79A7DA;', '--ifm-color-primary: #25c2a0;');
   withSiteTree({'docusaurus.config.ts': config, 'src/css/custom.css': css}, (root) => {
     assert.deepEqual(runChecks(root).errors, []);
   });
