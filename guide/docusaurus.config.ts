@@ -2,6 +2,7 @@ import type {PrismTheme} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import rehypeTaskListLabels from './src/plugins/rehype-task-list-labels.mjs';
+import rehypeTableRegions from './src/plugins/rehype-table-regions.mjs';
 
 // An empty Prism theme on purpose: a theme would put colour values and inline styles
 // into code blocks. The code colours are variables in src/css/custom.css, the only
@@ -52,8 +53,10 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           // Gives every "- [ ]" checkbox an accessible name (aria-label = item text).
-          // The offline config spreads this config, so it inherits the plugin.
-          rehypePlugins: [rehypeTaskListLabels],
+          // Gives every "- [ ]" checkbox an accessible name (aria-label = item text), and puts every
+          // table in a focusable, named scroll region (label = nearest heading), so a keyboard user
+          // can scroll a wide table. The offline config spreads this config, so it inherits both plugins.
+          rehypePlugins: [rehypeTaskListLabels, rehypeTableRegions],
         },
         blog: false,
         theme: {
