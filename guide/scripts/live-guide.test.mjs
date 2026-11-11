@@ -31,9 +31,9 @@ test('the finished live guide: the command line passes every rule from every wor
     const result = spawnSync(process.execPath, [CHECK_SCRIPT], {encoding: 'utf8', cwd});
     assert.equal(result.status, 0, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
     assert.equal(result.stderr, '', `cwd ${cwd}`);
-    assert.match(result.stdout, /^ok {3}structure \(11 pages/m, `cwd ${cwd}`);
+    assert.match(result.stdout, /^ok {3}structure \(12 pages/m, `cwd ${cwd}`);
     assert.ok(result.stdout.split('\n').includes(`ok   coverage (${summary})`), `cwd ${cwd}\n${result.stdout}`);
-    assert.match(result.stdout, /^ok {3}content \(11 pages/m, `cwd ${cwd}`);
+    assert.match(result.stdout, /^ok {3}content \(12 pages/m, `cwd ${cwd}`);
     assert.match(result.stdout, /^pending skeleton pages: 0$/m, `cwd ${cwd}`);
     assert.match(result.stdout, /^pending coverage entries: 0 on 0 skeleton pages$/m, `cwd ${cwd}`);
     assert.doesNotMatch(result.stdout, /^FAIL /m, `cwd ${cwd}`);

@@ -58,7 +58,7 @@ function zeroTestRule(root) {
 }
 
 // Runs every source rule against the tree under root. Returns the report lines and
-// the flat error list; the caller decides the exit code. The structure rules (the eleven
+// the flat error list; the caller decides the exit code. The structure rules (the twelve
 // pages, the level page grammar, the checklists against the workshop plan) describe the
 // real guide, so they run only when options.structure is set; the command line sets it
 // for the default root. The coverage and content rules (the manifest anchored in the pack,

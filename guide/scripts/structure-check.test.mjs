@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join, relative, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runChecks} from './check.mjs';
-import {FIXTURE_LEVELS, fixturePlan, goodDocs, levelPage, withStructureTree} from './lib/structure-fixtures.mjs';
+import {BONUS_FILE, FIXTURE_LEVELS, bonusPage, fixturePlan, goodDocs, levelPage, withStructureTree} from './lib/structure-fixtures.mjs';
 import {replaceOnce} from './lib/test-fixtures.mjs';
 import {SKELETON_DOCS, withSkeletonGuideCopy} from './fixtures/skeleton-docs.mjs';
 import {SKELETON_MARKER} from './rules/structure.mjs';
@@ -24,7 +24,7 @@ const failing = (errors) => errors.filter((e) => e.startsWith('structure:'));
 test('runChecks with structure: a good guide has no errors and prints one structure line', () => {
   const {lines, errors} = check({});
   assert.deepEqual(errors, []);
-  assert.ok(lines.some((line) => /^ok {3}structure \(11 pages/.test(line)), lines.join(' | '));
+  assert.ok(lines.some((line) => /^ok {3}structure \(12 pages/.test(line)), lines.join(' | '));
 });
 
 test('runChecks: the structure rules run only when asked for, other trees keep their old behaviour', () => {
@@ -56,6 +56,9 @@ test('runChecks with structure: each rule family reaches the whole checker', () 
     [{'docs/06-wrap-up.md': '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::tip Checkpoint\nx\n:::\n'}, /space form/],
     [{'docs/06-wrap-up.md': '---\ntitle: Wrap-up\nsidebar_position: 8\n---\n\n:::info[Sync moment]\nx\n:::\n'}, /is a sync moment/],
     [{'docs/reference/_category_.json': '{"label": "Reference", "position": 3}'}, /position/],
+    // spec 16: the marker rule of the bonus page reaches the whole checker (a paragraph before the box, no link in the box)
+    [{[BONUS_FILE]: bonusPage({before: ['A paragraph first.']})}, /must be the first element of the page/],
+    [{[BONUS_FILE]: bonusPage({box: [':::info[Optional bonus level]', '', 'Optional.', '', ':::']})}, /must link to the Wrap-up with \(\.\/06-wrap-up\.md\)/],
   ];
   for (const [files, pattern] of cases) {
     const errors = failing(check(files).errors);
@@ -132,7 +135,7 @@ test('cli: --structure runs the structure rules on an explicit root, and a failu
   withStructureTree(realDocs(), (root) => {
     const result = spawnSync(process.execPath, [CHECK_SCRIPT, root, '--structure'], {encoding: 'utf8'});
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}structure \(11 pages/m);
+    assert.match(result.stdout, /^ok {3}structure \(12 pages/m);
   });
   withStructureTree({...realDocs(), 'docs/extra.md': '---\ntitle: X\n---\n'}, (root) => {
     const result = spawnSync(process.execPath, [CHECK_SCRIPT, root, '--structure'], {encoding: 'utf8'});
@@ -156,7 +159,7 @@ test('cli: the real guide passes the structure rules from any working directory'
   withSkeletonGuideCopy((guide) => {
     for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
       const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
-      // T11: the skeleton ban fails the default root with exactly one error per marked page, the 11 skeleton pages
+      // T11: the skeleton ban fails the default root with exactly one error per marked page, the 12 skeleton pages
       // here, and no other error. The structure line below is unchanged.
       assert.equal(result.status, 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
       const stderr = result.stderr.split('\n').filter(Boolean);
@@ -164,10 +167,10 @@ test('cli: the real guide passes the structure rules from any working directory'
         .filter(([, text]) => text.includes(SKELETON_MARKER))
         .map(([file]) => file)
         .sort();
-      assert.equal(skeletons.length, 11);
+      assert.equal(skeletons.length, 12);
       assert.deepEqual(stderr.slice(0, -1).map((line) => /^skeleton: (docs\/\S+): /.exec(line)?.[1]), skeletons, `cwd ${cwd}\n${result.stderr}`);
-      assert.equal(stderr.at(-1), 'check failed with 11 error(s)', `cwd ${cwd}`);
-      assert.match(result.stdout, /^ok {3}structure \(11 pages/m);
+      assert.equal(stderr.at(-1), 'check failed with 12 error(s)', `cwd ${cwd}`);
+      assert.match(result.stdout, /^ok {3}structure \(12 pages/m);
     }
   });
 });
@@ -186,7 +189,7 @@ test('cli: the live guide gets the structure rules from any working directory, i
   const at = live.lines.indexOf(`pending skeleton pages: ${marked.length}`);
   assert.ok(at !== -1, live.lines.join('\n'));
   assert.deepEqual(live.lines.slice(at + 1, at + 1 + marked.length), marked.map((file) => `  pending ${file}`));
-  assert.ok(live.lines.some((line) => /^(ok {3}structure \(11 pages|FAIL structure \(\d+ errors\))/.test(line)), live.lines.join('\n'));
+  assert.ok(live.lines.some((line) => /^(ok {3}structure \(12 pages|FAIL structure \(\d+ errors\))/.test(line)), live.lines.join('\n'));
   const stderr = live.errors.length === 0 ? [] : [...live.errors, `check failed with ${live.errors.length} error(s)`];
   for (const cwd of [tmpdir(), join(GUIDE_ROOT, '..'), GUIDE_ROOT]) {
     const result = spawnSync(process.execPath, [CHECK_SCRIPT], {encoding: 'utf8', cwd});

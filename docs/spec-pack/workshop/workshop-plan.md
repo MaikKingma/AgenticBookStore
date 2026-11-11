@@ -450,6 +450,10 @@ spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 **Debrief (3 min):** who finished, and where did the spec save you? Where did it slow you down?
 
+## Bonus level: orchestrate your own team (optional)
+
+This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home. It sits outside the agenda and has no solution branch, because you build your own flow. Anyone who is not finished with Level 4 goes straight on to the Wrap-up.
+
 ## 10. Wrap-up (15 min)
 - Show of hands: who cleared which level? Count Level 0 to Level 4.
 - Two or three participants show their harness folder (`tree .claude`) and their spec.

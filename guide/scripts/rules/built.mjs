@@ -59,7 +59,7 @@ function htmlFiles(dir, relDir, out) {
 // 6. The table regions: every table inside an article sits in a focusable, named region with a name that
 // is unique on its page (rules/table-regions-built.mjs). It runs on every build dir, the Pages build and
 // the offline build alike; tables is the number of such tables, tablePages the pages that hold one.
-// 7. The routes (spec 16): the 11 live routes in the sitemap and in the build, and the prev/next chain through them
+// 7. The routes (spec 16): the 12 routes in the sitemap and in the build, and the prev/next chain through them
 // (rules/routes-built.mjs). options.routes switches it on; like the navbar and the level progress rule it describes
 // the real site, so check-built.mjs sets it for the default build dir only. routes and chainPages are returned only then.
 export function scanBuilt(dir, options = {}) {

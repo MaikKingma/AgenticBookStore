@@ -504,9 +504,9 @@ const NAVBAR_FULL =
   '<a href=https://www.linkedin.com/in/maik-kingma/ target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">Follow on LinkedIn</a></div></div></nav>';
 
 // Spec 16, T1 (G-1, option A): the default build dir also runs the routes rule (rules/routes-built.mjs), which needs
-// the sitemap and the 11 route files with their pagination nav (the previous and next link in chain order). The
-// full build gains the three route files goodBuild() does not have (wrap-up and two reference pages), the pagination
-// of all 11, and the sitemap. goodBuild() itself is unchanged, so the scanBuilt counts above stay as they were.
+// the sitemap and the 12 route files with their pagination nav (the previous and next link in chain order). The
+// full build gains the route files goodBuild() does not have (the bonus page, wrap-up and two reference pages), the
+// pagination of all 12, and the sitemap. goodBuild() itself is unchanged, so the scanBuilt counts above stay as they were.
 const chainHref = (index) => new URL(SITE_ROUTES[index]).pathname;
 function withPagination(html, index) {
   const link = (kind, target) =>
@@ -519,7 +519,13 @@ const SITEMAP =
   SITE_ROUTES.map((loc) => `<url><loc>${loc}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`).join('') +
   '</urlset>';
 const fullBuild = () => {
-  const pages = {...goodBuild(), 'wrap-up.html': page(''), 'reference/architecture.html': page(''), 'reference/troubleshooting.html': page('')};
+  const pages = {
+    ...goodBuild(),
+    'bonus-level-orchestration.html': page(''),
+    'wrap-up.html': page(''),
+    'reference/architecture.html': page(''),
+    'reference/troubleshooting.html': page(''),
+  };
   return {
     'sitemap.xml': SITEMAP,
     ...Object.fromEntries(SITE_ROUTES.map((loc, index) => [routeFile(loc), withPagination(withNavbar(pages[routeFile(loc)]), index)])),
@@ -541,9 +547,9 @@ test('check-built with no argument runs the level progress rule and prints its o
   withCopiedScripts(fullBuild(), (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 6 other pages$/m);
-    assert.match(result.stdout, /^ok {3}navbar: 11 pages, /m);
-    assert.match(result.stdout, /^ok {3}routes: 11 routes in the sitemap and the build, prev\/next chain of 11 pages$/m);
+    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 7 other pages$/m);
+    assert.match(result.stdout, /^ok {3}navbar: 12 pages, /m);
+    assert.match(result.stdout, /^ok {3}routes: 12 routes in the sitemap and the build, prev\/next chain of 12 pages$/m);
   });
 });
 

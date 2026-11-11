@@ -34,6 +34,7 @@ export const PAGE_FILES = {
   L2: 'docs/03-level-2-give-your-agent-eyes.mdx',
   L3: 'docs/04-level-3-behavioral-control.mdx',
   L4: 'docs/05-level-4-spec-driven-development.mdx',
+  BO: 'docs/06-bonus-level-orchestration.mdx',
   WU: 'docs/06-wrap-up.md',
   CS: 'docs/reference/cheat-sheet.md',
   AR: 'docs/reference/architecture.md',
@@ -66,6 +67,7 @@ const PART_B_HOOKS = 'Part B: Hooks';
 const PART_C = 'Part C: A skill and a command';
 const LEVEL4 = '9. Level 4';
 const SDD_PART2 = 'Part 2: Level 4 tracks for participants';
+const BONUS = 'Bonus level';
 const WRAP_UP = '10. Wrap-up';
 const RISKS = '11. Risks and mitigations';
 
@@ -84,6 +86,7 @@ const trackA = entries('sdd', 'Track A: OpenSpec', 'L4');
 const trackB = entries('sdd', 'Track B: Spec Kit', 'L4');
 const trackC = entries('sdd', 'Track C: Agent OS', 'L4');
 const common = entries('sdd', SDD_PART2, 'L4');
+const bonus = plan(BONUS, 'BO');
 const wrapUp = plan(WRAP_UP, 'WU');
 const install = entries('sdd', 'Installing a framework yourself', 'WU');
 const agenda = plan('2. Agenda', 'IX');
@@ -637,6 +640,10 @@ export const ENTRIES = [
   cheat(LEVEL3)('CS-50', 'cheat sheet rows (section 2.9)', 'text', '$CLAUDE_PROJECT_DIR'),
   cheat(LEVEL3)('CS-51', 'cheat sheet rows (section 2.9)', 'text', 'deny, then ask, then allow'),
   cheat(LEVEL2)('CS-52', 'cheat sheet rows (section 2.9)', 'text', '.mcp.json'),
+
+  // Bonus level (spec 16): the optional page between Level 4 and the Wrap-up. BO-01 pins the sentence of its marker box
+  // (the structure rule pins the box itself: first on the page, the Wrap-up link inside it).
+  bonus('BO-01', 'bonus level marker (spec 16)', 'text', 'This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home.'),
 ];
 
 // Rows of the research table that the script does not match, with the reason. The verifiers
