@@ -30,10 +30,58 @@ const fails = (errors, pattern) => {
 // (d) the deny-list
 
 test('deny-list: each term fails on a page, in any letter case, and the message names the term and the line', () => {
-  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms']) {
+  for (const term of ['facilitator', 'expected findings', 'fallback kit', 'rehearsal', 'spec-pack', 'workshop-plan', 'sdd-framework-guide', '.claude/comms', 'sync moment', 'maik demos', 'live demo', 'watch the demo']) {
     for (const variant of [term, term.toUpperCase(), `${term[0].toUpperCase()}${term.slice(1)}`]) {
       fails(denyListErrors(OTHER, `first line\nsee ${variant} here\n`), new RegExp(`${OTHER}: line 2: "${term.replace(/[.\-/]/g, '\\$&')}" must not appear`));
     }
+  }
+});
+
+// Spec 15 (decision D19): the workshop has no sync moments and no live demo. Each term allows any run of whitespace
+// between its words, a line break included, and each row is pinned on its own.
+test('deny-list: the demo terms fail across a line break, a double space and a tab, and name the term and the line', () => {
+  for (const [term, words] of [['sync moment', ['sync', 'moment']], ['maik demos', ['maik', 'demos']], ['live demo', ['live', 'demo']]]) {
+    for (const gap of [' ', '  ', '\n', ' \n', '\t']) {
+      fails(denyListErrors(OTHER, `first line\n${words[0]}${gap}${words[1]} here\n`), new RegExp(`${OTHER}: line 2: "${term}" must not appear`));
+    }
+  }
+  fails(denyListErrors(OTHER, 'Look up, Maik demos this now.'), /"maik demos"/);
+  fails(denyListErrors(OTHER, 'Each level opens with a short live demo and closes with a debrief.'), /"live demo"/);
+  fails(denyListErrors(OTHER, 'Sync moments are the live demos.'), /"sync moment"[\s\S]*"live demo"/);
+});
+
+// Spec 15 task T3: the Level 2 "watch the demo" instruction is gone. The term allows any run of whitespace between its
+// words, and the two sentences that carried it (the Level 2 page and the troubleshooting page) fail when put back.
+test('deny-list T3: "watch the demo" fails across a line break, a double space and a tab, and names the term and the line', () => {
+  for (const gap of [' ', '  ', '\n', ' \n', '\t']) {
+    fails(denyListErrors(OTHER, `first line\nwatch${gap}the${gap}demo here\n`), new RegExp(`${OTHER}: line 2: "watch the demo" must not appear`));
+  }
+  // FF-T3-1: the plural and the long form are demo instructions too (a trailing word boundary or a demonstration
+  // look-ahead would let them through).
+  for (const text of ['Watch the demos and continue with Part B.', 'watch the demonstration', 'Please watch the demonstration first.']) {
+    fails(denyListErrors(OTHER, `first line\n${text}\n`), new RegExp(`${OTHER}: line 2: "watch the demo" must not appear`));
+  }
+  fails(denyListErrors(OTHER, 'Still stuck after two minutes: watch the demo and continue with Part B.'), /"watch the demo"/);
+  fails(denyListErrors(TROUBLE, 'Still stuck after two minutes? Watch the demo and continue with Part B of [Level 2](../03-level-2-give-your-agent-eyes.mdx#part-b-mcp).'), /"watch the demo"/);
+});
+
+test('deny-list T3: the replacement sentences and the near misses of "watch the demo" pass', () => {
+  for (const text of ['Still stuck after two minutes: continue with Part B.', 'watch the clock', 'watch the diagnostics', 'the demo data', 'watch the build', 'Maik demonstrates']) {
+    passes(denyListErrors(OTHER, text));
+  }
+});
+
+// FF-T1-2: the "sync moment" row also catches a hyphen, an underscore or no gap between the words, and still passes
+// the ordinary words around it.
+test('deny-list FF-T1-2: "sync moment" fails with a hyphen, an underscore or no gap, and names the term and the line', () => {
+  for (const text of ['Sync-moment', 'sync_moment', 'Syncmoment', 'sync - moment', 'SYNC__MOMENT', 'sync moment', 'Sync\nmoment']) {
+    fails(denyListErrors(OTHER, `first line\n${text} here\n`), new RegExp(`${OTHER}: line 2: "sync moment" must not appear`));
+  }
+});
+
+test('deny-list FF-T1-2: near misses of "sync moment" and "maik demos" pass', () => {
+  for (const text of ['in sync', 'a moment', 'sync the moment', 'asynchronous', 'Maik demonstrates', 'Maik demonstrates the build', 'in sync, one moment later']) {
+    passes(denyListErrors(OTHER, text));
   }
 });
 
@@ -42,7 +90,7 @@ test('deny-list: "spec NN" is the word spec and a number, in any case', () => {
 });
 
 test('deny-list: near misses pass', () => {
-  for (const text of ['.claude/rules/domain.md', 'your spec', 'spec artefacts', 'Spec Kit', 'a spec and a plan', 'the workshop plan', 'specs/10', 'facilitat', 'rehearse']) {
+  for (const text of ['.claude/rules/domain.md', 'your spec', 'spec artefacts', 'Spec Kit', 'a spec and a plan', 'the workshop plan', 'specs/10', 'facilitat', 'rehearse', 'demo data', 'the demo data', 'in sync', 'a moment', 'sync the moment', 'Maik and Tom walk around', 'olive demo']) {
     passes(denyListErrors(OTHER, text));
   }
 });
@@ -339,6 +387,25 @@ test('powershell: the innermost tab decides, so a bash fence in a PowerShell tab
   assert.match(errors[0], /line 11: the PowerShell line "del x"/);
   // The same fence in the macOS tab, or in the track tab outside the os group, is not checked.
   passes(psCheck(text.replace('label="Windows PowerShell"', 'label="macOS/Linux"')));
+});
+
+// Spec 15 task T4: the pinned OpenSpec install in a Windows PowerShell tab. The pack states both lines whole; the version in the
+// variable line is the pin, so v1.15.0, an appended switch, the variable on the same line or in the bash form each fail.
+const PACK_OPENSPEC = [
+  '## Installing OpenSpec\n\n```powershell\n$env:OPENSPEC_VERSION = "v1.16.0"\nirm https://openspec.dev/cli/install.ps1 | iex\n```\n',
+];
+const osCheck = (lines) => powershellErrors(OTHER, scanMarkdown(psTab(lines)), packCommandLines(PACK_OPENSPEC));
+
+test('powershell: the pinned OpenSpec install lines pass when the pack states them whole', () => {
+  passes(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"', 'irm https://openspec.dev/cli/install.ps1 | iex']));
+});
+
+test('powershell: a different pin, an appended switch, one joined line, the bash form and a missing quote each fail (the version is the pin)', () => {
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.15.0"', 'irm https://openspec.dev/cli/install.ps1 | iex']), /the PowerShell line "\$env:OPENSPEC_VERSION = "v1\.15\.0"" is not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"', 'irm https://openspec.dev/cli/install.ps1 | iex -Verbose']), /the PowerShell line "irm https:\/\/openspec\.dev\/cli\/install\.ps1 \| iex -Verbose" is not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = "v1.16.0"; irm https://openspec.dev/cli/install.ps1 | iex']), /not a command line/);
+  fails(osCheck(['OPENSPEC_VERSION=v1.16.0 irm https://openspec.dev/cli/install.ps1 | iex']), /not a command line/);
+  fails(osCheck(['$env:OPENSPEC_VERSION = v1.16.0']), /not a command line/);
 });
 
 test('powershell and tabs: a comment opener in inline code hides neither a Windows line nor a tab group (the unclosed {/* witness)', () => {

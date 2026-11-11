@@ -58,7 +58,7 @@ All five are in the [Anthropic Academy catalogue](https://anthropic.skilljar.com
 
 ## Install a spec framework yourself
 
-Level 4 used prepared branches, so you did not install anything. To use a framework in your own repository, install it and then initialise it in the repository.
+Level 4 used prepared branches, so only Track A needed one install, the OpenSpec program. To use a framework in your own repository, install it and then initialise it in the repository.
 
 ### OpenSpec
 

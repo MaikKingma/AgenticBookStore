@@ -7,4 +7,5 @@
 - [gh Actions measurement](gh-actions-measurement-technique.md) — step times, log greps, cache scoping check via gh, bash guard quirks
 - [PDF asset extraction](pdf-asset-extraction-technique.md) — stdlib python zlib on image XObject + SMask gives RGBA without installs; tool inventory
 - [Guide checker probe](guide-checker-probe-technique.md) — check.mjs runs bare, pins via git grep, hash baselines are QA-only, scratchpad browser rig, .tsx cannot load in Node
+- [Framework docs reading](framework-docs-reading-technique.md) — gh api @base64d at pinned tags for OpenSpec/Spec Kit/Agent OS, curl|sh env-pin trap, refused script runs
 - [Worktree shell guard](worktree-agent-shell-guard.md) — relative paths, git grep, referee wall time and Surefire totals, claude-api model table

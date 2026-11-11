@@ -95,4 +95,10 @@ metadata:
 - **Stopped or rate-limited children:** resume the same agent with SendMessage to its agent id (context kept); its
   outbox can be stale, so ask it to rewrite the outbox first. SubagentHandback works once per resume of me; between
   resumes just end the turn.
+- **Parallel level tasks on guide specs (spec 15 A1):** one scratch `git worktree add -b <task> SP/wt-t<n>` per task,
+  comms and memory in the main worktree, distinct port ranges. Every task edits workshop-plan.md, coverage.mjs and
+  coverage-manifest.test.mjs, so each later merge conflicts in the manifest (floors, `plan:<line>` sweep keys): commit
+  the task, `git merge` the spec tip, let that task's implementer resolve and re-run gates, I commit the merge. Hold a
+  second branch's merge until the first lands (abort, merge once). Keep plan.md row updates out of task branches and
+  commit them once at the end. Owner fast path (A6): verifier PASS plus green CI merges, no meta-review loop.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.

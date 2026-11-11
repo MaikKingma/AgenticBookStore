@@ -36,6 +36,13 @@ const DENY = [
   ['sdd-framework-guide', /sdd-framework-guide/gi],
   ['spec NN', /\bspec\s+(?:\d+|NN)\b/gi],
   ['.claude/comms', /\.claude\/comms/gi],
+  // Spec 15 (decision D19): no sync moments and no live demo, Maik and Tom walk around instead.
+  // The words of "sync moment" may also be joined by a hyphen or an underscore, or by nothing at all.
+  ['sync moment', /sync[\s_-]*moment/gi],
+  ['maik demos', /maik\s+demos/gi],
+  ['live demo', /\blive\s+demo/gi],
+  // Spec 15 task T3 (decision D19): the Level 2 fallback is a debugging section, never a demo.
+  ['watch the demo', /watch\s+the\s+demo/gi],
 ];
 const FEATURE_BRIEFS = /feature-briefs/gi;
 const LEVEL4_LINK_TARGET = /(?:05-level-4-spec-driven-development\.mdx?|\blevel-4-spec-driven-development)$/;

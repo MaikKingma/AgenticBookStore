@@ -197,9 +197,38 @@ The checker (rule `logo`) fails when any file under `static/img/`, in any folder
 that holds both its name and its sha256 (the ok line states the number of images). Check by hand with
 `shasum -a 256 static/img/*.png`. To replace a logo, redo the steps above and update the table.
 
+## Table regions
+
+Docusaurus renders a Markdown table as a box that scrolls when the table is wider than the page, and that box cannot take
+keyboard focus (axe `scrollable-region-focusable`, WCAG 2.1.1). At 390 px wide most tables are wider than the page (axe
+flagged the three that hold no link), so a keyboard user could not scroll them. The rehype plugin `src/plugins/rehype-table-regions.mjs` fixes it for every table
+of every page, with no change to a page:
+
+- It wraps each table in a `div` with `tabindex="0"`, `role="region"`, an `aria-label` and the class
+  `guide-table-region`. The role is on the wrapper and never on the table, so the table keeps its table semantics.
+- The label is the text of the nearest heading before the table (inline code, emphasis and `kbd` keep their words, the MDX
+  id comment of `## Title {/* #id */}` is dropped). Several tables under one heading are numbered ("Packages (table 1 of
+  2)"), a table before any heading is called "Table", and a label already used on the page gets a count ("Notes, 2").
+  Every label is unique on its page, because two regions with one name are an axe `landmark-unique` violation.
+- It is registered in `docusaurus.config.ts` as `rehypePlugins: [rehypeTaskListLabels, rehypeTableRegions]`; the offline
+  config spreads that config. `scripts/task-list-labels.test.mjs` pins the whole list, so dropping either plugin fails
+  `npm run check`. The plugin imports nothing from `node_modules` (a self-test reads its import lines).
+- `src/css/custom.css` (block "Table regions"): the region scrolls (`overflow-x: auto`) and the table inside is
+  `display: table`, so there is one scrollbar. The focus ring is the one of the level progress breadcrumb
+  (`--guide-level-focus`, 3 px solid, 2 px outside the box, on `:focus-visible`), and `scroll-margin-top` keeps a focused
+  region below the sticky navbar.
+- `npm run check:built` runs the rule `scripts/rules/table-regions-built.mjs` on every table inside an `article`: its
+  parent must be a `div` with `tabindex="0"`, `role="region"` and a non-blank `aria-label`, it must be the only element in
+  that region, and no two names on one page may be equal (case and spacing ignored). The ok line gives the number of
+  tables and pages. The rule reads the Pages build. The offline build is rendered in the browser, so its html holds no
+  table and the rule prints no line for it; the rendered sweep (axe and keyboard, three engines, both builds) is the proof
+  there.
+
+Write tables as plain Markdown and add no wrapper of your own.
+
 ## Writing pages
 
-- Admonitions use the bracket form: `:::info[Sync moment]` and `:::tip[Checkpoint]`. The space form renders as plain text.
+- Admonitions use the bracket form: `:::note[At a glance]` and `:::tip[Checkpoint]`. The space form renders as plain text.
 - Put placeholders such as `<branch>` or `{name}` in inline code. Raw ones break the build.
 - Use Markdown image syntax only, never a raw `<img>` tag.
 - Quote a YAML title that contains a colon.

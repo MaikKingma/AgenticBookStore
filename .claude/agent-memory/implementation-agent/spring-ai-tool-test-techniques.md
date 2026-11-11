@@ -24,8 +24,6 @@ metadata:
   `ChatClient.Builder.defaultSystem(Resource)` reads with the platform charset; pass `UTF_8`.
 - `MessageWindowChatMemory` moves its cut forward to the next USER message, so complete Q/A turns cannot tell window 20 from
   21. A window witness needs an odd count: a first call that throws leaves its question unanswered in memory.
-- A bean method injecting `ChatClient.Builder` breaks every `ApplicationContextRunner` over that config: register a builder and
-  the tools with `withBean(...)`.
 - Spring AI 2.0.2 here has no `spring-ai-retry`: `NonTransientAiException`/`TransientAiException` do not exist. A live
   Anthropic failure is a `com.anthropic.errors.AnthropicException` subclass (`AnthropicIoException`, `AnthropicRetryableException`
   take a `(String)`, HTTP ones such as `RateLimitException` only a builder). Check a plan's named types with
@@ -36,5 +34,3 @@ metadata:
   `stop_reason`, `stop_sequence`, `usage`. `ChatClient.Builder.defaultOptions(..)` takes the options BUILDER (`.build()` does
   not compile) and merges with the model's defaults. Use `SoftAssertions`; do not assert on a whole request body string
   (failure output floods).
-- `@Tool` description = `getToolDefinition().description()`; `@ToolParam(description=..)` shows under `inputSchema()`
-  `properties.<name>.description`.

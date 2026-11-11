@@ -29,7 +29,7 @@ In this level you pick a track and a feature brief, turn the brief into a spec, 
 
 ## Tracks {/* #tracks */}
 
-Pick a track and switch to its prepared branch (built from `solution/level-3`, framework installed, project conventions captured):
+Pick a track and switch to its prepared branch (built from `solution/level-3`, with the framework's project files already in place):
 
 | Track | Branch | Weight | Commands you will use |
 |---|---|---|---|
@@ -45,9 +45,11 @@ git switch start/level-4-<track>     # openspec | speckit | agentos
 claude                               # new session; /model sonnet
 ```
 
-The start branches are built from `solution/level-3`: your Level 2 and Level 3 harness (`.mcp.json`, the `jdtls-lsp` plugin declaration, hooks, permissions, skill, `/ship`) plus the framework, already installed and configured. Pick a feature brief from the [feature briefs](#feature-briefs) below. Write the brief into the first command in your own words and add the answers to its questions: that is your contribution as the human.
+The start branches are built from `solution/level-3`: your Level 2 and Level 3 harness (`.mcp.json`, the `jdtls-lsp` plugin declaration, hooks, permissions, skill, `/ship`) plus the framework's project files, already in place (each tab below says what its branch holds). Pick a feature brief from the [feature briefs](#feature-briefs) below. Write the brief into the first command in your own words and add the answers to its questions: that is your contribution as the human.
 
 The steps below use the example names of brief A (`add-book-reviews`, `add book reviews`). With brief B or C, use your own change name.
+
+A track takes about 35 minutes; the rest of the 42 solo minutes is for choosing a track and a brief at the start and for the final checks at the end.
 
 Open the tab of your track.
 
@@ -55,6 +57,38 @@ Open the tab of your track.
   <TabItem value="openspec" label="Track A: OpenSpec">
 
 About 35 minutes.
+
+The start branch holds an initialised OpenSpec project: `openspec/config.yaml` and one spec in `openspec/specs/ordering/spec.md`, plus the `/opsx` commands in `.claude/commands/opsx/`. It does not hold the `openspec` program. If `openspec --version` does not print 1.16.0 yet, install that version:
+
+<Tabs groupId="os">
+  <TabItem value="unix" label="macOS/Linux">
+
+```bash
+curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.16.0 sh
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows PowerShell">
+
+```powershell
+$env:OPENSPEC_VERSION = "v1.16.0"
+irm https://openspec.dev/cli/install.ps1 | iex
+```
+
+  </TabItem>
+</Tabs>
+
+With Node.js 22.12 or later, npm installs the same version instead:
+
+```bash
+npm install -g @fission-ai/openspec@1.16.0
+```
+
+Check it:
+
+```bash
+openspec --version
+```
 
 1. Run the command below with "reviews and ratings" (or your brief) after it: the agent reads the code you are about to change.
 
@@ -106,10 +140,18 @@ About 35 minutes.
 
 Gotchas: `openspec ...` runs in the terminal, `/opsx:...` in Claude Code. If the commands do not show up, restart Claude Code.
 
+**For your own brownfield project**, the first steps from the [OpenSpec docs](https://github.com/Fission-AI/OpenSpec/blob/v1.16.0/docs/existing-projects.md), once the program is installed:
+
+1. `openspec init` in your repository.
+2. Optionally fill in `context:` in `openspec/config.yaml` with your stack and conventions.
+3. Then the same flow as in this track: `/opsx:explore`, `/opsx:propose`, `/opsx:apply` and `/opsx:archive`.
+
   </TabItem>
   <TabItem value="speckit" label="Track B: Spec Kit">
 
 About 35 minutes, short path.
+
+The start branch holds a Spec Kit project: the `.specify/` folder with a constitution already written in `.specify/memory/constitution.md`, plus the `/speckit-*` skills in `.claude/skills/`.
 
 1. Specify the feature with your brief and decisions. Describe what and why, not the tech stack.
 
@@ -155,12 +197,20 @@ Skip `/speckit-checklist` and `/speckit-analyze` today; try them at home.
 
 Gotchas: in Claude Code the commands are `/speckit-specify` (dash), the dotted names are documentation notation. The active feature is stored in `.specify/feature.json`, not taken from the git branch.
 
+**For your own brownfield project**, the first steps from the [Spec Kit docs](https://github.com/github/spec-kit/blob/v1.3.1/docs/how-to/existing-projects.md), after installing it as on the [wrap-up page](./06-wrap-up.md#install-a-spec-framework-yourself):
+
+1. `specify init --here --force --integration claude` in your repository.
+2. `/speckit-constitution` with the rules your project already follows.
+3. Then `/speckit-specify` for one small change, followed by `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks` and `/speckit-implement`.
+
   </TabItem>
   <TabItem value="agentos" label="Track C: Agent OS">
 
 About 35 minutes.
 
-1. Look at `agent-os/standards/` first: these were discovered from the codebase. Fix anything wrong.
+The start branch holds Agent OS product docs in `agent-os/product/` and standards written for this repo and indexed in `agent-os/standards/index.yml`, plus the commands in `.claude/commands/agent-os/`.
+
+1. Look at `agent-os/standards/` first: they were written for this repo and indexed. Fix anything wrong.
 
 2. Enter plan mode (or press `Shift+Tab` until plan mode):
 
@@ -190,8 +240,21 @@ About 35 minutes.
 
 Gotchas: `/shape-spec` refuses to run outside plan mode. Agent OS needs bash: on Windows use WSL or Git Bash.
 
+**For your own brownfield project**, the first steps from the [Agent OS docs](https://buildermethods.com/agent-os/workflow), after installing it as on the [wrap-up page](./06-wrap-up.md#install-a-spec-framework-yourself):
+
+1. `/discover-standards` to extract the patterns your code already follows.
+2. `/inject-standards` before you implement.
+3. `/plan-product` for the mission and the roadmap.
+4. `/shape-spec` in plan mode, for each change.
+
   </TabItem>
 </Tabs>
+
+:::tip[Make it yours]
+
+Spec-driven does not mean someone else's rules. Invent one of your own that every future spec must follow, and see whether the agent keeps to it: a rule in `openspec/config.yaml`, a principle in `.specify/memory/constitution.md` or a standard in `agent-os/standards/`. The best harness has a creative engineer tweaking it all the time.
+
+:::
 
 ## Feature briefs {/* #feature-briefs */}
 
@@ -222,11 +285,7 @@ Two routes, and your spec must pick one explicitly:
 1. **Within the architecture (recommended):** add a `searchTitles` method to the `DistributorAppService` port, implement it over REST in `acl`, expose it to the model through a new tool that calls a flow. Tests: scripted chat model plus a mocked port.
 2. **Via MCP:** use Spring AI's MCP client against our distributor MCP server. This breaks two rules on purpose (outbound integration only through `acl`; `CLAUDE.md` says the distributor is reached only through the port), so your spec must include an architecture change: update `docs/architecture.md`, `CLAUDE.md` and the ArchUnit rule with a documented exception. That is a legitimate outcome of a spec, as long as it is explicit.
 
-:::info[Sync moment]
-
-Look up, Maik demos this now. Maik shows one spec artefact per framework side by side (OpenSpec delta spec, Spec Kit spec.md, Agent OS shape.md) so everyone sees the same idea in three shapes. (5 minutes)
-
-:::
+Whichever brief you pick, once your spec artefact is committed, ask someone on another track to show theirs: an OpenSpec delta spec, a Spec Kit spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 ## Before you move on
 

@@ -27,12 +27,6 @@ git stash -u && git switch solution/level-2
 
 Start from your Level 2 result, or from `solution/level-2`. In this level you add permissions, a hook that blocks red commits, a skill and a command.
 
-:::info[Sync moment]
-
-Look up, Maik demos this now. Maik shows one hook blocking a commit: red tests, exit code 2, and the agent reads the stderr and fixes the test. (4 minutes)
-
-:::
-
 ## Part A: Permissions {/* #part-a-permissions */}
 
 About 4 minutes.
@@ -82,7 +76,7 @@ Expected: the read is denied.
 
 ## Part B: Hooks {/* #part-b-hooks */}
 
-About 11 minutes. The goal: no green tests, no commit.
+About 14 minutes. The goal: no green tests, no commit. Watch for the moment the hook blocks a red commit with exit code 2 and the agent reads the stderr and fixes the test.
 
 ### 1. Add the hook to the settings
 
@@ -177,7 +171,7 @@ The `solution/level-3` branch has one, `.claude/hooks/architecture-check-on-stop
 
 ## Part C: Skill and command {/* #part-c-skill-and-command */}
 
-About 9 minutes.
+About 10 minutes.
 
 ### 1. Create the skill
 
@@ -208,6 +202,12 @@ Create a review subagent `.claude/agents/architecture-reviewer.md` (`tools: Read
 Guideline versus guarantee. Which of your Level 0 findings are now impossible, and which are only less likely?
 
 When you are done, compare your result with the branch [solution/level-3](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-3).
+
+:::tip[Make it yours]
+
+The best harness has a creative engineer tweaking it all the time. Once your hook and skill work, invent one more guardrail of your own: a deny rule for a command you never want Claude to run, a hook that blocks a risky edit, or a second command next to `/ship`. Keep it only if it helps.
+
+:::
 
 ## Level cleared when
 

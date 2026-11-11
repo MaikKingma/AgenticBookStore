@@ -10,7 +10,7 @@ export const SKELETON_MARKER = '{/* guide-skeleton */}';
 
 const PROGRESS_IMPORT = "import LevelProgress from '@site/src/components/LevelProgress';";
 const BOX_OPENER = ':::note[At a glance]';
-const SYNC_PHRASE = 'Look up, Maik demos this now';
+const SYNC_MOMENT_TITLE = /sync[\s_-]*moment/i;
 const CHECKLIST_HEADING = '## Level cleared when';
 const CATEGORY_FILE = 'docs/reference/_category_.json';
 const WRAP_UP_POSITION = 8;
@@ -283,8 +283,8 @@ function checklistErrors({lines, flags, bodyLine, planItems}) {
   return errors;
 }
 
-// Rules every page follows: no body H1, no space-form admonitions, the sync moment
-// and checkpoint conventions, and the contractual anchors of the page.
+// Rules every page follows: no body H1, no space-form admonitions, no sync moment, the
+// checkpoint convention, and the contractual anchors of the page.
 function commonErrors({lines, flags, bodyLine, anchors}) {
   const errors = [];
   lines.forEach((line, index) => {
@@ -295,16 +295,20 @@ function commonErrors({lines, flags, bodyLine, anchors}) {
       errors.push(`line ${bodyLine + index}: a setext H1 ("${lines[index - 1].trim()}" underlined with ===), the title comes from the frontmatter`);
     }
     if (/^\s*:::[A-Za-z]+[ \t]+\S/.test(line)) {
-      errors.push(`line ${bodyLine + index + 1}: admonition in the space form ("${line.trim()}"), use the bracket form, for example :::info[Sync moment]`);
+      errors.push(`line ${bodyLine + index + 1}: admonition in the space form ("${line.trim()}"), use the bracket form, for example :::tip[Checkpoint]`);
     }
   });
   const {done, unclosed} = admonitions(lines, flags);
   for (const frame of unclosed) errors.push(`line ${bodyLine + frame.start + 1}: the ${frame.type} admonition is never closed`);
+  // The workshop has no sync moments (spec 15, decision D19): no admonition of any type may carry one in its
+  // title, whatever the case or spacing, on any page. A box that is never closed is banned too.
+  for (const box of [...done, ...unclosed]) {
+    if (SYNC_MOMENT_TITLE.test(box.title ?? '')) {
+      errors.push(`line ${bodyLine + box.start + 1}: an admonition titled "${box.title}" is a sync moment, the workshop has none, Maik and Tom walk around instead`);
+    }
+  }
   for (const box of done) {
     const where = `line ${bodyLine + box.start + 1}`;
-    if (box.type === 'info' && box.title === 'Sync moment' && !box.content.join('\n').includes(SYNC_PHRASE)) {
-      errors.push(`${where}: the Sync moment must say "${SYNC_PHRASE}"`);
-    }
     if (box.type === 'tip' && box.title === 'Checkpoint') {
       if (!box.content.some((line) => /^\s*(`{3,}|~{3,})/.test(line))) errors.push(`${where}: the Checkpoint has no fenced block with the command`);
       if (!box.content.some((line) => line.trim().startsWith('Expected'))) errors.push(`${where}: the Checkpoint has no line starting with "Expected"`);
@@ -344,7 +348,6 @@ function levelPageErrors({text, level, spec, planLevel}) {
   const flags = fenceFlags(lines);
   const errors = frontmatterErrors({front, title: spec.title, position: level + 3});
 
-  const skeleton = text.includes(SKELETON_MARKER);
   const common = commonErrors({lines, flags, bodyLine, anchors: spec.anchors});
   errors.push(...common.errors);
 
@@ -379,11 +382,6 @@ function levelPageErrors({text, level, spec, planLevel}) {
   // The checklist ends the page and equals the plan. The marker exempts neither.
   if (planLevel) errors.push(...checklistErrors({lines, flags, bodyLine, planItems: planLevel.items}));
 
-  // Body content rules apply once the marker is gone.
-  if (!skeleton) {
-    const syncs = common.done.filter((a) => a.type === 'info' && a.title === 'Sync moment').length;
-    if (syncs !== 1) errors.push(`${syncs} sync moments, a finished level page has exactly 1`);
-  }
   return errors;
 }
 

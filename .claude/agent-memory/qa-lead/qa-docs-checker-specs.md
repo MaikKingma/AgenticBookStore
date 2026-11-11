@@ -30,7 +30,7 @@ code AND the oracle for every later task. Tier the checker tasks critical.
    manifest must delete whitespace, backticks and `|` on both sides (Docusaurus code lines are `.token-line` spans
    with `<br>`: no newline in textContent; tables render no pipe). Facilitator-only ranges can overlap lines the
    manifest requires: absence greps name facilitator-only phrases. Optional quotes vs "anchored by the manifest"
-   criteria conflict after the freeze: settle them at the checkpoint.
+   criteria conflict after the freeze: settle them at the checkpoint. A pack-literal sweep (every span and fence line of the source sections covered or excluded) grows with each source edit: a mirrored file or mock adds one literal per line (one `command` entry holding the whole block covers them); plan coverage per task, exclusions only with a named pin (fix-11 A2, spec 15 G-2). A deny term added in task N for text a later task removes turns N red: check every new ban against the remaining tasks' text (spec 15 G-1).
 4. **Plan-parser witnesses.** Reword only the continuation line of a wrapped source bullet or Goal (kills first-line
    parsing); drop backticks (kills markup-stripping normalisation); a heading with two parentheticals
    (`(LSP + MCP) (20 min)`) needs the last one; an in-section `(8 min)` must not be accepted as the level time; the

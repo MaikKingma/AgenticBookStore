@@ -18,7 +18,7 @@ Arrive with this installed:
 - Docker Desktop (or another Docker engine), installed and running
 - the Java language server `jdtls`, on the `PATH`
 
-Node.js is not needed: the build installs its own copy.
+Node.js is not needed for the build: it installs its own copy. You only need Node.js 22.12 or later if you pick Track A (OpenSpec) and install it with npm; the install script needs no Node.js.
 
 Windows participants also need Git for Windows (Git Bash). The `Bash` matcher, the `if` field and the `Bash(...)` permission rules of Level 3 only apply when Claude Code runs commands through Bash.
 
@@ -119,6 +119,40 @@ Use WSL and install as on Linux there. Native Windows is not verified yet.
 </Tabs>
 
 The setup check covers the binary only. The `jdtls-lsp` plugin is installed in [Level 2 Part A](./03-level-2-give-your-agent-eyes.mdx#part-a-lsp), so Levels 0 and 1 run without it.
+
+## Install OpenSpec (Track A only)
+
+Only if you pick Track A (OpenSpec) in Level 4. The start branch holds the OpenSpec project files but not the `openspec` program, so install it now. The install script needs no Node.js. The version is pinned to 1.16.0, so everybody has the same one:
+
+<Tabs groupId="os">
+  <TabItem value="unix" label="macOS/Linux">
+
+```bash
+curl -fsSL https://openspec.dev/cli/install.sh | OPENSPEC_VERSION=v1.16.0 sh
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows PowerShell">
+
+```powershell
+$env:OPENSPEC_VERSION = "v1.16.0"
+irm https://openspec.dev/cli/install.ps1 | iex
+```
+
+  </TabItem>
+</Tabs>
+
+If the installer asks you to add its folder to your `PATH`, do that and open a new terminal. With Node.js 22.12 or later, npm installs the same version instead:
+
+```bash
+npm install -g @fission-ai/openspec@1.16.0
+```
+
+Check the install. This prints 1.16.0:
+
+```bash
+openspec --version
+```
 
 ## Set the workshop key
 

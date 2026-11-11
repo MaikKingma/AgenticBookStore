@@ -7,6 +7,7 @@ import {packCommandLines} from './content.mjs';
 import {powershellLineErrors} from './built-powershell.mjs';
 import {navbarErrors} from './navbar-built.mjs';
 import {levelOfFile, levelPagesOf, levelProgressErrors, routeOf} from './level-progress-built.mjs';
+import {tableRegions} from './table-regions-built.mjs';
 
 // The built-output rules behind `npm run check:built`.
 // 1. With the Docusaurus 3 title syntax (:::info[Title]) an admonition renders as a box.
@@ -44,7 +45,7 @@ function htmlFiles(dir, relDir, out) {
   return out;
 }
 
-// Returns {errors, count, checkboxes, windowsLines, navbarPages, levelPages, otherPages}: count is the number of html
+// Returns {errors, count, checkboxes, windowsLines, tables, tablePages, navbarPages, levelPages, otherPages}: count is the number of html
 // files scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
 // number of lines read in PowerShell tab panels and PowerShell-language code blocks, a line
 // counted once (in the list or not). options.navbar ({base}) switches on rule 4 below, the navbar
@@ -54,6 +55,9 @@ function htmlFiles(dir, relDir, out) {
 // 4. The navbar of the Pages build: logo link, title link, GitHub and LinkedIn links.
 // 5. The level progress breadcrumb: on the five level pages (level-N-*.html), none on any other page
 // (rules/level-progress-built.mjs).
+// 6. The table regions: every table inside an article sits in a focusable, named region with a name that
+// is unique on its page (rules/table-regions-built.mjs). It runs on every build dir, the Pages build and
+// the offline build alike; tables is the number of such tables, tablePages the pages that hold one.
 export function scanBuilt(dir, options = {}) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {
     return {errors: [`built: ${dir} is missing; run npm run build first`], count: 0};
@@ -66,6 +70,8 @@ export function scanBuilt(dir, options = {}) {
   let checkboxCount = 0;
   let windowsLines = 0;
   let navbarPages = 0;
+  let tableCount = 0;
+  let tablePages = 0;
   const allowed = packAllowList();
   const pages = options.levels ? levelPagesOf(files) : null;
   if (pages) errors.push(...pages.errors);
@@ -90,6 +96,10 @@ export function scanBuilt(dir, options = {}) {
     const windows = powershellLineErrors(file, html, allowed);
     errors.push(...windows.errors);
     windowsLines += windows.checked;
+    const regions = tableRegions({file, html});
+    errors.push(...regions.errors);
+    tableCount += regions.tables;
+    if (regions.tables > 0) tablePages++;
     if (options.navbar) {
       errors.push(...navbarErrors({file, html, base: options.navbar.base}));
       navbarPages++;
@@ -107,6 +117,8 @@ export function scanBuilt(dir, options = {}) {
     count: files.length,
     checkboxes: checkboxCount,
     windowsLines,
+    tables: tableCount,
+    tablePages,
     navbarPages,
     levelPages,
     otherPages: pages ? files.length - levelPages : undefined,
