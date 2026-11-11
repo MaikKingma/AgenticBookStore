@@ -19,7 +19,7 @@ owner's merge.
 
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
-| T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | (see PR) | sdd/15-guide-content-revision/T1 | PASS r1 | ENDORSE |
+| T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | #171 | sdd/15-guide-content-revision/T1 | PASS r1 | ENDORSE |
 | T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock, Level 1 creativity tip (A1) | elevated | sonnet | | | | |
 | T3 | guide | [T1] | 2 | Level 2 step 5 debugging section in `<details>`, demo text removed, Level 2 creativity tip (A1) | elevated | sonnet | | | | |
 | T4 | guide | [T1] | 2 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence, Level 4 creativity tip (A1) | elevated | sonnet | | | | |
