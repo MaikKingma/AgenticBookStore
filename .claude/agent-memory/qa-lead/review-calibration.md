@@ -85,6 +85,8 @@ Rules I settled while meta-reviewing verifier verdicts in this repo's SDD cycle.
    the same seam by a fileScope line, must-fail there (spec 14 T1 NM25 -> T2). Same for a batch of checker-strictness
    survivors when the next task does not share the seam: propose an insertion-only scope amendment for the round that
    runs anyway, with exact fixtures and a base-file control, never a test-only rework round (spec 14 T2 -> T3, A3).
+   In the LAST task (no round to ride): ENDORSE, owner residual folded into the next spec that reopens the module, a
+   qa-final must-fail per entry on the tip, and verbatim test-only RAs the orchestrator may bind (spec 14 T3 R6).
 
 16. **Regression-guard survivors in a file that freezes at this PASS.** A survivor that narrows a property class (a Unicode property replaced by categories, one element type instead of any) is no REJECT, even on a critical rule, when the verifier proved the current bytes on every member (an exhaustive enumeration through the real function plus a real build), the file joins the freeze hash baseline at merge, and another gate or an authoring grep already rejects the reachable forms. Record it as a follow-up (exhaustive test loop, then re-baseline). Before accepting a "reachable residual", check whether a hygiene gate rejects the probe source (spec 11 T5b: raw non-ASCII fails the ascii rule; only references and escapes reach a label).
 

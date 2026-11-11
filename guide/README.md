@@ -68,8 +68,9 @@ Rules in place:
   printed with its ratio: 4.5 or more for text, 3.0 or more for non-text accents. The table is pinned by
   `scripts/contrast-pairs.test.mjs` (the required pairs by name and a minimum count), so a pair can be added but not
   dropped quietly.
-- Brand and fonts: the seven brand values, the primary colours, the font stack, the three font faces and their
-  provenance, the licence file, and no font CDN or font package anywhere in `guide/`.
+- Brand and fonts: the deck palette values (decision D18), the primary colour of each mode, the dark surfaces, the
+  admonition borders, the font stack, the three font faces and their provenance, the licence file, and no font CDN or
+  font package anywhere in `guide/`.
 - Logo provenance (rule `logo`): every file under `static/img/` has a README line with its name and sha256 (see Logo and
   provenance below).
 
@@ -78,24 +79,75 @@ decode a typed backslash-u escape into the literal character.
 
 ## Brand
 
-The guide uses the OpenValue 2026 brand (decision D7), the same as the OpenBook storefront. All colour values live in
-`src/css/custom.css` and nowhere else.
+The guide uses the palette of the keynote deck "Shift Left, Look Right" (decision D18). It replaced the D7 teal palette
+for the guide only; the OpenBook storefront keeps D7. All colour values live in `src/css/custom.css` and nowhere else.
 
-- Seven brand values: navy `#1D252D`, blue `#3D7DC9`, teal `#014046`, sage `#809FA2`, mist `#CBD9DA`, snow `#F1F5F6`,
-  white `#FFFFFF`. In the stylesheet they are `--ov-navy` and so on. Everything else maps them onto the Infima variables.
-- Light mode: teal primary, navy text and headings, white page, code blocks on snow, navbar navy with white text and a
-  blue accent line. Dark mode: navy page, mist primary (10.7:1), white text. Both modes pass every contrast pair, so the
-  colour mode switch stays on. If a dark pair ever fails, fix the pair or set `colorMode.disableSwitch: true` (and
+- Deck colours: deck blue `#3C7EC9` (`--ov-blue`) and slate `#1D242C` (`--ov-slate`, the dark background and the colour
+  of the slate logo file). The D7 neutrals still in use are sage `#809FA2` (`--ov-sage`, decorative only), snow
+  `#F1F5F6` (`--ov-snow`) and white `#FFFFFF` (`--ov-white`). D7 navy, teal and mist are gone from the guide.
+- Deck blue is 4.18:1 on white and 3.74:1 on slate, below the 4.5:1 of text. So it is a non-text accent only (navbar
+  accent line, admonition borders, outlines and bars), and text and filled controls use an AA shade of it. The primary
+  colour (`--ifm-color-primary`, the colour Infima paints links, the table of contents entry and buttons in) is `#3371B8`
+  in light mode (5.01:1 on white) and `#79A7DA` in dark mode (6.23:1 on slate, 5.10:1 on the raised surface
+  `--ov-slate-800`). Each mode has its six shade variables (`-dark`, `-darker`, `-darkest`, `-light`, `-lighter`,
+  `-lightest`), the Docusaurus ratios of its primary, ordered from dark to light:
+
+  | Variable | Light mode | Dark mode |
+  |---|---|---|
+  | `--ifm-color-primary-darkest` | `#244F81` | `#3373BA` |
+  | `--ifm-color-primary-darker` | `#2B609C` | `#518DCF` |
+  | `--ifm-color-primary-dark` | `#2E66A6` | `#5E96D3` |
+  | `--ifm-color-primary` | `#3371B8` | `#79A7DA` |
+  | `--ifm-color-primary-light` | `#3A7CC8` | `#94B8E1` |
+  | `--ifm-color-primary-lighter` | `#4383CB` | `#A1C1E5` |
+  | `--ifm-color-primary-lightest` | `#5F95D3` | `#C9DBF0` |
+
+- Light mode: white page, slate text and headings (15.66:1), code blocks and inline code on snow, links in the primary
+  (underlined in page text), a light navbar with slate text and a deck blue accent line. The active entry of the sidebar
+  menu, the breadcrumbs and the tabs use `--ifm-color-primary-dark` (4.91:1 on the hover tint `--ov-slate-100`).
+- Dark mode: the page, the navbar and the sidebar are slate `#1D242C`; every other surface is a named slate token (list
+  below), text is white (15.66:1) and links are the primary. Both modes pass every contrast pair, so the colour mode
+  switch stays on. If a dark pair ever fails, fix the pair or set `colorMode.disableSwitch: true` (and
   `respectPrefersColorScheme: false`) and delete the dark block; the checker verifies that combination too.
-- Blue is 4.2:1 on white: use it for large or bold text and non-text accents only. Sage is 2.8:1 on white: decorative
-  only, never text. The checker fails on a text pair that uses either.
+- The slate scale is slate mixed with white (100 to 500) or black (900); 700 and 800 are the raised dark surfaces:
+
+  | Token | Value | Used for |
+  |---|---|---|
+  | `--ov-slate-100` | `#E6EBF0` | light mode hover tint, navbar hover and mobile menu, highlighted code line, warning admonition, note, tip and info code tints |
+  | `--ov-slate-200` | `#CFD7DF` | light mode borders and code border; dark mode light grey text (emphasis 600 and 700) and scrollbar hover |
+  | `--ov-slate-500` | `#4B5966` | light mode mid-dark neutral text (emphasis 600 and 700) and scrollbar hover |
+  | `--ov-slate-700` | `#323E49` | dark mode navbar hover and mobile menu, highlighted code line, emphasis 200; light mode danger inline code tint |
+  | `--ov-slate-800` | `#2A333C` | dark mode inline code, table stripe, hover tint, admonitions, upcoming crumb fill, emphasis 100, danger code tint |
+  | `--ov-slate-900` | `#171C22` | dark mode code blocks (also the observation card), danger admonition, code tints |
+
+- Dark surfaces, one token each: code blocks (`--prism-background-color`) and the observation card of Level 0, which is
+  a code block: `--ov-slate-900`; inline code, table stripe, tabs and menu hover (`--ifm-hover-overlay`) and the note,
+  tip, info and warning admonitions: `--ov-slate-800`; the highlighted code line: `--ov-slate-700`; the danger
+  admonition: `--ov-slate-900`. A checklist sits on the page (`--ov-slate` in dark mode). The checker fails when one of
+  these is not a `var(--ov-slate-<step>)` in the dark block, and when a slate token is missing from this section.
+- Admonition borders (the `-dark` variable of each type; the exact deck blue, a shade of the primary or a named neutral):
+
+  | Type | Light mode | Dark mode |
+  |---|---|---|
+  | note | sage (decorative, no pair) | sage |
+  | tip | `--ifm-color-primary-darkest` `#244F81` | `--ifm-color-primary-lighter` `#A1C1E5` |
+  | info | deck blue `#3C7EC9` (3.81:1 on snow) | `--ifm-color-primary` `#79A7DA` |
+  | warning and caution | slate `#1D242C` | white `#FFFFFF` |
+  | danger | deck blue `#3C7EC9` (3.74:1 on slate) | `--ifm-color-primary-light` `#94B8E1` |
+
+- Buttons are the primary with the inverse text colour: white on `#3371B8` in light mode (5.01:1), slate on `#79A7DA` in
+  dark mode (6.23:1); the hover uses `--ifm-color-primary-dark`. The `LevelProgress` colours are the `--guide-level-*`
+  variables (current crumb `#3371B8` with a white label, done crumbs green, upcoming crumbs muted).
+- The checker (rules `brand` and `contrast`) fails on: a primary other than the two AA shades above (the exact deck blue
+  included), shades out of order, a dark background that is not slate, a dark surface that is not a named slate token, a
+  light heading colour that is not slate, an admonition border outside the sets above, and any text pair that uses deck
+  blue or sage as its colour or its background. Deck blue may only appear in non-text pairs.
 - A contrast pair is a foreground variable and a background variable, by name, in `scripts/rules/contrast-pairs.mjs`.
   Declare the variables in `custom.css` with a hex value or one `var()` reference, and add a pair when a component gets
   a new text colour. Every Infima admonition type (note, tip, info, warning, danger, and caution as an alias of warning)
   has its pairs, so any of them may be used on a page.
 - The Prism theme in `docusaurus.config.ts` is empty on purpose. Code colours are the `--prism-*` and `--guide-code-*`
   variables of `custom.css`.
-- `LevelProgress` colours are the `--guide-level-*` variables of `custom.css`.
 
 ### Fonts and provenance
 

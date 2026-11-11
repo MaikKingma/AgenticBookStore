@@ -14,7 +14,7 @@ const byName = (name) => CONTRAST_PAIRS.filter((pair) => pair.name === name);
 
 // The number of pairs when this test was written. It may only grow: raise it together
 // with a new pair, never lower it to make a removal pass.
-const MINIMUM_PAIR_COUNT = 60;
+const MINIMUM_PAIR_COUNT = 65;
 
 test('contrast pairs: the table holds at least the pinned number of pairs', () => {
   assert.ok(CONTRAST_PAIRS.length >= MINIMUM_PAIR_COUNT, `only ${CONTRAST_PAIRS.length} pairs`);
@@ -137,3 +137,32 @@ test('contrast pairs: a current fill of #3C7EC9 fails the current label pair at 
     ['dark', '#FFFFFF', '#3371B8', 4.5],
   ]);
 });
+
+// Spec 14 T3 (A1): primary is the AA shade of the deck blue per mode and stays a text pair (4.5:1) on the page, so a
+// link, the table of contents entry and every other element Infima paints in bare primary is readable.
+test('contrast pairs: the primary pair stays a text pair on the page and resolves to the AA shade of each mode', () => {
+  assert.deepEqual(byName('primary'), [{name: 'primary', fg: '--ifm-color-primary', bg: '--ifm-background-color', kind: 'text'}]);
+  const {results, errors} = evaluatePairs({css: CSS, pairs: CONTRAST_PAIRS, darkMode: true});
+  assert.deepEqual(errors, []);
+  const primary = results.filter((result) => result.name === 'primary');
+  assert.deepEqual(primary.map((result) => [result.mode, result.fgHex.toUpperCase(), result.bgHex.toUpperCase(), result.min]), [
+    ['light', '#3371B8', '#FFFFFF', 4.5],
+    ['dark', '#79A7DA', '#1D242C', 4.5],
+  ]);
+  assert.ok(primary.every((result) => result.ratio >= 4.5), primary.map((result) => result.ratio).join(' '));
+});
+
+// New in T3: the surfaces and controls the deck palette adds or re-colours get a pair of their own, by name.
+const T3_PAIRS = [
+  ['button text', '--ifm-font-color-base-inverse', '--ifm-color-primary', 'text'],
+  ['button hover text', '--ifm-font-color-base-inverse', '--ifm-color-primary-dark', 'text'],
+  ['primary on table stripe', '--ifm-color-primary', '--ifm-table-stripe-background', 'text'],
+  ['checklist text', '--ifm-font-color-base', '--ifm-background-color', 'text'],
+  ['observation card text', '--prism-color', '--prism-background-color', 'text'],
+];
+
+for (const [name, fg, bg, kind] of T3_PAIRS) {
+  test(`contrast pairs: the deck palette pair "${name}" is declared once, ${kind}, on ${fg} and ${bg}`, () => {
+    assert.deepEqual(byName(name), [{name, fg, bg, kind}]);
+  });
+}

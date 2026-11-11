@@ -5,10 +5,13 @@ import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {BRAND, FONT_STACK, brandErrors, restrictedTextErrors} from './rules/brand.mjs';
 import {fontErrors, bannedFontSourceErrors} from './rules/fonts.mjs';
+import {evaluatePairs} from './rules/contrast.mjs';
+import {CONTRAST_PAIRS} from './rules/contrast-pairs.mjs';
 import {goodSiteFiles, goodFontFiles} from './lib/test-fixtures.mjs';
 
 const site = goodSiteFiles();
 const CSS = site['src/css/custom.css'];
+const same = (a, b) => a.toUpperCase() === b.toUpperCase();
 
 const swap = (text, from, to) => {
   assert.ok(text.includes(from), `fixture lacks ${from}`);
@@ -20,13 +23,11 @@ test('brandErrors: the real custom.css has no error in light and dark mode', () 
   assert.deepEqual(brandErrors({css: CSS, darkMode: false}), []);
 });
 
-test('brandErrors: the seven brand values are the ones of decision D7', () => {
+test('brandErrors: the brand values are the ones of decision D18 (deck blue and slate, with the D7 neutrals sage, snow and white)', () => {
   assert.deepEqual(BRAND, {
-    navy: '#1D252D',
-    blue: '#3D7DC9',
-    teal: '#014046',
+    blue: '#3C7EC9',
+    slate: '#1D242C',
     sage: '#809FA2',
-    mist: '#CBD9DA',
     snow: '#F1F5F6',
     white: '#FFFFFF',
   });
@@ -42,24 +43,144 @@ test('brandErrors: brand values are matched in any letter case', () => {
   assert.deepEqual(brandErrors({css, darkMode: true}), []);
 });
 
-test('brandErrors: the light primary colour must be teal', () => {
-  const css = swap(CSS, '--ifm-color-primary: #014046;', '--ifm-color-primary: #2e8555;');
+test('brandErrors: the light primary colour must be the AA shade #3371B8 of the deck blue', () => {
+  const css = swap(CSS, '--ifm-color-primary: #3371B8;', '--ifm-color-primary: #2e8555;');
   assert.deepEqual(brandErrors({css, darkMode: true}), [
-    'brand: light --ifm-color-primary must be #014046 (teal), found #2e8555',
+    'brand: light --ifm-color-primary must be #3371B8 (the AA shade of the deck blue), found #2e8555',
   ]);
 });
 
-test('brandErrors: the dark primary colour must be mist, and only matters while dark mode is on', () => {
-  const css = swap(CSS, '--ifm-color-primary: #CBD9DA;', '--ifm-color-primary: #25c2a0;');
+test('brandErrors: the dark primary colour must be the lighter AA shade #79A7DA, and only matters while dark mode is on', () => {
+  const css = swap(CSS, '--ifm-color-primary: #79A7DA;', '--ifm-color-primary: #25c2a0;');
   assert.deepEqual(brandErrors({css, darkMode: true}), [
-    'brand: dark --ifm-color-primary must be #CBD9DA (mist), found #25c2a0',
+    'brand: dark --ifm-color-primary must be #79A7DA (the lighter AA shade of the deck blue), found #25c2a0',
   ]);
   assert.deepEqual(brandErrors({css, darkMode: false}), []);
 });
 
 test('brandErrors: a primary that is not declared is an error', () => {
-  const css = swap(CSS, '--ifm-color-primary: #014046;', '--ifm-not-primary: #014046;');
+  const css = swap(CSS, '--ifm-color-primary: #3371B8;', '--ifm-not-primary: #3371B8;');
   assert.match(brandErrors({css, darkMode: false}).join('\n'), /light --ifm-color-primary is not defined/);
+});
+
+// Spec 14 T3 (A1, FF-T1-6): the four primaries that must fail, each with its exact message. The exact deck blue
+// #3C7EC9 is only 4.18:1 on white and 3.74:1 on slate, so it may never be the primary text colour.
+test('brandErrors: the light primary restored to the old teal #014046 fails', () => {
+  const css = swap(CSS, '--ifm-color-primary: #3371B8;', '--ifm-color-primary: #014046;');
+  assert.deepEqual(brandErrors({css, darkMode: true}), [
+    'brand: light --ifm-color-primary must be #3371B8 (the AA shade of the deck blue), found #014046',
+  ]);
+});
+
+test('brandErrors: the light primary set to the exact deck blue #3C7EC9 fails (any blue is not enough)', () => {
+  const css = swap(CSS, '--ifm-color-primary: #3371B8;', '--ifm-color-primary: #3C7EC9;');
+  assert.deepEqual(brandErrors({css, darkMode: true}), [
+    'brand: light --ifm-color-primary must be #3371B8 (the AA shade of the deck blue), found #3C7EC9',
+  ]);
+});
+
+test('brandErrors: the dark primary set to the exact deck blue #3C7EC9 fails', () => {
+  const css = swap(CSS, '--ifm-color-primary: #79A7DA;', '--ifm-color-primary: #3C7EC9;');
+  assert.deepEqual(brandErrors({css, darkMode: true}), [
+    'brand: dark --ifm-color-primary must be #79A7DA (the lighter AA shade of the deck blue), found #3C7EC9',
+  ]);
+});
+
+test('brandErrors: the dark primary swapped with the light value fails, and so does the light one swapped with the dark value', () => {
+  const dark = swap(CSS, '--ifm-color-primary: #79A7DA;', '--ifm-color-primary: #3371B8;');
+  assert.deepEqual(brandErrors({css: dark, darkMode: true}), [
+    'brand: dark --ifm-color-primary must be #79A7DA (the lighter AA shade of the deck blue), found #3371B8',
+  ]);
+  const light = swap(CSS, '--ifm-color-primary: #3371B8;', '--ifm-color-primary: #79A7DA;');
+  assert.deepEqual(brandErrors({css: light, darkMode: true}), [
+    'brand: light --ifm-color-primary must be #3371B8 (the AA shade of the deck blue), found #79A7DA',
+  ]);
+});
+
+// The six shade variables of each mode are the Docusaurus ratios of the primary and stay ordered by luminance.
+test('brandErrors: the six primary shades stay ordered, darkest to lightest, in each mode', () => {
+  const tail = 'must run darkest, darker, dark, primary, light, lighter, lightest from dark to light';
+  const lightDark = swap(CSS, '--ifm-color-primary-dark: #2E66A6;', '--ifm-color-primary-dark: #4383CB;');
+  assert.deepEqual(brandErrors({css: lightDark, darkMode: true}), [
+    `brand: light primary shades ${tail} (--ifm-color-primary-dark is not darker than --ifm-color-primary)`,
+  ]);
+  const darkLightest = swap(CSS, '--ifm-color-primary-lightest: #C9DBF0;', '--ifm-color-primary-lightest: #79A7DA;');
+  assert.deepEqual(brandErrors({css: darkLightest, darkMode: true}), [
+    `brand: dark primary shades ${tail} (--ifm-color-primary-lighter is not darker than --ifm-color-primary-lightest)`,
+  ]);
+  assert.deepEqual(brandErrors({css: darkLightest, darkMode: false}), []);
+});
+
+// A second dark block after the real one: its declaration is the last one, so it wins like in the cascade.
+const withDark = (name, value) => `${CSS}\nhtml[data-theme='dark'] {\n  ${name}: ${value};\n}\n`;
+
+// Dark mode (G-4): the page, the navbar and the sidebar are the deck slate; every other surface is a named
+// --ov-slate-<step> token, so a surface cannot drift to a colour of its own.
+test('brandErrors: the dark page, navbar and sidebar backgrounds must resolve to the deck slate #1D242C', () => {
+  for (const name of ['--ifm-background-color', '--ifm-background-surface-color', '--ifm-navbar-background-color']) {
+    const css = withDark(name, 'var(--ov-snow)');
+    assert.deepEqual(brandErrors({css, darkMode: true}), [`brand: dark ${name} must resolve to the deck slate #1D242C, found #F1F5F6`]);
+  }
+});
+
+test('brandErrors: every dark surface variable is a named --ov-slate-<step> token', () => {
+  for (const name of [
+    '--ifm-code-background',
+    '--prism-background-color',
+    '--docusaurus-highlighted-code-line-bg',
+    '--ifm-color-secondary-contrast-background',
+    '--ifm-color-success-contrast-background',
+    '--ifm-color-info-contrast-background',
+    '--ifm-color-warning-contrast-background',
+    '--ifm-color-danger-contrast-background',
+    '--ifm-table-stripe-background',
+    '--ifm-hover-overlay',
+  ]) {
+    const css = withDark(name, 'var(--ov-snow)');
+    assert.deepEqual(brandErrors({css, darkMode: true}), [
+      `brand: dark ${name} must be a named slate token var(--ov-slate-<step>), found "var(--ov-snow)"`,
+    ]);
+    assert.deepEqual(brandErrors({css, darkMode: false}), []);
+  }
+});
+
+test('brandErrors: a dark surface that is not declared in the dark block is an error', () => {
+  const css = swap(CSS, '--ifm-table-stripe-background: var(--ov-slate-800);', '--ifm-table-stripe-colour: var(--ov-slate-800);');
+  assert.deepEqual(brandErrors({css, darkMode: true}), ['brand: dark --ifm-table-stripe-background is not declared in the dark block']);
+});
+
+test('brandErrors: the light heading colour must resolve to the deck slate #1D242C', () => {
+  const css = swap(CSS, '--ifm-heading-color: var(--ov-slate);', '--ifm-heading-color: var(--ov-sage);');
+  assert.deepEqual(brandErrors({css, darkMode: true}), ['brand: light --ifm-heading-color must resolve to the deck slate #1D242C, found #809FA2']);
+});
+
+// Admonition borders (G-4): the -dark variable of each bordered type is the exact deck blue, one of the six shades
+// of the primary of its mode, or a named neutral (slate, white, snow, sage), never another colour.
+test('brandErrors: an admonition border that is neither the deck blue, a primary shade nor a named neutral fails, in each mode', () => {
+  const light = swap(CSS, '--ifm-color-info-dark: var(--ov-blue);', '--ifm-color-info-dark: #2E8555;');
+  assert.deepEqual(brandErrors({css: light, darkMode: true}), [
+    'brand: light --ifm-color-info-dark (admonition border) must be the deck blue #3C7EC9, a shade of the primary or a named neutral, found #2E8555',
+  ]);
+  const dark = swap(CSS, '--ifm-color-info-dark: var(--ifm-color-primary);', '--ifm-color-info-dark: #2E8555;');
+  assert.deepEqual(brandErrors({css: dark, darkMode: true}), [
+    'brand: dark --ifm-color-info-dark (admonition border) must be the deck blue #3C7EC9, a shade of the primary or a named neutral, found #2E8555',
+  ]);
+  assert.deepEqual(brandErrors({css: dark, darkMode: false}), []);
+});
+
+// The slate tokens and every colour of the Brand section of the README are declared in custom.css, so the README
+// cannot name a colour the stylesheet does not hold (and the stylesheet cannot grow a slate token unlisted).
+test('brand README: every --ov-slate-<step> token of custom.css is listed in the Brand section, and every hex there is in custom.css', () => {
+  const readme = site['README.md'];
+  const brand = readme.slice(readme.indexOf('\n## Brand'), readme.indexOf('\n### Fonts and provenance'));
+  assert.ok(brand.length > 500, 'the Brand section was not found');
+  const tokens = [...new Set(CSS.match(/--ov-slate-\d+(?=:)/g))];
+  assert.ok(tokens.length >= 5, tokens.join(' '));
+  for (const token of tokens) assert.ok(brand.includes(`\`${token}\``), `${token} is not listed in the README Brand section`);
+  const declared = CSS.toUpperCase();
+  for (const hex of new Set(brand.match(/#[0-9A-Fa-f]{6}\b/g))) {
+    assert.ok(declared.includes(hex.toUpperCase()), `${hex} is in the README Brand section but not in custom.css`);
+  }
 });
 
 test('brandErrors: the font stack must be exactly the one of decision D7', () => {
@@ -79,14 +200,14 @@ const result = (extra) => ({mode: 'light', name: 'p', fg: '--a', bg: '--b', kind
 
 test('restrictedTextErrors: blue and sage never carry normal text, in any case, as text or as its background', () => {
   const errors = restrictedTextErrors([
-    result({fgHex: '#3d7dc9'}),
+    result({fgHex: '#3c7ec9'}),
     result({fgHex: '#809FA2', mode: 'dark'}),
-    result({bgHex: '#3D7DC9', name: 'q'}),
+    result({bgHex: '#3C7EC9', name: 'q'}),
   ]);
   assert.deepEqual(errors, [
-    'brand: light p: text pair --a on --b uses blue #3D7DC9 as text, which is only for large or bold text and non-text accents',
+    'brand: light p: text pair --a on --b uses blue #3C7EC9 as text, which is only for non-text accents',
     'brand: dark p: text pair --a on --b uses sage #809FA2 as text, which is decorative only',
-    'brand: light q: text pair --a on --b uses blue #3D7DC9 as a background for text',
+    'brand: light q: text pair --a on --b uses blue #3C7EC9 as a background for text',
   ]);
 });
 
@@ -97,11 +218,25 @@ test('restrictedTextErrors: sage as the background of a text pair is an error of
 });
 
 test('restrictedTextErrors: non-text pairs may use blue and sage', () => {
-  assert.deepEqual(restrictedTextErrors([result({kind: 'nontext', fgHex: '#3D7DC9'}), result({kind: 'nontext', bgHex: '#809FA2'})]), []);
+  assert.deepEqual(restrictedTextErrors([result({kind: 'nontext', fgHex: '#3C7EC9'}), result({kind: 'nontext', bgHex: '#809FA2'})]), []);
 });
 
 test('restrictedTextErrors: other colours pass', () => {
   assert.deepEqual(restrictedTextErrors([result({})]), []);
+});
+
+// Spec 14 T3 (A1): the exact deck blue is for borders, bars, outlines and non-text pairs only. In the real stylesheet
+// no text pair resolves to it, as text or as background, in light or in dark mode; where it is used it is a non-text pair.
+test('restrictedTextErrors: no real text pair uses the exact deck blue, and the non-text pairs that use it are named', () => {
+  const {results, errors} = evaluatePairs({css: CSS, pairs: CONTRAST_PAIRS, darkMode: true});
+  assert.deepEqual(errors, []);
+  assert.deepEqual(restrictedTextErrors(results), []);
+  const exact = results.filter((pair) => same(pair.fgHex, BRAND.blue) || same(pair.bgHex, BRAND.blue));
+  assert.ok(exact.length > 0, 'the deck blue is used by no pair at all: the guard below proves nothing');
+  assert.deepEqual([...new Set(exact.map((pair) => pair.kind))], ['nontext']);
+  assert.deepEqual([...new Set(exact.map((pair) => pair.name))].toSorted(), ['admonition danger border', 'admonition info border', 'navbar accent line']);
+  const asText = exact.map((pair) => ({...pair, kind: 'text'}));
+  assert.equal(restrictedTextErrors(asText).length, asText.length);
 });
 
 const fontFiles = () => ({

@@ -20,7 +20,7 @@ merge.
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | logo asset, navbar logo link, GitHub and LinkedIn links, navbar colours, logo provenance check, navbar built rule | elevated | sonnet | #165 | sdd/14-guide-branding/T1 | PASS r1 | ENDORSE |
 | T2 | guide | [T1] | 2 | LevelProgress chevron breadcrumb with links, done/current/upcoming states, level-progress built rule | critical | sonnet (owner policy, see Decisions) | #167 | sdd/14-guide-branding/T2 | PASS r1 | ENDORSE |
-| T3 | guide | [T1, T2] | 3 | deck colours across the site, brand rule to D18, visual sweep, screenshots | elevated | sonnet | | sdd/14-guide-branding/T3 | | |
+| T3 | guide | [T1, T2] | 3 | deck colours across the site, brand rule to D18, visual sweep, screenshots | elevated | sonnet | #169 | sdd/14-guide-branding/T3 | PASS r1 | ENDORSE |
 
 qaDirective per task = `qa-strategy.md` C0 plus that task's block under "Task directives", plus every
 `## QA feed-forward` entry below.
@@ -250,6 +250,13 @@ From the T2 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
   gains `guide/scripts/level-progress.test.mjs`, insertion-only except the one FF-T2-1 (f) title rename.
   `guide/scripts/rules/level-progress-built.mjs` and `guide/src/components/LevelProgress.tsx` stay hash-equal to the
   T2 gate.
+- A4 (2026-11-11, orchestrator, from impl-t3's finding; gate re-run self-accepted). T3 AC6 "axe full rule set 0
+  violations" excludes exactly one pre-existing rule hit: `scrollable-region-focusable` on the one wide table at
+  390 px on `level-4`, `reference/architecture` and `reference/cheat-sheet` (Firefox does not flag the cheat sheet).
+  It is present on the spec base build, is not caused by spec 14 (390 px is a width spec 14 added to the sweep), and
+  its fix (a focusable table wrapper) is outside the pack scope; it goes to the owner as residual R5 for an sdd-bugfix.
+  Every other axe rule stays at 0 violations on every page run, and the verifier proves the hit is identical on the
+  spec base.
 
 ## Residuals for the owner
 
@@ -257,4 +264,13 @@ From the T2 meta-review (qa-lead ENDORSE r1; details in the QA ledger):
 - R2 the logo recipe script stays session-local; the README records the steps and hashes (F1).
 - R3 OD-1 was decided by the main session under delegated gates: the exact deck blue `#3c7ec9` is used only for
   non-text accents; text and the current crumb use the AA shade `#3371B8` (Maik may overrule).
+- R5 pre-existing axe `scrollable-region-focusable` on the wide tables at 390 px (level-4, reference/architecture,
+  reference/cheat-sheet): a fix needs a focusable table wrapper, see A4. Main session, 2026-11-11: stays a residual
+  here; the fix (a focusable, labelled table wrapper, then the A4 exclusion dropped) is folded into spec 15.
+- R6 test-only gaps from the T3 review (qa-lead ENDORSE r1; criteria met, the real `npm run check` catches every
+  production edit): the admonition-border test mutates only `info`; the dark-surface test lists 10 of the 20
+  surfaces; no equal-neighbour shade fixture; the README test does not compare shade-table cells and quoted ratios.
+  The QA ledger holds the exact test list (RA-1 to RA-3). Proposed for spec 15 next to R5.
+- D1 (A1 consequence) dark-mode filled buttons use slate text on `#79A7DA` (6.23:1); white would be about 2.5:1.
+- D2 dark-mode body text stays white `#FFFFFF` (15.66:1) rather than "light grey" as the pack wording says.
 - R4 at 32 px the "TECH TRIBES" line of the logo is about 10 px tall (OD-2).

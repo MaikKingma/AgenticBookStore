@@ -344,6 +344,28 @@ test('level progress rule: a done crumb whose name does not start with its level
   fails(errors, /crumb 1 \(Level 0\) check mark must have aria-hidden="true"/);
 });
 
+// --- name and list shape pins (spec 14 T2 meta-review: R15, R20, R33, R34) -------------------------------
+
+test('level progress rule: a crumb that reads Level 10 is not the Level 1 crumb (the name must not continue with a digit)', () => {
+  const ten = mutate(CURRENT_2, `<span>Level 1</span>${DONE_TEXT}`, `<span>Level 10</span>${DONE_TEXT}`);
+  fails(errorsOf(ten, 2), /crumb 2 \(Level 1\) must read Level 1/);
+});
+
+test('level progress rule: a second ol in the nav fails', () => {
+  const second = mutate(CURRENT_2, NAV_CLOSE, '</ol><ol class=steps_tDzf></ol></nav>');
+  fails(errorsOf(second, 2), /must hold one ol \(found 2\)/);
+});
+
+test('level progress rule: an ol wrapped in a div is not the ol of the nav', () => {
+  const wrapped = mutate(mutate(CURRENT_2, NAV_OPEN, NAV_OPEN.replace('<ol', '<div><ol')), NAV_CLOSE, '</ol></div></nav>');
+  fails(errorsOf(wrapped, 2), /must hold one ol \(found 0\)/);
+});
+
+test('level progress rule: a done crumb whose text says uncompleted does not say completed', () => {
+  const un = mutate(CURRENT_2, '(completed)', '(uncompleted)');
+  fails(errorsOf(un, 2), /crumb 1 \(Level 0\) is done and its link name must say completed/);
+});
+
 // --- pages that are not level pages ----------------------------------------------------------------------
 
 test('level progress rule: a page that is not a level page must have no level progress nav', () => {
@@ -680,10 +702,20 @@ function moduleErrors(css) {
   if (!/content:\s*'\\2713'/.test(bodyOf(rules, '.check::before'))) errors.push("the check mark must draw the check character as the escape '\\2713' in the content of .check::before");
   if (!/color:\s*var\(--crumb-fg\)/.test(link)) errors.push('the link label colour must come from --crumb-fg');
   if (!/--crumb-bg:\s*var\(--guide-level-inactive-bg\)/.test(bodyOf(rules, '.steps > .step'))) errors.push('the upcoming crumb must use the inactive variables by default');
+  // A hovered label keeps its own colour: the pair that proves it is the one of the state, not a link hover colour.
+  for (const [selector, body] of rules.filter(([name]) => name.includes(':hover'))) {
+    for (const declaration of body.matchAll(/(?:^|[;\s])color\s*:\s*([^;]+)/g)) {
+      if (declaration[1].trim() !== 'var(--crumb-fg)') errors.push(`${selector} declares color ${declaration[1].trim()}: a hovered crumb label must keep var(--crumb-fg)`);
+    }
+  }
+  // The outline is the inset of the fill layer inside the outline layer.
+  if (!/inset:\s*var\(--outline\)/.test(bodyOf(rules, '.fill'))) errors.push('.fill must be inset by var(--outline), so that the .edge layer shows as the outline');
+  const width = /--outline:\s*(\d+(?:\.\d+)?)px/.exec(bodyOf(rules, '.steps'));
+  if (!width || Number(width[1]) < 1) errors.push('.steps must declare --outline of at least 1px');
   return errors;
 }
 
-test('level progress stylesheet: the module keeps the wrapping row, the chevron on pseudo elements and the focus ring', () => {
+test('level progress stylesheet: the module keeps the wrapping row, the chevron on the two layer spans and the focus ring', () => {
   assert.deepEqual(moduleErrors(MODULE_CSS), []);
 });
 
@@ -705,6 +737,9 @@ for (const [what, from, to, message] of [
   ['a fill layer without a real background', 'background: var(--crumb-bg);', 'background: transparent;', /as real backgrounds/],
   ['no done rule', "[data-state='done']", "[data-state='finished']", /no rule for data-state done/],
   ['a link colour of its own', 'color: var(--crumb-fg);\n  font-weight', 'color: var(--ifm-link-color);\n  font-weight', /label colour must come from --crumb-fg/],
+  ['a hover colour of its own', '.link:hover {\n  color: var(--crumb-fg);', '.link:hover {\n  color: var(--ifm-link-hover-color);', /a hovered crumb label must keep var\(--crumb-fg\)/],
+  ['a fill layer with no inset', 'inset: var(--outline);', 'inset: 0;', /\.fill must be inset by var\(--outline\)/],
+  ['an outline width of 0', '--outline: 2px;', '--outline: 0px;', /\.steps must declare --outline of at least 1px/],
 ]) {
   test(`level progress stylesheet: ${what} fails the module pins`, () => {
     assert.ok(MODULE_CSS.includes(from), `the module has no ${from}`);
