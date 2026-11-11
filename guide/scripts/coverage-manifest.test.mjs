@@ -84,8 +84,9 @@ test('manifest: each page has at least its pinned number of entries, so entries 
   // L3 rose from 34 to 35 in task T6 (L3-35, the Level 3 "Make it yours" tip).
   // SU rose from 21 to 26 and L4 from 65 to 79 in spec 15 task T4 (Node.js qualification and the pinned OpenSpec install
   // on the setup page, the start-branch sentences, the brownfield notes, the 42-minute sentence, the Level 4 tip).
-  // BO is the bonus page (spec 16, T2): BO-01 pins the sentence of its marker box.
-  const floor = {BO: 1, SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
+  // BO is the bonus page (spec 16): BO-01 pins the sentence of its marker box (T2), BO-02 to BO-15 the sentences, the table and the
+  // fragment that hold its code spans and fenced lines (T4). The BO floor equals the live count.
+  const floor = {BO: 15, SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -515,7 +516,7 @@ const SWEEPS = [
       skipSections: ['6. Break'],
       skipParagraphs: ['Facilitator fallback kit', '**Expected findings'],
       skipLists: ['**Level cleared when**'],
-      pages: [['3. Setup check', ['SU']], ['4. Level 0', ['L0']], ['5. Level 1', ['L1']], ['7. Level 2', ['L2']], ['8. Level 3', ['L3']], ['9. Level 4', ['L4', 'CS']]],
+      pages: [['3. Setup check', ['SU']], ['4. Level 0', ['L0']], ['5. Level 1', ['L1']], ['7. Level 2', ['L2']], ['8. Level 3', ['L3']], ['9. Level 4', ['L4', 'CS']], ['Bonus level', ['BO']]],
     },
   ],
   ['sdd', {from: '## Part 2', to: '---', skipSections: ['Level cleared when'], pages: [['Part 2', ['L4']]]}],
@@ -668,7 +669,8 @@ test('manifest: snippets shorter than 8 characters are the pinned short ones, ea
 const BO_SENTENCE = 'This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home.';
 
 test('manifest: BO-01 pins the marker sentence on the bonus page and in the plan section "Bonus level" (probes: page loses it, plan rewords it)', () => {
-  const bo = ENTRIES.filter((e) => e.page === 'BO');
+  // T4 retarget: the page has 15 entries now (BO-01 to BO-15); this test is about BO-01, so it reads that one entry.
+  const bo = ENTRIES.filter((e) => e.page === 'BO' && e.id === 'BO-01');
   assert.deepEqual(
     bo.map((e) => [e.id, e.source, e.section, e.kind, e.snippet, e.pageSnippet]),
     [['BO-01', 'plan', 'Bonus level', 'text', BO_SENTENCE, undefined]],
@@ -698,4 +700,75 @@ test('manifest: BO-01 pins the marker sentence on the bonus page and in the plan
   // the sentence in another plan section does not anchor it (the entry is searched in its own section only)
   const elsewhere = pack.plan.replace(BO_SENTENCE, 'Placeholder.').replace('## 10. Wrap-up (15 min)', `## 10. Wrap-up (15 min)\n\n${BO_SENTENCE}`);
   assert.match(run(bo, {pages, pack: {...pack, plan: elsewhere}}).errors.join('\n'), /BO-01: the snippet .* is not in workshop\/workshop-plan\.md, section "Bonus level"/);
+});
+
+// Spec 16 (T4): the content of the bonus page. BO-02 to BO-15 hold every code span and fenced line of the plan section "Bonus level"
+// (the literal sweep above reads that range for the page BO), and the live page carries each snippet word for word. The count is typed
+// here a second time, so that an entry dropped from the manifest (and from the floor above) cannot go unnoticed.
+const BO_COUNT = 15;
+const BO_IDS = Array.from({length: BO_COUNT}, (_, i) => `BO-${String(i + 1).padStart(2, '0')}`);
+
+test('manifest: the bonus page has exactly BO-01 to BO-15, and dropping any one of them falls below the floor of the page', () => {
+  const bo = ENTRIES.filter((e) => e.page === 'BO');
+  assert.deepEqual(bo.map((e) => e.id), BO_IDS);
+  for (const e of bo) assert.deepEqual([e.source, e.section], ['plan', 'Bonus level'], e.id);
+  for (const id of BO_IDS) assert.equal(ENTRIES.filter((e) => e.page === 'BO' && e.id !== id).length, BO_COUNT - 1, `without ${id} the page has ${BO_COUNT - 1} entries, below the floor`);
+});
+
+test('manifest: the live bonus page and the plan section carry every BO snippet, a snippet missing on the page fails by its id (BO-02 to BO-15)', () => {
+  const bo = ENTRIES.filter((e) => e.page === 'BO');
+  const pages = readPages(join(GUIDE, 'docs'));
+  const pack = readPack();
+  const live = run(bo, {pages, pack});
+  assert.deepEqual(live.errors, []);
+  assert.equal(live.anchored, BO_COUNT);
+  assert.deepEqual(live.pending, {}, 'the bonus page is no skeleton, so no entry is pending');
+  for (const entry of bo.slice(1)) {
+    const page = pages[PAGE_FILES.BO];
+    const folded = fold(page);
+    assert.equal(folded.split(fold(entry.snippet)).length - 1, 1, `${entry.id}: the page carries the snippet exactly once`);
+    assert.equal(fold(pack.plan).split(fold(entry.snippet)).length - 1, 1, `${entry.id}: the plan carries the snippet exactly once`);
+    // the page without the snippet: the entry fails, and only that entry
+    const lines = page.split('\n');
+    const without = entry.snippet.includes('\n') ? lines.filter((line) => !entry.snippet.split('\n').includes(line)) : lines.map((line) => line.replace(entry.snippet, 'Nothing here.'));
+    const errors = run(bo, {pages: {...pages, [PAGE_FILES.BO]: without.join('\n')}, pack}).errors;
+    assert.ok(errors.some((error) => error.startsWith(`coverage: ${entry.id}: ${PAGE_FILES.BO}: the `)), `${entry.id}: ${errors.join('\n')}`);
+  }
+});
+
+test('manifest: the literal sweep reads the plan section "Bonus level" for the page BO, a bonus literal without its entry fails, and no exclusion is added for it', () => {
+  assert.deepEqual(SWEEPS[0][1].pages.at(-1), ['Bonus level', ['BO']]);
+  assert.deepEqual(sweep(ENTRIES).filter((key) => /^plan:(4[5-9]\d|5\d\d) /.test(key)), [], 'no sweep exclusion lies in the bonus section (lines 453 to the Wrap-up)');
+  const witnesses = [
+    ['BO-10', 'claude --version'],
+    ['BO-11', '/config'],
+    ['BO-13', '/<name>'],
+    ['BO-07', '.claude/agents/architecture-reviewer.md'],
+    ['BO-07', 'start/level-4-<track>'],
+    ['BO-06', 'name: <name>'],
+    ['BO-06', 'description: <when to use it>'],
+    ['BO-04', 'Read'],
+    ['BO-09', '/ship'],
+  ];
+  for (const [id, literal] of witnesses) {
+    const left = sweep(ENTRIES.filter((e) => e.id !== id));
+    assert.ok(left.some((key) => key.endsWith(` ${literal}`)), `without ${id} the sweep finds ${literal} uncovered`);
+  }
+  // the right snippet on the wrong page or attributed to the wrong section does not cover a bonus literal
+  assert.ok(sweep(ENTRIES.map((e) => (e.id === 'BO-10' ? {...e, page: 'L4'} : e))).some((key) => key.endsWith(' claude --version')));
+  assert.ok(sweep(ENTRIES.map((e) => (e.id === 'BO-10' ? {...e, section: '9. Level 4'} : e))).some((key) => key.endsWith(' claude --version')));
+});
+
+test('manifest: the literals of the bonus section shorter than 4 characters are the fence lines --- of the fragment, pinned by BO-06 in sentence context', () => {
+  const plan = readPack().plan;
+  const found = literalsOf(plan, {from: '## Bonus level', to: '## 10. Wrap-up'}).map((u) => u.literal);
+  assert.ok(found.length >= 20, `the bonus section holds ${found.length} literals`);
+  assert.deepEqual([...new Set(found.filter((literal) => literal.length < 4))], ['---']);
+  const [fragment] = ENTRIES.filter((e) => e.id === 'BO-06');
+  assert.equal(fragment.kind, 'command', 'the fragment must stand in a fenced block of the page');
+  assert.ok(fold(fragment.snippet).startsWith('--- name: <name>') && fold(fragment.snippet).endsWith('model: <model> ---'), 'the --- lines are the first and the last line of the fragment');
+  // the page must hold the fragment as one fenced block: without its fence the command entry fails
+  const pages = readPages(join(GUIDE, 'docs'));
+  const asProse = pages[PAGE_FILES.BO].replace('```yaml\n---\nname: <name>', 'Fragment:\n\n---\nname: <name>').replace('model: <model>\n---\n```', 'model: <model>\n---');
+  assert.match(run([fragment], {pages: {...pages, [PAGE_FILES.BO]: asProse}, pack: readPack()}).errors.join('\n'), /^coverage: BO-06: docs\/06-bonus-level-orchestration\.mdx: the command ".*" is not in a fenced block of the page/);
 });

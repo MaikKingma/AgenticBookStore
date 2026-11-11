@@ -5,6 +5,7 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {scanMarkdown} from './lib/mdscan.mjs';
 import {BONUS_PLAN_HEADING, SUBAGENT_KEYS, TIME_SLOT_PATTERNS, bonusFragmentErrors, bonusMembershipErrors, bonusPlanSection, codeLiterals, timeSlotErrors} from './rules/content.mjs';
+import {normalise, readBullets} from './rules/plan.mjs';
 
 // The guards of the optional bonus level page (spec 16, task T3, decisions D-S4 and D-S6). The rules are pure functions in
 // rules/content.mjs; this file runs them on fixture strings (every witness that must fail, and the matching form that
@@ -503,4 +504,333 @@ test('time slot: minutes in the neighbouring plan sections are no fault of the b
   const live = bonusPlanSection(LIVE_PLAN);
   passes(timeSlotErrors('plan "Bonus level" section', live.text, live.heading + 1));
   assert.ok(timeSlotErrors('plan', LIVE_PLAN).length >= 5, 'the live plan has minutes in its level headings, outside the bonus section');
+});
+
+// 4. The outline of the page (spec 16, task T4, criterion 1b)
+
+// The H2 headings of the page in order, exact strings: the four parts, the question and the checklist. "What you bring" is a bold
+// line and no heading, so the sequence has six entries.
+const OUTLINE = ['Part A: Think first', 'Part B: Define two subagents', 'Part C: Coordinate them from the main session', 'Part D: Let Claude write it as a workflow', 'Before you move on', 'Bonus cleared when'];
+const MARKER_BOX = ':::info[Optional bonus level]';
+const GLANCE_BOX = ':::note[At a glance]';
+const TIP_BOX = ':::tip[Make it yours]';
+const headingsMessage = (titles) => `bonus page: the H2 headings are ${JSON.stringify(titles)}, expected exactly ${JSON.stringify(OUTLINE)}`;
+
+// The outline rule: the marker box first, one at a glance box before the first H2, the six H2 headings in order, one Make it yours
+// tip between Part D and the question, the checklist last and nothing after its list. Headings and boxes in a fenced block are text.
+function outlineErrors(pageText) {
+  const text = pageText.replace(/\r\n/g, '\n');
+  const raw = text.split('\n');
+  const prose = scanMarkdown(text).lines.map((line) => (line.fence === null ? line.text : null));
+  const at = (wanted) => prose.flatMap((line, index) => (line !== null && line.trim() === wanted ? [index] : []));
+  const errors = [];
+  const end = raw.indexOf('---', 1);
+  if (raw[0] !== '---' || end === -1) errors.push('bonus page: the page has no frontmatter');
+  const first = raw.findIndex((line, index) => index > end && line.trim() !== '');
+  if (first === -1 || raw[first].trim() !== MARKER_BOX) {
+    errors.push(`bonus page: the ${MARKER_BOX} box must be the first element of the page, found ${first === -1 ? 'nothing' : `"${raw[first].trim()}"`}`);
+  }
+  const heads = prose.flatMap((line, index) => {
+    const match = line === null ? null : /^## (.+)$/.exec(line.trimEnd());
+    return match ? [{title: match[1], index}] : [];
+  });
+  const titles = heads.map((head) => head.title);
+  if (JSON.stringify(titles) !== JSON.stringify(OUTLINE)) errors.push(headingsMessage(titles));
+  const head = (title) => heads.find((candidate) => candidate.title === title)?.index;
+  const glance = at(GLANCE_BOX);
+  if (glance.length !== 1) errors.push(`bonus page: ${glance.length} ${GLANCE_BOX} boxes, expected 1`);
+  else if (!(glance[0] > first && (heads.length === 0 || glance[0] < heads[0].index))) {
+    errors.push(`bonus page: the ${GLANCE_BOX} box must come after the marker box and before the first H2 heading`);
+  }
+  const tips = at(TIP_BOX);
+  if (tips.length !== 1) errors.push(`bonus page: ${tips.length} ${TIP_BOX} tips, expected 1`);
+  else if (head(OUTLINE[3]) !== undefined && head(OUTLINE[4]) !== undefined && !(tips[0] > head(OUTLINE[3]) && tips[0] < head(OUTLINE[4]))) {
+    errors.push(`bonus page: the ${TIP_BOX} tip must stand after the Part D heading and before "## ${OUTLINE[4]}"`);
+  }
+  const checklist = head(OUTLINE[5]);
+  if (checklist !== undefined) {
+    let from = checklist + 1;
+    while (from < raw.length && raw[from].trim() === '') from++;
+    const {items, next} = readBullets(raw, from);
+    if (items.length === 0) errors.push(`bonus page: "## ${OUTLINE[5]}" must be followed by a task list`);
+    const after = raw.findIndex((line, index) => index >= next && line.trim() !== '');
+    if (after !== -1) errors.push(`bonus page: something follows the cleared-when list (line ${after + 1}: "${raw[after].trim()}"), the list ends the page`);
+  }
+  return errors;
+}
+
+const swapText = (text, a, b) => text.replace(a, '@@swap@@').replace(b, a).replace('@@swap@@', b);
+
+test('outline: the live page has the marker box first, one at a glance box, the six H2 headings in order, one Make it yours tip and the list last', () => {
+  passes(outlineErrors(LIVE_PAGE));
+  const lines = LIVE_PAGE.split('\n');
+  assert.equal(scanMarkdown(LIVE_PAGE).lines.length, lines.length, 'the scanner reads one line per line of the page');
+  assert.deepEqual(lines.filter((line) => line.startsWith('## ')), OUTLINE.map((title) => `## ${title}`));
+  assert.equal(lines.filter((line) => line.trim() === TIP_BOX).length, 1);
+  assert.equal(lines.filter((line) => line.trim() === GLANCE_BOX).length, 1);
+  assert.ok(lines.indexOf(MARKER_BOX) < lines.indexOf(GLANCE_BOX) && lines.indexOf(GLANCE_BOX) < lines.indexOf(`## ${OUTLINE[0]}`));
+  assert.ok(lines.indexOf(`## ${OUTLINE[3]}`) < lines.indexOf(TIP_BOX) && lines.indexOf(TIP_BOX) < lines.indexOf(`## ${OUTLINE[4]}`));
+});
+
+test('outline: a Part D heading removed, two Parts swapped, a heading reworded or an extra heading fails by the sequence it finds', () => {
+  const without = LIVE_PAGE.replace(`## ${OUTLINE[3]}\n`, '');
+  assert.deepEqual(outlineErrors(without), [headingsMessage([OUTLINE[0], OUTLINE[1], OUTLINE[2], OUTLINE[4], OUTLINE[5]])]);
+  const swapped = swapText(LIVE_PAGE, `## ${OUTLINE[1]}`, `## ${OUTLINE[2]}`);
+  assert.deepEqual(outlineErrors(swapped), [headingsMessage([OUTLINE[0], OUTLINE[2], OUTLINE[1], OUTLINE[3], OUTLINE[4], OUTLINE[5]])]);
+  const swappedLast = swapText(LIVE_PAGE, `## ${OUTLINE[4]}`, `## ${OUTLINE[5]}`);
+  assert.deepEqual(outlineErrors(swappedLast).slice(0, 1), [headingsMessage([OUTLINE[0], OUTLINE[1], OUTLINE[2], OUTLINE[3], OUTLINE[5], OUTLINE[4]])]);
+  const reworded = LIVE_PAGE.replace(`## ${OUTLINE[0]}`, '## Part A: Think First');
+  assert.deepEqual(outlineErrors(reworded), [headingsMessage(['Part A: Think First', ...OUTLINE.slice(1)])]);
+  const noPart = LIVE_PAGE.replace(`## ${OUTLINE[1]}`, 'Part B: Define two subagents');
+  assert.deepEqual(outlineErrors(noPart), [headingsMessage(OUTLINE.filter((title) => title !== OUTLINE[1]))]);
+  const level3 = LIVE_PAGE.replace(`## ${OUTLINE[1]}`, `### ${OUTLINE[1]}`);
+  assert.deepEqual(outlineErrors(level3), [headingsMessage(OUTLINE.filter((title) => title !== OUTLINE[1]))]);
+  const bring = LIVE_PAGE.replace('**What you bring from Levels 3 and 4**', '## What you bring from Levels 3 and 4');
+  assert.deepEqual(outlineErrors(bring), [headingsMessage(['What you bring from Levels 3 and 4', ...OUTLINE])]);
+  const extra = `${LIVE_PAGE.trimEnd()}\n`.replace(`## ${OUTLINE[4]}`, `## An extra heading\n\nText.\n\n## ${OUTLINE[4]}`);
+  assert.match(outlineErrors(extra)[0], /^bonus page: the H2 headings are \[.*"An extra heading".*\], expected exactly/);
+});
+
+test('outline: a heading or a box inside a fenced block is text, a level 3 heading is no H2, and a page with carriage returns reads alike', () => {
+  const fenced = LIVE_PAGE.replace(`## ${OUTLINE[4]}`, `\`\`\`md\n## Part E: Not a heading\n${TIP_BOX}\n\`\`\`\n\n## ${OUTLINE[4]}`);
+  passes(outlineErrors(fenced));
+  passes(outlineErrors(LIVE_PAGE.replace(`## ${OUTLINE[4]}`, `### Not an H2\n\n## ${OUTLINE[4]}`)));
+  passes(outlineErrors(LIVE_PAGE.replace(/\n/g, '\r\n')));
+});
+
+test('outline: the marker box must be the first element, with the right type and title, and a page without it fails', () => {
+  failsOn(outlineErrors(LIVE_PAGE.replace(MARKER_BOX, `A paragraph first.\n\n${MARKER_BOX}`)), 'A paragraph first.');
+  failsOn(outlineErrors(LIVE_PAGE.replace(MARKER_BOX, ':::note[Optional bonus level]')), ':::note[Optional bonus level]');
+  failsOn(outlineErrors(LIVE_PAGE.replace(MARKER_BOX, ':::info[Optional Bonus Level]')), ':::info[Optional Bonus Level]');
+  failsOn(outlineErrors(LIVE_PAGE.replace(MARKER_BOX, `import X from 'x';\n\n${MARKER_BOX}`)), "import X from 'x';");
+  failsOn(outlineErrors(LIVE_PAGE.replace(MARKER_BOX, `${GLANCE_BOX}\n\nA.\n\n:::\n\n${MARKER_BOX}`)).filter((error) => error.includes('first element')), GLANCE_BOX);
+  const bare = outlineErrors('---\ntitle: x\n---\n');
+  assert.ok(bare.some((error) => error.endsWith('found nothing')), bare.join('\n'));
+});
+
+test('outline: exactly one Make it yours tip, after Part D and before the question; exactly one at a glance box, before the first H2', () => {
+  const tipBlock = `${TIP_BOX}\n\n${LIVE_PAGE.split(`${TIP_BOX}\n\n`)[1].split('\n')[0]}\n\n:::\n\n`;
+  assert.ok(LIVE_PAGE.includes(tipBlock), 'the tip block is read from the page');
+  assert.deepEqual(outlineErrors(LIVE_PAGE.replace(tipBlock, `${tipBlock}${tipBlock}`)), [`bonus page: 2 ${TIP_BOX} tips, expected 1`]);
+  assert.deepEqual(outlineErrors(LIVE_PAGE.replace(tipBlock, '')), [`bonus page: 0 ${TIP_BOX} tips, expected 1`]);
+  assert.deepEqual(outlineErrors(LIVE_PAGE.replace(TIP_BOX, ':::tip[Hint]')), [`bonus page: 0 ${TIP_BOX} tips, expected 1`]);
+  const late = LIVE_PAGE.replace(tipBlock, '').replace('Which gate did you keep human, and why?\n\n', `Which gate did you keep human, and why?\n\n${tipBlock}`);
+  assert.match(outlineErrors(late)[0], /tip must stand after the Part D heading and before "## Before you move on"$/);
+  const early = LIVE_PAGE.replace(tipBlock, '').replace(`## ${OUTLINE[3]}\n`, `${tipBlock}## ${OUTLINE[3]}\n`);
+  assert.match(outlineErrors(early)[0], /tip must stand after the Part D heading/);
+  assert.deepEqual(outlineErrors(LIVE_PAGE.replace(GLANCE_BOX, ':::note[Glance]')), [`bonus page: 0 ${GLANCE_BOX} boxes, expected 1`]);
+  const glanceBlock = LIVE_PAGE.slice(LIVE_PAGE.indexOf(GLANCE_BOX), LIVE_PAGE.indexOf('\n:::\n', LIVE_PAGE.indexOf(GLANCE_BOX)) + 5);
+  assert.deepEqual(outlineErrors(LIVE_PAGE.replace(glanceBlock, `${glanceBlock}\n${glanceBlock}`)), [`bonus page: 2 ${GLANCE_BOX} boxes, expected 1`]);
+  const lateGlance = LIVE_PAGE.replace(glanceBlock, '').replace(`## ${OUTLINE[1]}`, `${glanceBlock}\n## ${OUTLINE[1]}`);
+  assert.deepEqual(outlineErrors(lateGlance), [`bonus page: the ${GLANCE_BOX} box must come after the marker box and before the first H2 heading`]);
+});
+
+test('outline: nothing follows the cleared-when list (a paragraph, a heading, a second list, an HTML comment) and the list may not be empty', () => {
+  for (const tail of ['A paragraph after the list.', '## Another heading', '- [ ] one more item after a blank line', '<div></div>', ':::note\nx\n:::']) {
+    const errors = outlineErrors(`${LIVE_PAGE.trimEnd()}\n\n${tail}\n`);
+    assert.ok(errors.some((error) => error.startsWith('bonus page: something follows the cleared-when list (line ')), `${tail}: ${errors.join('\n')}`);
+  }
+  failsOn(outlineErrors(`${LIVE_PAGE.trimEnd()}\n\nA paragraph after the list.\n`), 'A paragraph after the list.');
+  assert.match(outlineErrors(`${LIVE_PAGE.trimEnd()}\n\nA paragraph after the list.\n`)[0], /^bonus page: something follows the cleared-when list \(line \d+: "A paragraph after the list\."\), the list ends the page$/);
+  passes(outlineErrors(`${LIVE_PAGE.trimEnd()}\n\n\n`));
+  const empty = LIVE_PAGE.slice(0, LIVE_PAGE.indexOf(`## ${OUTLINE[5]}`) + `## ${OUTLINE[5]}`.length);
+  assert.deepEqual(outlineErrors(`${empty}\n`), [`bonus page: "## ${OUTLINE[5]}" must be followed by a task list`]);
+});
+
+// 5. The cleared-when list against the plan (task T4, criterion 3)
+
+const CLEARED_MARKER = '**Bonus cleared when**';
+const CLEARED_HEADING = '## Bonus cleared when';
+
+// The items of the list under the marker line of the plan section "Bonus level": the marker line stands exactly once in the whole
+// plan, inside that section; an item runs over its indented continuation lines (readBullets of the checker), white space folded.
+function planClearedWhen(planText) {
+  const lines = planText.replace(/\r\n/g, '\n').split('\n');
+  const marks = lines.flatMap((line, index) => (line.trim() === CLEARED_MARKER ? [index] : []));
+  if (marks.length !== 1) return {error: `the plan has ${marks.length} "${CLEARED_MARKER}" lines, expected exactly 1`};
+  const section = bonusPlanSection(planText);
+  if (section.error) return {error: section.error};
+  if (!(marks[0] > section.heading && marks[0] < section.to)) return {error: `"${CLEARED_MARKER}" must stand in the plan section "Bonus level"`};
+  const {items} = readBullets(lines, marks[0] + 1);
+  if (items.length === 0) return {error: `"${CLEARED_MARKER}" has no list items in the plan`};
+  return {items: items.map(normalise)};
+}
+
+function pageClearedWhen(pageText) {
+  const text = pageText.replace(/\r\n/g, '\n');
+  const lines = text.split('\n');
+  const prose = scanMarkdown(text).lines;
+  const heads = lines.flatMap((line, index) => (prose[index].fence === null && line.trimEnd() === CLEARED_HEADING ? [index] : []));
+  if (heads.length !== 1) return {error: `the page has ${heads.length} "${CLEARED_HEADING}" headings, expected exactly 1`};
+  let from = heads[0] + 1;
+  while (from < lines.length && lines[from].trim() === '') from++;
+  const {items} = readBullets(lines, from);
+  if (items.length === 0) return {error: `"${CLEARED_HEADING}" must be followed by a task list of "- [ ] " items`};
+  return {items};
+}
+
+// The page list equals the plan list in order and count, item by item with the task box taken off (white space folded).
+function clearedWhenErrors(pageText, planText) {
+  const wanted = planClearedWhen(planText);
+  if (wanted.error) return [`bonus page: ${wanted.error}`];
+  const found = pageClearedWhen(pageText);
+  if (found.error) return [`bonus page: ${found.error}`];
+  const errors = [];
+  const items = found.items.map((item, index) => {
+    const match = /^\[([ xX])\]\s+(.*)$/.exec(item);
+    if (!match) {
+      errors.push(`bonus page: cleared-when item ${index + 1} is not a task list item ("- [ ] " followed by the text)`);
+      return undefined;
+    }
+    if (match[1] !== ' ') errors.push(`bonus page: cleared-when item ${index + 1} is checked, a task list item must be "- [ ]"`);
+    return normalise(match[2]);
+  });
+  if (items.length !== wanted.items.length) errors.push(`bonus page: the cleared-when list has ${items.length} items, the plan has ${wanted.items.length}`);
+  for (let i = 0; i < Math.min(items.length, wanted.items.length); i++) {
+    if (items[i] !== undefined && items[i] !== wanted.items[i]) {
+      errors.push(`bonus page: cleared-when item ${i + 1} differs from the plan: expected "${wanted.items[i]}", found "${items[i]}"`);
+    }
+  }
+  return errors;
+}
+
+// The lines of a text, the index after its marker line, and the index of the first blank line from there on.
+const listLines = (text, marker) => {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line.trim() === marker) + 1;
+  let end = start;
+  while (end < lines.length && lines[end].trim() !== '') end++;
+  return {lines, start, end};
+};
+
+test('cleared when: the live page items equal the live plan items in order and count, and the plan marker stands once, in the bonus section', () => {
+  passes(clearedWhenErrors(LIVE_PAGE, LIVE_PLAN));
+  const wanted = planClearedWhen(LIVE_PLAN);
+  assert.equal(wanted.error, undefined);
+  assert.equal(wanted.items.length, 4);
+  assert.equal(pageClearedWhen(LIVE_PAGE).items.length, 4);
+  assert.equal(LIVE_PLAN.split('\n').filter((line) => line.trim() === CLEARED_MARKER).length, 1);
+  assert.ok(wanted.items.every((item) => !/\s{2}/.test(item)), 'the plan items are white space folded');
+  // one plan item is wrapped over two lines, so that the continuation witness below reads a real continuation line
+  const {lines, start, end} = listLines(LIVE_PLAN, CLEARED_MARKER);
+  const item = lines.slice(start, end);
+  assert.equal(item.length, 5, 'four items, one of them wrapped over two lines');
+  assert.ok(item.some((line) => /^\s+\S/.test(line)), 'a continuation line is indented');
+});
+
+test('cleared when: two items swapped, one dropped, a page-only extra item or a plan-only extra item each fail with the message and the item', () => {
+  const {lines: pageLines, start} = listLines(LIVE_PAGE, CLEARED_HEADING);
+  const first = pageLines.findIndex((line, index) => index > start && line.startsWith('- [ ] '));
+  const items = pageLines.slice(first, first + 4);
+  assert.equal(items.length, 4);
+  const withItems = (list) => [...pageLines.slice(0, first), ...list, ...pageLines.slice(first + 4)].join('\n');
+  const swapped = clearedWhenErrors(withItems([items[1], items[0], items[2], items[3]]), LIVE_PLAN);
+  assert.equal(swapped.length, 2, swapped.join('\n'));
+  assert.match(swapped[0], /^bonus page: cleared-when item 1 differs from the plan: expected ".*", found ".*"$/);
+  assert.match(swapped[1], /^bonus page: cleared-when item 2 differs from the plan/);
+  for (let drop = 0; drop < 4; drop++) {
+    const rest = items.filter((_, index) => index !== drop);
+    const errors = clearedWhenErrors(withItems(rest), LIVE_PLAN);
+    assert.ok(errors.includes('bonus page: the cleared-when list has 3 items, the plan has 4'), `drop ${drop}: ${errors.join('\n')}`);
+  }
+  assert.deepEqual(clearedWhenErrors(withItems([...items, '- [ ] An item only the page has.']), LIVE_PLAN), ['bonus page: the cleared-when list has 5 items, the plan has 4']);
+  passes(clearedWhenErrors(withItems(items), LIVE_PLAN));
+  const planExtra = LIVE_PLAN.replace(`${CLEARED_MARKER}\n`, `${CLEARED_MARKER}\n- An item only the plan has.\n`);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE, planExtra).slice(0, 1), ['bonus page: the cleared-when list has 4 items, the plan has 5']);
+});
+
+test('cleared when: a reworded continuation line of a wrapped plan item fails, a continuation line dropped fails, white space alone passes', () => {
+  const continuation = '  the tools you chose and what it hands back.';
+  assert.ok(LIVE_PLAN.includes(`\n${continuation}\n`), 'the plan item wraps before "the tools you chose"');
+  const reworded = LIVE_PLAN.replace(continuation, '  the tools you picked and what it hands back.');
+  const errors = clearedWhenErrors(LIVE_PAGE, reworded);
+  assert.equal(errors.length, 1, errors.join('\n'));
+  assert.match(errors[0], /^bonus page: cleared-when item 2 differs from the plan: expected ".* the tools you picked and what it hands back\.", found ".* the tools you chose and what it hands back\."$/);
+  const dropped = clearedWhenErrors(LIVE_PAGE, LIVE_PLAN.replace(`\n${continuation}\n`, '\n'));
+  assert.equal(dropped.length, 1, dropped.join('\n'));
+  assert.match(dropped[0], /^bonus page: cleared-when item 2 differs from the plan/);
+  passes(clearedWhenErrors(LIVE_PAGE, LIVE_PLAN.replace(continuation, '      the  tools you chose\tand what it hands back.')));
+  passes(clearedWhenErrors(LIVE_PAGE.replace('- [ ] Two subagent files', '- [ ]   Two  subagent  files'), LIVE_PLAN));
+});
+
+test('cleared when: backticks dropped from one item, a reworded item, a checked item and a plain bullet each fail', () => {
+  const ticks = '`.claude/agents/`';
+  assert.ok(LIVE_PAGE.includes(`are in ${ticks},`));
+  const noTicks = clearedWhenErrors(LIVE_PAGE.replace(`are in ${ticks},`, 'are in .claude/agents/,'), LIVE_PLAN);
+  assert.equal(noTicks.length, 1, noTicks.join('\n'));
+  assert.match(noTicks[0], /^bonus page: cleared-when item 2 differs from the plan: expected ".*`\.claude\/agents\/`.*", found ".*are in \.claude\/agents\/, .*"$/);
+  const noTicksVerify = clearedWhenErrors(LIVE_PAGE.replace('and `./mvnw verify` is green', 'and ./mvnw verify is green'), LIVE_PLAN);
+  assert.match(noTicksVerify[0], /cleared-when item 3 differs/);
+  const reworded = clearedWhenErrors(LIVE_PAGE.replace('written down', 'noted down'), LIVE_PLAN);
+  assert.match(reworded[0], /cleared-when item 1 differs/);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE.replace('- [ ] Your flow', '- [x] Your flow'), LIVE_PLAN), ['bonus page: cleared-when item 1 is checked, a task list item must be "- [ ]"']);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE.replace('- [ ] Your flow', '- Your flow'), LIVE_PLAN), ['bonus page: cleared-when item 1 is not a task list item ("- [ ] " followed by the text)']);
+});
+
+test('cleared when: the plan marker must stand exactly once, inside the bonus section, with a list; the page needs exactly one heading with a list', () => {
+  const none = LIVE_PLAN.replace(`${CLEARED_MARKER}\n`, '');
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE, none), [`bonus page: the plan has 0 "${CLEARED_MARKER}" lines, expected exactly 1`]);
+  const twice = LIVE_PLAN.replace('## 10. Wrap-up (15 min)', `## 10. Wrap-up (15 min)\n${CLEARED_MARKER}\n- A second list.\n`);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE, twice), [`bonus page: the plan has 2 "${CLEARED_MARKER}" lines, expected exactly 1`]);
+  const moved = LIVE_PLAN.replace(`${CLEARED_MARKER}\n`, '').replace('## 10. Wrap-up (15 min)', `## 10. Wrap-up (15 min)\n${CLEARED_MARKER}\n- A list in the wrong section.\n`);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE, moved), [`bonus page: "${CLEARED_MARKER}" must stand in the plan section "Bonus level"`]);
+  const empty = LIVE_PLAN.replace(`${CLEARED_MARKER}\n`, `${CLEARED_MARKER}\n\n`);
+  assert.match(clearedWhenErrors(LIVE_PAGE, empty)[0], /has no list items in the plan$/);
+  const noSection = LIVE_PLAN.replace(`## ${BONUS_PLAN_HEADING}`, '## Another heading');
+  assert.match(clearedWhenErrors(LIVE_PAGE, noSection)[0], /^bonus page: the plan has no "## Bonus level/);
+  assert.deepEqual(clearedWhenErrors(LIVE_PAGE.replace(CLEARED_HEADING, '## Bonus finished when'), LIVE_PLAN), [`bonus page: the page has 0 "${CLEARED_HEADING}" headings, expected exactly 1`]);
+  assert.deepEqual(clearedWhenErrors(`${LIVE_PAGE}\n${CLEARED_HEADING}\n\n- [ ] x\n`, LIVE_PLAN), [`bonus page: the page has 2 "${CLEARED_HEADING}" headings, expected exactly 1`]);
+  assert.match(clearedWhenErrors(LIVE_PAGE.slice(0, LIVE_PAGE.indexOf(CLEARED_HEADING) + CLEARED_HEADING.length), LIVE_PLAN)[0], /must be followed by a task list/);
+  passes(clearedWhenErrors(LIVE_PAGE.replace(/\n/g, '\r\n'), LIVE_PLAN.replace(/\n/g, '\r\n')));
+});
+
+// 6. The anti-vacuity floor (task T4, criterion 3)
+
+// The membership check above passes when the page holds no literal at all, so an emptied page would pass it. The floor pins the
+// number of inline code spans and fenced lines of the live page at this tip, each exactly: adding or removing one literal on the
+// page (and in the plan section, so that membership stays green) turns this test red until the pin is changed on purpose.
+const PAGE_SPAN_FLOOR = 34;
+const PAGE_LINE_FLOOR = 6;
+
+function floorErrors(pageText) {
+  const {spans, lines} = codeLiterals(pageText);
+  const errors = [];
+  if (spans.length !== PAGE_SPAN_FLOOR) errors.push(`bonus page: ${spans.length} inline code spans, the floor pins exactly ${PAGE_SPAN_FLOOR}`);
+  if (lines.length !== PAGE_LINE_FLOOR) errors.push(`bonus page: ${lines.length} fenced lines, the floor pins exactly ${PAGE_LINE_FLOOR}`);
+  return errors;
+}
+
+test('floor: the live page holds exactly the pinned number of inline code spans and fenced lines', () => {
+  passes(floorErrors(LIVE_PAGE));
+  const {spans, lines} = codeLiterals(LIVE_PAGE);
+  assert.equal(spans.length, 34);
+  assert.equal(lines.length, 6);
+});
+
+test('floor: an emptied page passes the membership check and fails the floor, so the floor is what stops a vacuous pass', () => {
+  const emptied = page('Plain prose only.');
+  passes(bonusMembershipErrors(emptied, LIVE_PLAN));
+  assert.deepEqual(floorErrors(emptied), [
+    `bonus page: 0 inline code spans, the floor pins exactly ${PAGE_SPAN_FLOOR}`,
+    `bonus page: 0 fenced lines, the floor pins exactly ${PAGE_LINE_FLOOR}`,
+  ]);
+  passes(bonusMembershipErrors(LIVE_PAGE.slice(0, LIVE_PAGE.indexOf('In Level 4 you held')), LIVE_PLAN));
+  assert.equal(floorErrors(LIVE_PAGE.slice(0, LIVE_PAGE.indexOf('In Level 4 you held'))).length, 2);
+});
+
+test('floor: one span or one fenced line added or removed on the page, with the plan following so that membership stays green, turns it red', () => {
+  const added = LIVE_PAGE.replace('Watch the run with `/workflows`.', 'Watch the run with `/workflows` and `claude`.');
+  passes(bonusMembershipErrors(added, LIVE_PLAN));
+  assert.deepEqual(floorErrors(added), [`bonus page: 35 inline code spans, the floor pins exactly ${PAGE_SPAN_FLOOR}`]);
+  const removed = LIVE_PAGE.replace('Watch the run with `/workflows`.', 'Watch the run with the workflows view.');
+  passes(bonusMembershipErrors(removed, LIVE_PLAN));
+  assert.deepEqual(floorErrors(removed), [`bonus page: 33 inline code spans, the floor pins exactly ${PAGE_SPAN_FLOOR}`]);
+  const plan = LIVE_PLAN.replace('Watch the run with `/workflows`.', 'Watch the run with `/workflows` and `extra-literal`.');
+  const both = LIVE_PAGE.replace('Watch the run with `/workflows`.', 'Watch the run with `/workflows` and `extra-literal`.');
+  passes(bonusMembershipErrors(both, plan));
+  assert.deepEqual(floorErrors(both), [`bonus page: 35 inline code spans, the floor pins exactly ${PAGE_SPAN_FLOOR}`]);
+  const line = LIVE_PAGE.replace('model: <model>\n---', 'model: <model>\n\ntools: <tools>\n---');
+  assert.deepEqual(floorErrors(line), [`bonus page: 7 fenced lines, the floor pins exactly ${PAGE_LINE_FLOOR}`]);
+  const fewer = LIVE_PAGE.replace('model: <model>\n', '');
+  assert.deepEqual(floorErrors(fewer), [`bonus page: 5 fenced lines, the floor pins exactly ${PAGE_LINE_FLOOR}`]);
 });

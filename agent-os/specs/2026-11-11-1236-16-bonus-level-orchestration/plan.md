@@ -27,7 +27,7 @@ lead's opus meta-review compensates on the critical tier.
 | T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
 | T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | #179 | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
 | T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | #180 | sdd/16-bonus-level-orchestration/T3 | FAIL r0 test-only, PASS r1 | ENDORSE r1 |
-| T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | | | | |
+| T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | (pending) | sdd/16-bonus-level-orchestration/T4 | PASS r0, PASS r1 after RA-T4-1 | REJECT r0 (RA-T4-1, line 134), r1 meta skipped (A4) |
 
 ## Common to every task (C)
 
@@ -297,6 +297,14 @@ Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaD
   built from parts so no unbalanced `/*` or `*/` stays in the source; each equal to the old string at runtime; the
   zero-test guard's per-file count of `structure.test.mjs` equals its plain `test(` count, and `ok tests (..., N test
   cases)` rises from 711). Exact cases in the QA lead's ledger review log (T2 r0). Gate 1 re-run self-accepted.
+- A4 (2026-11-11, OWNER decision "Fast but checked", relayed by the main session): T4 merges on verifier PASS and
+  green CI; the QA lead meta-review of T4 counts only if back within about 10 minutes; on a FAIL with real defects one
+  fix round only. Final sweep time-boxed to about 20 minutes: one qa-final (opus) on the final spec tip with the guide
+  gates on Node 26.13.0 (npm ci, check, typecheck, build, check:built, build:offline), a browser and axe sweep of the
+  bonus page, Level 4 and Wrap-up at both widths and both colour modes, the referee, and the live sitemap URL and
+  prev/next check. Skipped by the owner: the QA lead's final brief and final review, the Node 24.20.0 run, the full
+  288-run matrix. Gate 2 self-accepted by the orchestrator if all of that is green. The spec PR stays the owner's
+  merge.
 - D-T2 (orchestrator): no `description:` frontmatter key on the bonus page; the meta description stays the first
   paragraph (the marker box text), which is accurate. Reversible product wording choice.
 

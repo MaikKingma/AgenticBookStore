@@ -16,7 +16,7 @@
 - [Bash script traps](bash-script-traps.md) — bash 3.2 vs 5, errexit, EXIT traps, git ref scripts, mutants
 - [RestClient acl traps](restclient-acl-traps.md) — @Autowired constructors, %2F paths, timeouts
 - [http replay techniques](http-replay-techniques.md) — live-proving .http files, seeded state
-- [Docs task techniques](docs-task-techniques.md) — README census scripts, reset claim, rg
+- [Docs task techniques](docs-task-techniques.md) — README census scripts, reset claim, rg, guide page plus plan mirror, claims table
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested @WebMvcTest, ProblemDetail keys
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callbacks without context, stub model
 - [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, installer isolation
