@@ -20,11 +20,11 @@ owner's merge.
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | remove every sync moment, rebalance the timetable, ban sync moments in the checker | critical | sonnet | #171 | sdd/15-guide-content-revision/T1 | PASS r1 | ENDORSE |
-| T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock, Level 1 creativity tip (A1) | elevated | sonnet | | | | |
-| T3 | guide | [T1] | 2 | Level 2 step 5 debugging section in `<details>`, demo text removed, Level 2 creativity tip (A1) | elevated | sonnet | | | | |
-| T4 | guide | [T1] | 2 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence, Level 4 creativity tip (A1) | elevated | sonnet | | | | |
-| T5 | guide | [] | 1 | wide tables in focusable labelled regions, A4 exclusion dropped, full 390 px sweep | critical | sonnet | | | | |
-| T6 | guide | [T1] | 2 | Level 3 creativity tip (A1) | standard | sonnet | | | | |
+| T2 | guide | [T1] | 2 | Level 1 step 3 rule file spelled out, step 5 `/context` text mock, Level 1 creativity tip (A1) | elevated | sonnet | #175 | sdd/15-guide-content-revision/T2 | PASS r1, A5 by implementer | not run (owner fast path) |
+| T3 | guide | [T1] | 2 | Level 2 step 5 debugging section in `<details>`, demo text removed, Level 2 creativity tip (A1) | elevated | sonnet | #174 | sdd/15-guide-content-revision/T3 | PASS r1, A4 by implementer | ENDORSE r1 |
+| T4 | guide | [T1] | 2 | Level 4 prepared setup and brownfield order per track, pinned OpenSpec install, Node sentence, Level 4 creativity tip (A1) | elevated | sonnet | #176 | sdd/15-guide-content-revision/T4 | FAIL r1 test-only, R1 R2 fixed by implementer | not run (owner fast path) |
+| T5 | guide | [] | 1 | wide tables in focusable labelled regions, A4 exclusion dropped, full 390 px sweep | critical | sonnet | #173 | sdd/15-guide-content-revision/T5 | PASS r1 | not run (owner fast path) |
+| T6 | guide | [T1] | 2 | Level 3 creativity tip (A1) | standard | sonnet | #172 | sdd/15-guide-content-revision/T6 | PASS r1 | ENDORSE r1 |
 
 Amendment A1 (owner request: parallelise the updates per level): T5 runs beside T1 and T2, T3, T4, T6 run beside each
 other after T1, each in its own git worktree (own build dirs, own ports), never two agents in one worktree. Task PRs
@@ -256,6 +256,14 @@ From the T1 meta-review (qa-lead ENDORSE r1; full text in the QA ledger section 
 - FF-T1-5 (qa-final): IX-11 to IX-15 match a Format cell anywhere in the agenda, not per row; qa-final re-runs the
   per-row arithmetic census from a final-prefixed copy of `s15-t1-qa-timetable.mjs`.
 
+From the T3 meta-review (qa-lead ENDORSE r1): FF-T3-1 and FF-T3-3 bound as A4; FF-T3-2 (qa-final): the troubleshooting
+pointer and the Part B fallback are present on the tip and their links land on `#part-a-lsp` and `#part-b-mcp` in both
+builds.
+
+From the T6 meta-review (qa-lead ENDORSE r1): FF-T6-1 (pin the tip's examples `deny rule` and `/ship`; witness the plural
+title `Sync moments`) not bound, owner residual and qa-final probe; FF-T6-2 (qa-final): every per-page floor equals
+its live count and each level page shows its tip exactly once.
+
 ## Amendments
 
 - A1 (2026-11-11, owner request "parallelise the updates per level", relayed mid-run; gate re-run self-accepted).
@@ -278,6 +286,24 @@ From the T1 meta-review (qa-lead ENDORSE r1; full text in the QA ledger section 
 - A2 (2026-11-11, orchestrator, from the T1 meta-review; gate re-run self-accepted, test-only plus one regex line).
   T6's fileScope gains `guide/scripts/structure.test.mjs` (insertion-only) and `guide/scripts/rules/structure.mjs`
   limited to the `SYNC_MOMENT_TITLE` line, for FF-T1-1. T3 carries FF-T1-2 inside its existing scope; T4 carries FF-T1-3.
+- A3 (2026-11-11, orchestrator, from impl-t4's finding). T4's fileScope gains `guide/docs/06-wrap-up.md`, only the
+  sentence that said Level 4 needed no install (now true for Track A, pinned by a node:test). T4's deletion of the stale
+  `SWEEP_EXCLUDED` key `plan:330 /plan` is accepted only together with a pin of the Track C `/plan` literal (QA R2).
+- A4 (2026-11-11, orchestrator, from the T3 meta-review FF-T3-1 and FF-T3-3). T3 adds the deny-list witnesses
+  `watch the demos` and `watch the demonstration` (test-only) and one sentence, page and plan, saying `claude --debug`
+  writes its log to a file under `~/.claude/debug/` (look for `LSP server` and `failed to start`), per the plugins
+  troubleshooting docs; pinned by L2-34.
+- A5 (2026-11-11, orchestrator, from the T2 verifier F1 to F3). The official docs document no in-session display of a
+  loaded path-scoped rule (`/memory` lists memory file locations; `/context` lists launch-time memory files). The Level 1
+  checkpoint becomes a behavioural check (a domain change follows the rule's "No setters." line) after one prose
+  sentence on when a rule loads; the one checklist item and its plan twin (and the skeleton fixture copy of that line)
+  claim only that behaviour. The window sentence of the `/context` mock and the checkpoint line are pinned.
+- A6 (2026-11-11, owner direction relayed by the main session: fast path, spec PR ready in about one hour). Cut process
+  overhead, never the checks: no further verifier or QA lead round for the T2 and T3 amendments (the implementer's gate
+  evidence counts); T4 and T5 merge on the verifier's verdict with real defects fixed in one round and no meta-review;
+  T6 merges on verifier PASS; task PRs merge back to back with green CI; the full guide gate set runs once on the final
+  spec tip; one time-boxed qa-final (opus) over the full diff; no QA lead final brief, final review or Gate 2 QA
+  assessment. The QA lead's ledger records that T2, T4 and T5 were not meta-reviewed.
 
 ## Residuals for the owner (expected)
 
@@ -290,3 +316,13 @@ From the T1 meta-review (qa-lead ENDORSE r1; full text in the QA ledger section 
   `docs/spec-pack/README.md` line 15, spec 10 line 168, plan line 173 (distributor on the projector machine, a break
   action, unchanged).
 - RA-1 to RA-4 from spec 14 stay open. Rendered checks run in a local rig, not in CI.
+- Pack text outside scope that is now stale: `sdd-framework-guide.md` line 100 ("already installed and configured"
+  for Level 4), the plan risk row "Facilitator has a spare Max account for demos.", the "35 minutes" Level 4 texts that
+  mirror `sdd-framework-guide.md` and `level-4-feature-briefs.md` (kept; one sentence explains the rest of the 42 solo
+  minutes).
+- The Level 1 behavioural checkpoint depends on Claude following the rule (a check, not a display); a rehearsal row
+  can confirm it.
+- Test-only follow-ups not bound under A6: FF-T6-1; T5 verifier findings (duplicated comment line above the plugin list
+  in `docusaurus.config.ts`, scroll-margin wording narrower than claimed in README, CSS comment and sweep record, extra
+  label and line-number pins, a CI pin for the table-region CSS block); T3 troubleshooting pointer unpinned.
+- T2, T4 and T5 have no QA lead meta-review (A6); T5 was tiered critical.
