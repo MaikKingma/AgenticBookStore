@@ -8,3 +8,150 @@ sidebar_position: 7.5
 This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home. It has no time slot of its own and no solution branch, because you build your own flow. Not finished with Level 4? Go to the [Wrap-up](./06-wrap-up.md).
 
 :::
+
+In Level 4 you held the whole flow together yourself. In this bonus level you split that flow into roles and decide which steps an agent may take and which stay with you.
+
+Four words have a fixed meaning on this page:
+
+- **Main session**: the Claude Code session you type in. You have used it in every level.
+- **Subagent**: a helper that the main session hands one task to. You define it in a file.
+- **Frontmatter**: the settings block at the top of a Markdown file. Your Level 1 rule and your Level 3 skill both have one.
+- **Workflow**: a Claude Code dynamic workflow, a script that Claude writes for the task you describe and that a runtime runs in the background. It is not the Level 3 skill.
+
+By the end you will have four things: your team's flow for one feature on paper, two subagents of your own, one feature carried through your flow with you as the gate and, if your account has the feature, that flow written by Claude as a workflow.
+
+:::note[At a glance]
+
+**Goal:** Plan one feature as a flow with human gates, define a research agent and a QA agent, and carry the feature through your flow from the main session.
+
+**Start:** Where you finished Level 4. No new branch.
+
+**You need:** Claude Code 2.1.154 or later and workflows on your account, for Part D only. Parts A to C do not use workflows.
+
+**Time:** There is no fixed time. Do as much as you like.
+
+:::
+
+**What you bring from Levels 3 and 4**
+
+- The spec flow of the track you chose in Level 4. The tracks use different commands, so this page says "your track's spec flow".
+- Your Level 3 permission rules and hooks.
+- Your `/ship` command and a project where `./mvnw verify` is green.
+
+## Part A: Think first
+
+Take one feature from the request to the finished change, the way your own team would do it. Here is a starting list. Cross out, add or reorder steps until it matches how your team really works.
+
+1. Understand the request.
+2. Research the code and the options.
+3. Plan the change.
+4. Implement it.
+5. Verify it.
+6. Review it.
+
+Write your list down and mark every step **agent** or **human gate**. An agent step may run without you. A human gate is a step where you read the result and decide before anything goes on.
+
+Questions to answer for each step:
+
+- What does the step hand to the next one?
+- How costly is it to redo if it goes wrong?
+- What would you check before you trust it?
+- Which part of your track's spec flow from Level 4 already covers it?
+
+Keep at least one human gate. You test it in Part C.
+
+## Part B: Define two subagents
+
+A subagent works in its own context window. It does not see your conversation, and it hands back a summary when it is done. That keeps long searches and logs out of your main session.
+
+A subagent is a Markdown file with frontmatter. The file lives in `.claude/agents/` in your project. Below the frontmatter, the body holds the instructions for the subagent. Only `name` and `description` are required.
+
+You define the parts of the file by answering questions, not by copying code:
+
+| Part | What it does | Question you answer |
+|---|---|---|
+| `name` | Names the subagent. Required. | What do you call it, so that you can ask for it by name? |
+| `description` | Tells Claude when to hand a task to it. Required. | In which situations should the main session use it? |
+| `tools` | Lists the tools it may use. Optional: leave it out and it inherits every tool available to subagents. | What does the job need, and what must it not touch? |
+| `model` | Picks the model it runs on. Optional: use an alias such as `sonnet`, or `inherit` for the model of the main session. | Does the job need a stronger or a cheaper model? |
+| The body | The instructions below the frontmatter. | What is its job, and how should it work? |
+| What it hands back | The summary it gives to the main session. | What does the main session need to read to decide the next step? |
+
+You build two subagents:
+
+- **A research agent.** It reads and reports. Questions: Which files and docs may it look at? What does your plan step need from it?
+- **A QA agent.** It checks behaviour: it runs the tests and walks through the scenarios of your spec, then reports what passed and what failed. Questions: Which commands may it run? How should it report a failure?
+
+A research agent that only reads does not need `Edit` or `Write`: leave them out of its `tools`. Tool names such as `Read`, `Edit`, `Write` and `Bash` are listed in the [tools reference](https://code.claude.com/docs/en/tools-reference).
+
+If an agent keeps `Bash`, limit risky commands with the permission rules from Level 3, not with the `tools` line. A Bash deny rule in your settings applies to the main session and to subagents. Your Level 3 hooks live in your settings too, and hooks from settings files also apply inside subagents.
+
+To create a file, answer the questions above and ask the main session to write it for you, or write it yourself. Read every file before you keep it. This is the whole shape of the frontmatter, with every value left for you:
+
+```yaml
+---
+name: <name>
+description: <when to use it>
+tools: <tools>
+model: <model>
+---
+```
+
+On the `solution/level-3` branch and on the `start/level-4-<track>` branches, `.claude/agents/architecture-reviewer.md` is an example of such a file. It is an architecture reviewer, so it is neither your research agent nor your QA agent.
+
+The official [guide to custom subagents](https://code.claude.com/docs/en/sub-agents) lists every field. Create your two files now, one for research and one for QA.
+
+## Part C: Coordinate them from the main session
+
+Pick a small feature. A good choice is the Level 4 feature brief that you did not build. Keep it small enough to finish.
+
+1. Start `claude` in your project. If `.claude/agents/` did not exist when your session started, restart Claude Code first so that it loads your first agent file.
+2. Ask the main session to use your research agent for the first step of your flow. Name the agent in your request. Claude decides whether to hand the task over, so check that the agent really ran.
+3. Stop and read what the research agent handed back. This is a human gate. Correct it, or ask for a better summary, before you go on.
+4. Run your track's spec flow from Level 4 for the feature, with the research summary as input.
+5. Ask the main session to use your QA agent on the change. Read its report and fix what it found.
+6. Run `./mvnw verify`, then commit through your `/ship` command from Level 3.
+
+You can also chain the agents in one request: ask Claude to use the research agent, then the QA agent. Each agent hands its results to Claude, which passes the relevant context to the next one.
+
+Look back and note where you stepped in: which results did you accept, change or reject?
+
+## Part D: Let Claude write it as a workflow
+
+A workflow is a script that Claude writes for the task you describe, and a runtime runs it in the background while your session stays responsive. You do not write the script, and this page shows none. You describe the flow, and you read what Claude wrote.
+
+First check that you have workflows:
+
+1. Run `claude --version`. You need 2.1.154 or later, the version that introduced dynamic workflows.
+2. Workflows are available on all paid plans. On Pro, open `/config` and turn on the Dynamic workflows row.
+3. An organization admin can switch workflows off for the whole organization. If they are off for you, ask your admin.
+
+No workflows? Then you are done: Part C was the bonus level. Go to the [Wrap-up](./06-wrap-up.md).
+
+If you have workflows:
+
+1. In the main session, ask Claude in your own words for a workflow that runs one stage of your flow, for example the research stage. Claude treats a direct request as the opt-in. Describe the research role and the QA role from Part B in your request.
+2. Read the script before it runs. In default (manual) and acceptEdits mode, Claude Code asks you to approve every run, and the prompt has a **View raw script** option. In auto mode it asks only at the first launch, and in bypass mode never. So before step 1, switch from auto to default or acceptEdits mode, as in Level 3.
+3. Watch the run with `/workflows`.
+4. Read the result. A workflow has no mid-run user input: it pauses on its own only for permission prompts and a usage-limit wait. So your human gate sits between two runs: run each stage as its own workflow, read the result, and only then start the next one.
+5. A run starts many agents, and runs count toward your plan's usage and rate limits. Start with a small slice of the feature.
+6. If a run is worth keeping, save it from the `/workflows` view, in the project location, and run it again later as `/<name>`.
+
+Start every workflow from the main session: a subagent cannot start one. The official [guide to dynamic workflows](https://code.claude.com/docs/en/workflows) has the rest.
+
+:::tip[Make it yours]
+
+Change your team until it fits you. Add a human gate where you did not trust an agent, drop one where you did, or swap a role: put a security reviewer in place of the QA agent. The best harness has a creative engineer tweaking it all the time.
+
+:::
+
+## Before you move on
+
+Which gate did you keep human, and why?
+
+## Bonus cleared when
+
+- [ ] Your flow for one feature is written down, with at least one step marked as a human gate.
+- [ ] Two subagent files of your own are in `.claude/agents/`, each with a description, the tools you chose and what it hands back.
+- [ ] One feature went through your flow with both subagents, and `./mvnw verify` is green.
+- [ ] If you have workflows: you read the script of one run before it ran, and you can say where your human gate sits.

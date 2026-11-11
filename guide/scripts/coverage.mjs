@@ -192,6 +192,32 @@ M M M M M M M M M M      .  Free space                    100k  (50%)
 . . . . . . . . . .
 . . . . . . . . . .`;
 
+// The bonus level page (spec 16, task T4): the sentences, the table and the frontmatter fragment that hold its code spans and
+// fenced lines. The page and the plan section "Bonus level" carry each of them word for word (folded when compared).
+const BONUS_FILE_SENTENCES =
+  'The file lives in `.claude/agents/` in your project. Below the frontmatter, the body holds the instructions for the subagent. Only `name` and `description` are required.';
+const BONUS_PARTS_TABLE = `| Part | What it does | Question you answer |
+|---|---|---|
+| \`name\` | Names the subagent. Required. | What do you call it, so that you can ask for it by name? |
+| \`description\` | Tells Claude when to hand a task to it. Required. | In which situations should the main session use it? |
+| \`tools\` | Lists the tools it may use. Optional: leave it out and it inherits every tool available to subagents. | What does the job need, and what must it not touch? |
+| \`model\` | Picks the model it runs on. Optional: use an alias such as \`sonnet\`, or \`inherit\` for the model of the main session. | Does the job need a stronger or a cheaper model? |
+| The body | The instructions below the frontmatter. | What is its job, and how should it work? |
+| What it hands back | The summary it gives to the main session. | What does the main session need to read to decide the next step? |`;
+const BONUS_TOOLS_SENTENCES =
+  'A research agent that only reads does not need `Edit` or `Write`: leave them out of its `tools`. Tool names such as `Read`, `Edit`, `Write` and `Bash` are listed in the';
+const BONUS_LIMIT_SENTENCES =
+  'If an agent keeps `Bash`, limit risky commands with the permission rules from Level 3, not with the `tools` line. A Bash deny rule in your settings applies to the main session and to subagents. Your Level 3 hooks live in your settings too, and hooks from settings files also apply inside subagents.';
+// The one frontmatter fragment of the page: every value is a placeholder, no instruction text (rule fragment of bonus-page.test.mjs).
+const BONUS_FRONTMATTER_FRAGMENT = `---
+name: <name>
+description: <when to use it>
+tools: <tools>
+model: <model>
+---`;
+const BONUS_EXAMPLE_SENTENCES =
+  'On the `solution/level-3` branch and on the `start/level-4-<track>` branches, `.claude/agents/architecture-reviewer.md` is an example of such a file. It is an architecture reviewer, so it is neither your research agent nor your QA agent.';
+
 export const ENTRIES = [
   // Setup check (WP section 3)
   setup('SU-01', 'WP:50', 'command', 'claude --version'),
@@ -644,6 +670,22 @@ export const ENTRIES = [
   // Bonus level (spec 16): the optional page between Level 4 and the Wrap-up. BO-01 pins the sentence of its marker box
   // (the structure rule pins the box itself: first on the page, the Wrap-up link inside it).
   bonus('BO-01', 'bonus level marker (spec 16)', 'text', 'This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home.'),
+  // Spec 16, task T4: the content of the page. Every inline code span and fenced line of the plan section "Bonus level" sits in the
+  // snippet of one of these entries (the literal sweep of coverage-manifest.test.mjs), and the page carries each snippet word for word.
+  bonus('BO-02', 'bonus level part B (spec 16)', 'text', BONUS_FILE_SENTENCES),
+  bonus('BO-03', 'bonus level part B (spec 16)', 'text', BONUS_PARTS_TABLE),
+  bonus('BO-04', 'bonus level part B (spec 16)', 'text', BONUS_TOOLS_SENTENCES),
+  bonus('BO-05', 'bonus level part B (spec 16)', 'text', BONUS_LIMIT_SENTENCES),
+  bonus('BO-06', 'bonus level part B (spec 16)', 'command', BONUS_FRONTMATTER_FRAGMENT),
+  bonus('BO-07', 'bonus level part B (spec 16)', 'text', BONUS_EXAMPLE_SENTENCES),
+  bonus('BO-08', 'bonus level part C (spec 16)', 'text', 'Start `claude` in your project. If `.claude/agents/` did not exist when your session started, restart Claude Code first so that it loads your first agent file.'),
+  bonus('BO-09', 'bonus level part C (spec 16)', 'text', 'Run `./mvnw verify`, then commit through your `/ship` command from Level 3.'),
+  bonus('BO-10', 'bonus level part D (spec 16)', 'text', 'Run `claude --version`. You need 2.1.154 or later, the version that introduced dynamic workflows.'),
+  bonus('BO-11', 'bonus level part D (spec 16)', 'text', 'Workflows are available on all paid plans. On Pro, open `/config` and turn on the Dynamic workflows row.'),
+  bonus('BO-12', 'bonus level part D (spec 16)', 'text', 'Watch the run with `/workflows`.'),
+  bonus('BO-13', 'bonus level part D (spec 16)', 'text', 'If a run is worth keeping, save it from the `/workflows` view, in the project location, and run it again later as `/<name>`.'),
+  bonus('BO-14', 'bonus level cleared when (spec 16)', 'text', 'Two subagent files of your own are in `.claude/agents/`, each with a description, the tools you chose and what it hands back.'),
+  bonus('BO-15', 'bonus level cleared when (spec 16)', 'text', 'One feature went through your flow with both subagents, and `./mvnw verify` is green.'),
 ];
 
 // Rows of the research table that the script does not match, with the reason. The verifiers
