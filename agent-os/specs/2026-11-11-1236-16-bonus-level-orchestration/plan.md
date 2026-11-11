@@ -25,7 +25,7 @@ lead's opus meta-review compensates on the critical tier.
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
-| T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | | | | |
+| T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | (pending) | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
 | T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | | | | |
 | T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | | | | |
 
@@ -255,6 +255,14 @@ Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaD
   `- 2026-11-11 (spec 16, T2): ...`.
 - FF-T1-5 (qa-final): right before hand-back, re-run the live chain check on the 11 live pages (0 errors) and re-curl
   the live sitemap; it must equal the T1 list.
+- FF-T2-1 (T3 implementer and verifier): T3 writes MDX comment witnesses in `content.test.mjs` and
+  `bonus-page.test.mjs`; build every `/*`, `*/` and `{/*` inside test literals from parts. The verifier quotes, per
+  edited test file, the zero-test guard's count and the plain `^[ \t]*(test|it)\s*\(` count; they must be equal.
+- FF-T2-2 (T3 verifier, C0-3): quote the `ok tests (..., N test cases)` line; N is at least 711 plus T3's own tests plus
+  the cases RA-T2-3 recovers, and it never drops in later tasks.
+- FF-T2-3 (T4 verifier and qa-final): the rendered Wrap-up link in the marker box: text `Wrap-up`, href
+  `/AgenticBookStore/wrap-up` (Pages) or the hash route (offline), visible at 390 px, both builds (residual R4: the
+  source check is a substring test).
 - Optional (T3 owns README edits): `guide/README.md:24` still describes `check:built` as a `:::` scan only (predates
   spec 16); T3 may correct it while adding its rule bullets.
 
@@ -264,6 +272,20 @@ Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaD
   `guide/scripts/level-progress.test.mjs` changes from "only if their T1 fixtures must follow" to required; the edits
   are listed retargets plus the `fullBuild()` page for the bonus route. Test-only, inside T2, no criterion weakened;
   Gate 1 re-run self-accepted.
+- A2 (2026-11-11, orchestrator, from the T2 implementer's report): T2's scope gains two comment-only lines,
+  `guide/scripts/check-built.mjs:4` and `guide/scripts/rules/built.mjs:62`, which named "the 11 live routes" and are
+  now 12, so the T2.3 proof grep stays clean. Comment-only, no code change; Gate 1 re-run self-accepted. T2.6 note:
+  git prints the plan's single insertion hunk as `@@ -452,0 +453,4 @@` because it slides a blank-line-bounded block;
+  the criterion is the content position (after line 451, before `## 10. Wrap-up`, one hunk of `+` lines only).
+- A3 (2026-11-11, orchestrator, from the QA lead's T2 r0 ENDORSE condition): T3's fileScope gains
+  `guide/scripts/structure.test.mjs`, limited to the test-only Required Actions RA-T2-1 (raw-text witnesses with no
+  blank line between the offending line and the box, expecting `[NOT_FIRST]`), RA-T2-2 (`[':::tip[Hint]', ':::']` in
+  the `before` list, expecting `[NOT_FIRST]`) and RA-T2-3 (comment-opener literals of the "comment before the box" test
+  built from parts so no unbalanced `/*` or `*/` stays in the source; each equal to the old string at runtime; the
+  zero-test guard's per-file count of `structure.test.mjs` equals its plain `test(` count, and `ok tests (..., N test
+  cases)` rises from 711). Exact cases in the QA lead's ledger review log (T2 r0). Gate 1 re-run self-accepted.
+- D-T2 (orchestrator): no `description:` frontmatter key on the bonus page; the meta description stays the first
+  paragraph (the marker box text), which is accurate. Reversible product wording choice.
 
 ## Decisions
 

@@ -36,3 +36,10 @@ Complements [[qa-docs-checker-specs]] (checker-as-oracle traps). Found at spec 1
 8. **A script-code ban scoped to spans and fences:** the only live prose that matches (`Break the agent (25 min)`)
    sits in the plan, not on a page, so the live run cannot kill a "whole text" mutant; prose-negative witnesses
    must do it.
+9. **Comment openers in test literals corrupt the zero-test count.** `rules/zero-tests.mjs` strips block comments
+   textually, so a literal `'{/* unclosed'` in a test file hides every `test(` up to the next `*/` (spec 16 T2:
+   `ok tests` fell 715 -> 711 while tests were added). Direct implementers to build `/*` and `*/` from parts and
+   verifiers to compare the guard count with a plain `^[ \t]*(test|it)\s*\(` count per edited file.
+10. **"Before the element" witnesses need one reason and adjacency.** A fixture helper that adds a blank line hides
+    the line directly above (an `index < start - 1` mutant survives); an admonition witness WITH a body is killed by
+    the body line, not the `:::` line. Name raw-text witnesses (no separator, empty admonition) at strategy time.

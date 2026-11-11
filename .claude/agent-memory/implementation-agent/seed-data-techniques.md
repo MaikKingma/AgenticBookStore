@@ -22,5 +22,4 @@ metadata:
   stock rows; line quantity and price; book price; author name; stock flag and level), assert counts, then ONE equality
   over all tables. A deletion check is a separate test. Edits to a subset of tables let per-column `DO UPDATE SET`
   mutants survive. Pin ASCII-only SQL with a byte scan of the classpath resource.
-- Growing a seed: prove "old lines unchanged" with an ordered-subsequence script plus two negative-control copies. Anchor
-  count greps with `^` (`grep -c '@Test'` counts `@TestInstance`).
+- Growing a seed: prove "old lines unchanged" with an ordered-subsequence script plus two negative-control copies.

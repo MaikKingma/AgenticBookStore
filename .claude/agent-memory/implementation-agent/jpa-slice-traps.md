@@ -23,11 +23,9 @@ metadata:
 - To pin a tiebreak column in `order by`, insert the tie row that must come last first: a small PostgreSQL sort keeps
   insertion (heap) order for ties, so a dropped tiebreak then fails. Use fixed UUIDs with a first hex digit 0 to 7 (PostgreSQL
   compares `uuid` unsigned, `UUID.compareTo` signed). Hibernate 7.4 accepts arithmetic (`s.a - s.b`) in a JPQL `order by`.
-  A two-row tie cannot defeat a wrong tiebreak column (`x asc` or `x desc` always matches one order): use a tie group of three
-  or more rows whose every other column runs in neither direction in the asserted order. PostgreSQL sorts NULL first under
-  `desc` and last under `asc`, so a nullable column needs its NULL in the middle row. "Every other column" includes joined
-  collection columns (`join fetch o.lines l`: a mutant can order by `l.isbn`): tabulate each order and line column before
-  reporting, and check every exact-list test that has a tie, not only the ordering one.
+  A two-row tie cannot defeat a wrong tiebreak column: use a tie group of three or more rows whose every other column runs in
+  neither direction in the asserted order (joined collection columns too: `join fetch o.lines l` can be ordered by `l.isbn`).
+  PostgreSQL sorts NULL first under `desc` and last under `asc`: a nullable column needs its NULL in the middle row.
 - `JdbcTemplate.queryForMap` returns `timestamptz` as `Timestamp`, `date` as `java.sql.Date`, `numeric` as `BigDecimal`.
 - Migration shape as a slice test: `information_schema.columns` (`data_type`, `character_maximum_length`, `is_nullable`,
   `column_default`) plus `pg_constraint` with `contype <> 'n'` (PG 18 lists NOT NULL as `n`). An over-long varchar insert logs
