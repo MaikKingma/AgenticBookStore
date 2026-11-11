@@ -44,11 +44,25 @@ No stack skill exists for Node/Docusaurus; follow the spec folder's strategy.md 
 - Frozen files: `shasum -a 256` before the first edit. Mutants: run on a scratchpad COPY of `guide/` + `docs/spec-pack` with
   `node_modules` symlinked, via a node runner (edit, spawn `node --test` or `scripts/check.mjs`, restore by hash). Count only
   NEW failing titles versus the baseline as kills. Call helper scripts by absolute path, never `~`, `$VAR` args or `$?`.
+- "Survives the old gate, dies against the new" proof: one runner, two variants (new tests vs the prior gate's test file swapped
+  in from `git show <sha>:path` saved by a script); the same mutant list gives SURVIVED then KILLED. In a git worktree the Bash
+  guard refuses `git show ... > file` inline: put every git read in a script file. A fixture-page line number: count the blank
+  line after frontmatter (a 4-line head puts the first box on line 6).
 - Loading `docusaurus.config.ts` from node:test prints MODULE_TYPELESS (breaks the 0-warning baseline): pin config on source text.
 - A "no body H1" rule must cover ATX with 0-3 spaces of indent and setext; a box parser must keep all fenced blocks per entry.
 - `coverage-manifest.test.mjs` reads the SKELETON snapshot pages (rule b is silent there): a test pinning live page text must read
   `readPages(join(GUIDE, 'docs'))`. `SWEEP_EXCLUDED` keys and the `plan:<n>` witnesses move on ANY plan edit above them, also an
   inserted agenda sentence: remap old -> new by a script (read the actual list from the failing deepEqual diff), reasons untouched.
+- A sweep literal is covered by SUBSTRING: a snippet holding `/plan-product` covers the literal `/plan`, so its `SWEEP_EXCLUDED` key
+  goes stale (delete it with a comment naming the covering entry). `plan:<n>` also hides in assertions (`includes('plan:58 ...')`):
+  grep `plan:[0-9]`, not only keys. A whole PowerShell line newly in the plan breaks a test that used it as "only the SDD guide
+  states it" (check-content scratch-pack witness): retarget it to another sdd-only line.
+- A new plan fence (rule file, text mock) is swept line by line: pin it with ONE whole-block `kind: 'command'` entry (snippet is a
+  template literal, folded on both sides) and keep `#` out of mock lines (the sweep strips whitespace + `#...`). A new inline span
+  in the plan needs an entry whose snippet CONTAINS it: pin the sentence that holds it, not the bare span.
+- `scanMarkdown().blocks[].body` keeps the indent of a list item that holds the fence (plan steps): dedent by the opening fence
+  line's indent before comparing a block with a file. Page text pinned by a node:test of its own (byte equality, mock arithmetic)
+  is read from the live page, never the skeleton snapshot.
 
 ## MDX scanner (scripts/lib/mdscan.mjs)
 - Scan fences and comments in ONE pass (a fence inside `{/* */}` is not code, a comment inside a fence is). A comment opener
@@ -71,7 +85,9 @@ No stack skill exists for Node/Docusaurus; follow the spec folder's strategy.md 
   run build` (~2 s warm). Capture fixtures as the `<article>` slice (hash links carry U+200B).
 - The offline build is client rendered: its `index.html` holds no table, so a built-HTML rule sees nothing there. Count compiled
   MDX in the js chunks (`.jsx(s.table,` vs `className:"guide-table-region"`) and the DOM in the rig instead.
-- Playwright: import by absolute path from a scratch install; wait for `document.title` to update (react-helmet).
+- Playwright: import by absolute path from a scratch install; wait for `document.title` to update (react-helmet). Theme: set
+  `newContext({colorScheme})` and wait for `dataset.theme` (a localStorage seed did not switch it). A `<details>` (Docusaurus
+  Details animates) flips `open` first: wait `locator.waitFor({state: 'visible'})` before `isVisible()`.
 
 ## Rig: navbar, theme wrappers, breadcrumbs (axe, focus rings)
 - axe `color-contrast` lists a label as `incomplete` when its fill is a pseudo-element or a negative z-index span under
