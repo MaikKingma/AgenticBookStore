@@ -145,23 +145,68 @@ prices, no migration (app fails at startup with `ddl-auto=validate`), ArchUnit v
    - A path instead of an essay: "Read docs/architecture.md before adding or moving classes." Compare with the
      import syntax `@docs/architecture.md`: an import loads the whole file at session start and costs context on
      every task; a plain path lets Claude read it only when needed. Try both and look at `/context`.
-3. Add path-scoped rules in `.claude/rules/` (they load only when Claude touches matching files):
-   - `domain.md` with `paths: ["bookstore/src/main/java/**/domain/**"]`
+3. Add path-scoped rules. A path-scoped rule is a markdown file in `.claude/rules/` whose header names the files it
+   is about. Create `.claude/rules/domain.md` with this exact content:
+
+   ```markdown
+   ---
+   paths:
+     - "bookstore/src/main/java/**/domain/**"
+   ---
+   # Domain layer
+   - Aggregates: private constructor, an intention-revealing static factory for creation, `restore(...)` for rehydration.
+   - Change state through behaviour methods named after the business action. No setters.
+   - Check invariants inside the aggregate and throw an unchecked exception from the `domain` package.
+   - Register domain events in the aggregate; flows publish them after saving via `pullDomainEvents()`.
+   - Value objects are records that validate in the compact constructor.
+   - Domain tests are plain JUnit and AssertJ, without a Spring context.
+   ```
+
+   The header between the two `---` lines is YAML frontmatter: `paths` lists globs relative to the project root, and
+   the rule loads only when Claude reads or edits a file that matches one, not at session start. Add two more rules
+   the same way:
    - `data-and-migrations.md` with `paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]`
    - `testing.md` with `paths: ["**/src/test/**"]`
 4. Explore the hierarchy. Add a conflicting line to your user file `~/.claude/CLAUDE.md` (for example
    "Always use Lombok") and a personal `CLAUDE.local.md` (for example your preferred commit style). Start a new
    session and run `/memory` and `/context`. Observe: files are **concatenated, not overridden**. When instructions
    conflict, the agent has to choose. Remove the Lombok line afterwards.
-5. Context rot: run `/context` and read the grid. Learn the three moves: `/clear` between unrelated tasks,
-   `/compact focus on <topic>` when a long task drifts, and delegate big reads to a subagent ("use a subagent to
-   find every place that formats money") so only the summary lands in your context. A 1M-token window is not an
-   attention guarantee.
+5. Context rot: run `/context` and read the grid. The grid below is an illustration, not a screenshot: your symbols,
+   names and numbers differ. Each symbol stands for 2k tokens of a 200k window.
+
+   ```text
+   Context usage: 100k of 200k tokens (50%)
+
+   S S S S S S S C K M      S  System prompt                  14k   (7%)
+   M M M M M M M M M M      C  CLAUDE.md and auto memory       2k   (1%)
+   M M M M M M M M M M      K  Skill descriptions              2k   (1%)
+   M M M M M M M M M M      M  Messages and tool results      82k  (41%)
+   M M M M M M M M M M      .  Free space                    100k  (50%)
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   . . . . . . . . . .
+   ```
+
+   What to watch for:
+   - S, C and K load before you type anything. Every line of your `CLAUDE.md` costs attention on every task.
+   - M grows with every prompt, answer, file read and tool result. It is the part you control.
+   - Free space shrinks as M grows. Long before it reaches zero, answers drift: that is context rot.
+   - Same task but drifting: `/compact focus on <topic>`. Unrelated next task: `/clear`.
+
+   Learn the three moves: `/clear` between unrelated tasks, `/compact focus on <topic>` when a long task drifts, and
+   delegate big reads to a subagent ("use a subagent to find every place that formats money") so only the summary
+   lands in your context. A 1M-token window is not an attention guarantee.
 6. Redo the Level 0 task in a fresh session (`/clear`). Compare with your observation card.
+
+**Make it yours:** The best harness has a creative engineer who keeps tweaking it. Pick one thing Claude got wrong in
+Level 0 and write a rule of your own for it, for example `.claude/rules/acl.md` for the distributor client. Skills,
+hooks and commands of your own can follow in later levels. This is optional.
 
 **Level cleared when**
 - `CLAUDE.md` has at most 60 lines.
-- `/context` shows the path-scoped rules loading only for matching files.
+- Asked to change a class in `domain`, Claude follows `.claude/rules/domain.md`: a behaviour method named after the business action, no setters.
 - In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no ArchUnit
   violation.
 
