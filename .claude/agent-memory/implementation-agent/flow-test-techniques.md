@@ -23,13 +23,12 @@ metadata:
 - Order and "which element" tests (`containsExactly` on a port list, multi-aggregate flows): make the stubbed order monotonic in
   NO column, asc or desc (id, every int field, derived values like available, booleans), else a re-sorting mutant survives.
   Use three rows with the reported row in the middle; the asserted list itself (shortage `details`, published stock events)
-  needs three entries too. QA counts every attribute of the entity the flow holds in scope (isbn, title, price), not only the
-  asserted record's fields. A shared fixture list asserted in several orders: one changed literal can fix one order and make
-  another monotone, so tabulate every order. Constant columns (every reorder level 3) let a stable Java sort survive: vary them.
-  Add the save-never/no-events check to read-side rejection tests (QA counts them).
-- Self-probe the QA probe list before handing over: one script in `.claude/comms/tmp/` builds each mutant with `perl -0pe` from
-  a `cp -p` original, installs it by `cp`, runs `-Dtest=<FlowTest>`, restores and compares `shasum`; flag "MUTANT NOT APPLIED"
-  when the regex misses (`cmp -s`). Mutants that cross lines need `/s`.
+  needs three entries too. QA counts every attribute of the entity the flow holds in scope. A shared fixture list asserted
+  in several orders: tabulate every order. Constant columns let a stable Java sort survive: vary them. Add the
+  save-never/no-events check to read-side rejection tests.
+- Self-probe the QA probe list before handing over: a script in `.claude/comms/tmp/` builds each mutant with `perl -0pe` from
+  a `cp -p` original, runs `-Dtest=<FlowTest>`, restores and compares `shasum`; flag "MUTANT NOT APPLIED" when the regex
+  misses (`cmp -s`). Mutants that cross lines need `/s`.
 - Flow log assertions: `@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})` works in a plain unit test.
   Logback's unconfigured pattern and Boot's pattern both contain `" WARN "`, so
   `containsOnlyOnce(" WARN ").containsPattern(" WARN .*" + id)` pins level and id on one line without filtering the output (QA

@@ -17,13 +17,14 @@ import {withSkeletonGuideCopy} from './fixtures/skeleton-docs.mjs';
 
 const FINISHED = '---\ntitle: Welcome\nslug: /\n---\n\nHello.\n';
 const MARKED = `---\ntitle: Welcome\nslug: /\n---\n\n${SKELETON_MARKER}\n`;
-const ELEVEN = [
+const TWELVE = [
   'docs/00-setup-check.md',
   'docs/01-level-0-break-the-agent.mdx',
   'docs/02-level-1-context-engineering.mdx',
   'docs/03-level-2-give-your-agent-eyes.mdx',
   'docs/04-level-3-behavioral-control.mdx',
   'docs/05-level-4-spec-driven-development.mdx',
+  'docs/06-bonus-level-orchestration.mdx',
   'docs/06-wrap-up.md',
   'docs/index.md',
   'docs/reference/architecture.md',
@@ -160,7 +161,7 @@ test('cli: an explicit root keeps the marker pages pending, the ban applies to t
   });
 });
 
-test('cli: the default root of a guide copy with the 11 skeleton pages fails with exactly the ban errors from every cwd', () => {
+test('cli: the default root of a guide copy with the 12 skeleton pages fails with exactly the ban errors from every cwd', () => {
   withSkeletonGuideCopy((guide) => {
     for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
       const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
@@ -168,12 +169,12 @@ test('cli: the default root of a guide copy with the 11 skeleton pages fails wit
       assert.equal(result.status, 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
       assert.deepEqual(
         stderr.slice(0, -1).map((line) => /^skeleton: (docs\/\S+): /.exec(line)?.[1]),
-        ELEVEN,
+        TWELVE,
         `cwd ${cwd}\n${result.stderr}`,
       );
-      assert.equal(stderr.at(-1), 'check failed with 11 error(s)', `cwd ${cwd}`);
-      assert.match(result.stdout, /^FAIL skeleton \(11 errors\)$/m);
-      assert.match(result.stdout, /^pending skeleton pages: 11$/m);
+      assert.equal(stderr.at(-1), 'check failed with 12 error(s)', `cwd ${cwd}`);
+      assert.match(result.stdout, /^FAIL skeleton \(12 errors\)$/m);
+      assert.match(result.stdout, /^pending skeleton pages: 12$/m);
     }
   });
 });

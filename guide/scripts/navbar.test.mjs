@@ -294,7 +294,7 @@ const LEVEL_PAGES = Object.fromEntries(
 );
 
 // Spec 16, T1 (G-1, option A): the default build dir also runs the routes rule (rules/routes-built.mjs), which needs
-// the sitemap and the 11 route files with their pagination nav. These fixture builds gain them: ROUTE_PAGES is the
+// the sitemap and the 12 route files with their pagination nav. These fixture builds gain them: ROUTE_PAGES is the
 // whole set of route files (the level pages keep their breadcrumb, every page gets its previous and next link in
 // the chain order) and the sitemap. The level pages, index.html and setup-check.html are built from page() as before.
 const chainHref = (index) => new URL(ROUTES[index]).pathname;
@@ -319,9 +319,9 @@ test('check-built with no argument checks the default build dir and runs the nav
   withCopiedScripts(ROUTE_PAGES, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}navbar: 11 pages, /m);
-    assert.match(result.stdout, /^ok {3}built: 11 html files/m);
-    assert.match(result.stdout, /^ok {3}routes: 11 routes in the sitemap and the build, prev\/next chain of 11 pages$/m);
+    assert.match(result.stdout, /^ok {3}navbar: 12 pages, /m);
+    assert.match(result.stdout, /^ok {3}built: 12 html files/m);
+    assert.match(result.stdout, /^ok {3}routes: 12 routes in the sitemap and the build, prev\/next chain of 12 pages$/m);
   });
 });
 

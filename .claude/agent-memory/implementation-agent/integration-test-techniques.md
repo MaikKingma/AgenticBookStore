@@ -20,14 +20,13 @@ metadata:
 - Probe-breaking data: insert rows out of title order AND out of ISBN order (kills sort-by-ISBN). Every search filter needs its
   own decoy matching all other criteria but not this one; QA probes each criterion by passing null. Open-in-view is off, so a
   get/change after an add goes through lazy authors and kills a removed flow `@Transactional`.
-- Order claims over a list: at least four rows (three with fixed "first/last" rows is always monotone). Columns no use case
-  changes (reserved, reorder level) are set by `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check. For
-  app-generated ids seed `book`, `book_author`, `stock_item` by SQL with fixed ids (first hex digit 0 to 7) so ids can be
-  non-monotone; set instants with `OffsetDateTime.ofInstant(i, ZoneOffset.UTC)` to compare literal ISO strings.
-- The full context is cached across `IntegrationTestBase` subclasses (no new Started line); `@MockitoSpyBean` on a port and a
-  plain class in the base `@Import` keep it so. A forked context (own `@TestPropertySource`, `@Import`, `@MockitoSpyBean` on a
-  transactional flow) costs one extra Started line. Drive the Spring AI tool loop from `ScriptedChatModel` and read the tool
-  result from the prompt's `ToolResponseMessage.responseData()` (raw JSON; Jackson 3 `JsonMapper.readValue(json, TypeReference)`).
+- Order claims over a list: at least four rows. Columns no use case changes (reserved, reorder level) are set by
+  `jdbcTemplate.update(...)` with an `isEqualTo(1)` row-count check. For app-generated ids seed by SQL with fixed ids (first hex
+  digit 0 to 7) so ids can be non-monotone; set instants with `OffsetDateTime.ofInstant(i, ZoneOffset.UTC)`.
+- The full context is cached across `IntegrationTestBase` subclasses; `@MockitoSpyBean` on a port and a plain class in the base
+  `@Import` keep it so. A forked context (own `@TestPropertySource`, `@Import`, `@MockitoSpyBean` on a transactional flow) costs
+  one extra Started line. Drive the Spring AI tool loop from `ScriptedChatModel`; read the tool result from the prompt's
+  `ToolResponseMessage.responseData()` (raw JSON).
 - The base cleans BEFORE each test: a `PER_CLASS` subclass's non-static `@BeforeAll` runs on the previous class's leftover rows,
   so its rows need keys (ISBN, id) no other test uses.
 - Verifier greps (`assert|fail\(`, forbidden annotations) also match Javadoc and comments: keep those tokens out of prose. QA greps
@@ -40,8 +39,7 @@ metadata:
   `containsOnlyOnce(" WARN ")`. "Exactly one WARN naming X": `containsPattern(" WARN .*" + x)` plus
   `doesNotContainPattern("(?s) WARN [^\\n]*" + x + ".* WARN [^\\n]*" + x)`. An after-commit listener failure logs `ERROR ...
   afterCompletion threw exception`, a BLANK line, then `java.lang.X: <message>`: join with `\\R+`.
-- JDBC witnesses for nullable column groups: `queryForObject(sql, (rs, n) -> Arrays.<Object>asList(rs.getString(1),
-  rs.getObject(2, Integer.class), ...), id)` gives nulls for SQL NULL, so "all cleared" is `isEqualTo(Arrays.asList(null, ...))`.
-  "Row unchanged after a rejected command": `queryForMap("select * ...")` before and after. Run every "unchanged" claim from each
-  start of the flag it could flip (`@ValueSource(booleans = {true, false})`), else a reset-with-rollback-suppressed mutant
-  survives (QA rule C0-17).
+- JDBC witnesses for nullable column groups: a row mapper returning `Arrays.<Object>asList(rs.getString(1),
+  rs.getObject(2, Integer.class), ...)` gives nulls for SQL NULL, so "all cleared" is `isEqualTo(Arrays.asList(null, ...))`.
+  "Row unchanged after a rejected command": `queryForMap("select * ...")` before and after, from each start of the flag it
+  could flip (`@ValueSource(booleans = {true, false})`; QA rule C0-17).

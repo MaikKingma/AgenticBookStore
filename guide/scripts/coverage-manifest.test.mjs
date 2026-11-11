@@ -54,7 +54,7 @@ test('manifest: every row of the research table is accounted for, by an entry or
 
 test('manifest: the pages of the levels are covered by entries, the rows without one are manual rows of the same page', () => {
   const withEntries = new Set(ENTRIES.map((e) => e.page));
-  assert.deepEqual([...withEntries].sort(), ['CS', 'IX', 'L0', 'L1', 'L2', 'L3', 'L4', 'SU', 'TS', 'WU']);
+  assert.deepEqual([...withEntries].sort(), ['BO', 'CS', 'IX', 'L0', 'L1', 'L2', 'L3', 'L4', 'SU', 'TS', 'WU']);
   assert.ok(MANUAL_ROWS.some((row) => row.page === 'AR'), 'the architecture page is accounted for by a manual row');
   for (const row of MANUAL_ROWS) assert.ok(row.reason.length >= 40, `${row.row}: a manual row says why in a sentence`);
 });
@@ -84,7 +84,8 @@ test('manifest: each page has at least its pinned number of entries, so entries 
   // L3 rose from 34 to 35 in task T6 (L3-35, the Level 3 "Make it yours" tip).
   // SU rose from 21 to 26 and L4 from 65 to 79 in spec 15 task T4 (Node.js qualification and the pinned OpenSpec install
   // on the setup page, the start-branch sentences, the brownfield notes, the 42-minute sentence, the Level 4 tip).
-  const floor = {SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
+  // BO is the bonus page (spec 16, T2): BO-01 pins the sentence of its marker box.
+  const floor = {BO: 1, SU: 26, L0: 23, L1: 41, L2: 34, L3: 35, L4: 79, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -211,7 +212,7 @@ test('manifest: the Level 3 page holds one "Make it yours" tip of at most 60 wor
   assert.match(tip[1], /\b(permission|deny|hook|skill|command)\b/, 'the tip ties to the Level 3 content (permissions, hooks, skill, command)');
 });
 
-test('manifest: the sources and the pages are the five pack files and the eleven pages, and they exist', () => {
+test('manifest: the sources and the pages are the five pack files and the twelve pages, and they exist', () => {
   assert.deepEqual(Object.keys(SOURCE_FILES), ['plan', 'sdd', 'briefs', 'spec10', 'spec09']);
   for (const rel of Object.values(SOURCE_FILES)) assert.ok(existsSync(join(PACK, rel)), rel);
   assert.deepEqual(
@@ -660,4 +661,41 @@ test('manifest: snippets shorter than 8 characters are the pinned short ones, ea
     'TS-10 /status',
     'TS-16 /mcp',
   ]);
+});
+
+// Spec 16 (T2): BO-01 pins the sentence of the marker box of the bonus page. The page is the optional page between Level 4
+// and the Wrap-up; its box is pinned by the structure rule (first element, the Wrap-up link inside it), the sentence here.
+const BO_SENTENCE = 'This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home.';
+
+test('manifest: BO-01 pins the marker sentence on the bonus page and in the plan section "Bonus level" (probes: page loses it, plan rewords it)', () => {
+  const bo = ENTRIES.filter((e) => e.page === 'BO');
+  assert.deepEqual(
+    bo.map((e) => [e.id, e.source, e.section, e.kind, e.snippet, e.pageSnippet]),
+    [['BO-01', 'plan', 'Bonus level', 'text', BO_SENTENCE, undefined]],
+  );
+  assert.equal(PAGE_FILES.BO, 'docs/06-bonus-level-orchestration.mdx');
+  const pack = readPack();
+  const pages = readPages(join(GUIDE, 'docs'));
+  assert.deepEqual(run(bo, {pages, pack}).errors, [], 'the live page and the plan carry the sentence');
+  assert.equal(fold(pack.plan).split(fold(BO_SENTENCE)).length - 1, 1, 'the plan carries the sentence once');
+  assert.equal(fold(pages[PAGE_FILES.BO]).split(fold(BO_SENTENCE)).length - 1, 1, 'the page carries the sentence once');
+  const stub = (body) => ({pages: {...pages, [PAGE_FILES.BO]: `---\ntitle: Bonus\n---\n\n${body}\n`}, pack});
+  // the page without the sentence, or with it reworded: the text is not on the page
+  for (const body of ['Nothing here.', BO_SENTENCE.replace('optional', 'voluntary')]) {
+    assert.match(
+      run(bo, stub(body)).errors.join('\n'),
+      /^coverage: BO-01: docs\/06-bonus-level-orchestration\.mdx: the text "This bonus level is optional: it is for you if you finish Level 4 early or want to carr\.\.\." is not on the page/,
+    );
+  }
+  assert.deepEqual(run(bo, stub(BO_SENTENCE)).errors, []);
+  // the plan reworded: the snippet is no longer anchored in the section
+  const noPlan = run(bo, {pages, pack: {...pack, plan: pack.plan.replace('it is for you if you finish', 'you may do it if you finish')}});
+  assert.match(
+    noPlan.errors.join('\n'),
+    /^coverage: BO-01: the snippet "This bonus level is optional: it is for you if you finish Level 4 early or want to carr\.\.\." is not in workshop\/workshop-plan\.md, section "Bonus level"/,
+  );
+  assert.equal(noPlan.anchored, 0);
+  // the sentence in another plan section does not anchor it (the entry is searched in its own section only)
+  const elsewhere = pack.plan.replace(BO_SENTENCE, 'Placeholder.').replace('## 10. Wrap-up (15 min)', `## 10. Wrap-up (15 min)\n\n${BO_SENTENCE}`);
+  assert.match(run(bo, {pages, pack: {...pack, plan: elsewhere}}).errors.join('\n'), /BO-01: the snippet .* is not in workshop\/workshop-plan\.md, section "Bonus level"/);
 });

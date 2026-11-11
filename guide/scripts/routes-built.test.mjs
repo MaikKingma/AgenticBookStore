@@ -1,6 +1,7 @@
-// Spec 16, T1: the built-output routes rule (rules/routes-built.mjs). It characterizes the live site before the
-// bonus page is added: the 11 routes in the sitemap and in the build, and the prev/next chain of the pagination
-// nav on each of them. The fixtures have the markup of a real Pages build (minified, unquoted attributes, the
+// Spec 16, T1: the built-output routes rule (rules/routes-built.mjs). It characterizes the site: the 12 routes in the
+// sitemap and in the build, and the prev/next chain of the pagination nav on each of them. T1 wrote it for the pages
+// that were live before the bonus page; T2 added the bonus page between Level 4 and Wrap-up (a listed retarget of
+// every hard-coded position, count and route in this file). The fixtures have the markup of a real Pages build (minified, unquoted attributes, the
 // pagination nav of Docusaurus 3). Nothing here reads guide/build: `npm run check:built` runs the rule on the
 // default build dir only, and the entry-point tests prove that switch on fixture builds (a copy of the scripts
 // folder whose ../build is a fixture).
@@ -17,8 +18,8 @@ import {scanBuilt} from './rules/built.mjs';
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://maikkingma.github.io/AgenticBookStore/';
 
-// The live <loc> values, in the order of the chain (a second copy of the list, typed here on purpose: the rule's
-// list must equal what the live sitemap served on 2026-11-11).
+// The <loc> values, in the order of the chain (a second copy of the list, typed here on purpose: the rule's list
+// must equal what the live sitemap served on 2026-11-11, plus the bonus page between Level 4 and Wrap-up, T2).
 const LIVE = [
   'https://maikkingma.github.io/AgenticBookStore/',
   'https://maikkingma.github.io/AgenticBookStore/setup-check',
@@ -27,13 +28,16 @@ const LIVE = [
   'https://maikkingma.github.io/AgenticBookStore/level-2-give-your-agent-eyes',
   'https://maikkingma.github.io/AgenticBookStore/level-3-behavioral-control',
   'https://maikkingma.github.io/AgenticBookStore/level-4-spec-driven-development',
+  'https://maikkingma.github.io/AgenticBookStore/bonus-level-orchestration',
   'https://maikkingma.github.io/AgenticBookStore/wrap-up',
   'https://maikkingma.github.io/AgenticBookStore/reference/cheat-sheet',
   'https://maikkingma.github.io/AgenticBookStore/reference/architecture',
   'https://maikkingma.github.io/AgenticBookStore/reference/troubleshooting',
 ];
+// The chain positions the tests refer to by name (the positions shifted by one at the bonus page).
+const [HOME, SETUP, LEVEL_0, LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, BONUS, WRAP_UP, CHEAT_SHEET, ARCHITECTURE, TROUBLESHOOTING] = LIVE.keys();
 // The build writes the sitemap in this order (alphabetical by file, the home page last), not in chain order.
-const BUILD_ORDER = [2, 3, 4, 5, 6, 9, 8, 10, 1, 7, 0].map((index) => LIVE[index]);
+const BUILD_ORDER = [BONUS, LEVEL_0, LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, ARCHITECTURE, CHEAT_SHEET, TROUBLESHOOTING, SETUP, WRAP_UP, HOME].map((index) => LIVE[index]);
 
 const FILES = [
   'index.html',
@@ -43,6 +47,7 @@ const FILES = [
   'level-2-give-your-agent-eyes.html',
   'level-3-behavioral-control.html',
   'level-4-spec-driven-development.html',
+  'bonus-level-orchestration.html',
   'wrap-up.html',
   'reference/cheat-sheet.html',
   'reference/architecture.html',
@@ -108,17 +113,17 @@ const includesError = (errors, pattern) => assert.ok(errors.some((error) => patt
 
 // --- the frozen list ------------------------------------------------------------------------------------------
 
-test('routes list: the 11 live <loc> values, verbatim and in chain order, frozen', () => {
+test('routes list: the 12 <loc> values (the live ones and the bonus page), verbatim and in chain order, frozen', () => {
   assert.deepEqual([...ROUTES], LIVE);
   assert.ok(Object.isFrozen(ROUTES));
-  assert.equal(new Set(ROUTES).size, 11);
+  assert.equal(new Set(ROUTES).size, 12);
   assert.ok(ROUTES.every((loc) => loc.startsWith(SITE)));
 });
 
 // --- a good build ---------------------------------------------------------------------------------------------
 
-test('routes rule: a build shaped like the real one passes, with 11 routes and 11 pages in the chain', () => {
-  assert.deepEqual(scan(goodFiles()), {errors: [], routes: 11, chainPages: 11});
+test('routes rule: a build shaped like the real one passes, with 12 routes and 12 pages in the chain', () => {
+  assert.deepEqual(scan(goodFiles()), {errors: [], routes: 12, chainPages: 12});
 });
 
 test('routes rule: the order of the sitemap does not matter', () => {
@@ -160,12 +165,13 @@ test('routes rule: a build with no sitemap fails once', () => {
 
 test('routes rule: a sitemap with no <loc> at all fails for every route', () => {
   const errors = errorsOf(withSitemap([]));
-  assert.equal(errors.length, 11, errors.join('\n'));
+  assert.equal(errors.length, 12, errors.join('\n'));
   for (const loc of LIVE) includesError(errors, new RegExp(`^routes: sitemap\\.xml has no <loc> for ${loc.replace(/[./:]/g, '\\$&')}$`));
 });
 
 test('routes rule: an extra <loc> in the sitemap fails (a page addition must extend the frozen list)', () => {
-  const extra = `${SITE}bonus-level-orchestration`;
+  // T1 used the bonus route here; it is a listed route since T2, so any other page stands in for the extra one.
+  const extra = `${SITE}extra-page`;
   const errors = errorsOf(withSitemap([...BUILD_ORDER, extra]));
   only(errors, new RegExp(`^routes: sitemap\\.xml has an unexpected <loc> ${extra.replace(/[./:]/g, '\\$&')} .*extend the list in rules/routes-built\\.mjs`));
 });
@@ -179,8 +185,8 @@ test('routes rule: a missing <loc> fails, for every route in turn', () => {
 
 test('routes rule: one <loc> replaced by another at the same count fails twice (the missing one and the unknown one)', () => {
   const replacement = `${SITE}level-5-something`;
-  const locs = BUILD_ORDER.map((loc) => (loc === LIVE[7] ? replacement : loc));
-  assert.equal(locs.length, 11);
+  const locs = BUILD_ORDER.map((loc) => (loc === LIVE[WRAP_UP] ? replacement : loc));
+  assert.equal(locs.length, 12);
   const errors = errorsOf(withSitemap(locs));
   assert.equal(errors.length, 2, errors.join('\n'));
   includesError(errors, /sitemap\.xml has no <loc> for https:\/\/maikkingma\.github\.io\/AgenticBookStore\/wrap-up$/);
@@ -189,12 +195,12 @@ test('routes rule: one <loc> replaced by another at the same count fails twice (
 
 test('routes rule: a <loc> listed twice fails even when the set of locs is right', () => {
   const locs = [...BUILD_ORDER, LIVE[4]];
-  assert.equal(new Set(locs).size, 11);
+  assert.equal(new Set(locs).size, 12);
   only(errorsOf(withSitemap(locs)), /^routes: sitemap\.xml lists https:\/\/maikkingma\.github\.io\/AgenticBookStore\/level-2-give-your-agent-eyes 2 times, expected once$/);
 });
 
 test('routes rule: a <loc> with a trailing slash fails (it is not the live one, and is not normalised away)', () => {
-  const locs = BUILD_ORDER.map((loc) => (loc === LIVE[7] ? `${LIVE[7]}/` : loc));
+  const locs = BUILD_ORDER.map((loc) => (loc === LIVE[WRAP_UP] ? `${LIVE[WRAP_UP]}/` : loc));
   const errors = errorsOf(withSitemap(locs));
   assert.equal(errors.length, 2, errors.join('\n'));
   includesError(errors, /has no <loc> for https:\/\/maikkingma\.github\.io\/AgenticBookStore\/wrap-up$/);
@@ -210,8 +216,8 @@ test('routes rule: the home <loc> without its trailing slash fails (the slash be
 });
 
 test('routes rule: a <loc> with another host, scheme or spaces around it fails', () => {
-  for (const wrong of ['http://maikkingma.github.io/AgenticBookStore/wrap-up', 'https://example.org/AgenticBookStore/wrap-up', ` ${LIVE[7]} `]) {
-    const errors = errorsOf(withSitemap(BUILD_ORDER.map((loc) => (loc === LIVE[7] ? wrong : loc))));
+  for (const wrong of ['http://maikkingma.github.io/AgenticBookStore/wrap-up', 'https://example.org/AgenticBookStore/wrap-up', ` ${LIVE[WRAP_UP]} `]) {
+    const errors = errorsOf(withSitemap(BUILD_ORDER.map((loc) => (loc === LIVE[WRAP_UP] ? wrong : loc))));
     assert.equal(errors.length, 2, `${wrong}: ${errors.join('\n')}`);
   }
 });
@@ -253,20 +259,42 @@ test('routes rule: Welcome is the first page, so a prev link on it fails', () =>
 });
 
 test('routes rule: a next href with an extra path segment fails (the whole href is compared, not its end)', () => {
-  const extraSegment = '/AgenticBookStore/x/wrap-up';
-  assert.ok(extraSegment.endsWith('/wrap-up') && extraSegment.includes('wrap-up'));
-  only(errorsOf(withPage(6, {next: extraSegment})), /^routes: level-4-spec-driven-development\.html: next link must go to \/AgenticBookStore\/wrap-up \(found \/AgenticBookStore\/x\/wrap-up\)$/);
+  // Level 4 leads to the bonus page since T2 (it led to Wrap-up before: a listed retarget).
+  const extraSegment = '/AgenticBookStore/x/bonus-level-orchestration';
+  assert.ok(extraSegment.endsWith('/bonus-level-orchestration') && extraSegment.includes('bonus-level-orchestration'));
+  only(errorsOf(withPage(LEVEL_4, {next: extraSegment})), /^routes: level-4-spec-driven-development\.html: next link must go to \/AgenticBookStore\/bonus-level-orchestration \(found \/AgenticBookStore\/x\/bonus-level-orchestration\)$/);
   // an href that starts with the right one (a trailing slash, a longer name) fails as well
-  for (const longer of ['/AgenticBookStore/wrap-up/', '/AgenticBookStore/wrap-up-old']) {
-    only(errorsOf(withPage(6, {next: longer})), /^routes: level-4-spec-driven-development\.html: next link must go to \/AgenticBookStore\/wrap-up \(found /);
+  for (const longer of ['/AgenticBookStore/bonus-level-orchestration/', '/AgenticBookStore/bonus-level-orchestration-old']) {
+    only(errorsOf(withPage(LEVEL_4, {next: longer})), /^routes: level-4-spec-driven-development\.html: next link must go to \/AgenticBookStore\/bonus-level-orchestration \(found /);
   }
+});
+
+test('routes rule: Level 4 leads to the bonus page and the bonus page to Wrap-up, so Level 4 straight to Wrap-up fails', () => {
+  only(errorsOf(withPage(LEVEL_4, {next: hrefAt(WRAP_UP)})), /^routes: level-4-spec-driven-development\.html: next link must go to \/AgenticBookStore\/bonus-level-orchestration \(found \/AgenticBookStore\/wrap-up\)$/);
+  only(errorsOf(withPage(WRAP_UP, {prev: hrefAt(LEVEL_4)})), /^routes: wrap-up\.html: previous link must go to \/AgenticBookStore\/bonus-level-orchestration \(found \/AgenticBookStore\/level-4-spec-driven-development\)$/);
+  only(errorsOf(withPage(BONUS, {prev: hrefAt(SETUP)})), /^routes: bonus-level-orchestration\.html: previous link must go to \/AgenticBookStore\/level-4-spec-driven-development \(found \/AgenticBookStore\/setup-check\)$/);
+  only(errorsOf(withPage(BONUS, {next: hrefAt(CHEAT_SHEET)})), /^routes: bonus-level-orchestration\.html: next link must go to \/AgenticBookStore\/wrap-up \(found \/AgenticBookStore\/reference\/cheat-sheet\)$/);
+  only(errorsOf(withPage(BONUS, {nav: false})), /^routes: bonus-level-orchestration\.html: no pagination nav/);
+  // the chain as the pages of the good build hold it: Level 4 -> bonus -> Wrap-up
+  const good = goodFiles();
+  assert.ok(good['level-4-spec-driven-development.html'].includes(`pagination-nav__link--next" href=${hrefAt(BONUS)}>`));
+  assert.ok(good['bonus-level-orchestration.html'].includes(`pagination-nav__link--prev" href=${hrefAt(LEVEL_4)}>`));
+  assert.ok(good['bonus-level-orchestration.html'].includes(`pagination-nav__link--next" href=${hrefAt(WRAP_UP)}>`));
+  assert.ok(good['wrap-up.html'].includes(`pagination-nav__link--prev" href=${hrefAt(BONUS)}>`));
+});
+
+test('routes rule: the bonus route is one of the twelve, a sitemap without it fails and so does a build without its file', () => {
+  const bonus = LIVE[BONUS];
+  only(errorsOf(withSitemap(BUILD_ORDER.filter((loc) => loc !== bonus))), /^routes: sitemap\.xml has no <loc> for https:\/\/maikkingma\.github\.io\/AgenticBookStore\/bonus-level-orchestration$/);
+  only(errorsOf(without(goodFiles(), 'bonus-level-orchestration.html')), /^routes: bonus-level-orchestration\.html is missing from the build \(route https:\/\/maikkingma\.github\.io\/AgenticBookStore\/bonus-level-orchestration\)/);
 });
 
 test('routes rule: a prev href that only starts with, ends with or contains the right one fails', () => {
   for (const wrong of ['/AgenticBookStore/sub/', '/x/AgenticBookStore/', '/AgenticBookStore']) {
     only(errorsOf(withPage(1, {prev: wrong})), new RegExp(`^routes: setup-check\\.html: previous link must go to /AgenticBookStore/ \\(found ${wrong.replace(/[./]/g, '\\$&')}\\)$`));
   }
-  only(errorsOf(withPage(7, {prev: '/AgenticBookStore/old/level-4-spec-driven-development'})), /^routes: wrap-up\.html: previous link must go to \/AgenticBookStore\/level-4-spec-driven-development /);
+  // the bonus page follows Level 4 since T2 (Wrap-up did before: a listed retarget)
+  only(errorsOf(withPage(BONUS, {prev: '/AgenticBookStore/old/level-4-spec-driven-development'})), /^routes: bonus-level-orchestration\.html: previous link must go to \/AgenticBookStore\/level-4-spec-driven-development /);
 });
 
 test('routes rule: two pagination navs, or a link in the nav that is neither previous nor next, fail', () => {
@@ -289,8 +317,8 @@ test('routes rule: a nav that only looks like a pagination nav (other class) is 
 test('routes rule: a missing file is reported once and its chain is not read (no second error for the same page)', () => {
   const result = scan(without(goodFiles(), 'wrap-up.html'));
   assert.equal(result.errors.length, 1, result.errors.join('\n'));
-  assert.equal(result.routes, 11);
-  assert.equal(result.chainPages, 10);
+  assert.equal(result.routes, 12);
+  assert.equal(result.chainPages, 11);
 });
 
 test('routes rule: errors of the sitemap, the files and the chain come together', () => {
@@ -312,8 +340,8 @@ const scanBuiltOf = (files, options) =>
 test('scanBuilt: with the routes option the rule runs and its counts are returned', () => {
   const result = scanBuiltOf(goodFiles(), {routes: true});
   assert.deepEqual(result.errors, []);
-  assert.equal(result.routes, 11);
-  assert.equal(result.chainPages, 11);
+  assert.equal(result.routes, 12);
+  assert.equal(result.chainPages, 12);
   const broken = scanBuiltOf(without(goodFiles(), 'sitemap.xml'), {routes: true});
   only(broken.errors, /^routes: sitemap\.xml is missing from the build/);
 });
@@ -376,9 +404,9 @@ test('check-built with no argument on a build shaped like the real one prints th
   withCopiedScripts(fullFiles(), (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}routes: 11 routes in the sitemap and the build, prev\/next chain of 11 pages$/m);
-    assert.match(result.stdout, /^ok {3}navbar: 11 pages, /m);
-    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 6 other pages$/m);
+    assert.match(result.stdout, /^ok {3}routes: 12 routes in the sitemap and the build, prev\/next chain of 12 pages$/m);
+    assert.match(result.stdout, /^ok {3}navbar: 12 pages, /m);
+    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 7 other pages$/m);
   });
 });
 
@@ -394,7 +422,7 @@ test('check-built with no argument and the sitemap removed exits 1 with the rout
 
 test('check-built with no argument and a broken chain exits 1 with the page named', () => {
   const build = fullFiles();
-  build['wrap-up.html'] = fullPage(7).replace(`href=${hrefAt(8)}`, 'href=/AgenticBookStore/x/cheat-sheet');
+  build['wrap-up.html'] = fullPage(WRAP_UP).replace(`href=${hrefAt(CHEAT_SHEET)}`, 'href=/AgenticBookStore/x/cheat-sheet');
   withCopiedScripts(build, (root, script) => {
     const result = run(script);
     assert.equal(result.status, 1, result.stdout + result.stderr);

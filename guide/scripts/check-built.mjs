@@ -1,7 +1,7 @@
 // Entry point of `npm run check:built`. It scans the Pages build (build/ by default)
 // and needs `npm run build` to have run first. Usage: node scripts/check-built.mjs [build-dir]
 // The navbar rule (rules/navbar-built.mjs), the level progress rule (rules/level-progress-built.mjs) and the
-// routes rule (rules/routes-built.mjs, the 11 live routes, the sitemap and the prev/next chain)
+// routes rule (rules/routes-built.mjs, the 12 routes, the sitemap and the prev/next chain)
 // describe the real site, so they run only on the default build dir; a build dir given on the command
 // line (the fixture builds of the self-tests) is scanned without them. The table regions rule
 // (rules/table-regions-built.mjs) runs on every build dir, so `node scripts/check-built.mjs build-offline`

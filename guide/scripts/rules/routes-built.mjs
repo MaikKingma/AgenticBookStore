@@ -10,12 +10,15 @@
 //   last page has no next link.
 // The list is frozen on purpose. A page addition must extend it, and say why in its commit and in this comment:
 // - 2026-11-11 (spec 16, T1): the 11 pages live at that date, copied from the sitemap of the Pages site.
+// - 2026-11-11 (spec 16, T2): the optional bonus level (bonus-level-orchestration, sidebar position 7.5) joins the
+//   chain between Level 4 and Wrap-up, so Level 4 now leads to it and it leads on to Wrap-up; 12 pages in all.
 import {existsSync, readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {elementTree} from '../lib/html.mjs';
 
-// The <loc> values as the live sitemap serves them, in the order of the chain: Welcome, Setup check, Level 0 to
-// Level 4, Wrap-up, then the reference pages. Typed out in full on purpose: nothing is derived from the base URL.
+// The <loc> values as the sitemap serves them, in the order of the chain: Welcome, Setup check, Level 0 to
+// Level 4, the bonus level, Wrap-up, then the reference pages. Typed out in full on purpose: nothing is derived
+// from the base URL.
 export const ROUTES = Object.freeze([
   'https://maikkingma.github.io/AgenticBookStore/',
   'https://maikkingma.github.io/AgenticBookStore/setup-check',
@@ -24,6 +27,7 @@ export const ROUTES = Object.freeze([
   'https://maikkingma.github.io/AgenticBookStore/level-2-give-your-agent-eyes',
   'https://maikkingma.github.io/AgenticBookStore/level-3-behavioral-control',
   'https://maikkingma.github.io/AgenticBookStore/level-4-spec-driven-development',
+  'https://maikkingma.github.io/AgenticBookStore/bonus-level-orchestration',
   'https://maikkingma.github.io/AgenticBookStore/wrap-up',
   'https://maikkingma.github.io/AgenticBookStore/reference/cheat-sheet',
   'https://maikkingma.github.io/AgenticBookStore/reference/architecture',
