@@ -43,3 +43,8 @@ Complements [[qa-docs-checker-specs]] (checker-as-oracle traps). Found at spec 1
 10. **"Before the element" witnesses need one reason and adjacency.** A fixture helper that adds a blank line hides
     the line directly above (an `index < start - 1` mutant survives); an admonition witness WITH a body is killed by
     the body line, not the `:::` line. Name raw-text witnesses (no separator, empty admonition) at strategy time.
+11. **Guards over "spans and fences" miss raw HTML code in MDX.** `<code>`, `<pre>` (any case, with attributes) render
+    as code but are no Markdown span or fence; a guard frozen for the content task must read them (`HTML_CODE` of
+    `lib/mdscan.mjs`) or the content task bans them by grep. `<kbd>`, `<samp>` and JSX code components stay for the
+    rendered code-text cross-check. A key list tested by looping over the production table is a tautology: pin a
+    typed second copy from the docs (spec 16 T3 r0 FAIL).
