@@ -371,3 +371,27 @@ html[data-theme='dark'] {
 .alert--danger {
   --ifm-alert-background-color-highlight: var(--guide-alert-danger-code);
 }
+
+/* Table regions (spec 15): src/plugins/rehype-table-regions.mjs wraps every table in a focusable,
+   named div, so a keyboard user can scroll a table wider than the page. The region scrolls, not the
+   table (Infima makes a table display: block with overflow: auto, which would give two scrollbars),
+   and it takes over the bottom margin of the table. The focus ring is the one of the level
+   progress breadcrumb (--guide-level-focus, 15.66:1 against the page, see contrast-pairs.mjs),
+   outside the box so the cells keep their size, and the page has room for it on every side. */
+.guide-table-region {
+  overflow-x: auto;
+  margin-bottom: var(--ifm-spacing-vertical);
+  /* A focused region is scrolled into view below the sticky navbar, not under it (the ring and the
+     table head stay visible). */
+  scroll-margin-top: calc(var(--ifm-navbar-height) + var(--ifm-spacing-vertical));
+}
+
+.guide-table-region > table {
+  display: table;
+  margin-bottom: 0;
+}
+
+.guide-table-region:focus-visible {
+  outline: 3px solid var(--guide-level-focus);
+  outline-offset: 2px;
+}
