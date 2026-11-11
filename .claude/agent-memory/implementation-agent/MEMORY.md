@@ -21,4 +21,5 @@
 - [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested @WebMvcTest, ProblemDetail keys, ChatClient mocks
 - [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callbacks without context, ListAppender, stub model
 - [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, token controls, installer isolation
+- [Built-HTML rule techniques](built-html-rule-techniques.md) — unquoted href slash, CLI fixtures, mutant runner script
 - [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace tables, two-tree counterexamples, installer traps

@@ -12,6 +12,8 @@ Complements [[qa-docs-checker-specs]] (checker-as-oracle traps). Found at spec 1
    `check-built.mjs` with no argument expecting exit 0. Any rule that needs the real site's pages fails there.
    **How to apply:** before Gate 1 grep `withCopiedScripts` callers and either put those test files in the task's
    fileScope (fixtures gain the pages; count pins become listed retargets) or require a second, pinned predicate.
+   Once those fixtures derive from the rule's frozen list, the next list change MUST edit them (an indexed lookup
+   per route crashes on the new one, page counts move): write them into that task's fileScope unconditionally.
 2. **Routes and pagination pins need same-count and prefix witnesses.** Extra and missing locs leave a
    count-plus-subset comparator alive: add a replaced loc at the same count, a duplicate, a trailing-slash loc; for
    prev/next add a prev-side swap, an extra prev on the first page and an href with an extra path segment
