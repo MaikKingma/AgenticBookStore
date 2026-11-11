@@ -3,9 +3,10 @@ spec: 16-bonus-level-orchestration
 pack: docs/spec-pack/specs/16-bonus-level-orchestration.md
 decision: D20
 base: factory
-status: in-progress
+status: done
 accepted-by: orchestrator (autonomous)
 gate1: 2026-11-11T12:38:22Z
+gate2: 2026-11-11T16:10:39Z
 qa-lead: on
 ---
 
@@ -27,7 +28,7 @@ lead's opus meta-review compensates on the critical tier.
 | T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
 | T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | #179 | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
 | T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | #180 | sdd/16-bonus-level-orchestration/T3 | FAIL r0 test-only, PASS r1 | ENDORSE r1 |
-| T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | (pending) | sdd/16-bonus-level-orchestration/T4 | PASS r0, PASS r1 after RA-T4-1 | REJECT r0 (RA-T4-1, line 134), r1 meta skipped (A4) |
+| T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | #181 | sdd/16-bonus-level-orchestration/T4 | PASS r0, PASS r1 after RA-T4-1 | REJECT r0 (RA-T4-1, line 134), r1 meta skipped (A4) |
 
 ## Common to every task (C)
 
@@ -314,3 +315,21 @@ Full wording in the QA lead's ledger (review log, T1 r0). Every later task's qaD
   qaModel and qaDirective; every criterion the QA lead flagged is rewritten; batches follow dependsOn; HR1 is settled by
   the official docs (`references.md`); no decision outside the orchestrator's authority. Owner items Q1 and Q2
   (`shape.md`) concern the owner's merge, not the cycle.
+- qa-final (opus, reduced scope per A4) on the spec tip 84060c1: PASS, no Required Actions. Guide gates on Node 26.13.0
+  green (937/937 node tests, `ok tests (31 test files, 805 test cases)`, coverage 359/359, structure 12 pages, routes
+  12 with the chain Level 4 -> bonus -> Wrap-up); browser and axe sweep of Level 4, bonus and Wrap-up (1280 and 390
+  px, light and dark, Chromium and WebKit, Pages and offline): 48 runs, axe 0, no horizontal scroll; referee BUILD
+  SUCCESS 28.3 s; live sitemap = the 11 frozen routes, all present in the new build, T1 live chain 0 errors; 23
+  contractual anchors present; beginner read found no false instruction; PR #177 CLEAN, existing pages, configs,
+  `src`, `static`, package files and `.github` equal to factory; remote refs and release `workshop-2026` untouched.
+- Gate 2 self-accepted by the orchestrator (A4: qa-final green): every task PR merged into the spec branch
+  (#178, #179, #180, #181), no dropped task, no unattributed straggler, the spec diff confined to the task file scopes,
+  tests, the spec folder and agent memory. Not run by owner decision (A4), listed as residuals: the QA lead's T4 r1
+  meta-review, final brief and final review, the Node 24.20.0 run, the full 288-run matrix, a doc re-fetch at qa-final
+  (last fetch 15:52Z, hashes equal to the morning fetch).
+- Residuals for the owner: N1 page line 106 and plan line 497 "the Level 4 feature brief that you did not build"
+  (there are three briefs; "a brief you did not build" would be exact); N2 page line 134 says "So before step 1"
+  inside step 2 (low harm: auto mode still asks at the first launch); Q1 the factory merge rebuilds the release asset
+  `workshop-2026`; Q2 no agent ran Claude Code (D14), so Parts B to D are untried in a real session; optional follow-up
+  SA1 (one sentence on the welcome and wrap-up pages); `node scripts/check.mjs` alone does not run the bonus guards
+  (`npm run check`, which CI runs, does).
