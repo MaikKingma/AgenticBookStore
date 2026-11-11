@@ -318,6 +318,8 @@ export const ENTRIES = [
   skill('L3-27', 'WP:284-285', 'text', 'tools: Read, Glob, Grep, Bash'),
   entries('spec10', 'Scenario: Red build blocks the commit', 'L3')('L3-28', 'S10:402-404', 'command', 'git commit -m "test"'),
   entries('spec10', 'Scenario: Escape hatch is closed', 'L3')('L3-29', 'S10:407-408', 'command', 'git commit --no-verify -m "x"'),
+  // Spec 15 (D-S10, task T6): the optional "Make it yours" tip, an invitation and never a step.
+  level3('L3-35', 'WP:283-285', 'text', 'invent one more guardrail of your own'),
 
   // Level 4 (WP section 9, SDD part 2, the feature briefs)
   level4('L4-01', 'WP:303-307', 'text', 'start/level-4-openspec'),

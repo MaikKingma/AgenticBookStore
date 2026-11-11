@@ -80,7 +80,8 @@ test('manifest: each page has at least its pinned number of entries, so entries 
   // live counts, the five retargeted sync moment entries (L0-01, L1-01, L2-01, L3-01, L4-05) keep their ids and rows.
   // L2 rose from 28 to 34 in spec 15 task T3 (L2-29 to L2-34: the diagnosis prompt, the Java 21 check, the new session
   // check, the first Java edit, the Level 2 tip and the debug log sentence of amendment A4); L2-17 was retargeted in place.
-  const floor = {SU: 21, L0: 23, L1: 33, L2: 34, L3: 34, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
+  // L3 rose from 34 to 35 in task T6 (L3-35, the Level 3 "Make it yours" tip).
+  const floor = {SU: 21, L0: 23, L1: 33, L2: 34, L3: 35, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -173,6 +174,38 @@ test('manifest: no page and no plan line names Java 10 to 19 for jdtls, and the 
     assert.doesNotMatch(text, /\b(?:JDK|Java) 1\d\b/, `${name} names no JDK 10 to 19`);
     assert.doesNotMatch(text, /watch\s+the\s+(?:facilitator\s+)?demo|facilitator\s+demo/i, `${name} has no demo step`);
   }
+});
+
+// Spec 15 task T6: L3-35 pins the Level 3 "Make it yours" tip on the live page and in the Level 3 section of the plan.
+test('manifest: L3-35 pins the Level 3 tip, a page or a plan section without its sentence fails', () => {
+  const entry = ENTRIES.filter((e) => e.id === 'L3-35');
+  assert.equal(entry.length, 1);
+  const sentence = 'invent one more guardrail of your own';
+  const live = readPages(join(GUIDE, 'docs'));
+  const page = live[PAGE_FILES.L3];
+  assert.equal(page.split(sentence).length - 1, 1, 'the sentence is on the live page exactly once');
+  assert.deepEqual(run(entry, {pages: live}).errors, []);
+  const noPage = run(entry, {pages: {...live, [PAGE_FILES.L3]: page.replace(sentence, 'do something else')}});
+  assert.match(noPage.errors.join('\n'), new RegExp(`^coverage: L3-35: docs/04-level-3-behavioral-control\\.mdx: the text "${sentence}" is not on the page`));
+  const pack = readPack();
+  assert.equal(pack.plan.replace(/\s+/g, ' ').split(sentence).length - 1, 1, 'the sentence is in the plan exactly once');
+  const noPlan = run(entry, {pages: live, pack: {...pack, plan: pack.plan.replace('invent one more guardrail of your own', 'do something else')}});
+  assert.match(noPlan.errors.join('\n'), new RegExp(`^coverage: L3-35: the snippet "${sentence}" is not in workshop/workshop-plan\\.md, section "8\\. Level 3"`));
+});
+
+test('manifest: the Level 3 page holds one "Make it yours" tip of at most 60 words, outside the at a glance box and the checklist', () => {
+  const page = readPages(join(GUIDE, 'docs'))[PAGE_FILES.L3];
+  const tips = [...page.matchAll(/^:::tip\[Make it yours\]\n([\s\S]*?)\n:::$/gm)];
+  assert.equal(tips.length, 1, 'one tip titled "Make it yours"');
+  const [tip] = tips;
+  const words = tip[1].trim().split(/\s+/).length;
+  assert.ok(words >= 20 && words <= 60, `the tip has ${words} words, 20 to 60 are allowed`);
+  const glance = page.indexOf(':::note[At a glance]');
+  const afterGlance = page.indexOf('\n:::\n', glance) + 1;
+  assert.ok(glance !== -1 && tip.index > afterGlance, 'the tip is after the at a glance box');
+  assert.ok(tip.index < page.indexOf('\n## Level cleared when'), 'the tip is before the "Level cleared when" checklist');
+  assert.match(tip[1], /\b(rule|skill|hook|guardrail|command)\b/, 'the tip names a rule, skill, hook, guardrail or command');
+  assert.match(tip[1], /\b(permission|deny|hook|skill|command)\b/, 'the tip ties to the Level 3 content (permissions, hooks, skill, command)');
 });
 
 test('manifest: the sources and the pages are the five pack files and the eleven pages, and they exist', () => {
@@ -342,10 +375,10 @@ const SWEEP_EXCLUDED = {
   'plan:286 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
   'plan:286 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
   'plan:304 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
-  'plan:319 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
-  'plan:326 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
-  'plan:328 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'plan:330 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:323 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  'plan:330 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
+  'plan:332 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:334 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
   'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
