@@ -25,7 +25,7 @@ lead's opus meta-review compensates on the critical tier.
 | id | module | dependsOn | batch | summary | qaTier | qaModel | pr | branch | verdict | qa-lead |
 |---|---|---|---|---|---|---|---|---|---|---|
 | T1 | guide | [] | 1 | built rule pins the 11 live routes, the exact sitemap and the prev/next chain | critical | sonnet | #178 | sdd/16-bonus-level-orchestration/T1 | PASS r0 | ENDORSE r0 |
-| T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | (pending) | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
+| T2 | guide | [T1] | 2 | register the bonus page as a stub with its pinned marker; every 11 -> 12 pin; plan stub section; routes 12; Status line | critical | sonnet | #179 | sdd/16-bonus-level-orchestration/T2 | PASS r0 | ENDORSE r0 (A3) |
 | T3 | guide | [T2] | 3 | guards: page-to-plan pack membership, placeholder-only fragment, no minutes, no workflow script code | critical | sonnet | | | | |
 | T4 | guide | [T3] | 4 | the bonus page content, its plan mirror and coverage, outline and cleared-when pins, claims table | critical | sonnet | | | | |
 
