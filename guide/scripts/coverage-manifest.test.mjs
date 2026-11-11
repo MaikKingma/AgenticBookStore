@@ -78,7 +78,7 @@ test('manifest: every entry is anchored in its pack section, and the count is th
 test('manifest: each page has at least its pinned number of entries, so entries cannot be dropped quietly', () => {
   // IX rose from 10 to 16 in spec 15 (the five Format cells and the walk-around sentence); the other floors equal the
   // live counts, the five retargeted sync moment entries (L0-01, L1-01, L2-01, L3-01, L4-05) keep their ids and rows.
-  const floor = {SU: 21, L0: 23, L1: 33, L2: 28, L3: 34, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
+  const floor = {SU: 21, L0: 23, L1: 41, L2: 28, L3: 34, L4: 65, WU: 22, IX: 16, CS: 52, TS: 16};
   for (const [page, minimum] of Object.entries(floor)) {
     const count = ENTRIES.filter((e) => e.page === page).length;
     assert.ok(count >= minimum, `${page} has ${count} entries, at least ${minimum} are pinned`);
@@ -259,23 +259,23 @@ const SWEEP_EXCLUDED = {
   'plan:134 git stash -u && git switch -C level-1 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:134 level-0-start': 'Start line of the Level 1 box, checked by the structure rule and by level-start.test.mjs',
   'plan:143 Money': 'the type name inside the CLAUDE.md rule about money, which L1-08 (never double) carries',
-  'plan:180 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
-  'plan:180 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
-  'plan:191 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
-  'plan:196 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
-  'plan:228 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
-  'plan:228 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
-  'plan:232 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:232 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
-  'plan:246 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
-  'plan:256 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
-  'plan:263 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
-  'plan:263 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
-  'plan:281 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
-  'plan:296 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
-  'plan:303 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
-  'plan:305 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
-  'plan:307 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:225 solution/level-1': 'Start line of the Level 2 box, checked by the structure rule',
+  'plan:225 solution/level-2': 'Catch-up and Compare line of the Level 2 box, checked by the structure rule',
+  'plan:236 solution/level-2': 'the plugin declaration claim of the project scope sentence (follow-up F4); the file itself is L2-08',
+  'plan:241 Found N new diagnostic issues ...': 'the same text as L2-12, which stops before the ellipsis',
+  'plan:273 solution/level-2': 'Start line of the Level 3 box, checked by the structure rule',
+  'plan:273 solution/level-3': 'Catch-up and Compare line of the Level 3 box, checked by the structure rule',
+  'plan:277 solution/level-2': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:277 jdtls-lsp': 'the plugin declaration claim of the settings.json paragraph (follow-up F4); the file itself is L3-32',
+  'plan:291 .claude/settings.json': 'the same file as L3-32 and L2-08, which the Permissions part names; the hooks step only says where the block goes',
+  'plan:301 ./mvnw -q verify': 'the command of the hook script that spec 10 prints in full, which L3-16 carries',
+  'plan:308 --no-verify': 'the escape hatch discussion, carried by L3-14 (escape hatch) and L3-29 (the spec 10 scenario command)',
+  'plan:308 -n': 'the short form of --no-verify in the same discussion, carried by L3-14 and the deny rule in L3-02',
+  'plan:326 git diff': 'a hint of the stretch subagent sentence, which L3-26 and L3-27 carry',
+  'plan:341 solution/level-3': 'the Level 4 box, whose start branches are L4-01 to L4-03 and L4-63 (built from solution/level-3)',
+  'plan:348 /plan': 'the Track C row of the table, which repeats Part 2 of the SDD guide (L4-37 carries /plan there)',
+  'plan:350 sdd-framework-guide.md': 'an internal path: the deny-list bans it on participant pages',
+  'plan:352 level-4-feature-briefs.md': 'an internal path: the deny-list bans it on participant pages',
   'sdd:99 .mcp.json': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:99 jdtls-lsp': 'a description of what the start branches contain, which depends on the plugin declaration claim (follow-up F4)',
   'sdd:100 /ship': 'a description of what the start branches contain; /ship is a step of every track (L4-19, L4-32, L4-42)',
@@ -321,7 +321,7 @@ test('manifest: the sweep counts coverage per section and per page, a snippet of
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-64')).includes('sdd:110 /clear'), 'the Track A step is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'SU-09')).includes('plan:58 ./mvnw verify'), 'the setup check command is covered by its own entry only');
   assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L4-65')).includes('sdd:97 claude'), 'the common start line is covered by its own entry only');
-  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:272 name'), 'the skill frontmatter field is covered by its own entry only');
+  assert.ok(sweep(ENTRIES.filter((e) => e.id !== 'L3-34')).includes('plan:317 name'), 'the skill frontmatter field is covered by its own entry only');
   // The right snippet on the wrong page, and on the right page but attributed to another section.
   const wrongPage = ENTRIES.map((e) => (e.id === 'L4-11' ? {...e, page: 'WU'} : e));
   assert.ok(sweep(wrongPage).includes('sdd:105 /opsx:explore'));

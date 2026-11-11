@@ -52,21 +52,38 @@ Compare that path with the import syntax `@docs/architecture.md`. An import load
 
 ### 3. Add path-scoped rules
 
-Add path-scoped rules in `.claude/rules/`. They load only when Claude touches matching files:
+A path-scoped rule is a markdown file in `.claude/rules/` whose header names the files it is about. Create `.claude/rules/domain.md` with this exact content:
 
-- `domain.md` with `paths: ["bookstore/src/main/java/**/domain/**"]`
+```markdown
+---
+paths:
+  - "bookstore/src/main/java/**/domain/**"
+---
+# Domain layer
+- Aggregates: private constructor, an intention-revealing static factory for creation, `restore(...)` for rehydration.
+- Change state through behaviour methods named after the business action. No setters.
+- Check invariants inside the aggregate and throw an unchecked exception from the `domain` package.
+- Register domain events in the aggregate; flows publish them after saving via `pullDomainEvents()`.
+- Value objects are records that validate in the compact constructor.
+- Domain tests are plain JUnit and AssertJ, without a Spring context.
+```
+
+The header between the two `---` lines is YAML frontmatter: `paths` lists globs relative to the project root, and the rule loads only when Claude reads or edits a file that matches one, not at session start.
+
+Add two more rules the same way:
+
 - `data-and-migrations.md` with `paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]`
 - `testing.md` with `paths: ["**/src/test/**"]`
 
 :::tip[Checkpoint]
 
-Ask Claude a question that does not touch `domain`, then run:
+Ask Claude to change a class under `domain`, and check that it follows the rule:
 
 ```text
-/context
+Let a book's title be corrected after it was added to the catalogue.
 ```
 
-Expected: `CLAUDE.md` is loaded, and neither `docs/architecture.md` nor `.claude/rules/domain.md` is. After Claude edits a file in `domain`, the rule is loaded. You can run `/memory` instead of `/context`.
+Expected: Claude adds a method named after the business action (for example `correctTitle`), not a `setTitle`, as `domain.md` says: "Change state through behaviour methods named after the business action. No setters." A path-scoped rule loads when Claude reads or edits a file that matches its `paths`: when it opens `Book.java`, the rule is loaded. You do not have to keep the change.
 
 :::
 
@@ -78,7 +95,31 @@ Observe: files are concatenated, not overridden. When instructions conflict, the
 
 ### 5. Watch for context rot
 
-Run `/context` and read the grid. Learn the three moves:
+Run `/context` and read the grid. The grid below is an illustration, not a screenshot: your symbols, names and numbers differ. Each symbol stands for 2k tokens of a 200k window.
+
+```text
+Context usage: 100k of 200k tokens (50%)
+
+S S S S S S S C K M      S  System prompt                  14k   (7%)
+M M M M M M M M M M      C  CLAUDE.md and auto memory       2k   (1%)
+M M M M M M M M M M      K  Skill descriptions              2k   (1%)
+M M M M M M M M M M      M  Messages and tool results      82k  (41%)
+M M M M M M M M M M      .  Free space                    100k  (50%)
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+```
+
+What to watch for:
+
+- S, C and K load before you type anything. Every line of your `CLAUDE.md` costs attention on every task.
+- M grows with every prompt, answer, file read and tool result. It is the part you control.
+- Free space shrinks as M grows. Long before it reaches zero, answers drift: that is context rot.
+- Same task but drifting: `/compact focus on <topic>`. Unrelated next task: `/clear`.
+
+Learn the three moves:
 
 - `/clear` between unrelated tasks.
 - `/compact focus on <topic>` when a long task drifts.
@@ -92,6 +133,12 @@ Redo the Level 0 task in a fresh session (`/clear`). Compare with your [observat
 
 When you are done, compare your result with the branch [solution/level-1](https://github.com/MaikKingma/AgenticBookStore/tree/solution/level-1).
 
+:::tip[Make it yours]
+
+The best harness has a creative engineer who keeps tweaking it. Pick one thing Claude got wrong in Level 0 and write a rule of your own for it, for example `.claude/rules/acl.md` for the distributor client. Skills, hooks and commands of your own can follow in later levels. This is optional.
+
+:::
+
 ## Before you move on
 
 What improved, and what still went wrong even though it was written down? That last list is the bridge to Level 3: `CLAUDE.md` is guidance, the agent may decide a guideline does not apply.
@@ -99,5 +146,5 @@ What improved, and what still went wrong even though it was written down? That l
 ## Level cleared when
 
 - [ ] `CLAUDE.md` has at most 60 lines.
-- [ ] `/context` shows the path-scoped rules loading only for matching files.
+- [ ] Asked to change a class in `domain`, Claude follows `.claude/rules/domain.md`: a behaviour method named after the business action, no setters.
 - [ ] In a fresh session, the Level 0 task ends with `./mvnw verify` green, shown in the terminal, and no ArchUnit violation.

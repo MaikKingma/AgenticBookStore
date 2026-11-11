@@ -134,6 +134,33 @@ fi
 rm -f "$log"
 exit 2`;
 
+// Level 1 (spec 15): the rule file of step 3, byte-equal to the level-1 solution branch (level-1-rule.test.mjs compares
+// the page with the staged file), and the illustrative /context mock of step 5.
+const LEVEL1_DOMAIN_RULE = `---
+paths:
+  - "bookstore/src/main/java/**/domain/**"
+---
+# Domain layer
+- Aggregates: private constructor, an intention-revealing static factory for creation, \`restore(...)\` for rehydration.
+- Change state through behaviour methods named after the business action. No setters.
+- Check invariants inside the aggregate and throw an unchecked exception from the \`domain\` package.
+- Register domain events in the aggregate; flows publish them after saving via \`pullDomainEvents()\`.
+- Value objects are records that validate in the compact constructor.
+- Domain tests are plain JUnit and AssertJ, without a Spring context.`;
+
+const LEVEL1_CONTEXT_MOCK = `Context usage: 100k of 200k tokens (50%)
+
+S S S S S S S C K M      S  System prompt                  14k   (7%)
+M M M M M M M M M M      C  CLAUDE.md and auto memory       2k   (1%)
+M M M M M M M M M M      K  Skill descriptions              2k   (1%)
+M M M M M M M M M M      M  Messages and tool results      82k  (41%)
+M M M M M M M M M M      .  Free space                    100k  (50%)
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .
+. . . . . . . . . .`;
+
 export const ENTRIES = [
   // Setup check (WP section 3)
   setup('SU-01', 'WP:50', 'command', 'claude --version'),
@@ -198,7 +225,8 @@ export const ENTRIES = [
   level1('L1-12', 'WP:140-147', 'text', 'Read docs/architecture.md before adding or moving classes.'),
   level1('L1-13', 'WP:140-147', 'text', '@docs/architecture.md'),
   level1('L1-14', 'WP:148-151', 'text', '.claude/rules/'),
-  level1('L1-15', 'WP:148-151', 'text', 'paths: ["bookstore/src/main/java/**/domain/**"]'),
+  // Spec 15: the domain rule header is shown as the YAML it is in the file (a list), not as an inline array.
+  level1('L1-15', 'WP:148-151', 'text', 'paths:\n  - "bookstore/src/main/java/**/domain/**"'),
   level1('L1-16', 'WP:148-151', 'text', 'paths: ["bookstore/src/main/java/**/data/**", "bookstore/src/main/resources/db/**"]'),
   level1('L1-17', 'WP:148-151', 'text', 'paths: ["**/src/test/**"]'),
   level1('L1-18', 'WP:148-151', 'text', 'domain.md'),
@@ -217,6 +245,16 @@ export const ENTRIES = [
   level1('L1-31', 'WP:160', 'text', 'Level 0 task in a fresh session'),
   level1('L1-33', 'WP:140-147', 'text', 'ArchitectureTest'),
   entries('spec10', 'Scenario: Rules load on demand', 'L1')('L1-32', 'S10:113-115', 'text', 'the rule is loaded'),
+  // Spec 15 (decision D19), Level 1: the whole rule file, the header sentence, the /context mock with its annotations and
+  // the "Make it yours" tip. The two blocks are pinned whole, so that every line of them is covered by the literal sweep.
+  level1('L1-34', 'WP:148-151', 'command', LEVEL1_DOMAIN_RULE),
+  level1('L1-35', 'WP:148-151', 'text', 'The header between the two `---` lines is YAML frontmatter: `paths` lists globs relative to the project root, and the rule loads only when Claude reads or edits a file that matches one, not at session start.'),
+  level1('L1-41', 'WP:148-151', 'text', 'Create `.claude/rules/domain.md` with this exact content:'),
+  level1('L1-36', 'WP:156-159', 'text', 'The grid below is an illustration, not a screenshot: your symbols, names and numbers differ.'),
+  level1('L1-37', 'WP:156-159', 'command', LEVEL1_CONTEXT_MOCK),
+  level1('L1-38', 'WP:156-159', 'text', 'M grows with every prompt, answer, file read and tool result. It is the part you control.'),
+  level1('L1-39', 'WP:156-159', 'text', 'Free space shrinks as M grows. Long before it reaches zero, answers drift: that is context rot.'),
+  level1('L1-40', 'WP:160', 'text', 'The best harness has a creative engineer who keeps tweaking it. Pick one thing Claude got wrong in Level 0 and write a rule of your own for it, for example `.claude/rules/acl.md` for the distributor client. Skills, hooks and commands of your own can follow in later levels. This is optional.'),
 
   // Level 2 (WP section 7)
   level2('L2-01', 'WP:182-184', 'text', 'Part A starts with the LSP install check'),
