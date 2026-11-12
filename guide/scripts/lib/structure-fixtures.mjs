@@ -238,6 +238,27 @@ export function otherPage(file) {
   return lines.join('\n');
 }
 
+// The bonus page (spec 16): its file, its frontmatter and the marker box, written out by hand like the rest. The title
+// holds a colon, so it is quoted; the position is a fraction that puts the page between Level 4 (7) and Wrap-up (8).
+export const BONUS_FILE = 'docs/06-bonus-level-orchestration.mdx';
+export const BONUS_FRONT = ['---', 'title: "Bonus level: orchestrate your own team"', 'sidebar_position: 7.5', '---'];
+export const BONUS_BOX = [
+  ':::info[Optional bonus level]',
+  '',
+  'This bonus level is optional. Not finished with Level 4? Go to the [Wrap-up](./06-wrap-up.md).',
+  '',
+  ':::',
+];
+
+// The bonus page as the skeleton snapshot and the live stub hold it: frontmatter, the box first, the marker after it.
+// options.before: lines that come before the box (blank lines and comments are allowed there, nothing else);
+// options.skeleton: false leaves the marker out, like the finished page.
+export function bonusPage({before = [], box = BONUS_BOX, skeleton = true} = {}) {
+  const lines = [...BONUS_FRONT, '', ...before, ...(before.length > 0 ? [''] : []), ...box, ''];
+  if (skeleton) lines.push(MARKER, '');
+  return lines.join('\n');
+}
+
 // All the files of a valid guide docs folder, as {path relative to guide/: text}.
 export function goodDocs() {
   const files = {};
@@ -245,6 +266,7 @@ export function goodDocs() {
     files[l.file] = levelPage(n);
   });
   for (const [file] of OTHER_PAGES) files[file] = otherPage(file);
+  files[BONUS_FILE] = bonusPage();
   files['docs/reference/_category_.json'] = '{\n  "label": "Reference",\n  "position": 9\n}\n';
   return files;
 }

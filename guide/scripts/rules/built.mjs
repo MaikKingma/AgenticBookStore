@@ -8,6 +8,7 @@ import {powershellLineErrors} from './built-powershell.mjs';
 import {navbarErrors} from './navbar-built.mjs';
 import {levelOfFile, levelPagesOf, levelProgressErrors, routeOf} from './level-progress-built.mjs';
 import {tableRegions} from './table-regions-built.mjs';
+import {routesErrors} from './routes-built.mjs';
 
 // The built-output rules behind `npm run check:built`.
 // 1. With the Docusaurus 3 title syntax (:::info[Title]) an admonition renders as a box.
@@ -45,8 +46,8 @@ function htmlFiles(dir, relDir, out) {
   return out;
 }
 
-// Returns {errors, count, checkboxes, windowsLines, tables, tablePages, navbarPages, levelPages, otherPages}: count is the number of html
-// files scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
+// Returns {errors, count, checkboxes, windowsLines, tables, tablePages, navbarPages, levelPages, otherPages, routes,
+// chainPages}: count is the number of html files scanned, checkboxes the number of checkboxes seen in them (named or not), windowsLines the
 // number of lines read in PowerShell tab panels and PowerShell-language code blocks, a line
 // counted once (in the list or not). options.navbar ({base}) switches on rule 4 below, the navbar
 // of every page (rules/navbar-built.mjs); it describes the real site, so check-built.mjs sets it
@@ -58,6 +59,9 @@ function htmlFiles(dir, relDir, out) {
 // 6. The table regions: every table inside an article sits in a focusable, named region with a name that
 // is unique on its page (rules/table-regions-built.mjs). It runs on every build dir, the Pages build and
 // the offline build alike; tables is the number of such tables, tablePages the pages that hold one.
+// 7. The routes (spec 16): the 12 routes in the sitemap and in the build, and the prev/next chain through them
+// (rules/routes-built.mjs). options.routes switches it on; like the navbar and the level progress rule it describes
+// the real site, so check-built.mjs sets it for the default build dir only. routes and chainPages are returned only then.
 export function scanBuilt(dir, options = {}) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {
     return {errors: [`built: ${dir} is missing; run npm run build first`], count: 0};
@@ -111,6 +115,8 @@ export function scanBuilt(dir, options = {}) {
       errors.push(...levelProgressErrors({file, html, base: options.levels.base, level: pageLevel, routes}));
     }
   }
+  const found = options.routes ? routesErrors(dir) : null;
+  if (found) errors.push(...found.errors);
   const levelPages = pages ? files.filter((file) => levelOfFile(file) !== null).length : undefined;
   return {
     errors,
@@ -122,6 +128,8 @@ export function scanBuilt(dir, options = {}) {
     navbarPages,
     levelPages,
     otherPages: pages ? files.length - levelPages : undefined,
+    routes: found?.routes,
+    chainPages: found?.chainPages,
   };
 }
 

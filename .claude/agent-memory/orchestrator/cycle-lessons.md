@@ -101,4 +101,11 @@ metadata:
   the task, `git merge` the spec tip, let that task's implementer resolve and re-run gates, I commit the merge. Hold a
   second branch's merge until the first lands (abort, merge once). Keep plan.md row updates out of task branches and
   commit them once at the end. Owner fast path (A6): verifier PASS plus green CI merges, no meta-review loop.
+- **Live-site guide additions (spec 16):** characterize first (a built rule freezing live routes, sitemap and
+  prev/next), register the page as a stub, add the guards, then write content; a new page needs a 7.5-style
+  `sidebar_position` so no URL moves. Verify Claude Code doc claims by curl of the raw `.md` pages, never WebFetch
+  summaries; a claims table (sentence -> id -> file:line -> quote) in the content task's outbox, copied by me into
+  `references.md`. The QA lead caught a mode-dependent instruction (approval prompts differ in auto mode) that the
+  verifier passed; keep its beginner read even on a fast path. Owner "fast but checked": time-box the meta-review with
+  a background `sleep 600` timer, one reduced qa-final.
 - **Pointer:** the per-task gate mechanics and decisions of spec 01 are in `agent-os/specs/2026-11-06-2155-01-foundation/plan.md` (Amendments, QA feed-forward) and the QA ledger of that run; the follow-ups F1 to F15 belong in the spec 02 QA strategy.

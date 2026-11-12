@@ -10,4 +10,5 @@ metadata:
 - `npm view @fission-ai/openspec@<ver> version engines` and `gh release view v<ver> --repo Fission-AI/OpenSpec --json assets` verify a pin without installing.
 - Trap: `VAR=x curl ... | sh` sets VAR for curl, not sh. Pin the install script as `curl ... | OPENSPEC_VERSION=v1.16.0 sh`.
 - Worktree guard: a command that sets `HOME=` is refused; executing a downloaded install script was refused by the auto-mode classifier ("Unauthorized Persistence"). Read scripts via `gh api ... .content | @base64d`, do not retry.
+- Claude Code docs: `curl -sSL -o <file> https://code.claude.com/docs/en/<page>.md` returns raw markdown (first line `> ## Documentation Index`); a connect error can happen on one page, so retry that file alone. Put fetches in a script file under `.claude/comms/tmp/` (guard refuses backslash-escaped spaces and compound commands). The CHANGELOG raw file on GitHub main has `## <version>` headings, newest first; find the heading above a line with awk.
 - Prior pack records (`docs/spec-pack/level-branches/records/level-4-*.md`) already hold per-branch evidence and findings (PF-T11-*, PF-T12-*, PF-T13-*); grep them before re-deriving.

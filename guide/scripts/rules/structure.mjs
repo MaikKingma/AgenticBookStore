@@ -10,6 +10,8 @@ export const SKELETON_MARKER = '{/* guide-skeleton */}';
 
 const PROGRESS_IMPORT = "import LevelProgress from '@site/src/components/LevelProgress';";
 const BOX_OPENER = ':::note[At a glance]';
+const BONUS_TITLE = 'Optional bonus level';
+const BONUS_OPENER = `:::info[${BONUS_TITLE}]`;
 const SYNC_MOMENT_TITLE = /sync[\s_-]*moment/i;
 const CHECKLIST_HEADING = '## Level cleared when';
 const CATEGORY_FILE = 'docs/reference/_category_.json';
@@ -57,11 +59,13 @@ const LEVELS = [
   },
 ];
 
-// The other six pages, with the sidebar position that puts them in the fixed order:
-// Welcome, Setup check, Levels 0 to 4 (positions 3 to 7), Wrap-up, then Reference.
+// The other seven pages, with the sidebar position that puts them in the fixed order:
+// Welcome, Setup check, Levels 0 to 4 (positions 3 to 7), the optional bonus level (7.5, spec 16),
+// Wrap-up, then Reference. bonusMarker: the page follows the marker rule (bonusMarkerErrors).
 const OTHER_PAGES = [
   {file: 'docs/index.md', title: 'Welcome', position: 1, slug: '/', anchors: []},
   {file: 'docs/00-setup-check.md', title: 'Setup check', position: 2, anchors: []},
+  {file: 'docs/06-bonus-level-orchestration.mdx', title: 'Bonus level: orchestrate your own team', position: 7.5, bonusMarker: true, anchors: []},
   {file: 'docs/06-wrap-up.md', title: 'Wrap-up', position: WRAP_UP_POSITION, anchors: []},
   {file: 'docs/reference/cheat-sheet.md', title: 'Cheat sheet', position: 1, anchors: []},
   {file: 'docs/reference/architecture.md', title: 'Architecture', position: 2, anchors: []},
@@ -385,13 +389,50 @@ function levelPageErrors({text, level, spec, planLevel}) {
   return errors;
 }
 
+// The marker rule of the bonus page (spec 16): the page opens with the optional-bonus box, so a participant who is behind
+// sees at once that the page may be skipped and where to go. The box is the first element of the body: only blank lines
+// and whole-line MDX comments (the skeleton marker is one) may come before it, because they render nothing. A paragraph,
+// a heading, an import line, another admonition or a comment that shares its line with text may not. The box links to
+// the Wrap-up from inside the box, and the page has no level bar (it is no level).
+const COMMENT_LINE = /^\s*(?:\{\/\*(?:(?!\*\/).)*\*\/\}\s*)+$/;
+const WRAP_UP_LINK = '](./06-wrap-up.md)';
+
+function bonusMarkerErrors({lines, flags, bodyLine, done}) {
+  const errors = [];
+  const boxes = done.filter((box) => box.type === 'info' && box.title === BONUS_TITLE);
+  if (boxes.length !== 1) {
+    errors.push(boxes.length === 0 ? `the page has no ${BONUS_OPENER} box` : `the page has ${boxes.length} ${BONUS_OPENER} boxes, expected 1`);
+  }
+  if (boxes.length > 0) {
+    const [box] = boxes;
+    const stray = lines.findIndex((line, index) => index < box.start && line.trim() !== '' && !COMMENT_LINE.test(line));
+    if (stray !== -1) {
+      errors.push(
+        `line ${bodyLine + stray + 1}: the ${BONUS_OPENER} box must be the first element of the page, found "${lines[stray].trim()}" before it (only blank lines and one-line MDX comments may come first)`,
+      );
+    }
+    // The link is searched inside the box, with inline code removed (a link written as code is no link).
+    if (!box.content.some((line) => line.replace(/`[^`]*`/g, '').includes(WRAP_UP_LINK))) {
+      errors.push(`the ${BONUS_OPENER} box must link to the Wrap-up with (./06-wrap-up.md), inside the box`);
+    }
+  }
+  lines.forEach((line, index) => {
+    if (!flags[index] && line.includes('LevelProgress')) {
+      errors.push(`line ${bodyLine + index + 1}: the bonus page has no level bar, it must not import or render LevelProgress`);
+    }
+  });
+  return errors;
+}
+
 function otherPageErrors({text, spec}) {
   const {front, body, bodyLine} = splitFrontmatter(text);
   const lines = body.split('\n');
   const flags = fenceFlags(lines);
+  const common = commonErrors({lines, flags, bodyLine, anchors: spec.anchors});
   return [
     ...frontmatterErrors({front, title: spec.title, position: spec.position, slug: spec.slug}),
-    ...commonErrors({lines, flags, bodyLine, anchors: spec.anchors}).errors,
+    ...common.errors,
+    ...(spec.bonusMarker ? bonusMarkerErrors({lines, flags, bodyLine, done: common.done}) : []),
   ];
 }
 
@@ -419,11 +460,11 @@ export function structureErrors({files, nulFiles = [], planText, planPath, sddTe
 
   for (const file of Object.keys(files).sort()) {
     if (!EXPECTED_FILES.has(file)) {
-      errors.push(`structure: unexpected file ${file}, the guide has exactly the eleven pages and reference/_category_.json`);
+      errors.push(`structure: unexpected file ${file}, the guide has exactly the twelve pages and reference/_category_.json`);
     }
   }
   for (const file of [...EXPECTED_FILES].sort()) {
-    if (!(file in files)) errors.push(`structure: missing ${file}, the guide has exactly the eleven pages and reference/_category_.json`);
+    if (!(file in files)) errors.push(`structure: missing ${file}, the guide has exactly the twelve pages and reference/_category_.json`);
   }
   for (const file of nulFiles) add(file, 'the file contains a NUL byte, docs files must be plain text');
 

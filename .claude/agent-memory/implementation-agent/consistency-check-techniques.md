@@ -14,16 +14,14 @@ Techniques that held for consistency-check tasks with no Claude runs:
   needs `-e`; `git grep -F ""` is an error (use `git ls-tree -r --name-only`). macOS `git grep -E` has no `\w`/`\b` (use `-P`).
   `origin/factory` can move mid-task (shared clone): pin the sha in every script. A Maven goal resolves without starting the
   app: `./mvnw -pl <module> spring-boot:help -Dgoal=run`.
-- **Shell traps**: multi-step logic in a script under `.claude/comms/tmp/`; the guard refuses `find`/`ls` with `$HOME` inline.
-  Never `cat "$RAW"` into a file that is also `$RAW` (filled 300 GB). `grep` has no `-P`: print context with `python3 -I`.
-  `mask` BEFORE any `cut`; evidence must not match its own greps (split-string patterns). `git status --short` folds untracked
-  folders: use `--untracked-files=all`.
-- **Completeness and quote fidelity are separate checks**: a token inventory of every staged file (backtick spans, JSON keys and
-  values, URLs, identifiers) diffed against the record, and a quote pass (strings of 12+ characters) against pack, plan, guide
-  and fetched pages, with mutated-quote controls. A misspelling control must land in the staged copy AND the in-memory copy of
-  the built tree, else the generic "staged differs from tree" row reports it and a missing token-specific check hides; assert
-  each control by its own finding text. Spelling search tolerates hard-wrapped prose (needle spaces become `\s+`); anchor
-  loose-variant regexes (they flag headings).
+- **Shell traps**: multi-step logic in a script under `.claude/comms/tmp/`. Never `cat "$RAW"` into a file that is also
+  `$RAW` (filled 300 GB). `grep` has no `-P`: print context with `python3 -I`. `mask` BEFORE any `cut`; evidence must not
+  match its own greps. `git status --short` folds untracked folders: use `--untracked-files=all`.
+- **Completeness and quote fidelity are separate checks**: a token inventory of every staged file diffed against the record,
+  and a quote pass (strings of 12+ characters) against pack, plan, guide and fetched pages, with mutated-quote controls. A
+  misspelling control must land in the staged copy AND the in-memory copy of the built tree, else the generic "staged differs
+  from tree" row reports it and hides a missing token-specific check; assert each control by its own finding text. Spelling
+  search tolerates hard-wrapped prose (needle spaces become `\s+`).
 - **Hooks without Claude**: run the staged PreToolUse hook as settings name it, from another folder, with only
   `CLAUDE_PROJECT_DIR` set and a one-line JSON payload on stdin. Plant the red test as an untracked file so `git reset --hard &&
   git clean -fdx` removes it. "Hook cannot start": `chmod -x` the hook, `sh -c` of the settings command exits 126.

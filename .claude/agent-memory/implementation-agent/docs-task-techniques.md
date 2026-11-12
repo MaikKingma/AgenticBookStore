@@ -18,10 +18,15 @@ For a prose task the tests are a claim census plus gate greps. What held:
 - **`rg` works in the Bash tool, not in script files.** Run gate greps as separate Bash calls with a positive control file in
   the scratchpad (exit 0) next to each empty result (exit 1). `rg -ni 'a|b'`, never `-E`. Its exit 1 shows only as "no
   output": add `--stats` so "0 matches, N files searched" is the quotable proof.
-- **A rate limit behind the offline check is not reachable offline.** To prove a 429 live, start a second instance with a
-  made-up key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub that answers a minimal
-  Messages JSON; the stub's request count shows rejected calls never reach the model.
+- **A rate limit behind the offline check is not reachable offline.** Prove a 429 live with a made-up key and
+  `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub; its request count shows rejected calls
+  never reach the model.
 - **Port 8080 may belong to someone else:** preflight with `lsof`, never kill it; use `--server.port=<free>`.
-- **Worktree Bash guard refuses paths with backslash-escaped spaces.** Use relative paths from the worktree root
-  (`python3 -I <abs scratchpad script> . README.md http`, `bash .claude/comms/tmp/x.sh`); the scratchpad and Read/Edit/Write
-  absolute paths are fine. Keep a `README.md` under a line limit by unwrapping lines, not dropping sections.
+- **A guide page with literals mirrored in the plan (spec 16 T4).** The coverage sweep needs one entry per plan span and
+  fence line; an entry's snippet must sit word for word in the page prose (not the at a glance box) and the plan section.
+  Write page and plan sentences identical, then one entry per sentence or table. The `**Bonus cleared when**` list is no
+  skipped list in the sweep. A claims table is cheapest from a node script: rows of [page sentence, id, doc, quote]; it finds
+  both line numbers with `includes` and emits a TSV for a `grep -nF` loop. In the pinned PATH use `/usr/sbin/lsof`;
+  `guide/node_modules` has no axe-core (the scratchpad rig carries it).
+- **Worktree Bash guard refuses paths with backslash-escaped spaces.** Use relative paths from the worktree root; the
+  scratchpad and Read/Edit/Write absolute paths are fine. Keep a `README.md` under a line limit by unwrapping lines.

@@ -3,7 +3,7 @@
 > Module: `guide` (and `docs/spec-pack/workshop`) · Depends on: 15 · Capability: `workshop-guide` · Decision D20
 
 ## Status
-Deferred by Maik on 2026-11-10 so the token window is not stretched; it starts automatically once spec 15 is merged.
+Started by the owner on 2026-11-11 during the live workshop as a full SDD cycle.
 
 ## Why
 Fast participants need something after Level 4. The natural next step after spec-driven development is to let a

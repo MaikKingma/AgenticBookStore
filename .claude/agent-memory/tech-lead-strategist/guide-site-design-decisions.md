@@ -30,4 +30,16 @@ Settled config facts (two builds, hash router, bracket admonitions, pins) live i
 - **Trap: research lives in git-ignored comms.** Ask the orchestrator to copy research into the spec folder so agents
   in other worktrees can read it by repo path.
 
+Spec 16 (bonus page on the live guide; plan: lead-1 outbox `strategy-16-bonus-level-orchestration.md`):
+
+- **Characterize the live contract first.** Before adding a page to a deployed guide, a built rule pins the live
+  sitemap locs, route files and the whole prev/next chain; the add task then shows the only change as insertions.
+  **Why:** the Docusaurus link check never notices a renamed page (links follow it), so URL loss is otherwise silent.
+- **No skeleton-first for a new page.** The skeleton ban fails any live marked page and an unregistered page fails
+  structure, so page and registration land together as a small finished stub; the marker lives only in the fixture.
+- **The literal sweep is one-way (plan -> page).** Pack membership of page spans needs its own page -> plan-section
+  check. A new plan section goes below the largest `plan:<n>` sweep key so no key shifts.
+- **Non-level page = marker admonition, not LevelProgress** (component and built rule are 0 to 4 only). Pin type,
+  title, first position and the escape link, since pagination sends everyone there.
+
 Related: [[archunit-referee-design]] (anti-vacuity guards), [[strategy-constraints]] (escape trap, stripped paths).

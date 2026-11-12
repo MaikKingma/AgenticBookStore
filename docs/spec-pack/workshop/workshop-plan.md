@@ -450,6 +450,75 @@ spec.md and an Agent OS shape.md hold the same idea in three shapes.
 
 **Debrief (3 min):** who finished, and where did the spec save you? Where did it slow you down?
 
+## Bonus level: orchestrate your own team (optional)
+
+This bonus level is optional: it is for you if you finish Level 4 early or want to carry on at home. It sits outside the agenda and has no solution branch, because you build your own flow. Anyone who is not finished with Level 4 goes straight on to the Wrap-up.
+
+**Goal:** plan one feature as a flow with human gates, define a research agent and a QA agent as subagent files, carry one feature through the flow from the main session and, when the account has workflows, let Claude write the flow as a workflow. The guide gives questions and a table of parts, never a finished agent file or script.
+
+**Start:** where Level 4 ended, on the same branch. Nothing new is prepared.
+
+**Part A: Think first.** The steps of one feature are understand, research, plan, implement, verify and review. Everyone marks each step agent or human gate, starting from the spec flow of the Level 4 track, and keeps at least one human gate.
+
+**Part B: Define two subagents.** A subagent works in its own context window and hands back a summary. A subagent is a Markdown file with frontmatter.
+
+The file lives in `.claude/agents/` in your project. Below the frontmatter, the body holds the instructions for the subagent. Only `name` and `description` are required.
+
+| Part | What it does | Question you answer |
+|---|---|---|
+| `name` | Names the subagent. Required. | What do you call it, so that you can ask for it by name? |
+| `description` | Tells Claude when to hand a task to it. Required. | In which situations should the main session use it? |
+| `tools` | Lists the tools it may use. Optional: leave it out and it inherits every tool available to subagents. | What does the job need, and what must it not touch? |
+| `model` | Picks the model it runs on. Optional: use an alias such as `sonnet`, or `inherit` for the model of the main session. | Does the job need a stronger or a cheaper model? |
+| The body | The instructions below the frontmatter. | What is its job, and how should it work? |
+| What it hands back | The summary it gives to the main session. | What does the main session need to read to decide the next step? |
+
+Two subagents are built: a research agent that reads and reports, and a QA agent that checks behaviour with the tests and the scenarios of the spec.
+
+A research agent that only reads does not need `Edit` or `Write`: leave them out of its `tools`. Tool names such as `Read`, `Edit`, `Write` and `Bash` are listed in the [tools reference](https://code.claude.com/docs/en/tools-reference).
+
+If an agent keeps `Bash`, limit risky commands with the permission rules from Level 3, not with the `tools` line. A Bash deny rule in your settings applies to the main session and to subagents. Your Level 3 hooks live in your settings too, and hooks from settings files also apply inside subagents.
+
+Participants ask the main session to write each file from their answers, or write it themselves. This is the whole shape of the frontmatter, with every value left for the participant:
+
+```yaml
+---
+name: <name>
+description: <when to use it>
+tools: <tools>
+model: <model>
+---
+```
+
+On the `solution/level-3` branch and on the `start/level-4-<track>` branches, `.claude/agents/architecture-reviewer.md` is an example of such a file. It is an architecture reviewer, so it is neither your research agent nor your QA agent.
+
+The official [guide to custom subagents](https://code.claude.com/docs/en/sub-agents) lists every field.
+
+**Part C: Coordinate them from the main session.** A small feature, for example the Level 4 feature brief that you did not build. Use the research agent, stop and read what it handed back (the first human gate), run the spec flow of the track, use the QA agent, then commit.
+
+1. Start `claude` in your project. If `.claude/agents/` did not exist when your session started, restart Claude Code first so that it loads your first agent file.
+2. Run `./mvnw verify`, then commit through your `/ship` command from Level 3.
+
+**Part D: Let Claude write it as a workflow.** A workflow is a script that Claude writes for the task you describe, and a runtime runs it in the background while your session stays responsive. The guide shows no script.
+
+1. Run `claude --version`. You need 2.1.154 or later, the version that introduced dynamic workflows.
+2. Workflows are available on all paid plans. On Pro, open `/config` and turn on the Dynamic workflows row.
+3. Watch the run with `/workflows`.
+4. If a run is worth keeping, save it from the `/workflows` view, in the project location, and run it again later as `/<name>`.
+
+The official [guide to dynamic workflows](https://code.claude.com/docs/en/workflows) has the rest.
+
+**Make it yours:** change your team until it fits you. Add a human gate, drop one or swap a role.
+
+**Bonus cleared when**
+- Your flow for one feature is written down, with at least one step marked as a human gate.
+- Two subagent files of your own are in `.claude/agents/`, each with a description,
+  the tools you chose and what it hands back.
+- One feature went through your flow with both subagents, and `./mvnw verify` is green.
+- If you have workflows: you read the script of one run before it ran, and you can say where your human gate sits.
+
+**Debrief:** which gate did you keep human, and why?
+
 ## 10. Wrap-up (15 min)
 - Show of hands: who cleared which level? Count Level 0 to Level 4.
 - Two or three participants show their harness folder (`tree .claude`) and their spec.

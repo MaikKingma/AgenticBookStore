@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {structureErrors, SKELETON_MARKER} from './rules/structure.mjs';
-import {FIXTURE_LEVELS, fixturePlan, fixtureSdd, goodDocs, levelPage} from './lib/structure-fixtures.mjs';
+import {BONUS_BOX, BONUS_FILE, BONUS_FRONT, FIXTURE_LEVELS, bonusPage, fixturePlan, fixtureSdd, goodDocs, levelPage} from './lib/structure-fixtures.mjs';
 import {TROUBLESHOOTING_ANCHORS} from './lib/structure-fixtures.mjs';
 import {replaceOnce} from './lib/test-fixtures.mjs';
 
@@ -24,7 +24,7 @@ function assertErrors(errors, patterns) {
 test('structure: the good docs have no errors and the summary counts the pages', () => {
   const {errors, summary} = run();
   assert.deepEqual(errors, []);
-  assert.match(summary, /11 pages/);
+  assert.match(summary, /12 pages/);
 });
 
 test('structure: a skeleton level page and a finished one both pass the grammar', () => {
@@ -394,9 +394,10 @@ test('structure: an anchor inside a fenced block does not count', () => {
 
 // Files and sidebar
 
-test('structure: exactly the eleven pages and the category file exist', () => {
-  assertErrors(run({'docs/extra.md': '---\ntitle: X\n---\n'}).errors, [/unexpected file docs\/extra\.md/]);
-  assertErrors(run({'docs/06-wrap-up.md': null}).errors, [/missing .*06-wrap-up\.md/]);
+test('structure: exactly the twelve pages and the category file exist', () => {
+  assertErrors(run({'docs/extra.md': '---\ntitle: X\n---\n'}).errors, [/unexpected file docs\/extra\.md.*exactly the twelve pages and reference\/_category_\.json/]);
+  assertErrors(run({'docs/06-wrap-up.md': null}).errors, [/missing .*06-wrap-up\.md.*exactly the twelve pages and reference\/_category_\.json/]);
+  assertErrors(run({[BONUS_FILE]: null}).errors, [/missing docs\/06-bonus-level-orchestration\.mdx.*exactly the twelve pages/]);
   assertErrors(run({'docs/reference/_category_.json': null}).errors, [/missing .*_category_\.json/]);
   assertErrors(run({'docs/img/a.png': 'x'}).errors, [/unexpected file docs\/img\/a\.png/]);
 });
@@ -420,6 +421,131 @@ test('structure: the Reference category is labelled and comes after Wrap-up', ()
 test('structure: other page titles are fixed', () => {
   const text = replaceOnce(goodDocs()['docs/reference/cheat-sheet.md'], 'title: Cheat sheet', 'title: Cheatsheet');
   assertErrors(run({'docs/reference/cheat-sheet.md': text}).errors, [/title/]);
+});
+
+// The bonus page (spec 16): the one optional page, between Level 4 and Wrap-up. Its marker rule: the page holds exactly one
+// :::info[Optional bonus level] box, the box is the first element of the body, the box links to ./06-wrap-up.md, and the
+// page has no level bar. What may come before the box: blank lines and whole-line MDX comments (the skeleton marker is
+// one); a paragraph, a heading, an import line, another admonition and a comment that shares its line with text may not.
+
+const bonus = (text) => run({[BONUS_FILE]: text}).errors;
+const BOX_TAIL = BONUS_BOX.slice(1);
+const NO_BOX = /no :::info\[Optional bonus level\] box/;
+const NOT_FIRST = /the :::info\[Optional bonus level\] box must be the first element of the page/;
+const NO_LINK = /the :::info\[Optional bonus level\] box must link to the Wrap-up with \(\.\/06-wrap-up\.md\)/;
+const LEVEL_BAR = /the bonus page has no level bar, it must not import or render LevelProgress/;
+
+test('structure: the bonus page is registered between Level 4 and Wrap-up, and the good stub passes with and without the marker', () => {
+  assert.deepEqual(bonus(bonusPage()), []);
+  assert.deepEqual(bonus(bonusPage({skeleton: false})), []);
+  assert.match(goodDocs()[BONUS_FILE], /^---\ntitle: "Bonus level: orchestrate your own team"\nsidebar_position: 7\.5\n---\n/);
+});
+
+test('structure: the bonus page needs the exact title and the position 7.5 (8 and 7 are the neighbours and fail)', () => {
+  assertErrors(bonus(replaceOnce(bonusPage(), 'sidebar_position: 7.5', 'sidebar_position: 8')), [/sidebar_position must be 7\.5, found 8/]);
+  assertErrors(bonus(replaceOnce(bonusPage(), 'sidebar_position: 7.5', 'sidebar_position: 7')), [/sidebar_position must be 7\.5, found 7/]);
+  assertErrors(bonus(replaceOnce(bonusPage(), 'sidebar_position: 7.5\n', '')), [/sidebar_position must be 7\.5, found none/]);
+  assertErrors(bonus(replaceOnce(bonusPage(), '"Bonus level: orchestrate your own team"', 'Bonus level: orchestrate your own team')), [/holds a colon and must be quoted/]);
+  assertErrors(bonus(replaceOnce(bonusPage(), 'orchestrate your own team', 'orchestrate a team')), [/the title must be "Bonus level: orchestrate your own team"/]);
+});
+
+test('structure: blank lines and whole-line MDX comments may come before the bonus box (each passes)', () => {
+  for (const before of [['', ''], ['{/* a note */}'], ['{/* one */}', '', '{/* two */}'], ['{/* a */} {/* b */}'], ['  {/* indented */}  ']]) {
+    assert.deepEqual(bonus(bonusPage({before})), [], JSON.stringify(before));
+  }
+  // the skeleton marker is such a comment: before the box it passes, after the box it passes too
+  assert.deepEqual(bonus(bonusPage({before: ['{/* guide-skeleton */}'], skeleton: false})), []);
+});
+
+test('structure: a paragraph, a heading, an import line or another admonition before the bonus box fails (each once)', () => {
+  const imports = "import Foo from '@site/src/components/Foo';";
+  for (const before of [['A paragraph first.'], ['## A heading'], [imports], [':::tip[Hint]', '', 'Read me.', '', ':::'], [':::tip[Hint]', ':::'], ['- a list item'], ['<Foo />']]) {
+    assertErrors(bonus(bonusPage({before})), [NOT_FIRST]);
+  }
+  const [error] = bonus(bonusPage({before: ['A paragraph first.']}));
+  assert.match(error, /^structure: docs\/06-bonus-level-orchestration\.mdx: line 6: .*found "A paragraph first\." before it/);
+});
+
+test('structure: a paragraph or a heading on the line right above the bonus box, with no blank line between, fails', () => {
+  const opener = ':::info[Optional bonus level]';
+  for (const line of ['A paragraph first.', '## A heading']) {
+    assertErrors(bonus(replaceOnce(bonusPage(), opener, `${line}\n${opener}`)), [NOT_FIRST]);
+  }
+});
+
+test('structure: a comment that spans lines, shares its line with text or is not a comment before the bonus box fails', () => {
+  // The comment openers and closers are built from parts: a literal slash-star pair in this file would be read as a
+  // block comment by the zero-test guard, which would swallow the tests that follow an unclosed one.
+  const open = '{/' + '*';
+  const close = '*' + '/}';
+  const cases = [[`${open} line one`, `line two ${close}`], [`${open} a ${close} text`], [`text ${open} a ${close}`], ['<!-- html comment -->'], [`${open} a ${close}${open} unclosed`]];
+  for (const before of cases) {
+    assertErrors(bonus(bonusPage({before})), [NOT_FIRST]);
+  }
+});
+
+test('structure: the bonus page has the box exactly once, as an info admonition titled "Optional bonus level"', () => {
+  assertErrors(bonus(bonusPage({box: []})), [NO_BOX]);
+  assertErrors(bonus(bonusPage({box: ['A paragraph instead.']})), [NO_BOX]);
+  for (const type of ['note', 'tip', 'warning', 'danger', 'caution']) {
+    assertErrors(bonus(bonusPage({box: [`:::${type}[Optional bonus level]`, ...BOX_TAIL]})), [NO_BOX]);
+  }
+  for (const title of ['Optional Bonus Level', 'optional bonus level', 'Optional bonus level extra', 'Optional bonus', 'Bonus level']) {
+    assertErrors(bonus(bonusPage({box: [`:::info[${title}]`, ...BOX_TAIL]})), [NO_BOX]);
+  }
+  assertErrors(bonus(bonusPage({box: [':::info', ...BOX_TAIL]})), [NO_BOX]);
+  assertErrors(bonus(bonusPage({box: [...BONUS_BOX, '', ...BONUS_BOX]})), [/the page has 2 :::info\[Optional bonus level\] boxes, expected 1/]);
+  assertErrors(bonus(bonusPage({box: [...BONUS_BOX, '', ...BONUS_BOX, '', ...BONUS_BOX]})), [/the page has 3 :::info\[Optional bonus level\] boxes, expected 1/]);
+});
+
+test('structure: a bonus box inside a fenced block is no box', () => {
+  assertErrors(bonus(bonusPage({box: ['```md', ...BONUS_BOX, '```']})), [NO_BOX]);
+});
+
+test('structure: a second box after the first still fails the count, a box that is not first fails the position', () => {
+  const secondBox = ['', ':::info[Optional bonus level]', '', 'Again. [Wrap-up](./06-wrap-up.md)', '', ':::'];
+  assertErrors(bonus(bonusPage({box: [...BONUS_BOX, ...secondBox]})), [/boxes, expected 1/]);
+  const note = [':::note[Aside]', '', 'Before the box.', '', ':::', ''];
+  assertErrors(bonus(bonusPage({box: [...note, ...BONUS_BOX]})), [NOT_FIRST]);
+});
+
+test('structure: the bonus box must link to ./06-wrap-up.md inside the box, a link anywhere else does not count', () => {
+  const noLink = [':::info[Optional bonus level]', '', 'This bonus level is optional.', '', ':::'];
+  assertErrors(bonus(bonusPage({box: noLink})), [NO_LINK]);
+  // the link only after the box, on the page but outside the box
+  assertErrors(bonus(`${bonusPage({box: noLink})}\nGo to the [Wrap-up](./06-wrap-up.md).\n`), [NO_LINK]);
+  // a link to another page, another form of the wrap-up link, a link inside a code span
+  for (const link of ['[Setup check](./00-setup-check.md)', '[Wrap-up](/wrap-up)', '[Wrap-up](./06-wrap-up.md#x)', '[Wrap-up](../06-wrap-up.md)', '`[Wrap-up](./06-wrap-up.md)`', '[Wrap-up]./06-wrap-up.md']) {
+    assertErrors(bonus(bonusPage({box: [':::info[Optional bonus level]', '', `Optional. ${link}`, '', ':::']})), [NO_LINK]);
+  }
+  // the link anywhere inside the box passes, also on a later line and with other links around it
+  const later = [':::info[Optional bonus level]', '', 'Optional.', '', 'See [Setup check](./00-setup-check.md) and the [Wrap-up](./06-wrap-up.md).', '', ':::'];
+  assert.deepEqual(bonus(bonusPage({box: later})), []);
+});
+
+test('structure: the bonus page has no level bar, neither the import nor the component (each fails, together twice)', () => {
+  const importLine = "import LevelProgress from '@site/src/components/LevelProgress';";
+  const component = '<LevelProgress current={4} />';
+  assertErrors(bonus(`${bonusPage()}\n${importLine}\n`), [LEVEL_BAR]);
+  assertErrors(bonus(`${bonusPage()}\n${component}\n`), [LEVEL_BAR]);
+  assertErrors(bonus(`${bonusPage()}\n${importLine}\n\n${component}\n`), [LEVEL_BAR, LEVEL_BAR]);
+  assertErrors(bonus(`${bonusPage()}\n<LevelProgress current={4}\n/>\n`), [LEVEL_BAR]);
+  // before the box the import fails the position too
+  assertErrors(bonus(bonusPage({before: [importLine]})), [NOT_FIRST, LEVEL_BAR]);
+  // mentioned in a fenced block it is no import and no component
+  assert.deepEqual(bonus(`${bonusPage()}\n\`\`\`js\n${importLine}\n\`\`\`\n`), []);
+});
+
+test('structure: the marker rule belongs to the bonus page only (a Wrap-up page without it, or with a level bar, is not judged by it)', () => {
+  assert.deepEqual(run({'docs/06-wrap-up.md': goodDocs()['docs/06-wrap-up.md']}).errors, []);
+  const wrapUp = `${goodDocs()['docs/06-wrap-up.md']}\n<LevelProgress current={4} />\n`;
+  assert.deepEqual(run({'docs/06-wrap-up.md': wrapUp}).errors, []);
+});
+
+test('structure: the frontmatter of the bonus page reads as in the fixture (a second copy, so a wrong rule cannot grade itself)', () => {
+  assert.deepEqual(BONUS_FRONT, ['---', 'title: "Bonus level: orchestrate your own team"', 'sidebar_position: 7.5', '---']);
+  assert.equal(BONUS_BOX[0], ':::info[Optional bonus level]');
+  assert.ok(BONUS_BOX.some((line) => line.includes('(./06-wrap-up.md)')));
 });
 
 test('structure: a docs file with a NUL byte is an error, not skipped', () => {

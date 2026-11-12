@@ -8,8 +8,6 @@ metadata:
   `ToolCallback`s (name, description, `inputSchema()` JSON, `call(json)` returning JSON). A failing tool makes `call`
   throw `ToolExecutionException`; `DefaultToolExecutionExceptionProcessor.builder().build().process(e)` is exactly what
   the model receives (the message only). Missing JSON arguments and `null` arrive as `null`; assert both.
-- A tool exception for the model: a private static `RuntimeException` built with `super(msg, null, false, false)` carries
-  a one-line text with no stack trace. Catch it first in the helper (before the catch-all) so it is not rewrapped.
 - Log assertions without console capture: logback `ListAppender` on `(ch.qos.logback.classic.Logger)
   LoggerFactory.getLogger(Type.class)`, level `TRACE` (`Level.ALL` is deprecated: javac warning, a QA FAIL),
   `setAdditive(false)` so expected WARN traces stay out of the build log, restore both in `@AfterEach`. The throwable:

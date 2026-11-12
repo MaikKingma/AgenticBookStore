@@ -47,8 +47,8 @@ test('runChecks with content: the real skeleton guide has no errors, prints anch
   assert.deepEqual(errors, []);
   const summary = `anchored ${ENTRIES.length}/${ENTRIES.length}, ${MANUAL_ROWS.length} manual rows, ${ENTRIES.length} entries pending`;
   assert.ok(lines.includes(`ok   coverage (${summary})`), lines.join('\n'));
-  assert.ok(lines.some((line) => /^ok {3}content \(11 pages/.test(line)), lines.join('\n'));
-  assert.ok(lines.includes(`pending coverage entries: ${ENTRIES.length} on 10 skeleton pages`), lines.join('\n'));
+  assert.ok(lines.some((line) => /^ok {3}content \(12 pages/.test(line)), lines.join('\n'));
+  assert.ok(lines.includes(`pending coverage entries: ${ENTRIES.length} on 11 skeleton pages`), lines.join('\n'));
   for (const [code, file] of Object.entries(PAGE_FILES)) {
     const ids = ENTRIES.filter((e) => e.page === code).map((e) => e.id).sort();
     if (ids.length === 0) continue;
@@ -250,7 +250,7 @@ test('cli: --content runs the coverage and content rules on an explicit root, an
     const ok = run([root, '--content']);
     assert.equal(ok.status, 0, ok.stdout + ok.stderr);
     assert.match(ok.stdout, new RegExp(`^ok {3}coverage \\(anchored ${ENTRIES.length}/${ENTRIES.length}`, 'm'));
-    assert.match(ok.stdout, /^ok {3}content \(11 pages/m);
+    assert.match(ok.stdout, /^ok {3}content \(12 pages/m);
   });
   withSiteTree({...REAL, ...page(LEVEL2, '<img src="/x.png">')}, (root) => {
     const bad = run([root, '--content']);
@@ -275,17 +275,17 @@ test('cli: the real guide passes the coverage and content rules from any working
   withSkeletonGuideCopy((guide) => {
     for (const cwd of [tmpdir(), join(guide, '..'), guide]) {
       const result = spawnSync(process.execPath, [join(guide, 'scripts', 'check.mjs')], {encoding: 'utf8', cwd});
-      // T11: the skeleton ban fails the default root with exactly one error per marked page, the 11 skeleton pages
+      // T11: the skeleton ban fails the default root with exactly one error per marked page, the 12 skeleton pages
       // here, and no other error. The coverage and content lines below are unchanged.
       assert.equal(result.status, 1, `cwd ${cwd}\n${result.stdout}${result.stderr}`);
       const stderr = result.stderr.split('\n').filter(Boolean);
       const skeletons = Object.keys(REAL).filter((file) => REAL[file].includes(SKELETON_MARKER)).sort();
-      assert.equal(skeletons.length, 11);
+      assert.equal(skeletons.length, 12);
       assert.deepEqual(stderr.slice(0, -1).map((line) => /^skeleton: (docs\/\S+): /.exec(line)?.[1]), skeletons, `cwd ${cwd}\n${result.stderr}`);
-      assert.equal(stderr.at(-1), 'check failed with 11 error(s)', `cwd ${cwd}`);
+      assert.equal(stderr.at(-1), 'check failed with 12 error(s)', `cwd ${cwd}`);
       assert.match(result.stdout, new RegExp(`^ok {3}coverage \\(anchored ${ENTRIES.length}/${ENTRIES.length}`, 'm'));
-      assert.match(result.stdout, /^ok {3}content \(11 pages/m);
-      assert.match(result.stdout, new RegExp(`^pending coverage entries: ${ENTRIES.length} on 10 skeleton pages`, 'm'));
+      assert.match(result.stdout, /^ok {3}content \(12 pages/m);
+      assert.match(result.stdout, new RegExp(`^pending coverage entries: ${ENTRIES.length} on 11 skeleton pages`, 'm'));
     }
   });
 });

@@ -14,6 +14,7 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {levelProgressCrumbs, levelProgressErrors} from './rules/level-progress-built.mjs';
 import {scanBuilt} from './rules/built.mjs';
+import {ROUTES as SITE_ROUTES, routeFile} from './rules/routes-built.mjs';
 import {cssVariables, resolveColor} from './rules/contrast.mjs';
 import {matchingBrace, withoutBlockComments} from './lib/text.mjs';
 
@@ -502,7 +503,34 @@ const NAVBAR_FULL =
   '<a href=https://github.com/MaikKingma/AgenticBookStore target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub</a>' +
   '<a href=https://www.linkedin.com/in/maik-kingma/ target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">Follow on LinkedIn</a></div></div></nav>';
 
-const fullBuild = () => Object.fromEntries(Object.entries(goodBuild()).map(([rel, html]) => [rel, withNavbar(html)]));
+// Spec 16, T1 (G-1, option A): the default build dir also runs the routes rule (rules/routes-built.mjs), which needs
+// the sitemap and the 12 route files with their pagination nav (the previous and next link in chain order). The
+// full build gains the route files goodBuild() does not have (the bonus page, wrap-up and two reference pages), the
+// pagination of all 12, and the sitemap. goodBuild() itself is unchanged, so the scanBuilt counts above stay as they were.
+const chainHref = (index) => new URL(SITE_ROUTES[index]).pathname;
+function withPagination(html, index) {
+  const link = (kind, target) =>
+    `<a class="pagination-nav__link pagination-nav__link--${kind}" href=${chainHref(target)}><div class=pagination-nav__sublabel>${kind}</div><div class=pagination-nav__label>Label</div></a>`;
+  const links = (index > 0 ? link('prev', index - 1) : '') + (index < SITE_ROUTES.length - 1 ? link('next', index + 1) : '');
+  return html.replace('</main>', `<nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages">${links}</nav></main>`);
+}
+const SITEMAP =
+  '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+  SITE_ROUTES.map((loc) => `<url><loc>${loc}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`).join('') +
+  '</urlset>';
+const fullBuild = () => {
+  const pages = {
+    ...goodBuild(),
+    'bonus-level-orchestration.html': page(''),
+    'wrap-up.html': page(''),
+    'reference/architecture.html': page(''),
+    'reference/troubleshooting.html': page(''),
+  };
+  return {
+    'sitemap.xml': SITEMAP,
+    ...Object.fromEntries(SITE_ROUTES.map((loc, index) => [routeFile(loc), withPagination(withNavbar(pages[routeFile(loc)]), index)])),
+  };
+};
 
 function withCopiedScripts(build, fn) {
   const files = {'docusaurus.config.ts': "export default {\n  baseUrl: '/AgenticBookStore/',\n};\n"};
@@ -519,8 +547,9 @@ test('check-built with no argument runs the level progress rule and prints its o
   withCopiedScripts(fullBuild(), (root, script) => {
     const result = run(script);
     assert.equal(result.status, 0, result.stdout + result.stderr);
-    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 3 other pages$/m);
-    assert.match(result.stdout, /^ok {3}navbar: 8 pages, /m);
+    assert.match(result.stdout, /^ok {3}level progress: 5 level pages, each with five crumbs and one current, none on the 7 other pages$/m);
+    assert.match(result.stdout, /^ok {3}navbar: 12 pages, /m);
+    assert.match(result.stdout, /^ok {3}routes: 12 routes in the sitemap and the build, prev\/next chain of 12 pages$/m);
   });
 });
 

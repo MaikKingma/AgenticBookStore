@@ -9,7 +9,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const GUIDE_ROOT = join(HERE, '..', '..');
 const PACK = join(GUIDE_ROOT, '..', 'docs', 'spec-pack');
 
-// guide/docs at 05e58a2: the eleven skeleton pages and reference/_category_.json, byte for byte.
+// guide/docs at 05e58a2: the eleven skeleton pages and reference/_category_.json, byte for byte. One page was added
+// later (spec 16, T2): docs/06-bonus-level-orchestration.mdx, the twelfth page of the live guide, as a skeleton.
 export const SKELETON_DOCS = join(HERE, 'skeleton-docs', 'docs');
 
 // The top-level folders of guide/ a copy leaves out: the live docs, and what is installed or generated.
