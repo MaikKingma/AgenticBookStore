@@ -1,6 +1,10 @@
 ---
 name: seed-data-mutant-probes
 description: Seed data mutants (JSON, repeatable SQL) - identity-asserting generator, count guards, growth diffs, ON CONFLICT
+applies-to:
+  - bookstore/src/main/resources/db/migration/**
+  - bookstore/src/main/resources/**/*.json
+  - bookstore/src/main/resources/**/*.sql
 metadata:
   type: feedback
 ---

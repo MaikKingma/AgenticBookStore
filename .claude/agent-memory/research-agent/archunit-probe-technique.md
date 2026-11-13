@@ -1,6 +1,9 @@
 ---
 name: archunit-probe-technique
 description: How to verify ArchUnit API shapes and violation text without touching the repo
+applies-to:
+  - bookstore/src/test/**/ArchitectureTest.java
+  - bookstore/src/test/**/ArchitectureSelfTest.java
 metadata:
   type: reference
 ---

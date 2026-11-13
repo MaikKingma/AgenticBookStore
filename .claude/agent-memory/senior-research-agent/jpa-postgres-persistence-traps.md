@@ -1,6 +1,10 @@
 ---
 name: jpa-postgres-persistence-traps
 description: Hibernate 7 / Spring Data / PostgreSQL 18 persistence traps that change data-adapter and test design (Instant rounding, Limit with join fetch, element collection version bumps, deadlocks from unsorted multi-row updates) plus the statement-counting probe technique
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/data/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/data/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,8 @@
 ---
 name: docusaurus-guide-traps
 description: Non-obvious traps for the guide/ Docusaurus site, its node:test checker (MDX scanner, built-HTML rules, page registration, mutants), A4 pages and CLI pipe truncation
+applies-to:
+  - guide/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,10 @@
 ---
 name: archunit-probes
 description: Non-vacuity probes and fixture self-test review for the bookstore ArchUnit rules
+applies-to:
+  - bookstore/src/test/java/**/ArchitectureTest.java
+  - bookstore/src/test/java/**/*Arch*
+  - bookstore/src/main/java/**
 metadata:
   type: feedback
 ---

@@ -1,6 +1,9 @@
 ---
 name: qa-docs-site-content
 description: Docusaurus guide traps: generated folders before ignore rules, link checks and hash router, markup and axe traps, rehype label plugins, regex MDX scanners, semantic source reviews, print margins, axe on file://, built meta descriptions, derived scenario prompts
+applies-to:
+  - guide/**
+  - "*.mdx"
 metadata:
   type: feedback
 ---

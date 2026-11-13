@@ -1,6 +1,8 @@
 ---
 name: model-choices
 description: Which task kinds held on sonnet and which needed opus in this repo; the owner's sonnet-first rule overrides the definition's escalation table
+applies-to:
+  - any
 metadata:
   type: project
 ---

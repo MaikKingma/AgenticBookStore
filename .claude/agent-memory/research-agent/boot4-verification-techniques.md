@@ -1,6 +1,10 @@
 ---
 name: boot4-verification-techniques
 description: How to verify Spring Boot 4 / Testcontainers 2 claims cheaply for this project (source jars, throwaway probe project, traps in docs)
+applies-to:
+  - "pom.xml"
+  - bookstore/src/test/**
+  - "application*.yml"
 metadata:
   type: reference
 ---

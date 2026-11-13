@@ -1,6 +1,9 @@
 ---
 name: http-collection-replay-probes
 description: JetBrains .http collections against a live seeded stack - replay driver, fresh DB per scenario, mutants
+applies-to:
+  - http/*.http
+  - "*.http"
 metadata:
   type: feedback
 ---

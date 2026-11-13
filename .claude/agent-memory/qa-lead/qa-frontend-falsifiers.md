@@ -1,6 +1,8 @@
 ---
 name: qa-frontend-falsifiers
 description: Witnesses that falsify React, Vitest and RTL criteria: mid-value refusals, storage reads, integer cents, query encoding, absence assertions, status-keyed rendering, decorrelated badges, list-order and key witnesses, money display sites, reducer double-dispatch, cap mirrors, text-source fixtures, lookup fallbacks
+applies-to:
+  - frontend/**
 metadata:
   type: feedback
 ---

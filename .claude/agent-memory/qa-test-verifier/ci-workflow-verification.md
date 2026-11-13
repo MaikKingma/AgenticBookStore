@@ -1,6 +1,8 @@
 ---
 name: ci-workflow-verification
 description: GitHub Actions task verification with read-only gh - baselines, timeouts, log and cache traps, gated deploys
+applies-to:
+  - .github/workflows/**
 metadata:
   type: feedback
 ---

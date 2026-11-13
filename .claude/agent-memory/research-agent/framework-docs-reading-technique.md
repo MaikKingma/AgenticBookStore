@@ -1,6 +1,10 @@
 ---
 name: framework-docs-reading-technique
 description: How to read pinned-version docs of OpenSpec, Spec Kit and Agent OS exactly, and traps in the install routes
+applies-to:
+  - agent-os/**
+  - docs/spec-pack/**
+  - .claude/**
 metadata:
   type: reference
 ---

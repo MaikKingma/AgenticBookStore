@@ -1,6 +1,9 @@
 ---
 name: slice-pattern-decisions
 description: Rationale for the cross-slice design choices set at spec 02 (catalogue) and extended at spec 03 (inventory) that later bookstore slices mirror; use when shaping any bookstore slice
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: project
 ---

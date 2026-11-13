@@ -1,6 +1,10 @@
 ---
 name: scaffold-verification-techniques
 description: Generated scaffolding and static .http files - regenerate for provenance, snapshot-safe probes, rework carry-forward
+applies-to:
+  - http/*.http
+  - "*.http"
+  - frontend/**
 metadata:
   type: feedback
 ---

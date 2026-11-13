@@ -1,6 +1,10 @@
 ---
 name: flow-mapper-test-techniques
 description: Mockito and AssertJ techniques for *FlowTest classes and DomainMapper/DTO tests so QA mutation probes die in round one (strict stubs, clock witnesses, event capture, ordering, validating hand-offs)
+applies-to:
+  - "*FlowTest.java"
+  - bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/**
+  - bookstore/src/main/java/nl/openvalue/bookstore/domain/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,9 @@
 ---
 name: jpa-adapter-probes
 description: Spring Data JPA adapters on Hibernate 7 and AFTER_COMMIT listeners - join dedup, tiebreaks, flush, locale
+applies-to:
+  - bookstore/**/data/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: feedback
 ---

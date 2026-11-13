@@ -1,6 +1,8 @@
 ---
 name: git-ci-traps
 description: Git, gh and CI traps of the factory cycles (SSH push, check names, PR watch timing, moved base, parallel worktrees, merges into in-flight branches); verify commands before relying on them
+applies-to:
+  - any
 metadata:
   type: project
 ---

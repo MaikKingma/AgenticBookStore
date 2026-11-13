@@ -1,6 +1,9 @@
 ---
 name: mcp-tool-probes
 description: Spring AI @McpTool servers (unit plus SDK IT per run) and in-process STDIO tests in a shared Surefire fork
+applies-to:
+  - distributor/**
+  - bookstore/src/main/java/**/assistant/**
 metadata:
   type: feedback
 ---

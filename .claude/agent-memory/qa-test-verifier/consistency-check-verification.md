@@ -1,6 +1,10 @@
 ---
 name: consistency-check-verification
 description: Doc-only consistency records and rehearsal checklists - own inventories, quote lookup, dry runs
+applies-to:
+  - docs/spec-pack/**
+  - agent-os/**
+  - guide/docs/**
 metadata:
   type: feedback
 ---

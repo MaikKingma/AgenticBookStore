@@ -1,6 +1,9 @@
 ---
 name: frontend-vitest-probe-techniques
 description: Maven-installed Node frontend - verbose Vitest run, console trap, probe runner, temporary witnesses, CSS tests
+applies-to:
+  - frontend/**
+  - frontend/pom.xml
 metadata:
   type: feedback
 ---

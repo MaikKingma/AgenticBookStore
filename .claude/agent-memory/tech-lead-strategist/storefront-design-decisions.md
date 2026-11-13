@@ -1,6 +1,9 @@
 ---
 name: storefront-design-decisions
 description: Spec 12 storefront rationale and frontend traps (router, oxlint, resources, no Maven edge, test style, styling contract, lockfile, inputs) for later frontend or guide work
+applies-to:
+  - frontend/**
+  - guide/**
 metadata:
   type: project
 ---

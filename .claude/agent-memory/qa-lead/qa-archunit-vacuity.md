@@ -1,6 +1,10 @@
 ---
 name: qa-archunit-vacuity
 description: ArchUnit rules and their self-tests: allowEmptyShould vacuity, reflective @AnalyzeClasses, origin-anchored failure matching, per-string and per-position witnesses (parameter predicates, nested-class walks), composite rules; read before any ArchUnit task strategy or review
+applies-to:
+  - bookstore/src/test/java/**/ArchitectureTest.java
+  - bookstore/src/test/java/**/*Arch*
+  - bookstore/src/main/java/**
 metadata:
   type: feedback
 ---

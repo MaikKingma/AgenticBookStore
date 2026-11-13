@@ -1,6 +1,9 @@
 ---
 name: bash-script-test-probes
 description: Bash and git publish scripts - interpreter trap, mutant dirs, push witnesses, look-alike path probes
+applies-to:
+  - scripts/**
+  - "*.sh"
 metadata:
   type: feedback
 ---

@@ -1,6 +1,10 @@
 ---
 name: qa-request-collection-smokes
 description: Verifying http/*.http request collections and live smoke replays: collection inputs vs E2E inputs, replaying the file's own bytes, driver negative controls, comment claims, leftover compose containers, PostgreSQL 18 NOT NULL catalogue rows, curl and Boot error-body details
+applies-to:
+  - http/*.http
+  - "*.http"
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: feedback
 ---

@@ -1,6 +1,8 @@
 ---
 name: worktree-agent-shell-guard
 description: Bash guard quirks for worktree-isolated research agents and cheap ways to get Surefire totals and wall time
+applies-to:
+  - any
 metadata:
   type: reference
 ---

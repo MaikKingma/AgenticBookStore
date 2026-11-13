@@ -1,6 +1,10 @@
 ---
 name: docs-census-probes
 description: Cheap ways to verify README and run claims for the bookstore (jar run, endpoint census, http collection collisions, worktree git guard)
+applies-to:
+  - "README.md"
+  - http/*.http
+  - docs/**
 metadata:
   type: reference
 ---

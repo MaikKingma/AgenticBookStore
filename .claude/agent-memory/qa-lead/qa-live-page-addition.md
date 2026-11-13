@@ -1,6 +1,10 @@
 ---
 name: qa-live-page-addition
 description: Strategy traps when a spec adds a page to the live Docusaurus guide: default-dir built-rule collisions with CLI fixtures, route and pagination pins, page-count pin greps, one-letter sweep literals, minutes regexes, claim closure, branch-only pointers, comment openers in test literals, raw HTML code
+applies-to:
+  - guide/docs/**
+  - guide/scripts/**
+  - guide/docusaurus.config.ts
 metadata:
   type: feedback
 ---

@@ -1,6 +1,9 @@
 ---
 name: test-context-cost-model
 description: How the bookstore test suite stays inside the 60 s verify budget (one container, one Spring context); use when a spec adds integration, slice or context tests
+applies-to:
+  - bookstore/src/test/**
+  - distributor/src/test/**
 metadata:
   type: project
 ---

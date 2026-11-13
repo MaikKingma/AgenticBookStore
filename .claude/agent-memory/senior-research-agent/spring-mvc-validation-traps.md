@@ -1,6 +1,10 @@
 ---
 name: spring-mvc-validation-traps
 description: Boot 4 / Spring 7 / Jackson 3 request binding and validation behaviour that contradicts Boot 3-era intuition (primitive JSON fields, @Validated, boolean params, params conditions, scoped advice)
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/command/**
+  - bookstore/src/main/java/nl/openvalue/bookstore/query/**
+  - distributor/**/api/**
 metadata:
   type: reference
 ---

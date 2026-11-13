@@ -1,6 +1,9 @@
 ---
 name: claude-code-headless-probe-techniques
 description: How to probe Claude Code behaviour headless (claude -p) without touching the user's ~/.claude, and the traps that make probes lie or write user config
+applies-to:
+  - .claude/**
+  - scripts/**
 metadata:
   type: reference
 ---

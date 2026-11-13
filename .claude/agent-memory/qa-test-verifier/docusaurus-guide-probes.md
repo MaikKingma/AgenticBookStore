@@ -1,6 +1,8 @@
 ---
 name: docusaurus-guide-probes
 description: guide/ node:test check harness - probe runner, wiring mutants, check:built, registration and rule-table guards
+applies-to:
+  - guide/scripts/**
 metadata:
   type: feedback
 ---

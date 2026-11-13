@@ -1,6 +1,10 @@
 ---
 name: readme-and-live-jar-probes
 description: README, packaging and live-jar tasks - claim checks, start proof, STDIO driver, Compose trap, LLM stub, capture replay
+applies-to:
+  - "README*.md"
+  - **/pom.xml
+  - bookstore/src/main/resources/**
 metadata:
   type: feedback
 ---

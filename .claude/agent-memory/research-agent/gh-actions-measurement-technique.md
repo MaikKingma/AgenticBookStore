@@ -1,6 +1,8 @@
 ---
 name: gh-actions-measurement-technique
 description: How to measure CI baselines with gh (step times, log greps, cache scoping) and the traps hit
+applies-to:
+  - .github/workflows/*.yml
 metadata:
   type: reference
 ---

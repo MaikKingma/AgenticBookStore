@@ -1,6 +1,9 @@
 ---
 name: live-ui-walk-verification
 description: Re-verifying a live UI walk - throwaway DB and jar, playwright-cli listeners, dev-mode console, control builds
+applies-to:
+  - frontend/**
+  - bookstore/src/main/resources/**
 metadata:
   type: feedback
 ---

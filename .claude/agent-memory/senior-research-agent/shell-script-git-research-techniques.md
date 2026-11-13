@@ -1,6 +1,9 @@
 ---
 name: shell-script-git-research-techniques
 description: How to verify bash scripts that manipulate git refs portably (macOS bash 3.2 vs Linux GNU) without touching the real remote
+applies-to:
+  - scripts/**
+  - "*.sh"
 metadata:
   type: reference
 ---

@@ -1,6 +1,10 @@
 ---
 name: docusaurus-content-ui-probes
 description: guide/ content pages vs the pack oracle, plus component, CSS, palette and focus-ring probes and rigs
+applies-to:
+  - guide/docs/**
+  - guide/src/**
+  - guide/docusaurus.config.ts
 metadata:
   type: feedback
 ---

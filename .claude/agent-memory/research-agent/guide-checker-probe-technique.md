@@ -1,6 +1,8 @@
 ---
 name: guide-checker-probe-technique
 description: How to map which guide/ checks pin a file without npm ci, and where the browser-check rig lives
+applies-to:
+  - guide/**
 metadata:
   type: reference
 ---

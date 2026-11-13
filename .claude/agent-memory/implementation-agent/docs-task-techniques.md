@@ -1,6 +1,10 @@
 ---
 name: docs-task-techniques
 description: README and architecture-doc tasks whose claims a QA census checks (two-way scripts, live proofs, rg traps) and replaying .http collection files live without an IDE
+applies-to:
+  - "README.md"
+  - docs/**
+  - http/*.http
 metadata:
   type: reference
 ---

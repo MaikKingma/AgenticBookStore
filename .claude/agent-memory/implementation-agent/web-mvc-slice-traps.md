@@ -1,6 +1,11 @@
 ---
 name: web-mvc-slice-traps
 description: @WebMvcTest slice traps in bookstore and distributor - nested contexts, ProblemDetail shape, 405 and advice scope, Jackson 3 coercion, view controller order, QA C0 greps on product files
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/command/**
+  - bookstore/src/main/java/nl/openvalue/bookstore/query/**
+  - distributor/**/api/**
+  - "*ControllerTest.java"
 metadata:
   type: reference
 ---

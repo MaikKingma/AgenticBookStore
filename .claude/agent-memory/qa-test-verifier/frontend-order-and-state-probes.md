@@ -1,6 +1,8 @@
 ---
 name: frontend-order-and-state-probes
 description: Frontend page and hook mutants - pass-through order, money strings, router and form gaps, input limits
+applies-to:
+  - frontend/**
 metadata:
   type: feedback
 ---

@@ -1,6 +1,10 @@
 ---
 name: spring-ai-mcp-test-traps
 description: Testing Spring AI 2.0.2 @Tool beans and MCP tools (mcp-core 2.1.0) - callbacks without a context, log recorder, scripted ChatClient, stub AnthropicChatModel, MCP client request traps
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/assistant/**
+  - distributor/**/mcp/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/assistant/**
 metadata:
   type: reference
 ---

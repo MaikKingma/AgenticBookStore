@@ -1,6 +1,8 @@
 ---
 name: guide-site-design-decisions
 description: Spec 11 (Docusaurus guide) strategy rationale - checker-first skeletons, marker-gated coverage, pack-anchored manifest, check-time source reading, contrast by variable name, Infima and MDX traps
+applies-to:
+  - guide/**
 metadata:
   type: project
 ---

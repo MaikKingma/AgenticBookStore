@@ -1,6 +1,9 @@
 ---
 name: restclient-acl-probes
 description: RestClient anti-corruption adapters - element-level malformed bodies, float coercion, log escaping
+applies-to:
+  - bookstore/src/main/java/**/acl/**
+  - bookstore/src/test/java/**/acl/**
 metadata:
   type: feedback
 ---

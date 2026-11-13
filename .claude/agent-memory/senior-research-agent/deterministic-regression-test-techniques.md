@@ -1,6 +1,9 @@
 ---
 name: deterministic-regression-test-techniques
 description: How to build deterministic red-before/green-after regression tests and like-for-like negative controls for clock, randomness and Spring test-context bugs
+applies-to:
+  - bookstore/src/test/**
+  - distributor/src/test/**
 metadata:
   type: reference
 ---

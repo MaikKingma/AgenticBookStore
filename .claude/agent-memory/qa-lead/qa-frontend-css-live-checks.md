@@ -1,6 +1,10 @@
 ---
 name: qa-frontend-css-live-checks
 description: Falsifiers for contrast and style-guard tests, CSS layout and live-browser checks, and frontend negative controls in a throwaway worktree: calibration pairs, coverage rules, named-surface claims, band witnesses, cascade blind spots, jsdom layout gaps, rehype table wrappers, favicon and cache traps
+applies-to:
+  - frontend/**
+  - guide/src/**
+  - "*.css"
 metadata:
   type: feedback
 ---

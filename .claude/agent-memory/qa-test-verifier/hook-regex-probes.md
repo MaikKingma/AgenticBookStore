@@ -1,6 +1,10 @@
 ---
 name: hook-regex-probes
 description: Claude Code hook scripts that grep stdin JSON - mutate every regex element, equivalence calls
+applies-to:
+  - .claude/**
+  - docs/spec-pack/**
+  - "*.sh"
 metadata:
   type: feedback
 ---

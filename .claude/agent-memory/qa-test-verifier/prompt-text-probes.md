@@ -1,6 +1,9 @@
 ---
 name: prompt-text-probes
 description: Text-only fixes (prompt resource, @Tool descriptions) - clause-level mutants and guard-test bite proofs
+applies-to:
+  - bookstore/src/main/resources/**
+  - bookstore/src/main/java/**/assistant/**
 metadata:
   type: feedback
 ---

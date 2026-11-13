@@ -1,6 +1,10 @@
 ---
 name: qa-input-format-falsifiers
 description: Falsifiers for input and string-format criteria: strip vs trim and Locale witnesses, padding classes, framework validator premises, regex position witnesses, missing-key bodies, length bounds, external-id case, random UUIDs, HTTP client timeouts, log-escape sets
+applies-to:
+  - bookstore/src/main/java/**
+  - bookstore/src/test/java/**
+  - frontend/**
 metadata:
   type: feedback
 ---

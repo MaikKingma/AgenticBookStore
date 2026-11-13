@@ -1,6 +1,9 @@
 ---
 name: spring-ai-mcp-traps
 description: Spring AI 2.0.x MCP server (webmvc, @McpTool) traps found by source reading and a scratch round trip; plus how to verify MCP behaviour fast
+applies-to:
+  - distributor/**/mcp/**
+  - distributor/**
 metadata:
   type: reference
 ---

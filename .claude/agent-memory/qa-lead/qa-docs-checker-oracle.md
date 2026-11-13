@@ -1,6 +1,10 @@
 ---
 name: qa-docs-checker-oracle
 description: Checker-as-oracle traps for docs specs graded by a home-made checker: mutation probes on checker source, frozen oracle hash chain, coverage-manifest gaming, plan-parser witnesses, hex and contrast rules, font loading, closed-set rules, shape vs count rules, self-tests reading live content
+applies-to:
+  - guide/scripts/**
+  - guide/docs/**
+  - docs/spec-pack/**
 metadata:
   type: feedback
 ---

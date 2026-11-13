@@ -1,6 +1,10 @@
 ---
 name: qa-llm-failure-and-prompts
 description: Spring AI assistant specs: catch-all tool error helpers, failure translation with memory restore, provider-shape defects needing stub contract tests, test contexts against exported env variables, prompt and tool-text fixes, fat-jar DoD greps
+applies-to:
+  - bookstore/src/main/java/**/assistant/**
+  - bookstore/src/main/resources/**
+  - bookstore/src/test/java/**/assistant/**
 metadata:
   type: feedback
 ---

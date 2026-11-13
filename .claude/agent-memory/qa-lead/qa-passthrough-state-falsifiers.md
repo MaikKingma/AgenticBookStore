@@ -1,6 +1,11 @@
 ---
 name: qa-passthrough-state-falsifiers
 description: Falsifiers for pass-through and default values, hard-coded defaults per layer, either-or values, state-dependent rules, list-element reporting, output caps, caught exception types, JSON null keys, exact-equality identifiers; read before the falsifier list of an adapter, mapper or flow task
+applies-to:
+  - bookstore/src/main/java/**/acl/**
+  - bookstore/src/main/java/**/domaininteraction/**
+  - bookstore/src/main/java/**/domain/**
+  - bookstore/src/test/java/**
 metadata:
   type: feedback
 ---

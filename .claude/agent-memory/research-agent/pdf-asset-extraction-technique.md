@@ -1,6 +1,10 @@
 ---
 name: pdf-asset-extraction-technique
 description: Extracting a logo/image with alpha from a PDF on a Mac without installs (stdlib python zlib on XObject + SMask)
+applies-to:
+  - guide/static/**
+  - frontend/public/**
+  - frontend/src/assets/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,8 @@
 ---
 name: review-scope-rulings
 description: Meta-review rulings on premises and scope: required forms stated as parentheticals, refuted brief expectations, orchestrator-approved deviations, verification tasks finding out-of-scope defects, nits in authored docs and rehearsal rows, live checks that cannot discriminate, comment-fix blast radius
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

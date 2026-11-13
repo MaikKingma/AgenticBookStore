@@ -1,6 +1,9 @@
 ---
 name: spring-runtime-probes
 description: Spring Boot runtime probes - clean builds, Docker-down, live boot, validators, fixed clock, EPP, view controllers
+applies-to:
+  - bookstore/src/main/**
+  - bookstore/pom.xml
 metadata:
   type: feedback
 ---

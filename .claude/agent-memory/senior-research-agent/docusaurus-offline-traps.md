@@ -1,6 +1,8 @@
 ---
 name: docusaurus-offline-traps
 description: Docusaurus 3.10 traps for file:// offline builds, broken-link gating and the future.v4 flag, plus how to verify them in a browser
+applies-to:
+  - guide/**
 metadata:
   type: reference
 ---

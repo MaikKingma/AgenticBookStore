@@ -1,6 +1,9 @@
 ---
 name: integration-test-techniques
 description: RestTestClient and AssertJ techniques for *IntegrationTest classes (type-sensitive JSON asserts, exact key sets, probe-killing data, no unchecked warnings)
+applies-to:
+  - "*IntegrationTest.java"
+  - bookstore/src/test/**
 metadata:
   type: reference
 ---

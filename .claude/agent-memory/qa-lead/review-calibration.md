@@ -1,6 +1,8 @@
 ---
 name: review-calibration
 description: Meta-review rules for rework rounds and evidence handling: carrying probe evidence into rework, edited killing assertions, no-red-run, implementer probes outside scope, probe-restore slips, escalated-round bounds, verifier-skipped read-only checks, concurrency witnesses, constant-only diffs, skipped dev-mode walks
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

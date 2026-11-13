@@ -1,6 +1,10 @@
 ---
 name: spring-web-config-probe-technique
 description: Probing WebMvcConfigurer, static resources, Boot error JSON, ProblemDetail wire format and Maven resource inheritance with a scratch Boot 4.1.2 project
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/command/**
+  - "*WebConfig*.java"
+  - "pom.xml"
 metadata:
   type: reference
 ---

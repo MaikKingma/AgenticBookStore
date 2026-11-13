@@ -1,6 +1,10 @@
 ---
 name: qa-test-data-falsifiers
 description: Backend test data that cannot falsify a criterion and the witnesses that can: combined filters, order claims, sorts and tiebreaks, UUID comparators, join duplicates, rounding, guard falsifiers, fixed clocks; read before writing the falsifier list of a qaDirective
+applies-to:
+  - bookstore/src/test/java/**
+  - bookstore/**/data/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: feedback
 ---

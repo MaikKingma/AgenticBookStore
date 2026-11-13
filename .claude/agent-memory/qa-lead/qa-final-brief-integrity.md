@@ -1,6 +1,8 @@
 ---
 name: qa-final-brief-integrity
 description: Writing the qa-final brief and checking integration: CI run ids by commit sha, base moved mid-cycle (patch-identity carry), per-task hash baselines and the dry-run checker script, count expectations from commands, free negative controls, scenario-map name drift
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

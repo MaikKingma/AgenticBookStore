@@ -1,6 +1,10 @@
 ---
 name: jpa-slice-traps
 description: Non-obvious behaviours of the bookstore JPA slice tests (Hibernate 7, Spring Data JPA 4.1, PostgreSQL) that decide whether a data-adapter mutation is killable
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/data/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/data/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: reference
 ---

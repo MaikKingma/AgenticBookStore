@@ -1,6 +1,8 @@
 ---
 name: seed-data-techniques
 description: Loading and guarding JSON seed files with Jackson 3 in the distributor; keeping each validation guard in one place so QA removal probes fail; CRLF-neutral file checks
+applies-to:
+  - distributor/**
 metadata:
   type: reference
 ---

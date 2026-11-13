@@ -1,6 +1,10 @@
 ---
 name: docusaurus-markdown-html-probes
 description: guide/ Markdown/MDX checkers, built-HTML tab readers and rehype plugins probed through the real pipeline
+applies-to:
+  - guide/scripts/**
+  - guide/src/**
+  - "*.mdx"
 metadata:
   type: feedback
 ---

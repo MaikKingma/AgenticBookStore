@@ -1,6 +1,9 @@
 ---
 name: env-switch-mutant-runner
 description: Running 20+ Java probes cheaply - env-switch schema or generated mutants, restore-and-hash runner, sort families
+applies-to:
+  - bookstore/src/main/java/**
+  - bookstore/src/test/java/**
 metadata:
   type: feedback
 ---

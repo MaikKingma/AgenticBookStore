@@ -1,6 +1,8 @@
 ---
 name: distributor-design-decisions
 description: Rationale behind spec 05 distributor design calls (advice scope, REST 400 vs MCP clamp, real services in slices, strict seed reader, shared ISBNs); use when shaping specs 06, 09, 10 or workshop levels that touch the distributor
+applies-to:
+  - distributor/**
 metadata:
   type: project
 ---

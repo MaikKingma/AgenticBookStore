@@ -1,6 +1,9 @@
 ---
 name: ci-testcontainers-research-techniques
 description: Techniques and traps for researching CI Docker image cost, Ryuk and registry questions for the Testcontainers suite on GitHub-hosted runners
+applies-to:
+  - .github/workflows/*.yml
+  - bookstore/src/test/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,8 @@
 ---
 name: frontend-build-traps
 description: Non-obvious traps for the frontend module (Maven-installed Node, Vite 8, Vitest 5, jsdom) and the test techniques that held, incl. QA grep traps in test sources
+applies-to:
+  - frontend/**
 metadata:
   type: feedback
 ---

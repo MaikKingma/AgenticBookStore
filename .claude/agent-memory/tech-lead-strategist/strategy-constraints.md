@@ -1,6 +1,8 @@
 ---
 name: strategy-constraints
 description: Recurring factory constraints that should shape every task breakdown and trap list (module batching, stripped paths, DoD greps, shared Docker, git ownership)
+applies-to:
+  - any
 metadata:
   type: project
 ---

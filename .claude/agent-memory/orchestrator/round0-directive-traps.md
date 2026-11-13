@@ -1,6 +1,8 @@
 ---
 name: round0-directive-traps
 description: Witness, falsifier and criteria rules to put into implDirective/qaDirective at round 0 so code tasks pass without test-only rework; pointers to the plans that hold the detail
+applies-to:
+  - any
 metadata:
   type: project
 ---

@@ -1,6 +1,10 @@
 ---
 name: qa-llm-adapter-specs
 description: QA strategy traps for Spring AI adapter specs: keyed referee as offline proof, environment-reading tests, framework-default-equivalent mutants, chat memory window semantics, tool-calling doubles, adapter layer rules, client-mirrored limits, sliding-window limiter witnesses, EPP pipeline order
+applies-to:
+  - bookstore/src/main/java/**/assistant/**
+  - bookstore/src/main/resources/application*
+  - bookstore/src/test/java/**/assistant/**
 metadata:
   type: feedback
 ---

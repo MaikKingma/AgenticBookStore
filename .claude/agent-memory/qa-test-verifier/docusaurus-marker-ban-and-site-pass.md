@@ -1,6 +1,8 @@
 ---
 name: docusaurus-marker-ban-and-site-pass
 description: Live-guide rendered pass (console buckets, CI zip, print count) and Linux-only flaky CLI tests
+applies-to:
+  - guide/**
 metadata:
   type: feedback
 ---

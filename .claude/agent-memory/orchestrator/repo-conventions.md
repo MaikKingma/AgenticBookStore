@@ -1,6 +1,8 @@
 ---
 name: repo-conventions
 description: Branch model, merge rules, module vocabulary and gate decisions settled for the AgenticBookStore factory runs; verify against docs/spec-pack/orchestrator before relying on them
+applies-to:
+  - any
 metadata:
   type: project
 ---

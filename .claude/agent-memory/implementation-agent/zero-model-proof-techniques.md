@@ -1,6 +1,9 @@
 ---
 name: zero-model-proof-techniques
 description: Proving staged config, generated trees and hand-written Agent OS files with zero model runs (glob tests, git grep on a sha, hooks, installer isolation, trace tables) and installer traps
+applies-to:
+  - .claude/**
+  - agent-os/**
 metadata:
   type: reference
 ---

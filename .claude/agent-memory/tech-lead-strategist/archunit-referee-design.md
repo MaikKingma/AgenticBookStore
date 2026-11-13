@@ -1,6 +1,9 @@
 ---
 name: archunit-referee-design
 description: Rationale and anti-vacuity technique for the bookstore ArchitectureTest and ArchitectureSelfTest; use when a spec adds or touches an ArchUnit rule (specs 02, 06, 07) or when planning referee work
+applies-to:
+  - bookstore/src/test/**/ArchitectureTest.java
+  - bookstore/src/test/**/ArchitectureSelfTest.java
 metadata:
   type: project
 ---

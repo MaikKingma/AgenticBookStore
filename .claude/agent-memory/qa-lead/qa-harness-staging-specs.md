@@ -1,6 +1,11 @@
 ---
 name: qa-harness-staging-specs
 description: Strategy traps for specs that stage agent config (CLAUDE.md, .claude/, hooks) under docs/ and verify it with headless Claude Code sessions: ignore rules, eol attributes, re-run budget, isolation evidence, stream-order judging, no-run verification plans, shared-repo ref checks, gate-regex input forms
+applies-to:
+  - docs/spec-pack/**
+  - .claude/**
+  - CLAUDE.md
+  - scripts/**
 metadata:
   type: feedback
 ---

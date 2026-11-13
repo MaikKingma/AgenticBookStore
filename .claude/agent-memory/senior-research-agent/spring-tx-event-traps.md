@@ -1,6 +1,10 @@
 ---
 name: spring-tx-event-traps
 description: Spring 7 transactional event listener traps that change how after-commit and rollback tests must be built (listener order, swallowed after-commit exceptions, REQUIRED vs REQUIRES_NEW delegates, startup check, rollback-only via joined proxies, test bean registration)
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/domaininteraction/**
+  - bookstore/src/main/java/nl/openvalue/bookstore/process/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/process/**
 metadata:
   type: reference
 ---

@@ -1,6 +1,10 @@
 ---
 name: domain-mutation-probes
 description: Domain value objects, aggregates, flow ports and translators, view mappers, wrapped-cause pins
+applies-to:
+  - bookstore/src/main/java/**/domain/**
+  - bookstore/src/main/java/**/domaininteraction/**
+  - bookstore/src/test/java/**/domain/**
 metadata:
   type: feedback
 ---

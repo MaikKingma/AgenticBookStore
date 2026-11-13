@@ -1,6 +1,9 @@
 ---
 name: bean-validation-traps
 description: Payload constraint techniques in the command layer (validating a trimmed value, keeping one violation per rule, test data for JSON control characters)
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/command/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/command/**
 metadata:
   type: reference
 ---

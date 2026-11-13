@@ -1,6 +1,11 @@
 ---
 name: qa-test-infra-guards
 description: Guarding shared test infrastructure and failure devices: cleaning hooks needing a guard test, Vitest console trap guard, shared integration base context key, rollback and after-commit listener probes, boundary-probe wording
+applies-to:
+  - bookstore/src/test/java/**
+  - frontend/**/*.test.*
+  - frontend/vitest*
+  - frontend/src/test/**
 metadata:
   type: feedback
 ---

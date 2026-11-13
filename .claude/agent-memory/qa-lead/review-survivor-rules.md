@@ -1,6 +1,8 @@
 ---
 name: review-survivor-rules
 description: Judging surviving mutations in meta-review: null guards, REJECT threshold vs inspection allowance, survivors contradicting a pinned criterion, strengthening-only mutants, oracle helpers, pass-through and equivalent mutants, freeze-time regression guards, gate-grep kills, boundary twins, oracle-hardening gaps
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

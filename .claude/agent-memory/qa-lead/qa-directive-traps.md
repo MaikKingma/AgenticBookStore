@@ -1,6 +1,8 @@
 ---
 name: qa-directive-traps
 description: Core traps in verifier directives (common block C0): clean-tree snapshots, path-ban greps, scope arguments, scratch evidence names, grep syntax (macOS, git grep, rg), gate greps hitting test text, .orig copies, timestamps, backslash-u escapes
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

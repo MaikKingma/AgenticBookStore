@@ -1,6 +1,10 @@
 ---
 name: spring-boot-env-logging-traps
 description: Boot 4.1.2 traps for no-context yml/EPP tests and for a second in-process app (SpringApplicationBuilder) in the shared Surefire fork - logback init once per JVM, system properties, main class
+applies-to:
+  - "application*.yml"
+  - distributor/**
+  - bookstore/src/test/**
 metadata:
   type: reference
 ---

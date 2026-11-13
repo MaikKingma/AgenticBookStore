@@ -1,6 +1,10 @@
 ---
 name: maven-build-traps
 description: Non-obvious traps when running the Maven wrapper and shell checks in this repo (output truncation, zsh globbing, wrapper line endings, package-info.class generation, Edit and probe restores)
+applies-to:
+  - "pom.xml"
+  - .mvn/**
+  - "mvnw"
 metadata:
   type: reference
 ---

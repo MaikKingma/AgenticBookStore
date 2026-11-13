@@ -1,6 +1,10 @@
 ---
 name: runtime-probe-lessons
 description: Live runs, sandbox hygiene, headless Claude Code, staged agent config, LLM adapter and Spring/Maven probe traps for directives and briefs
+applies-to:
+  - .claude/**
+  - bookstore/src/main/java/nl/openvalue/bookstore/assistant/**
+  - "pom.xml"
 metadata:
   type: project
 ---

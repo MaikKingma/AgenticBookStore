@@ -1,6 +1,10 @@
 ---
 name: qa-warnings-and-logging
 description: Warning inventory and log-evidence traps in directives: warnings vs task sequencing, per-context counts, once-per-JVM notices, base-referee multiset diff, logback initialised once per JVM, run-order dependence, STDIO empty-pattern line, README command claims
+applies-to:
+  - bookstore/src/test/**
+  - bookstore/src/main/resources/logback*
+  - "README*.md"
 metadata:
   type: feedback
 ---

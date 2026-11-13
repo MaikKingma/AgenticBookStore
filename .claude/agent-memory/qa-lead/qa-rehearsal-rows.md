@@ -1,6 +1,10 @@
 ---
 name: qa-rehearsal-rows
 description: Reviewing owner rehearsal rows and staged exercise docs: rows that must produce the state they premise (reset, ignored target, auto memory), characterization-test role ladders, doc-row claim checks, lifecycle premises (LSP starts on first edit), row literals measured with variant commands
+applies-to:
+  - docs/spec-pack/**
+  - guide/docs/**
+  - .claude/**
 metadata:
   type: feedback
 ---

@@ -1,6 +1,8 @@
 ---
 name: shell-traps
 description: zsh, ugrep, BSD grep, rg, Edit/Write, macOS and worktree-guard traps that make QA commands look empty or green
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

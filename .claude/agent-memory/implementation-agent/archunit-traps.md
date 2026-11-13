@@ -1,6 +1,9 @@
 ---
 name: archunit-traps
 description: Non-obvious ArchUnit 1.5.1 behaviours met while extending ArchitectureTest and ArchitectureSelfTest in the bookstore module
+applies-to:
+  - bookstore/src/test/**/ArchitectureTest.java
+  - bookstore/src/test/**/ArchitectureSelfTest.java
 metadata:
   type: reference
 ---

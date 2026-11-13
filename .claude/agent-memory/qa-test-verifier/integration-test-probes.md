@@ -1,6 +1,9 @@
 ---
 name: integration-test-probes
 description: Full-context HTTP integration tests - per-criterion data rows, transaction boundaries, Flyway guards, flakes
+applies-to:
+  - bookstore/src/test/java/**
+  - bookstore/src/main/resources/db/migration/**
 metadata:
   type: feedback
 ---

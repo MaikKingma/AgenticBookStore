@@ -1,6 +1,8 @@
 ---
 name: final-sweep-checks
 description: qa-final traps - moving base, CI run ids, bugfix control ladder, warning inventory, JaCoCo CLI, heartbeat stamps
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

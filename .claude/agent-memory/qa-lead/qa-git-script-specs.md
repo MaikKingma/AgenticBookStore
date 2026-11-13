@@ -1,6 +1,9 @@
 ---
 name: qa-git-script-specs
 description: Falsifiers and safety rules for specs whose product is a bash script that rewrites git refs (publish or strip scripts, force pushes, guards): commit-tree determinism, atomic and lease witnesses, reuse precedence, refusal and look-alike witnesses, scratch-repo recipes, script-interpreter trap
+applies-to:
+  - scripts/**
+  - "*.sh"
 metadata:
   type: feedback
 ---

@@ -1,6 +1,9 @@
 ---
 name: tool-adapter-probes
 description: Spring AI @Tool classes, ChatClient wiring and scripted chat-model doubles - catch, memory, stub-server mutants
+applies-to:
+  - bookstore/src/main/java/**/assistant/**
+  - bookstore/src/test/java/**/assistant/**
 metadata:
   type: feedback
 ---

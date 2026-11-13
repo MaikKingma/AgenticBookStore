@@ -1,6 +1,8 @@
 ---
 name: qa-ci-config-specs
 description: QA traps for CI-config specs whose evidence is real GitHub Actions runs: unreadable job summaries and the signed-in channel decided at Gate 1, baselines recomputed by script, timing noise, log-grep anchors, hang and timeout paths, Linux-only pipe truncation, actions/cache evidence, owner-armed deploy gates
+applies-to:
+  - .github/workflows/**
 metadata:
   type: feedback
 ---

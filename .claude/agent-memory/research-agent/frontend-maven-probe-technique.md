@@ -1,6 +1,9 @@
 ---
 name: frontend-maven-probe-technique
 description: How to verify frontend-maven-plugin / Vite / Vitest claims with a scratch Maven probe and which sources were authoritative
+applies-to:
+  - frontend/**
+  - frontend/pom.xml
 metadata:
   type: reference
 ---

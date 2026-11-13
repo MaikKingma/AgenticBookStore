@@ -1,6 +1,10 @@
 ---
 name: level-branch-cut-verification
 description: Cut-and-pushed level branches - tree equality vs build-level, manifest vs diff, push side effects
+applies-to:
+  - scripts/**
+  - "*.sh"
+  - docs/spec-pack/**
 metadata:
   type: feedback
 ---

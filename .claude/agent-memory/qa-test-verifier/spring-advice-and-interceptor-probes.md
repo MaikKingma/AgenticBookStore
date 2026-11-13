@@ -1,6 +1,10 @@
 ---
 name: spring-advice-and-interceptor-probes
 description: @ControllerAdvice handlers, MVC interceptors, validated config records and config-precedence pins
+applies-to:
+  - bookstore/src/main/java/**/command/**
+  - bookstore/src/main/java/**/query/**
+  - bookstore/src/main/resources/application*
 metadata:
   type: feedback
 ---

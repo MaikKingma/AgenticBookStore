@@ -1,6 +1,10 @@
 ---
 name: qa-bugfix-and-live-runs
 description: sdd-bugfix lite cycles (no strategy run, common block gaps), bugfix final brief (cross negative controls, scratch tests, worktree recipes), shared compose database across checkouts, live-captured contract fixtures
+applies-to:
+  - bookstore/src/test/**
+  - bookstore/**/compose*.y*ml
+  - "*.http"
 metadata:
   type: feedback
 ---

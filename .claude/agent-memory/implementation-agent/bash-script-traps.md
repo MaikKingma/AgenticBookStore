@@ -1,6 +1,10 @@
 ---
 name: bash-script-traps
 description: Traps and techniques for the repo's bash tooling (level-branches, publish script) and hermetic bash tests: errexit in || contexts, bash 3.2 vs 5, git apply --3way, EXIT traps, PATH shims, bash mutants
+applies-to:
+  - scripts/**
+  - "*.sh"
+  - .github/workflows/*.yml
 metadata:
   type: reference
 ---

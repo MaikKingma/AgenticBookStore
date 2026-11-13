@@ -1,6 +1,9 @@
 ---
 name: restclient-acl-traps
 description: Traps and techniques for the bookstore acl adapter on Spring RestClient (Boot 4.1.2) - two constructors need @Autowired, path variable encoding, OutputCapture formats, loopback HttpServer timeout tests
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/acl/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/acl/**
 metadata:
   type: reference
 ---

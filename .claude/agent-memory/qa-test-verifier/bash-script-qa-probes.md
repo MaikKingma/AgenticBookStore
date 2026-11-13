@@ -1,6 +1,9 @@
 ---
 name: bash-script-qa-probes
 description: Bash tooling and self-test verification - copy-based mutants, xtrace coverage, rollback witnesses
+applies-to:
+  - scripts/**
+  - "*.sh"
 metadata:
   type: feedback
 ---

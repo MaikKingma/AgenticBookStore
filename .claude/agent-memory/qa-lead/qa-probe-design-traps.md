@@ -1,6 +1,8 @@
 ---
 name: qa-probe-design-traps
 description: Designing must-fail mutation probes: failing for the stated reason, equivalent mutants, restore slips, clean builds and Surefire selector syntax, implementers editing production in rework, injected seams proven only by fakes
+applies-to:
+  - any
 metadata:
   type: feedback
 ---

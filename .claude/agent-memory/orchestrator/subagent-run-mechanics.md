@@ -1,6 +1,8 @@
 ---
 name: subagent-run-mechanics
 description: How to run the cycle as a subagent orchestrator here (waiting on children, hand-back, resume, steering children, cwd and memory paths, timestamps, memory guard, fast paths)
+applies-to:
+  - any
 metadata:
   type: project
 ---

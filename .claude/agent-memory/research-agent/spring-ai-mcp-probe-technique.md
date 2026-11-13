@@ -1,6 +1,9 @@
 ---
 name: spring-ai-mcp-probe-technique
 description: How to verify Spring AI 2.0.x MCP starter behaviour (stdio vs HTTP) cheaply, plus probe traps
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/assistant/**
+  - distributor/**/mcp/**
 metadata:
   type: reference
 ---

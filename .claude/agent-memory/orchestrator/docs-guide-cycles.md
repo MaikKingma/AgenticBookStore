@@ -1,6 +1,10 @@
 ---
 name: docs-guide-cycles
 description: Traps of docs, guide-site and pack-wording cycles (checker design, frozen checkers, truth tables, wording sweeps, contrast, live-site pages, claim verification)
+applies-to:
+  - guide/**
+  - docs/spec-pack/**
+  - "README.md"
 metadata:
   type: project
 ---

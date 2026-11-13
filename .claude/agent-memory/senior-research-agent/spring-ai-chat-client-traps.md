@@ -1,6 +1,9 @@
 ---
 name: spring-ai-chat-client-traps
 description: Spring AI 2.0.x ChatClient/Anthropic traps (tool loop in advisor, test-double options, blank key, env fallbacks, temperature) and how to verify them offline
+applies-to:
+  - bookstore/src/main/java/nl/openvalue/bookstore/assistant/**
+  - bookstore/src/test/java/nl/openvalue/bookstore/assistant/**
 metadata:
   type: reference
 ---
