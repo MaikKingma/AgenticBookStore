@@ -1,6 +1,6 @@
 ---
 name: bash-script-qa-probes
-description: Verifying bash tooling tasks (staging/apply/cut scripts with a bash self-test) - copy-based mutants, xtrace coverage via BASH_ENV, gap probes on unreached refusal lines, README-as-written runs
+description: Bash tooling and self-test verification - copy-based mutants, xtrace coverage, rollback witnesses
 metadata:
   type: feedback
 ---
@@ -13,6 +13,4 @@ Rule: for a bash self-test, mutate COPIES of the script folder in the scratchpad
 - Run the README "as written" in a scratch clone of the worktree (`git clone <worktree>`, then point `refs/remotes/origin/<base>` at the real sha), with the staging folder copied in and FIXTURE step folders. Use a scratch bare remote for fetch and push steps. Keep HOME real for Maven and isolate git only with `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_NOSYSTEM`.
 - Rollback under `set -e`: a failing command inside an EXIT-trap rollback aborts the rest of the handler silently (index restore, folder cleanup, backup removal, the "rolled back" line). Witness on the UNMUTATED script: an earlier row that stages (patch via `--3way`), then a write onto a `chmod 444` file. Check `git status`, empty folders and leftover backup folders. A mutant leaving a temp folder behind is a hint to look for this.
 - "Deleting `set +e` in the trap is equivalent, every command is guarded" is usually false: the `echo ... >&2` status lines are unguarded. Witness: run the failing case with stderr closed (`2>&-`); the mutant aborts the trap and leaks its backup/temp folder (or turns exit 0 into 1). Judge claimed-equivalent mutants with a witness, never by reading.
-- After a rollback rework, mutate each `|| record_failure` guard to `|| true` separately and run a witness per guard: a failure the tests never force (rm of an added top-level file, a mode-only change skipped by a "same file" shortcut) makes the tool claim "unchanged" while the tree differs. Shim the one command with a PATH-first script.
-- Verbatim-staging tasks (pack fenced blocks copied into a step folder): the extractor must be fence-aware, because a CLAUDE.md block contains `## ` lines that end a naive section scan; end the section at a bare `---` outside a fence and map heading to target by the first backticked token. Run one negative control PER file (flip one byte in a copy of the staged tree) plus a dropped-final-newline control. A sandbox built from `origin/factory` can hold more tests than the worktree referee (factory moved past the spec branch): compare totals per base, not across.
 Related: [[shell-traps]], [[env-switch-mutant-runner]], [[readme-and-live-jar-probes]], [[bash-script-test-probes]]

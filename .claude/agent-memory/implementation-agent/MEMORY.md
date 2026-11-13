@@ -1,23 +1,16 @@
 - [ArchUnit traps](archunit-traps.md) — mutable LayeredArchitecture, array dependencies, Map edits
 - [Maven build traps](maven-build-traps.md) — Maven wrapper, zsh, compiler-plugin traps, stack skills
 - [JPA slice traps](jpa-slice-traps.md) — JDBC reads skip auto-flush, clear before round trips, tiebreaks
-- [Flow test techniques](flow-test-techniques.md) — Mockito strict stubs, clock witnesses, order tests
+- [Flow and mapper test techniques](flow-mapper-test-techniques.md) — strict stubs, clock witnesses, order tests, validating hand-offs
 - [Integration test techniques](integration-test-techniques.md) — RestTestClient coercion, probe-killing data
 - [Seed data techniques](seed-data-techniques.md) — Jackson 3 strict reads, one guard per rule
-- [MCP test client traps](mcp-test-client-traps.md) — CallToolRequest ctor warning, scanner check
 - [Bean validation traps](bean-validation-traps.md) — trimmed-length constraint, control-char JSON
-- [Mapper test witnesses](mapper-test-witnesses.md) — data that makes mapper mutations observable
-- [Boot logging in a shared fork](boot-logging-shared-fork.md) — logback init once per JVM
-- [Distributor API slice traps](distributor-api-slice-traps.md) — Javadoc greps, slices skip MCP scanner
-- [Docusaurus guide traps](docusaurus-guide-traps.md) — guide/ checker, MDX scanner, built HTML, page registration, A4
-- [Spring environment tests](spring-environment-tests.md) — yml/EPP tests, Binder placeholders
-- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, Vitest cleanup, QA grep traps
-- [View controller test traps](view-controller-test-traps.md) — equivalent-mutant probe, no redirects
-- [Bash script traps](bash-script-traps.md) — bash 3.2 vs 5, errexit, EXIT traps, git ref scripts, mutants
+- [Spring AI and MCP test traps](spring-ai-mcp-test-traps.md) — tool callbacks without context, stub model, MCP client ctor warning
+- [Web MVC slice traps](web-mvc-slice-traps.md) — nested @WebMvcTest, ProblemDetail, 405 advice, view controller order, QA greps
+- [Boot env and logging traps](spring-boot-env-logging-traps.md) — yml/EPP tests, second app in the shared fork
 - [RestClient acl traps](restclient-acl-traps.md) — @Autowired constructors, %2F paths, timeouts
-- [http replay techniques](http-replay-techniques.md) — live-proving .http files, seeded state
-- [Docs task techniques](docs-task-techniques.md) — README census scripts, reset claim, rg, guide page plus plan mirror, claims table
-- [Web slice nested contexts](web-slice-nested-contexts.md) — @Nested @WebMvcTest, ProblemDetail keys
-- [Spring AI tool test techniques](spring-ai-tool-test-techniques.md) — tool callbacks without context, stub model
-- [Consistency-check techniques](consistency-check-techniques.md) — glob tests, git grep on a sha, installer isolation
-- [Agent OS written-files techniques](agent-os-written-files-techniques.md) — trace tables, installer traps
+- [Docusaurus guide traps](docusaurus-guide-traps.md) — guide/ checker, MDX scanner, built HTML, page registration, A4
+- [Frontend build traps](frontend-build-traps.md) — Node-first Maven run, Vitest cleanup, QA grep traps
+- [Bash script traps](bash-script-traps.md) — bash 3.2 vs 5, errexit, EXIT traps, git ref scripts, mutants
+- [Docs task techniques](docs-task-techniques.md) — README census scripts, rg, reset claim, .http replay
+- [Zero-model proof techniques](zero-model-proof-techniques.md) — glob tests, git grep on a sha, installer isolation, trace tables

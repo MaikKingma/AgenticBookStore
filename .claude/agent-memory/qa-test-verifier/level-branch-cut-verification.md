@@ -1,6 +1,6 @@
 ---
 name: level-branch-cut-verification
-description: Verifying cut-and-pushed level branches (spec 10 T14 style) - tree equality against build-level, why a fresh simulate from the tip need not equal the published level-0 tag, manifest-vs-diff check, push side effects
+description: Cut-and-pushed level branches - tree equality vs build-level, manifest vs diff, push side effects
 metadata:
   type: feedback
 ---
@@ -10,8 +10,6 @@ Rule: compare TREES, never commit shas, and build the reference on a clone of th
 - Run both: (A) simulate from the tip, build-level per step, `git diff-tree -r --name-status <sandbox HEAD^{tree}> <pushed branch tree>` after fetching the pushed branch into the sandbox (expect only the explained file); (B) `git clone <full clone>` then `checkout --detach refs/tags/level-0-start`, `build-level.sh <step> <clone>`, `rev-parse HEAD^{tree}` equals the pushed branch tree, and `HEAD~1^{tree}` equals the parent branch tree (chain check, free).
 - Find which factory ref reproduces the tag tree: simulate from the candidate refs (`--repo <worktree> <sha>`, scripts from the tip); the one that gives the tag tree is the explanation. Explain the delta with `git log --full-history -m -S<string> -- <file>` (plain `-S` shows only the first, non-merge commit).
 - Manifest vs push: python reads `manifest.tsv` (6 tab fields, skip `#`), decodes `files/`/`patches/` names (`dot-` to `.`, `CLAUDE.staged.md` to `CLAUDE.md`), and compares with `git diff --raw --no-renames -z <parent> <branch>`: add=A, replace/patch=M, new mode = `100`+mode column; assert no extra and no missing paths.
-- Forbidden-path greps (`docs/spec-pack/`, `guide/`, `guide.yml`) need a positive control: the same pattern on `origin/factory` must hit.
 - Push side effects: two `git ls-remote origin` listings (before and after the long runs) with `diff` of the full files; `gh run list --repo <r> --branch <b>` for each new branch (0 runs) with the spec branch as positive control; read the `on:` blocks of every workflow file on the branch (`ci.yml`, `no-agent-config.yml` trigger on main, factory, sdd specs, the tag).
-- Six `./mvnw clean verify` runs take about 30 s each on a warm `.m2`: one background script (budget per run, `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<scratch>`, `cd` into each clone) plus a foreground wait script. Module attribution of the counts: vitest in the frontend module, then `Tests run:` for bookstore, then distributor; `it.fails` in `setupTests.test.ts` reports as "2 expected fail", not a skip.
 - After the push, prove verbatim pack files and patch bases on the PUBLISHED branches, not on staging: fenced block vs `git show origin/<branch>:<path>`, each patch row's base sha vs `git rev-parse <pushed predecessor>:<target>`. A row that runs a generator needing `claude` on PATH (uvx `specify init`) gets a logging `claude` stub first on a PATH without the user bin folder, so no real Claude can start (D14).
 Related: [[scaffold-verification-techniques]], [[shell-traps]], [[final-sweep-checks]]

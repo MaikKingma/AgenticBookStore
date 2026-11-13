@@ -1,3 +1,7 @@
 - [Repo conventions](repo-conventions.md) — factory base branch, merge-commit rule for spec PRs, module vocabulary, no allowlist, pack spec is the source of truth
-- [Cycle lessons](cycle-lessons.md) — SSH push, CI check names, moved base and parallel worktree cycles, headless Claude Code proxy, memory guard, model choices
-- [Harness staging lessons](harness-staging-lessons.md) — spec 10: no headless Claude login, staged agent config, plugin guard, sandbox hygiene, doc rework traps
+- [Git and CI traps](git-ci-traps.md) — SSH push, check names and watch timing, CI-config evidence, moved base, parallel worktrees and merges
+- [Round-0 directive traps](round0-directive-traps.md) — witness and falsifier families to name up front, bugfix criteria, authority for fixture amendments
+- [Docs and guide cycles](docs-guide-cycles.md) — checker design and freezing, truth tables, wording sweeps, contrast, live-site pages
+- [Subagent run mechanics](subagent-run-mechanics.md) — waiting, hand-back, steering children, resume, cwd and memory paths, timestamps
+- [Runtime probe lessons](runtime-probe-lessons.md) — isolated live DB, sandbox hygiene, headless Claude Code, LLM adapter offline pins, Spring/Maven traps
+- [Model choices](model-choices.md) — owner sonnet-first rule; which task kinds held on sonnet, which on opus

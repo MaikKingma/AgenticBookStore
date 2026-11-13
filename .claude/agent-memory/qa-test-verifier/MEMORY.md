@@ -1,25 +1,30 @@
-- [Shell traps](shell-traps.md) — zsh, ugrep, BSD grep, rg, Edit/Write, pinned PATH and worktree-guard quirks that look like empty results
-- [Scaffold verification](scaffold-verification-techniques.md) — regenerate scaffolds, snapshot-safe probes, rework carry-forward by hash
-- [ArchUnit probes](archunit-probes.md) — non-vacuity probes for ArchUnit rules, fixture self-tests, suffix set equality
-- [Spring runtime probes](spring-runtime-probes.md) — Boot runtime, advice and slice witnesses, EPP, validators, interceptors
-- [Domain mutation probes](domain-mutation-probes.md) — domain invariants, flow translators, port order, view mappers, detail pins
-- [JPA adapter and listener probes](jpa-adapter-probes.md) — Hibernate 7 adapter probes plus AFTER_COMMIT and REQUIRES_NEW listeners
-- [Integration test probes](integration-test-probes.md) — full-context IT witnesses, transaction boundaries, Flyway history guards
-- [Mutant runners](env-switch-mutant-runner.md) — env-selected or generated mutant files, restore-and-hash runner
-- [Final sweep and coverage](final-sweep-checks.md) — qa-final traps, bugfix control ladder, warning inventory, JaCoCo from the CLI
-- [RestClient ACL probes](restclient-acl-probes.md) — element-level malformed bodies, float coercion, identity checks, log escaping
-- [Tool adapter probes](tool-adapter-probes.md) — @Tool and ChatClient mutants, scripted chat-model doubles
-- [Prompt and tool text probes](prompt-text-probes.md) — text-only fixes: clause-level mutants, guard-test bite proofs
-- [MCP tool and STDIO probes](mcp-tool-probes.md) — @McpTool mutants, output caps, swapped-stream STDIO tests
-- [README, live-jar and capture probes](readme-and-live-jar-probes.md) — README fact checks, jar start runs, STDIO driver, contract capture replay
-- [CI workflow verification](ci-workflow-verification.md) — read-only gh techniques for Actions tasks, gated-deploy traps
-- [Docusaurus guide probes](docusaurus-guide-probes.md) — guide/ probe runner, wiring mutants, MDX variants, tab reader, scratch-copy mutants, rendered rigs, page-registration and zero-test-guard count, content-page literal oracle
-- [Site pass and Linux-flaky CLI tests](docusaurus-marker-ban-and-site-pass.md) — rendered pass, CI zip, print count, process.exit pipe truncation
-- [Frontend Vitest probes](frontend-vitest-probe-techniques.md) — verbose run vs Maven reporter, probe runner, console-trap gap
-- [Live UI walk](live-ui-walk-verification.md) — re-walking a browser walk, playwright-cli listeners, dev-mode console
-- [Bash script test probes](bash-script-test-probes.md) — PATH-bash interpreter trap, exact-replace mutant dirs, push witnesses
-- [Bash script QA probes](bash-script-qa-probes.md) — copy-based mutants for bash self-tests, xtrace coverage, rollback witnesses
-- [HTTP collection replay probes](http-collection-replay-probes.md) — .http replay driver, fresh DB per scenario, mutant pairing
-- [Hook regex probes](hook-regex-probes.md) — grep-on-stdin hooks: mutate prefix, separator, class per side
-- [Consistency-check verification](consistency-check-verification.md) — own token inventory, glob tests, row dry runs, fallback proofs
-- [Level-branch cut verification](level-branch-cut-verification.md) — trees not shas, build-level on the real tag clone, push side effects
+- [Shell traps](shell-traps.md) — zsh, ugrep, BSD grep, rg, Edit/Write, worktree-guard quirks that fake empty results
+- [Scaffold checks](scaffold-verification-techniques.md) — regenerate scaffolds, .http bytes, snapshot probes, rework carry-forward
+- [ArchUnit](archunit-probes.md) — rule non-vacuity on the production import, fixture self-tests, predicate mutants
+- [Spring runtime](spring-runtime-probes.md) — clean runs, Docker-down, live boot, validators, fixed clock, EPP, view controllers
+- [Advice, interceptors](spring-advice-and-interceptor-probes.md) — advice handlers, interceptors, config records, precedence pins
+- [Domain](domain-mutation-probes.md) — value objects, aggregates, flow port order, mapper hand-offs, view mappers
+- [JPA, listeners](jpa-adapter-probes.md) — Hibernate 7 joins, tiebreaks, flush, locale; AFTER_COMMIT listeners
+- [Integration tests](integration-test-probes.md) — full-context IT data rows, transaction boundaries, Flyway guards, flakes
+- [Mutant runners](env-switch-mutant-runner.md) — env-switch or generated mutants, restore-and-hash runner, sort families
+- [Seed data](seed-data-mutant-probes.md) — JSON and SQL seed mutants, count guards, growth diffs, ON CONFLICT
+- [Final sweep](final-sweep-checks.md) — qa-final: moving base, CI ids, control ladder, warning inventory, JaCoCo CLI
+- [RestClient ACL](restclient-acl-probes.md) — malformed 2xx bodies, float coercion, log escaping, QA-only class
+- [Tool adapters](tool-adapter-probes.md) — @Tool catch clauses, ChatClient memory and advisors, stub-server options
+- [Prompt text](prompt-text-probes.md) — text-only fixes: clause-level mutants, guard-test bite proofs
+- [MCP, STDIO](mcp-tool-probes.md) — @McpTool mutants, output caps, STDIO tests leaking logging across classes
+- [README, live jar](readme-and-live-jar-probes.md) — claim checks, start proof, STDIO driver, Compose trap, LLM stub, replay
+- [CI workflows](ci-workflow-verification.md) — read-only gh: baselines, timeouts, log and cache traps, gated deploys
+- [Guide harness](docusaurus-guide-probes.md) — guide/ node:test runner, wiring mutants, check:built, registration guards
+- [Guide MDX, HTML](docusaurus-markdown-html-probes.md) — MDX syntax variants, built-HTML tab reader, rehype plugins
+- [Guide content, UI](docusaurus-content-ui-probes.md) — page mutants vs pack oracle, CSS, palette, focus ring, WebKit rig
+- [Guide rendered pass](docusaurus-marker-ban-and-site-pass.md) — console buckets, CI zip, print count, process.exit flake
+- [Frontend Vitest](frontend-vitest-probe-techniques.md) — verbose run, console-trap gap, probe runner, witnesses, CSS tests
+- [Frontend state](frontend-order-and-state-probes.md) — sort sweeps, money strings, router, form, in-flight, input limits
+- [Live UI walk](live-ui-walk-verification.md) — throwaway DB and jar, playwright-cli listeners, dev console, control builds
+- [Bash tests](bash-script-test-probes.md) — PATH-bash interpreter trap, mutant dirs, push and precedence witnesses
+- [Bash QA](bash-script-qa-probes.md) — copy-based mutants, xtrace coverage, rollback witnesses
+- [HTTP replay](http-collection-replay-probes.md) — .http replay driver, fresh DB per scenario, mutant pairing
+- [Hook regex](hook-regex-probes.md) — grep-on-stdin hooks: mutate prefix, separator, class per side
+- [Consistency checks](consistency-check-verification.md) — own inventories, quote lookup, dry runs, false-universal audits
+- [Level branch cuts](level-branch-cut-verification.md) — trees not shas, build-level on the real tag clone, push effects

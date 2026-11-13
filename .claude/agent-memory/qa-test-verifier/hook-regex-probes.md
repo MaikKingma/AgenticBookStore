@@ -1,6 +1,6 @@
 ---
 name: hook-regex-probes
-description: Mutation probes for Claude Code hook scripts that match stdin JSON with grep - every regex element (prefix, separator, whitespace class per side, quantifier), equivalence calls, git-hook stdout trap, docs-quote checks
+description: Claude Code hook scripts that grep stdin JSON - mutate every regex element, equivalence calls
 metadata:
   type: feedback
 ---
@@ -12,7 +12,4 @@ Rule: for a hook that filters stdin JSON with one `grep -E` pattern, mutate EVER
 - Per side and per member: a whole-class mutant is killed by one fixture while single positions survive. Quantifier `*` to `?`/`{0,2}` is killed only by a run of 3. LF ends the grep line, so LF-before-colon is a negative case.
 - Locale trap: `[[:space:]]` in a UTF-8 locale also matches non-ASCII spaces (U+00A0 on macOS, U+2003, U+3000); such a character does not split words in bash/zsh, so it is no real command.
 - Docs quotes: fetch the `.md` form with curl, compare sha256 with the evidence header, compare each quoted line exactly (non-ASCII as `?`); the control must print which line it mutated.
-- A hook calling bare `mktemp` on macOS leaves TMPDIR: put a mktemp shim first on PATH for real-build runs.
-- Insertion check after line N: plain macOS `diff` may report it one line earlier (`373a374,379`) when the inserted block ends with the same text as line N. Judge with `diff --minimal` plus a split check (`head -n N` equal, `sed -n 'N+1,N+kp'` equal to the RA text extracted from the ledger, tails equal), and a control split at N-1 that must fail.
-- After a removal round (dropped twin implementation), compare the remaining result table row by row with the previous round's (`comm -13` of sorted rows) and name each dropped row's twin.
 Related: [[bash-script-qa-probes]], [[shell-traps]], [[consistency-check-verification]]

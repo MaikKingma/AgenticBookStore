@@ -1,6 +1,6 @@
 ---
 name: prompt-text-probes
-description: Probing a system-prompt resource plus @Tool/@ToolParam description text - mutant families, red-set shape, guard-test witnesses
+description: Text-only fixes (prompt resource, @Tool descriptions) - clause-level mutants and guard-test bite proofs
 metadata:
   type: feedback
 ---
@@ -11,5 +11,4 @@ Rule: for a task whose fix is only text (a `.st` prompt, annotation descriptions
 - Families: each list item dropped/swapped/added (genres, fields), one clause of each rule dropped, each spec line deleted on its own, the example in an instruction changed to a wrong spelling (spaced, hyphen, lowercase, other constant), renderer-unsafe chars (`{x}`, `$`, em dash) to prove the pre-existing safety test still bites, annotation text dropped from the `@Tool` description only and from the `@ToolParam` only, one word of a spec sentence altered.
 - Expect survivors in explanatory clauses no AC pins (a "never X and Y together" parenthesis, a "you do not remember" sentence); report them as advisory with the one assertion that would close them.
 - Guard tests that are green before and after by design need their own bite proof: run the integration class on the pre-fix bytes (green), then mutate the production behaviour the guard documents (a repository `like :q` criterion made match-all; the conversation id randomised per call) and name the red test lines.
-- A domain parser used as a witness (`Genre.parse`): mutate it three ways (accept space, accept space by another spelling, drop `toUpperCase`); the last one dies as an ERROR (exception from the helper), which still counts as red.
 Related: [[tool-adapter-probes]], [[env-switch-mutant-runner]]

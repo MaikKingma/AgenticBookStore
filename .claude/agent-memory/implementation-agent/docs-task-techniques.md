@@ -1,32 +1,35 @@
 ---
 name: docs-task-techniques
-description: Techniques for README and architecture doc tasks whose claims a QA census checks (live proofs, two-way scripts, traps)
+description: README and architecture-doc tasks whose claims a QA census checks (two-way scripts, live proofs, rg traps) and replaying .http collection files live without an IDE
 metadata:
-  type: feedback
+  type: reference
 ---
-For a prose task the tests are a claim census plus gate greps. What held:
+For a prose task the tests are a claim census plus gate greps. Guide-page traps live in [[docusaurus-guide-traps]].
 
-- **Two-way scripts with a negative control.** Parse the `@RestController` sources (class `@RequestMapping` plus method
-  mapping) and the README list, compare both ways, then re-run on a README copy with one line removed and expect a
-  difference. Same for `ArchitectureTest` constants and `classNames(...)` suffix lists against the architecture doc
-  (`python3 -I`, parametrize the doc path). Quoted enum names such as `HALF_EVEN` look like rule constants: allowlist them. A
-  count-sentence census reads the seed SQL (parse the INSERT VALUES rows) with copies altered one number at a time.
-- **Fake an "older database" for a reset claim.** Start the jar with `--spring.flyway.locations=classpath:db/migration` on its
-  own database, add a book, stop, start again with the default locations: the seed fails on the FK to `book_author`, exit 1.
-- **Do not write "no volume" about the compose reset.** The `postgres:18.6` image declares an anonymous volume at
-  `/var/lib/postgresql`; say "removes the database container". Check with `docker inspect --format '{{json .Config.Volumes}}'`.
-- **`rg` works in the Bash tool, not in script files.** Run gate greps as separate Bash calls with a positive control file in
-  the scratchpad (exit 0) next to each empty result (exit 1). `rg -ni 'a|b'`, never `-E`. Its exit 1 shows only as "no
-  output": add `--stats` so "0 matches, N files searched" is the quotable proof.
-- **A rate limit behind the offline check is not reachable offline.** Prove a 429 live with a made-up key and
-  `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>` pointing at a local stub; its request count shows rejected calls
-  never reach the model.
-- **Port 8080 may belong to someone else:** preflight with `lsof`, never kill it; use `--server.port=<free>`.
-- **A guide page with literals mirrored in the plan (spec 16 T4).** The coverage sweep needs one entry per plan span and
-  fence line; an entry's snippet must sit word for word in the page prose (not the at a glance box) and the plan section.
-  Write page and plan sentences identical, then one entry per sentence or table. The `**Bonus cleared when**` list is no
-  skipped list in the sweep. A claims table is cheapest from a node script: rows of [page sentence, id, doc, quote]; it finds
-  both line numbers with `includes` and emits a TSV for a `grep -nF` loop. In the pinned PATH use `/usr/sbin/lsof`;
-  `guide/node_modules` has no axe-core (the scratchpad rig carries it).
-- **Worktree Bash guard refuses paths with backslash-escaped spaces.** Use relative paths from the worktree root; the
-  scratchpad and Read/Edit/Write absolute paths are fine. Keep a `README.md` under a line limit by unwrapping lines.
+- **Two-way scripts with a negative control**: parse `@RestController` sources (class plus method mapping) and the README list,
+  compare both ways, re-run on a README copy with one line removed and expect a difference. Same for `ArchitectureTest` constants
+  and `classNames(...)` suffix lists against the architecture doc (`python3 -I`, parametrize the doc path). Allowlist quoted enum
+  names such as `HALF_EVEN`. A count-sentence census parses the seed SQL INSERT rows, with copies altered one number at a time.
+- **Fake an "older database" for a reset claim**: start the jar with `--spring.flyway.locations=classpath:db/migration` on its own
+  database, add a book, stop, start with default locations: the seed fails on the FK to `book_author`, exit 1.
+- **Never write "no volume" about the compose reset**: `postgres:18.6` declares an anonymous volume at `/var/lib/postgresql`; say
+  "removes the database container" (`docker inspect --format '{{json .Config.Volumes}}'`).
+- **`rg` works in the Bash tool, not script files.** Run gate greps as separate calls with a positive control file in the
+  scratchpad next to each empty result. `rg -ni 'a|b'`, never `-E`; add `--stats` so "0 matches, N files searched" is quotable.
+- **A rate limit behind the offline check**: prove a 429 live with a made-up key and `SPRING_AI_ANTHROPIC_BASE_URL=http://127.0.0.1:<port>`
+  on a local stub; its request count shows rejected calls never reach the model.
+- Port 8080 may belong to someone else: preflight with `lsof` (`/usr/sbin/lsof` in a pinned PATH), never kill; use
+  `--server.port=<free>`. `guide/node_modules` has no axe-core (the scratchpad rig carries it).
+- Worktree Bash guard refuses backslash-escaped spaces: use relative paths from the worktree root. Keep a `README.md` under a
+  line limit by unwrapping lines. A claims table is cheapest from a node script emitting a TSV for a `grep -nF` loop.
+
+## .http replay (no IDE)
+- Driver: python3 `-I` splits the file's bytes at `###`, substitutes `{{var}}` and `{{$uuid}}`, sends with urllib, runs each
+  block's `> {% ... %}` handler through `node -e` with a shim (`client.global.set/get`, `client.test`, `client.assert`,
+  `response.status/body`). Flag a capture of `undefined`, unresolved variables, a missing status line as FAIL.
+- One line `# Expected status: 202 (distributor running); 503 (distributor stopped).` per block; a free-text tail breaks it.
+- Run-mode blocks need three modes, each with a fresh container: distributor up, jar killed, and
+  `--distributor.chaos.failure-rate=1.0`.
+- Seeded state: new books start with a stock row at 0 (assert low-stock membership by id, never a count); a dip fires the
+  automatic restock only when the signal is false, and `receive` resets it.
+- Offline assistant path: `env -u BOOKSTORE_AI_API_KEY` (503 offline, 400 before offline, 429 only with a key).

@@ -1,10 +1,25 @@
-- [QA directive traps](qa-directive-traps.md) — snapshots, greps, probes, ArchUnit vacuity, evidence files, hash baselines, bugfix cycles; read before writing a directive
-- [Test-data falsifiers](qa-test-data-falsifiers.md) — backend data and witnesses that falsify a criterion: sorts, tiebreaks, pass-throughs, clocks, regex, unicode; read before a falsifier list
-- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest, contrast, style-guard, CSS layout, live-browser witnesses; read before a UI falsifier list or final brief
-- [CI-config specs](qa-ci-config-specs.md) — traps when the proof is GitHub Actions runs; read before a CI strategy, final brief or red-CI rework
-- [Docs and checker specs](qa-docs-checker-specs.md) — checker-as-oracle traps for docs/MDX checkers, probes, self-tests, axe; read before a docs strategy or content review
-- [Git-script specs](qa-git-script-specs.md) — bash scripts that rewrite or push git refs; read before such a strategy or review
-- [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI specs: keyed referee, env-reading tests, EPP order, memory window, tool doubles, provider stubs
-- [Review calibration](review-calibration.md) — meta-review rules: probe carry into rework, REJECT vs inspection, oracle helpers, scope edits; read before every review
-- [Live guide page addition](qa-live-page-addition.md) — adding a page to the live guide: routes, count pins, sweep literals, claim closure
-- [Harness staging specs](qa-harness-staging-specs.md) — staged agent config: ignore/eol traps, isolation, rehearsal rows, lifecycle premises, gate-regex forms
+- [Directive traps](qa-directive-traps.md) — C0 basics: clean-tree snapshots, path bans, scratch names, grep syntax, .orig copies, backslash-u
+- [Warnings and logging](qa-warnings-and-logging.md) — warning inventory, logback once per JVM, run order, README command claims
+- [Probe design](qa-probe-design-traps.md) — must-fail probes: reason lines, equivalent mutants, clean builds, Surefire -Dtest, seams
+- [Test infra guards](qa-test-infra-guards.md) — cleaning hooks, Vitest console trap, shared base, rollback and after-commit probes
+- [ArchUnit vacuity](qa-archunit-vacuity.md) — allowEmptyShould, origin-anchored matching, per-string and per-position witnesses
+- [Final brief integrity](qa-final-brief-integrity.md) — CI run ids, base moved, hash baselines, brief dry-run scripts and counts
+- [Request smokes](qa-request-collection-smokes.md) — http/*.http replay, driver controls, comment claims, compose leftovers, PG18
+- [Bugfix and live runs](qa-bugfix-and-live-runs.md) — lite bugfix cycles, cross negctl, shared compose DB, captured fixtures
+- [Test-data falsifiers](qa-test-data-falsifiers.md) — filters, sorts, tiebreaks, UUID order, joins, rounding, guards, clocks, seeds
+- [Pass-through falsifiers](qa-passthrough-state-falsifiers.md) — defaults, hand-offs, state rules, list element, caps, exact equality
+- [Input format falsifiers](qa-input-format-falsifiers.md) — strip/trim, regex positions, missing keys, timeouts, log-escape sets
+- [Frontend falsifiers](qa-frontend-falsifiers.md) — React/Vitest/RTL witnesses: mid values, cents, keys, reducers, text sources
+- [CSS and live checks](qa-frontend-css-live-checks.md) — contrast and style guards, layout and live-browser checks, frontend negctl
+- [CI-config specs](qa-ci-config-specs.md) — Actions-run evidence: summaries, baselines, hang paths, cache, Linux pipe, deploy gates
+- [Docs checker oracle](qa-docs-checker-oracle.md) — home-made checker as oracle: probes, freeze, manifest gaming, parser witnesses
+- [Docs site content](qa-docs-site-content.md) — Docusaurus: link checks, axe, MDX scanners, source reviews, meta descriptions
+- [Live page addition](qa-live-page-addition.md) — adding a guide page: CLI fixtures, route pins, count greps, claim closure
+- [Git-script specs](qa-git-script-specs.md) — scripts rewriting refs: commit-tree, atomic and lease witnesses, refusals, bash trap
+- [Harness staging](qa-harness-staging-specs.md) — staged agent config: ignore and eol traps, isolation, no-run plans, gate regexes
+- [Rehearsal rows](qa-rehearsal-rows.md) — owner rows: reset state, characterization tests, lifecycle premises, literal measuring
+- [LLM adapter specs](qa-llm-adapter-specs.md) — Spring AI: keyed referee, env tests, default mutants, tool doubles, EPP order
+- [LLM failure and prompts](qa-llm-failure-and-prompts.md) — catch-all tool helpers, failure translation, provider stubs, prompt pins
+- [Review calibration](review-calibration.md) — rework rules: probe carry, edited assertions, no red run, slips, escalated round
+- [Survivor rules](review-survivor-rules.md) — judging surviving mutants: REJECT threshold, equivalents, pass-throughs, twins
+- [Scope rulings](review-scope-rulings.md) — refuted premises, approved deviations, out-of-scope defects, doc nits, live checks
